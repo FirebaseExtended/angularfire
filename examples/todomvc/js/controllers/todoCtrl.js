@@ -6,9 +6,11 @@
  * - retrieves and persist the model via the todoStorage service
  * - exposes the model to the template and provides event handlers
  */
-todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, todoStorage, filterFilter) {
-	var todos = $scope.todos = todoStorage.get();
-
+todomvc.factory('angularFire', angularFire);
+todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, angularFire, filterFilter) {
+	angularFire.associate($scope, 'todos');
+	
+	var todos = $scope.todos;
 	$scope.newTodo = '';
 	$scope.editedTodo = null;
 
@@ -16,7 +18,6 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, todoStorage,
 		$scope.remainingCount = filterFilter(todos, {completed: false}).length;
 		$scope.completedCount = todos.length - $scope.remainingCount;
 		$scope.allChecked = !$scope.remainingCount;
-		todoStorage.put(todos);
 	}, true);
 
 	if ($location.path() === '') {
