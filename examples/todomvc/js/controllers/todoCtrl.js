@@ -6,25 +6,33 @@
  * - retrieves and persist the model via the todoStorage service
  * - exposes the model to the template and provides event handlers
  */
-todomvc.factory('angularFire', angularFire);
+todomvc.factory('angularFire', function($q) {
+	return new AngularFire($q, "https://anant.firebaseio.com/angular");
+});
 todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, angularFire, filterFilter) {
-	angularFire.associate($scope, 'todos');
-	
-	var todos = $scope.todos;
+	$scope.todos = angularFire.associate($scope, 'todos');
+
 	$scope.newTodo = '';
 	$scope.editedTodo = null;
-
-	$scope.$watch('todos', function () {
-		$scope.remainingCount = filterFilter(todos, {completed: false}).length;
-		$scope.completedCount = todos.length - $scope.remainingCount;
-		$scope.allChecked = !$scope.remainingCount;
-	}, true);
 
 	if ($location.path() === '') {
 		$location.path('/');
 	}
-
 	$scope.location = $location;
+
+	$scope.todos.then(function(todos) {
+		startWatch($scope, filterFilter);
+	});
+});
+
+function startWatch($scope, filter) {
+	var todos = $scope.todos;
+
+	$scope.$watch('todos', function () {
+		$scope.remainingCount = filter(todos, {completed: false}).length;
+		$scope.completedCount = todos.length - $scope.remainingCount;
+		$scope.allChecked = !$scope.remainingCount;
+	}, true);
 
 	$scope.$watch('location.path()', function (path) {
 		$scope.statusFilter = (path === '/active') ?
@@ -71,4 +79,4 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, angularFire,
 			todo.completed = completed;
 		});
 	};
-});
+}
