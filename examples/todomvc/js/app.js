@@ -7,4 +7,4 @@
  *
  * @type {angular.Module}
  */
-var todomvc = angular.module('todomvc', []);
+var todomvc = angular.module('todomvc', ['firebase']);
