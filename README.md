@@ -59,7 +59,7 @@ $scope.items.then(function() {
 });
 ```
 
-See [todoCtrl.js](https://github.com/firebase/angularFire/blob/master/examples/todomvc/controllers/todoCtrl.js)
+See [todoCtrl.js](https://github.com/firebase/angularFire/blob/gh-pages/examples/todomvc/js/controllers/todoCtrl.js)
 for a working example of how all this falls in place!
 
 License
