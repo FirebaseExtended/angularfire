@@ -40,10 +40,12 @@ function startWatch($scope, filter) {
 		if (!$scope.newTodo.length) {
 			return;
 		}
+
 		$scope.todos.push({
 			title: $scope.newTodo,
 			completed: false
 		});
+
 		$scope.newTodo = '';
 	};
 
