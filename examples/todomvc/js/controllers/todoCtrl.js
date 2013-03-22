@@ -26,11 +26,9 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, angularFire,
 });
 
 function startWatch($scope, filter) {
-	var todos = $scope.todos;
-
 	$scope.$watch('todos', function () {
-		$scope.remainingCount = filter(todos, {completed: false}).length;
-		$scope.completedCount = todos.length - $scope.remainingCount;
+		$scope.remainingCount = filter($scope.todos, {completed: false}).length;
+		$scope.completedCount = $scope.todos.length - $scope.remainingCount;
 		$scope.allChecked = !$scope.remainingCount;
 	}, true);
 
@@ -44,12 +42,10 @@ function startWatch($scope, filter) {
 		if (!$scope.newTodo.length) {
 			return;
 		}
-
-		todos.push({
+		$scope.todos.push({
 			title: $scope.newTodo,
 			completed: false
 		});
-
 		$scope.newTodo = '';
 	};
 
@@ -65,17 +61,17 @@ function startWatch($scope, filter) {
 	};
 
 	$scope.removeTodo = function (todo) {
-		todos.splice(todos.indexOf(todo), 1);
+		$scope.todos.splice($scope.todos.indexOf(todo), 1);
 	};
 
 	$scope.clearCompletedTodos = function () {
-		$scope.todos = todos = todos.filter(function (val) {
+		$scope.todos = $scope.todos.filter(function (val) {
 			return !val.completed;
 		});
 	};
 
 	$scope.markAll = function (completed) {
-		todos.forEach(function (todo) {
+		$scope.todos.forEach(function (todo) {
 			todo.completed = completed;
 		});
 	};
