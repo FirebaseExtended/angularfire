@@ -29,7 +29,7 @@ var myapp = angular.module('myapp', ['firebase']);
 Set `angularFire` as a service dependency in your controller:
 
 ```js
-myapp.controller('MyCtrl', function MyCtrl($scope, angularFire, filterFilter) {
+myapp.controller('MyCtrl', function MyCtrl($scope, angularFire) {
   ...
 });
 ```
@@ -54,8 +54,7 @@ after the promise has completed:
 
 ```js
 $scope.items.then(function() {
-  // Add a new item. You can also add a function to $scope and call it
-  // from markup as you normally would with AngularJS.
+  // Add a new item by simply modifying the array.
   $scope.items.push({name: "Firebase", desc: "is awesome!"});
 });
 ```
