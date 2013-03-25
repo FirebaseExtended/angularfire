@@ -37,11 +37,9 @@ AngularFire.prototype = {
     return deferred.promise;
   },
   _resolve: function($scope, name, deferred, val) {
-    console.log("remote change");
     $scope[name] = angular.copy(val);
     this._remoteValue = angular.copy(val);
     if (deferred) {
-      console.log("resolving deferred");
       deferred.resolve(val);
       this._watch($scope, name);
     }
@@ -58,7 +56,6 @@ AngularFire.prototype = {
       if (angular.equals(val, self._remoteValue)) {
         return;
       }
-      console.log("local change");
       self._fRef.set(val);
     }, true);
   },
