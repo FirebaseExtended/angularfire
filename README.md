@@ -72,7 +72,7 @@ See the source for the
 [controller behind the demo TODO app](https://github.com/firebase/angularFire/blob/gh-pages/examples/todomvc/js/controllers/todoCtrl.js)
 for a working example of this pattern.
 
-Option 2: Expicit synchronization
+Option 2: Explicit synchronization
 ---------------------------------
 This is method is great if you want control over when local changes are
 synchronized to Firebase. Any changes made to a model won't be synchronized
