@@ -7,7 +7,7 @@
  * - exposes the model to the template and provides event handlers
  */
 todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, angularFire, filterFilter) {
-	var url = "https://anant.firebaseio.com/angular";
+	var url = "https://angularFire.firebaseio-demo.com/todomvc";
 	$scope.todos = angularFire(url, $scope, 'todos');
 
 	$scope.newTodo = '';
