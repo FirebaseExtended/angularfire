@@ -83,7 +83,7 @@ angular.module('firebase').factory('angularFireCollection', function($timeout) {
     angular.extend(this, ref.val());
   }
 
-  return function(collectionUrl) {
+  return function(collectionUrl, initialCb) {
     var collection = [];
     var indexes = {};
     var collectionRef = new Firebase(collectionUrl);
@@ -124,6 +124,10 @@ angular.module('firebase').factory('angularFireCollection', function($timeout) {
         var item = collection[index];
         item.$index = indexes[item.$id] = index;
       }
+    }
+
+    if (initialCb && typeof initialCb == 'function') {
+      collectionRef.once('value', initialCb);
     }
 
     collectionRef.on('child_added', function(data, prevId) {
