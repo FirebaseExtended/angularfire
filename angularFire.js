@@ -4,6 +4,7 @@ angular.module('firebase', []).value('Firebase', Firebase);
 
 // Implicit syncing. angularFire binds a model to $scope and keeps the dat
 // synchronized with a Firebase location both ways.
+// TODO: Optimize to use child events instead of whole 'value'.
 angular.module('firebase').factory('angularFire', function($q) {
   return function(url, scope, name) {
     var af = new AngularFire($q, url);
@@ -74,7 +75,8 @@ AngularFire.prototype = {
 };
 
 // Explicit syncing. Provides a collection object you can modify.
-// Original code from https://github.com/petebacondarwin/angular-firebase/blob/master/ng-firebase-collection.js
+// Original code by @petebacondarwin, from:
+// https://github.com/petebacondarwin/angular-firebase/blob/master/ng-firebase-collection.js
 angular.module('firebase').factory('angularFireCollection', function($timeout) {
   function angularFireItem(ref, index) {
     this.$ref = ref.ref();

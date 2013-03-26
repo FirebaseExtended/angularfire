@@ -9,6 +9,7 @@ and they will be transparently kept in sync across all clients currently using
 your app. The 2-way data binding offered by AngularJS works as normal, except
 that the changes are also sent to all other clients instead of just a server.
 
+### Live Demo: <a target="_blank" href="http://firebase.github.com/angularFire/examples/chat/">Simple chat room</a>.
 ### Live Demo: <a target="_blank" href="http://firebase.github.com/angularFire/examples/todomvc/">Real-time TODO app</a>.
 
 Usage
@@ -26,6 +27,14 @@ Add the module `firebase` as a dependency for your app module:
 var myapp = angular.module('myapp', ['firebase']);
 ```
 
+You now have two options.
+
+Option 1: Implicit synchronization
+----------------------------------
+This method is great if you want to implicitly synchronize a model with Firebase.
+All local changes will be automatically sent to Firebase, and all remote changes
+will instantly update the local model.
+
 Set `angularFire` as a service dependency in your controller:
 
 ```js
@@ -34,7 +43,7 @@ myapp.controller('MyCtrl', function MyCtrl($scope, angularFire) {
 });
 ```
 
-Bind a Firebase URL to any scope variable:
+Bind a Firebase URL to any model in `$scope`:
 
 ```js
 var url = 'https://<my-firebase>.firebaseio.com/items';
@@ -43,7 +52,7 @@ $scope.items = angularFire(url, $scope, 'items');
 
 Use the model in your markup as you normally would:
 
-```js
+```html
 <ul ng-controller="MyCtrl">
   <li ng-repeat="item in items">{{item.name}}: {{item.desc}}</li>
 </ul>
@@ -59,8 +68,55 @@ $scope.items.then(function() {
 });
 ```
 
-See [todoCtrl.js](https://github.com/firebase/angularFire/blob/gh-pages/examples/todomvc/js/controllers/todoCtrl.js)
-for a working example of how all this falls in place!
+See the source for the
+[controller behind the demo TODO app](https://github.com/firebase/angularFire/blob/gh-pages/examples/todomvc/js/controllers/todoCtrl.js)
+for a working example of this pattern.
+
+Option 2: Expicit synchronization
+---------------------------------
+This is method is great if you want control over when local changes are
+synchronized to Firebase. Any changes made to a model won't be synchronized
+automatically, and you must invoke specific methods if you wish to update the
+remote data. All remote changes will automatically appear in the local model
+(1-way synchronization).
+
+Set `angularFireCollection` as a service dependency in your controller:
+
+```js
+myapp.controller:('MyCtrl', function MyCtrl($scope, angularFireCollection) {
+  ...
+});
+```
+
+Create a collection at a specified Firebase URL and assign it to a model in `$scope`:
+
+```js
+$scope.items = angularFireCollection(url);
+```
+
+Use the model as you normally would in your markup:
+
+```html
+<ul ng-controller="MyCtrl">
+  <li ng-repeat="item in items">{{item.name}}: {{item.desc}}</li>
+</ul>
+```
+
+You can bind specific functions if you wish to add, remove or update objects in
+the collection with any Angular directive:
+
+```html
+<form ng-submit="items.$add(item)">
+  <input type="text" ng-model="item.name" placeholder="Name" required/>
+  <input type="text" ng-model="item.desc" placeholder="Description"/>
+</form>
+```
+
+You can do the same with the `$remove` and `$update` methods.
+
+See the source for the
+[controller behind the demo chat app](https://github.com/firebase/angularFire/blob/gh-pages/examples/chat/app.js)
+for a working example of this pattern.
 
 License
 -------
