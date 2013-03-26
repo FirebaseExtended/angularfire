@@ -11,7 +11,7 @@
   </div>
   <p></p>
   <div id="messagesDiv" style="height:500px;">
-    <div ng-repeat="message in messages">
+    <div ng-cloak ng-repeat="message in messages">
       <em>{{message.from}}: </em>{{message.content}}
     </div>
   </div>

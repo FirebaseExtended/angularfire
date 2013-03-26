@@ -76,15 +76,6 @@ AngularFire.prototype = {
 // Explicit syncing. Provides a collection object you can modify.
 // Original code from https://github.com/petebacondarwin/angular-firebase/blob/master/ng-firebase-collection.js
 angular.module('firebase').factory('angularFireCollection', function($timeout) {
-  /**
-   * @class item in the collection
-   * @param {DataSnapshot} ref      reference to the firebase data snapshot for this item
-   * @param {int} index             position of the item in the collection
-   *
-   * @property {DataSnapshot} $ref  reference to the firebase data snapshot for this item
-   * @property {String} $id         unique identifier for this item within the collection
-   * @property {int} $index         position of the item in the collection
-   */
   function angularFireItem(ref, index) {
     this.$ref = ref.ref();
     this.$id = ref.name();
@@ -92,11 +83,6 @@ angular.module('firebase').factory('angularFireCollection', function($timeout) {
     angular.extend(this, ref.val());
   }
 
-  /**
-   * create a firebaseCollection
-   * @param  {String} collectionUrl The firebase url where the collection lives
-   * @return {Array}                An array that will hold the items in the collection
-   */
   return function(collectionUrl) {
     var collection = [];
     var indexes = {};
@@ -108,37 +94,33 @@ angular.module('firebase').factory('angularFireCollection', function($timeout) {
     
     function addChild(index, item) {
       indexes[item.$id] = index;
-      collection.splice(index,0,item);
-      console.log('added: ', index, item);
+      collection.splice(index, 0, item);
     }
 
     function removeChild(id) {
       var index = indexes[id];
-
-      // Remove the item from the collection
+      // Remove the item from the collection.
       collection.splice(index, 1);
       indexes[id] = undefined;
-
-      console.log('removed: ', id);
     }
 
     function updateChild (index, item) {
       collection[index] = item;
-      console.log('changed: ', index, item);
     }
 
     function moveChild (from, to, item) {
       collection.splice(from, 1);
       collection.splice(to, 0, item);
       updateIndexes(from, to);
-      console.log('moved: ', from, ' -> ', to, item);
     }
 
     function updateIndexes(from, to) {
       var length = collection.length;
       to = to || length;
-      if ( to > length ) { to = length; }
-      for(index = from; index < to; index++) {
+      if (to > length) {
+        to = length;
+      }
+      for (var index = from; index < to; index++) {
         var item = collection[index];
         item.$index = indexes[item.$id] = index;
       }
@@ -165,13 +147,11 @@ angular.module('firebase').factory('angularFireCollection', function($timeout) {
         var index = indexes[data.name()];
         var newIndex = getIndex(prevId);
         var item = new angularFireItem(data, index);
-
+        
         updateChild(index, item);
-
-        if ( newIndex !== index ) {
+        if (newIndex !== index) {
           moveChild(index, newIndex, item);
         }
-
       });
     });
 
@@ -184,8 +164,8 @@ angular.module('firebase').factory('angularFireCollection', function($timeout) {
       });
     });
 
-    collection.$add = function(item) {
-      collectionRef.push(item);
+    collection.$add = function(item, cb) {
+      collectionRef.push(item, cb ? cb : null);
     };
     collection.$remove = function(itemOrId) {
       var item = angular.isString(itemOrId) ? collection[itemOrId] : itemOrId;
