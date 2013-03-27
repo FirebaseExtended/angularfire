@@ -170,15 +170,15 @@ angular.module('firebase').factory('angularFireCollection', function($timeout) {
       });
     });
 
-    collection.$add = function(item, cb) {
+    collection.add = function(item, cb) {
       collectionRef.push(item, cb ? cb : null);
     };
-    collection.$remove = function(itemOrId) {
+    collection.remove = function(itemOrId) {
       var item = angular.isString(itemOrId) ? collection[itemOrId] : itemOrId;
       item.$ref.remove();
     };
 
-    collection.$update = function(itemOrId) {
+    collection.update = function(itemOrId) {
       var item = angular.isString(itemOrId) ? collection[itemOrId] : itemOrId;
       var copy = {};
       angular.forEach(item, function(value, key) {

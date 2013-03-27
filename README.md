@@ -118,13 +118,13 @@ You can bind specific functions if you wish to add, remove or update objects in
 the collection with any Angular directive:
 
 ```html
-<form ng-submit="items.$add(item)">
+<form ng-submit="items.add(item)">
   <input type="text" ng-model="item.name" placeholder="Name" required/>
   <input type="text" ng-model="item.desc" placeholder="Description"/>
 </form>
 ```
 
-You can do the same with the `$remove` and `$update` methods.
+You can do the same with the `remove` and `update` methods.
 
 See the source for the
 [controller behind the demo chat app](https://github.com/firebase/angularFire/blob/gh-pages/examples/chat/app.js)
