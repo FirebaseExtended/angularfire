@@ -6,22 +6,24 @@
  * - retrieves and persist the model via the todoStorage service
  * - exposes the model to the template and provides event handlers
  */
-todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, angularFire, filterFilter) {
-	var url = "https://angularFire.firebaseio-demo.com/todomvc";
-	$scope.todos = angularFire(url, $scope, 'todos');
+todomvc.controller('TodoCtrl', ['$scope', '$location', 'angularFire', 'filterFilter',
+	function TodoCtrl($scope, $location, angularFire, filterFilter) {
+		var url = "https://angularFire.firebaseio-demo.com/todomvc";
+		$scope.todos = angularFire(url, $scope, 'todos');
 
-	$scope.newTodo = '';
-	$scope.editedTodo = null;
+		$scope.newTodo = '';
+		$scope.editedTodo = null;
 
-	if ($location.path() === '') {
-		$location.path('/');
+		if ($location.path() === '') {
+			$location.path('/');
+		}
+		$scope.location = $location;
+
+		$scope.todos.then(function(todos) {
+			startWatch($scope, filterFilter);
+		});
 	}
-	$scope.location = $location;
-
-	$scope.todos.then(function(todos) {
-		startWatch($scope, filterFilter);
-	});
-});
+]);
 
 function startWatch($scope, filter) {
 	$scope.$watch('todos', function () {

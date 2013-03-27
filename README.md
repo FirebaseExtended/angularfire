@@ -38,9 +38,11 @@ will instantly update the local model.
 Set `angularFire` as a service dependency in your controller:
 
 ```js
-myapp.controller('MyCtrl', function MyCtrl($scope, angularFire) {
-  ...
-});
+myapp.controller('MyCtrl', ['$scope', 'angularFire',
+  function MyCtrl($scope, angularFire) {
+    ...
+  }
+]);
 ```
 
 Bind a Firebase URL to any model in `$scope`:
@@ -58,13 +60,23 @@ Use the model in your markup as you normally would:
 </ul>
 ```
 
-To add or remove items, simply edit the model (a JavaScript array by default)
-after the promise has completed:
+Data from Firebase is loaded asynchronously, so make sure you edit the model
+*only after the promise has been fulfilled*. You can do this using the `then`
+method (See the
+[Angular documentation on $q](http://docs.angularjs.org/api/ng.$q)
+for more no how promises work).
+
+Place all your logic that will manipulate the model like this:
 
 ```js
 $scope.items.then(function() {
-  // Add a new item by simply modifying the array.
+  // Add a new item by simply modifying the model directly.
   $scope.items.push({name: "Firebase", desc: "is awesome!"});
+  // Or, attach a function to $scope that will let a directive in markup manipulate the model.
+  $scope.removeItem = function() {
+    $scope.items.splice($scope.toRemove, 1);
+    $scope.toRemove = null;
+  };
 });
 ```
 
