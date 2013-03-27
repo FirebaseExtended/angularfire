@@ -1,6 +1,6 @@
 angularFire
 ===========
-angularFire is an [AngularJS](http://angularjs.org/) service that integrated
+angularFire is an [AngularJS](http://angularjs.org/) service that integrates
 with [Firebase](http://www.firebase.com) so you can easily add real-time
 features to your app!
 
@@ -21,7 +21,7 @@ Include both firebase.js and angularFire.js in your application.
 <script src="angularFire.js"></script>
 ```
 
-Add the module `firebase` as a dependency for your app module:
+Add the module `firebase` as a dependency to your app module:
 
 ```js
 var myapp = angular.module('myapp', ['firebase']);
@@ -45,11 +45,13 @@ myapp.controller('MyCtrl', ['$scope', 'angularFire',
 ]);
 ```
 
-Bind a Firebase URL to any model in `$scope`:
+Bind a Firebase URL to any model in `$scope`. The fourth argument is the type
+of model you want to use (can be any JavaScript type, you mostly want a
+dictionary or array):
 
 ```js
 var url = 'https://<my-firebase>.firebaseio.com/items';
-$scope.items = angularFire(url, $scope, 'items');
+$scope.items = angularFire(url, $scope, 'items', []);
 ```
 
 Use the model in your markup as you normally would:
@@ -64,7 +66,7 @@ Data from Firebase is loaded asynchronously, so make sure you edit the model
 *only after the promise has been fulfilled*. You can do this using the `then`
 method (See the
 [Angular documentation on $q](http://docs.angularjs.org/api/ng.$q)
-for more no how promises work).
+for more on how promises work).
 
 Place all your logic that will manipulate the model like this:
 
@@ -86,7 +88,7 @@ for a working example of this pattern.
 
 Option 2: Explicit synchronization
 ---------------------------------
-This is method is great if you want control over when local changes are
+This method is great if you want control over when local changes are
 synchronized to Firebase. Any changes made to a model won't be synchronized
 automatically, and you must invoke specific methods if you wish to update the
 remote data. All remote changes will automatically appear in the local model
