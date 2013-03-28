@@ -97,9 +97,11 @@ remote data. All remote changes will automatically appear in the local model
 Set `angularFireCollection` as a service dependency in your controller:
 
 ```js
-myapp.controller:('MyCtrl', function MyCtrl($scope, angularFireCollection) {
-  ...
-});
+myapp.controller('MyCtrl', ['$scope', 'angularFireCollection',
+  function MyCtrl($scope, angularFireCollection) {
+    ...
+  }
+]);
 ```
 
 Create a collection at a specified Firebase URL and assign it to a model in `$scope`:
