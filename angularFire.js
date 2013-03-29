@@ -19,8 +19,11 @@ function AngularFire($q, url) {
   this._fRef = new Firebase(url);
 }
 AngularFire.prototype = {
-  associate: function($scope, name) {
+  associate: function($scope, name, ret) {
     var self = this;
+    if (!ret) {
+      ret = [];
+    }
     var deferred = this._q.defer();
     this._fRef.on('value', function(snap) {
       var resolve = false;
@@ -28,9 +31,13 @@ AngularFire.prototype = {
         resolve = deferred;
         deferred = false;
       }
-      self._remoteValue = [];
+      self._remoteValue = ret;
       if (snap && snap.val()) {
         var val = snap.val();
+        if (typeof snap.val() != typeof ret) {
+          self._fRef.set(null);
+          return;
+        }
         self._remoteValue = angular.copy(val);
         if (angular.equals(val, $scope[name])) {
           return;
