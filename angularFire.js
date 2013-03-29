@@ -34,7 +34,13 @@ AngularFire.prototype = {
       self._remoteValue = ret;
       if (snap && snap.val()) {
         var val = snap.val();
-        if (typeof snap.val() != typeof ret) {
+        if (typeof val != typeof ret) {
+          self._fRef.set(null);
+          return;
+        }
+        // Also distinguish between objects and arrays.
+        var check = Object.prototype.toString;
+        if (check.call(ret) != check.call(val)) {
           self._fRef.set(null);
           return;
         }
