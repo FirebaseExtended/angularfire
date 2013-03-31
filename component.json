@@ -1,0 +1,10 @@
+{
+  "name": "angularFire",
+  "version": "0.0.1",
+  "main": "./angularFire.js",
+  "dependencies": {
+    "angular": "1.0.5"
+  },
+  "readmeFilename": "README.md",
+  "description": "AngularJS bindings for Firebase."
+}
