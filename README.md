@@ -1,9 +1,9 @@
 AngularFire
 ===========
 AngularFire is an [AngularJS](http://angularjs.org/) service that integrates
-with [Firebase](http://www.firebase.com) so you can easily add real-time
-features to your app. Firebase is a full backend so you don't need servers
-to build your Angular app!
+with [Firebase](http://www.firebase.com/?utm_medium=web&utm_source=angularFire)
+so you can easily add real-time features to your app. Firebase is a full backend
+so you don't need servers to build your Angular app!
 
 The bindings let you associate a Firebase URL with a model (or set of models),
 and they will be transparently kept in sync across all clients currently using
