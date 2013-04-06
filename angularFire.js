@@ -6,9 +6,9 @@ angular.module('firebase', []).value('Firebase', Firebase);
 // synchronized with a Firebase location both ways.
 // TODO: Optimize to use child events instead of whole 'value'.
 angular.module('firebase').factory('angularFire', function($q) {
-  return function(url, scope, name) {
+  return function(url, scope, name, ret) {
     var af = new AngularFire($q, url);
-    return af.associate(scope, name);
+    return af.associate(scope, name, ret);
   };
 });
 
