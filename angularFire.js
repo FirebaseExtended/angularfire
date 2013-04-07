@@ -25,6 +25,7 @@ AngularFire.prototype = {
       ret = [];
     }
     var deferred = this._q.defer();
+    var promise = deferred.promise;
     this._fRef.on('value', function(snap) {
       var resolve = false;
       if (deferred) {
@@ -52,7 +53,7 @@ AngularFire.prototype = {
       self._safeApply($scope,
         self._resolve.bind(self, $scope, name, resolve, self._remoteValue));
     });
-    return deferred.promise;
+    return promise;
   },
   _resolve: function($scope, name, deferred, val) {
     $scope[name] = angular.copy(val);
