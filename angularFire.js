@@ -185,7 +185,10 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
     });
 
     collection.add = function(item, cb) {
-      collectionRef.push(item, cb ? cb : null);
+      if (!cb)
+        collectionRef.push(item);
+      else
+        collectionRef.push(item, cb);
     };
     collection.remove = function(itemOrId) {
       var item = angular.isString(itemOrId) ? collection[itemOrId] : itemOrId;
