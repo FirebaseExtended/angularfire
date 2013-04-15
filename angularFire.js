@@ -36,13 +36,13 @@ AngularFire.prototype = {
       if (snap && snap.val()) {
         var val = snap.val();
         if (typeof val != typeof ret) {
-          self._fRef.set(null);
+          self._log("Error: type mismatch");
           return;
         }
         // Also distinguish between objects and arrays.
         var check = Object.prototype.toString;
         if (check.call(ret) != check.call(val)) {
-          self._fRef.set(null);
+          self._log("Error: type mismatch");
           return;
         }
         self._remoteValue = angular.copy(val);
@@ -54,6 +54,11 @@ AngularFire.prototype = {
         self._resolve.bind(self, $scope, name, resolve, self._remoteValue));
     });
     return promise;
+  },
+  _log: function(msg) {
+    if (console && console.log) {
+      console.log(msg);
+    }
   },
   _resolve: function($scope, name, deferred, val) {
     $scope[name] = angular.copy(val);
