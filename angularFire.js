@@ -33,7 +33,7 @@ AngularFire.prototype = {
         deferred = false;
       }
       self._remoteValue = ret;
-      if (snap && snap.val()) {
+      if (snap && snap.val() != undefined) {
         var val = snap.val();
         if (typeof val != typeof ret) {
           self._log("Error: type mismatch");
