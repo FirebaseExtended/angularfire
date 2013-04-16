@@ -21,7 +21,7 @@ function AngularFire($q, url) {
 AngularFire.prototype = {
   associate: function($scope, name, ret) {
     var self = this;
-    if (!ret) {
+    if (ret == undefined) {
       ret = [];
     }
     var deferred = this._q.defer();
