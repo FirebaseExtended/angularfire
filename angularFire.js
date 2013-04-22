@@ -5,15 +5,16 @@ angular.module('firebase', []).value('Firebase', Firebase);
 // Implicit syncing. angularFire binds a model to $scope and keeps the dat
 // synchronized with a Firebase location both ways.
 // TODO: Optimize to use child events instead of whole 'value'.
-angular.module('firebase').factory('angularFire', ['$q', function($q) {
+angular.module('firebase').factory('angularFire', ['$q', '$parse', function($q, $parse) {
   return function(url, scope, name, ret) {
-    var af = new AngularFire($q, url);
+    var af = new AngularFire($q, $parse, url);
     return af.associate(scope, name, ret);
   };
 }]);
 
-function AngularFire($q, url) {
+function AngularFire($q, $parse, url) {
   this._q = $q;
+  this._parse = $parse;
   this._initial = true;
   this._remoteValue = false;
   this._fRef = new Firebase(url);
@@ -61,7 +62,7 @@ AngularFire.prototype = {
     }
   },
   _resolve: function($scope, name, deferred, val) {
-    $scope[name] = angular.copy(val);
+    this._parse(name).assign($scope, angular.copy(val));
     this._remoteValue = angular.copy(val);
     if (deferred) {
       deferred.resolve(val);
