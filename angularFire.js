@@ -2,13 +2,14 @@
 
 angular.module('firebase', []).factory('angularFire', function($q) {
   return function(url, scope, name) {
-    var af = new AngularFire($q, url);
+    var af = new AngularFire($q, $parse, url);
     return af.associate(scope, name);
   };
 });
 
-function AngularFire($q, url) {
+function AngularFire($q, $parse, url) {
   this._q = $q;
+  this._parse = $parse;
   this._initial = true;
   this._remoteValue = false;
   this._fRef = new Firebase(url);
@@ -38,7 +39,7 @@ AngularFire.prototype = {
   },
   _resolve: function($scope, name, deferred, val) {
     console.log("remote change");
-    $scope[name] = angular.copy(val);
+    this._parse(name).assign($scope, angular.copy(val));
     this._remoteValue = angular.copy(val);
     if (deferred) {
       console.log("resolving deferred");
