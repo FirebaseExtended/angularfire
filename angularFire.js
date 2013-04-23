@@ -198,12 +198,12 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
       }
     };
     collection.remove = function(itemOrId) {
-      var item = angular.isString(itemOrId) ? collection[itemOrId] : itemOrId;
+      var item = angular.isString(itemOrId) ? collection[indexes[itemOrId]] : itemOrId;
       item.$ref.remove();
     };
 
     collection.update = function(itemOrId) {
-      var item = angular.isString(itemOrId) ? collection[itemOrId] : itemOrId;
+      var item = angular.isString(itemOrId) ? collection[indexes[itemOrId]] : itemOrId;
       var copy = {};
       angular.forEach(item, function(value, key) {
         if (key.indexOf('$') !== 0) {
