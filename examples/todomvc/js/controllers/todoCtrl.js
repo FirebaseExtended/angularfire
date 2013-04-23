@@ -9,7 +9,7 @@
 todomvc.controller('TodoCtrl', ['$scope', '$location', 'angularFire', 'filterFilter',
 	function TodoCtrl($scope, $location, angularFire, filterFilter) {
 		var url = "https://angularFire.firebaseio-demo.com/todomvc";
-		$scope.todos = angularFire(url, $scope, 'todos');
+		var promise = angularFire(url, $scope, 'todos');
 
 		$scope.newTodo = '';
 		$scope.editedTodo = null;
@@ -19,7 +19,7 @@ todomvc.controller('TodoCtrl', ['$scope', '$location', 'angularFire', 'filterFil
 		}
 		$scope.location = $location;
 
-		$scope.todos.then(function(todos) {
+		promise.then(function(todos) {
 			startWatch($scope, filterFilter);
 		});
 	}

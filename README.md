@@ -51,7 +51,7 @@ dictionary or array):
 
 ```js
 var url = 'https://<my-firebase>.firebaseio.com/items';
-$scope.items = angularFire(url, $scope, 'items', []);
+var promise = angularFire(url, $scope, 'items', []);
 ```
 
 Use the model in your markup as you normally would:
@@ -71,7 +71,7 @@ for more on how promises work).
 Place all your logic that will manipulate the model like this:
 
 ```js
-$scope.items.then(function() {
+promise.then(function() {
   // Add a new item by simply modifying the model directly.
   $scope.items.push({name: "Firebase", desc: "is awesome!"});
   // Or, attach a function to $scope that will let a directive in markup manipulate the model.
@@ -87,7 +87,7 @@ See the source for the
 for a working example of this pattern.
 
 Option 2: Explicit synchronization
----------------------------------
+----------------------------------
 This method is great if you want control over when local changes are
 synchronized to Firebase. Any changes made to a model won't be synchronized
 automatically, and you must invoke specific methods if you wish to update the
