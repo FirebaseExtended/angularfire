@@ -163,8 +163,9 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
     collectionRef.on('child_removed', function(data) {
       $timeout(function() {
         var id = data.name();
+        var pos = indexes[id];
         removeChild(id);
-        updateIndexes(indexes[id]);
+        updateIndexes(pos);
       });
     });
 
