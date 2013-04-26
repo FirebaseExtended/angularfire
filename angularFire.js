@@ -105,11 +105,12 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
     angular.extend(this, ref.val());
   }
 
-  return function(collectionUrl, initialCb) {
+  return function(collectionUrl, prefun, initialCb) {
     var collection = [];
     var indexes = {};
     var collectionRef = new Firebase(collectionUrl);
-
+    var collectionQuery = collectionRef;
+    
     function getIndex(prevId) {
       return prevId ? indexes[prevId] + 1 : 0;
     }
@@ -148,11 +149,15 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
       }
     }
 
-    if (initialCb && typeof initialCb == 'function') {
-      collectionRef.once('value', initialCb);
+    if (prefun && typeof prefun == 'function') {
+      collectionQuery = prefun(collectionRef);
     }
 
-    collectionRef.on('child_added', function(data, prevId) {
+    if (initialCb && typeof initialCb == 'function') {
+      collectionQuery.once('value', initialCb);
+    }
+
+    collectionQuery.on('child_added', function(data, prevId) {
       $timeout(function() {
         var index = getIndex(prevId);
         addChild(index, new angularFireItem(data, index));
@@ -160,7 +165,7 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
       });
     });
 
-    collectionRef.on('child_removed', function(data) {
+    collectionQuery.on('child_removed', function(data) {
       $timeout(function() {
         var id = data.name();
         removeChild(id);
@@ -168,7 +173,7 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
       });
     });
 
-    collectionRef.on('child_changed', function(data, prevId) {
+    collectionQuery.on('child_changed', function(data, prevId) {
       $timeout(function() {
         var index = indexes[data.name()];
         var newIndex = getIndex(prevId);
@@ -181,7 +186,7 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
       });
     });
 
-    collectionRef.on('child_moved', function(ref, prevId) {
+    collectionQuery.on('child_moved', function(ref, prevId) {
       $timeout(function() {
         var oldIndex = indexes[ref.name()];
         var newIndex = getIndex(prevId);
