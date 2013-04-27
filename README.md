@@ -87,7 +87,7 @@ See the source for the
 for a working example of this pattern.
 
 Option 2: Explicit synchronization
-----------------------------------
+---------------------------------- 
 This method is great if you want control over when local changes are
 synchronized to Firebase. Any changes made to a model won't be synchronized
 automatically, and you must invoke specific methods if you wish to update the

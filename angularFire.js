@@ -6,18 +6,23 @@ angular.module('firebase', []).value('Firebase', Firebase);
 // synchronized with a Firebase location both ways.
 // TODO: Optimize to use child events instead of whole 'value'.
 angular.module('firebase').factory('angularFire', ['$q', '$parse', function($q, $parse) {
-  return function(url, scope, name, ret) {
-    var af = new AngularFire($q, $parse, url);
+  return function(ref, scope, name, ret) {
+    var af = new AngularFire($q, $parse, ref);
     return af.associate(scope, name, ret);
   };
 }]);
 
-function AngularFire($q, $parse, url) {
+function AngularFire($q, $parse, ref) {
   this._q = $q;
   this._parse = $parse;
   this._initial = true;
   this._remoteValue = false;
-  this._fRef = new Firebase(url);
+
+  if (typeof ref == "string") {
+    this._fRef = new Firebase(ref);
+  } else {
+    this._fRef = ref.ref();
+  }
 }
 AngularFire.prototype = {
   associate: function($scope, name, ret) {
@@ -105,10 +110,16 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
     angular.extend(this, ref.val());
   }
 
-  return function(collectionUrl, initialCb) {
+  return function(collectionUrlOrRef, initialCb) {
     var collection = [];
     var indexes = {};
-    var collectionRef = new Firebase(collectionUrl);
+
+    var collectionRef;
+    if (typeof collectionUrlOrRef == "string") {
+      collectionRef = new Firebase(collectionUrlOrRef);
+    } else {
+      collectionRef = collectionUrlOrRef;
+    }
 
     function getIndex(prevId) {
       return prevId ? indexes[prevId] + 1 : 0;
@@ -193,9 +204,9 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
 
     collection.add = function(item, cb) {
       if (!cb) {
-        collectionRef.push(item);
+        collectionRef.ref().push(item);
       } else {
-        collectionRef.push(item, cb);
+        collectionRef.ref().push(item, cb);
       }
     };
     collection.remove = function(itemOrId) {
