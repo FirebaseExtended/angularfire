@@ -21,7 +21,7 @@ function AngularFire($q, $parse, ref) {
   if (typeof ref == "string") {
     this._fRef = new Firebase(ref);
   } else {
-    this._fRef = ref.ref();
+    this._fRef = ref;
   }
 }
 AngularFire.prototype = {
@@ -86,7 +86,7 @@ AngularFire.prototype = {
       if (angular.equals(val, self._remoteValue)) {
         return;
       }
-      self._fRef.set(val);
+      self._fRef.ref().set(val);
     }, true);
   },
   _safeApply: function($scope, fn) {
