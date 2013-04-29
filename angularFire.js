@@ -2,229 +2,269 @@
 
 angular.module('firebase', []).value('Firebase', Firebase);
 
-// Implicit syncing. angularFire binds a model to $scope and keeps the dat
+// Implicit syncing. angularFire binds a model to $scope and keeps the data
 // synchronized with a Firebase location both ways.
 // TODO: Optimize to use child events instead of whole 'value'.
-angular.module('firebase').factory('angularFire', ['$q', '$parse', function($q, $parse) {
-  return function(ref, scope, name, ret) {
-    var af = new AngularFire($q, $parse, ref);
-    return af.associate(scope, name, ret);
-  };
+angular.module('firebase').factory('angularFire', ['$q', function($q) {
+	return function(url, scope, name, ret) {
+		var af = new AngularFire($q, url);
+		return af.associate(scope, name, ret);
+	};
 }]);
 
-function AngularFire($q, $parse, ref) {
-  this._q = $q;
-  this._parse = $parse;
-  this._initial = true;
-  this._remoteValue = false;
-
-  if (typeof ref == "string") {
-    this._fRef = new Firebase(ref);
-  } else {
-    this._fRef = ref.ref();
-  }
+function AngularFire($q, url) {
+	this._q = $q;
+	this._initial = true;
+	this._remoteValue = false;
+	this._fRef = new Firebase(url);
 }
 AngularFire.prototype = {
-  associate: function($scope, name, ret) {
-    var self = this;
-    if (ret == undefined) {
-      ret = [];
-    }
-    var deferred = this._q.defer();
-    var promise = deferred.promise;
-    this._fRef.on('value', function(snap) {
-      var resolve = false;
-      if (deferred) {
-        resolve = deferred;
-        deferred = false;
-      }
-      self._remoteValue = ret;
-      if (snap && snap.val() != undefined) {
-        var val = snap.val();
-        if (typeof val != typeof ret) {
-          self._log("Error: type mismatch");
-          return;
-        }
-        // Also distinguish between objects and arrays.
-        var check = Object.prototype.toString;
-        if (check.call(ret) != check.call(val)) {
-          self._log("Error: type mismatch");
-          return;
-        }
-        self._remoteValue = angular.copy(val);
-        if (angular.equals(val, $scope[name])) {
-          return;
-        }
-      }
-      self._safeApply($scope,
-        self._resolve.bind(self, $scope, name, resolve, self._remoteValue));
-    });
-    return promise;
-  },
-  _log: function(msg) {
-    if (console && console.log) {
-      console.log(msg);
-    }
-  },
-  _resolve: function($scope, name, deferred, val) {
-    this._parse(name).assign($scope, angular.copy(val));
-    this._remoteValue = angular.copy(val);
-    if (deferred) {
-      deferred.resolve(val);
-      this._watch($scope, name);
-    }
-  },
-  _watch: function($scope, name) {
-    // Watch for local changes.
-    var self = this;
-    $scope.$watch(name, function() {
-      if (self._initial) {
-        self._initial = false;
-        return;
-      }
-      var val = JSON.parse(angular.toJson($scope[name]));
-      if (angular.equals(val, self._remoteValue)) {
-        return;
-      }
-      self._fRef.set(val);
-    }, true);
-  },
-  _safeApply: function($scope, fn) {
-    var phase = $scope.$root.$$phase;
-    if (phase == '$apply' || phase == '$digest') {
-      fn();
-    } else {
-      $scope.$apply(fn);
-    }
-  }
+	associate: function($scope, name, ret) {
+		var self = this;
+		if (ret === undefined) {
+			ret = [];
+		}
+		var deferred = this._q.defer();
+		var promise = deferred.promise;
+		this._fRef.on('value', function(snap) {
+			var resolve = false;
+			if (deferred) {
+				resolve = deferred;
+				deferred = false;
+			}
+			self._remoteValue = ret;
+			if (snap && snap.val() !== undefined) {
+				var val = snap.val();
+				if (typeof val !== typeof ret) {
+					self._log('Error: type mismatch');
+					return;
+				}
+				// Also distinguish between objects and arrays.
+				var check = Object.prototype.toString;
+				if (check.call(ret) !== check.call(val)) {
+					self._log('Error: type mismatch');
+					return;
+				}
+				self._remoteValue = angular.copy(val);
+				if (angular.equals(val, $scope[name])) {
+					return;
+				}
+			}
+			self._safeApply($scope,
+				self._resolve.bind(self, $scope, name, resolve, self._remoteValue));
+		});
+		return promise;
+	},
+	_log: function(msg) {
+		if (console && console.log) {
+			console.log(msg);
+		}
+	},
+	_resolve: function($scope, name, deferred, val) {
+		$scope[name] = angular.copy(val);
+		this._remoteValue = angular.copy(val);
+		if (deferred) {
+			deferred.resolve(val);
+			this._watch($scope, name);
+		}
+	},
+	_watch: function($scope, name) {
+		// Watch for local changes.
+		var self = this;
+		$scope.$watch(name, function() {
+			if (self._initial) {
+				self._initial = false;
+				return;
+			}
+			var val = JSON.parse(angular.toJson($scope[name]));
+			if (angular.equals(val, self._remoteValue)) {
+				return;
+			}
+			self._fRef.set(val);
+		}, true);
+	},
+	_safeApply: function($scope, fn) {
+		var phase = $scope.$root.$$phase;
+		if (phase === '$apply' || phase === '$digest') {
+			fn();
+		} else {
+			$scope.$apply(fn);
+		}
+	}
 };
 
 // Explicit syncing. Provides a collection object you can modify.
 // Original code by @petebacondarwin, from:
 // https://github.com/petebacondarwin/angular-firebase/blob/master/ng-firebase-collection.js
 angular.module('firebase').factory('angularFireCollection', ['$timeout', function($timeout) {
-  function angularFireItem(ref, index) {
-    this.$ref = ref.ref();
-    this.$id = ref.name();
-    this.$index = index;
-    angular.extend(this, ref.val());
-  }
+	function angularFireItem(ref, index) {
+		this.$ref = ref.ref();
+		this.$id = ref.name();
+		this.$index = index;
+		angular.extend(this, ref.val());
+	}
 
-  return function(collectionUrlOrRef, initialCb) {
-    var collection = [];
-    var indexes = {};
+	return function(collectionUrl, initialCb) {
+		var collection = [];
+		var indexes = {};
+		var collectionRef = new Firebase(collectionUrl);
+		var authClient; // set after authCallback is defined
 
-    var collectionRef;
-    if (typeof collectionUrlOrRef == "string") {
-      collectionRef = new Firebase(collectionUrlOrRef);
-    } else {
-      collectionRef = collectionUrlOrRef;
-    }
+		if (initialCb && typeof initialCb === 'function') {
+			collectionRef.once('value', initialCb);
+		}
 
-    function getIndex(prevId) {
-      return prevId ? indexes[prevId] + 1 : 0;
-    }
-    
-    function addChild(index, item) {
-      indexes[item.$id] = index;
-      collection.splice(index, 0, item);
-    }
+		function getIndex(prevId) {
+			return prevId ? indexes[prevId] + 1 : 0;
+		}
 
-    function removeChild(id) {
-      var index = indexes[id];
-      // Remove the item from the collection.
-      collection.splice(index, 1);
-      indexes[id] = undefined;
-    }
+		function addChild(index, item) {
+			indexes[item.$id] = index;
+			collection.splice(index, 0, item);
+		}
 
-    function updateChild (index, item) {
-      collection[index] = item;
-    }
+		function removeChild(id) {
+			var index = indexes[id];
+			// Remove the item from the collection.
+			collection.splice(index, 1);
+			indexes[id] = undefined;
+		}
 
-    function moveChild (from, to, item) {
-      collection.splice(from, 1);
-      collection.splice(to, 0, item);
-      updateIndexes(from, to);
-    }
+		function updateChild(index, item) {
+			collection[index] = item;
+		}
 
-    function updateIndexes(from, to) {
-      var length = collection.length;
-      to = to || length;
-      if (to > length) {
-        to = length;
-      }
-      for (var index = from; index < to; index++) {
-        var item = collection[index];
-        item.$index = indexes[item.$id] = index;
-      }
-    }
+		function moveChild(from, to, item) {
+			collection.splice(from, 1);
+			collection.splice(to, 0, item);
+			updateIndexes(from, to);
+		}
 
-    if (initialCb && typeof initialCb == 'function') {
-      collectionRef.once('value', initialCb);
-    }
+		function updateIndexes(from, to) {
+			var length = collection.length;
+			to = to || length;
+			if (to > length) {
+				to = length;
+			}
+			for (var index = from; index < to; index++) {
+				var item = collection[index];
+				item.$index = indexes[item.$id] = index;
+			}
+		}
 
-    collectionRef.on('child_added', function(data, prevId) {
-      $timeout(function() {
-        var index = getIndex(prevId);
-        addChild(index, new angularFireItem(data, index));
-        updateIndexes(index);
-      });
-    });
+		collectionRef.on('child_added', function(data, prevId) {
+			$timeout(function() {
+				var index = getIndex(prevId);
+				addChild(index, new angularFireItem(data, index));
+				updateIndexes(index);
+			});
+		});
 
-    collectionRef.on('child_removed', function(data) {
-      $timeout(function() {
-        var id = data.name();
-        var pos = indexes[id];
-        removeChild(id);
-        updateIndexes(pos);
-      });
-    });
+		collectionRef.on('child_removed', function(data) {
+			$timeout(function() {
+				var id = data.name();
+				removeChild(id);
+				updateIndexes(indexes[id]);
+			});
+		});
 
-    collectionRef.on('child_changed', function(data, prevId) {
-      $timeout(function() {
-        var index = indexes[data.name()];
-        var newIndex = getIndex(prevId);
-        var item = new angularFireItem(data, index);
-        
-        updateChild(index, item);
-        if (newIndex !== index) {
-          moveChild(index, newIndex, item);
-        }
-      });
-    });
+		collectionRef.on('child_changed', function(data, prevId) {
+			$timeout(function() {
+				var index = indexes[data.name()];
+				var newIndex = getIndex(prevId);
+				var item = new angularFireItem(data, index);
 
-    collectionRef.on('child_moved', function(ref, prevId) {
-      $timeout(function() {
-        var oldIndex = indexes[ref.name()];
-        var newIndex = getIndex(prevId);
-        var item = collection[oldIndex];
-        moveChild(oldIndex, newIndex, item);
-      });
-    });
+				updateChild(index, item);
+				if (newIndex !== index) {
+					moveChild(index, newIndex, item);
+				}
+			});
+		});
 
-    collection.add = function(item, cb) {
-      if (!cb) {
-        collectionRef.ref().push(item);
-      } else {
-        collectionRef.ref().push(item, cb);
-      }
-    };
-    collection.remove = function(itemOrId) {
-      var item = angular.isString(itemOrId) ? collection[indexes[itemOrId]] : itemOrId;
-      item.$ref.remove();
-    };
+		collectionRef.on('child_moved', function(ref, prevId) {
+			$timeout(function() {
+				var oldIndex = indexes[ref.name()];
+				var newIndex = getIndex(prevId);
+				var item = collection[oldIndex];
+				moveChild(oldIndex, newIndex, item);
+			});
+		});
 
-    collection.update = function(itemOrId) {
-      var item = angular.isString(itemOrId) ? collection[indexes[itemOrId]] : itemOrId;
-      var copy = {};
-      angular.forEach(item, function(value, key) {
-        if (key.indexOf('$') !== 0) {
-          copy[key] = value;
-        }
-      });
-      item.$ref.set(copy);
-    };
+		collection.add = function(item, cb) {
+			collectionRef.push(item, cb ? cb : null);
+		};
+		collection.remove = function(itemOrId) {
+			var item = angular.isString(itemOrId) ? collection[itemOrId] : itemOrId;
+			item.$ref.remove();
+		};
 
-    return collection;
-  };
+		collection.update = function(itemOrId) {
+			var item = angular.isString(itemOrId) ? collection[itemOrId] : itemOrId;
+			var copy = {};
+			angular.forEach(item, function(value, key) {
+				if (key.indexOf('$') !== 0) {
+					copy[key] = value;
+				}
+			});
+			item.$ref.set(copy);
+		};
+
+		return collection;
+	};
+}]);
+
+
+// Bridging the gap between Firebase and FirebaseAuthClient to make user authentication simpler.
+// Pass it a path and an object containing settings (provider, options etc.)
+angular.module('firebase').factory('angularFireAuthentication', ['$timeout', function($timeout) {
+	function angularFireAuth(ref) {
+		this.$ref = ref.ref();
+		this.$id = ref.name();
+		angular.extend(this, ref.val());
+	}
+
+	return function(collectionUrl, authModule, initialCb) {
+		var collection = [];
+		var token = localStorage.getItem('_token');
+		var currentUser = localStorage.getItem('_currentUser');
+
+		var authCb = function(err, user) {
+			if (err) {
+				localStorage.clear();
+			} else if (user) {
+				localStorage.clear();
+				localStorage.setItem('_token', user.firebaseAuthToken);
+				localStorage.setItem('_currentUser', user.id);
+
+				console.log(user.id);
+				if (initialCb && typeof initialCb === 'function') {
+					collectionRef.child(user.id).once('value', /*initialCb*/ function(snap) {
+						collectionRef.child(snap.name()).set({
+
+						});
+					});
+				}
+			} else {
+				localStorage.clear();
+			}
+		};
+
+		var collectionRef = new Firebase(collectionUrl);
+		var authClient = new FirebaseAuthClient(collectionRef, authCb);
+
+		// logging out when authModule is null
+		if (authModule === null) {
+			//console.log('Logging out!');
+			authClient.logout();
+		}
+
+		// log in using token or authClient
+		if (token && authModule !== null) {
+			//console.log('Logging in with token');
+			collectionRef.auth(token, authCb);
+		} else {
+			//console.log('Logging in with authClient');
+			authClient.login(authModule.provider, authModule.options);
+		}
+	};
 }]);
