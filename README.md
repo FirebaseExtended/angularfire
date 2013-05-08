@@ -12,6 +12,8 @@ that the changes are also sent to all other clients instead of just a server.
 ### Live Demo: <a target="_blank" href="http://firebase.github.com/angularFire/examples/chat/">Simple chat room</a>.
 ### Live Demo: <a target="_blank" href="http://firebase.github.com/angularFire/examples/todomvc/">Real-time TODO app</a>.
 
+[![Build Status](https://travis-ci.org/firebase/angularFire.png)](https://travis-ci.org/firebase/angularFire)
+
 Usage
 -----
 Include both firebase.js and angularFire.js in your application.
