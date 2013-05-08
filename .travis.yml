@@ -1,0 +1,11 @@
+language: node_js
+node_js:
+  - 0.8
+before_install:
+  - git clone git://github.com/n1k0/casperjs.git ~/casperjs
+  - export PATH=$PATH:~/casperjs/bin
+before_script:
+  - phantomjs --version
+  - casperjs --version
+script:
+  - make test
