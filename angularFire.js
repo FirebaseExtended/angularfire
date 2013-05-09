@@ -5,16 +5,20 @@ angular.module('firebase', []).value('Firebase', Firebase);
 // Implicit syncing. angularFire binds a model to $scope and keeps the dat
 // synchronized with a Firebase location both ways.
 // TODO: Optimize to use child events instead of whole 'value'.
-angular.module('firebase').factory('angularFire', ['$q', '$parse', function($q, $parse) {
-  return function(ref, scope, name, ret) {
-    var af = new AngularFire($q, $parse, ref);
-    return af.associate(scope, name, ret);
-  };
-}]);
+angular.module('firebase').factory('angularFire', ['$q', '$parse', '$timeout',
+  function($q, $parse, $timeout) {
+    return function(ref, scope, name, ret) {
+      var af = new AngularFire($q, $parse, $timeout, ref);
+      return af.associate(scope, name, ret);
+    };
+  }
+]);
 
-function AngularFire($q, $parse, ref) {
+function AngularFire($q, $parse, $timeout, ref) {
   this._q = $q;
   this._parse = $parse;
+  this._timeout = $timeout;
+
   this._initial = true;
   this._remoteValue = false;
 
@@ -56,8 +60,9 @@ AngularFire.prototype = {
           return;
         }
       }
-      self._safeApply($scope,
-        self._resolve.bind(self, $scope, name, resolve, self._remoteValue));
+      self._timeout(function() {
+        self._resolve($scope, name, resolve, self._remoteValue)
+      });
     });
     return promise;
   },
@@ -88,14 +93,6 @@ AngularFire.prototype = {
       }
       self._fRef.ref().set(val);
     }, true);
-  },
-  _safeApply: function($scope, fn) {
-    var phase = $scope.$root.$$phase;
-    if (phase == '$apply' || phase == '$digest') {
-      fn();
-    } else {
-      $scope.$apply(fn);
-    }
   }
 };
 
