@@ -19,8 +19,8 @@
 </head>
 <body ng-controller="Todo">
   <p></p>
-  <form id="todo-form" ng-submit="addTodo()">
-    <input id="new-todo" placeholder="What needs to be done?" ng-model="newTodo" autofocus>
+  <form ng-submit="addTodo()">
+    <input placeholder="What needs to be done?" ng-model="newTodo" autofocus>
   </form>
   <div id="messagesDiv" style="height:500px;">
     <div ng-cloak ng-repeat="todo in todos">
@@ -37,12 +37,9 @@
 
     angular.module("todo", ["firebase"]);
     function Todo($scope, angularFire) {
-      _scope = $scope;
-
       $scope.newTodo = '';
-      $scope.editedTodo = null;
-
-      angularFire(_url, $scope, 'todos').then(function() {
+      angularFire(new Firebase(_url), $scope, 'todos').then(function() {
+        _scope = $scope;
         $scope.addTodo = function() {
           if (!$scope.newTodo.length) {
             return;
@@ -61,7 +58,7 @@
 
     function testIfInDOM(todo, node) {
       if (node.childNodes.length != 7) return false;
-      if (node.childNodes[1].check != todo.completed) return false;
+      if (node.childNodes[1].checked != todo.completed) return false;
       if (node.childNodes[3].value != todo.title) return false;
       return true;
     }
