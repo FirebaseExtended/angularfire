@@ -13,9 +13,12 @@
     <label for="">Your name: </label><input id="name" type="text" ng-model="username">
   </div>
   <p></p>
-  <div id="messagesDiv" auto-scroll="messages" style="height:500px;">
+  <div id="messagesDiv" style="height:500px;">
     <div ng-cloak ng-repeat="message in messages">
-      <em>{{message.from}}: </em>{{message.content}}
+      <span class="messageBlock">
+        <em>{{message.from}}: </em>
+        <span class="content">{{message.content}}</span>
+      </span>
     </div>
   </div>
   <form ng-submit="addMessage()">
@@ -23,27 +26,30 @@
     <input id="send" type="submit" id="submit" value="Send" style="font-size:24px;">
   </form>
   <script type="text/javascript">
-    var testModule;
-    var chatModule = angular.module("chat", ["firebase"]);
+    var _scope;
+    var _url = 'https://angularFireTests.firebaseio-demo.com/chat';
+    angular.module("chat", ["firebase"]);
     function Chat($scope, angularFireCollection) {
-      var url = 'https://angularFire.firebaseio-demo.com/chat';
-      $scope.messages = angularFireCollection(new Firebase(url).limit(50));
+      $scope.messages = angularFireCollection(new Firebase(_url).limit(2));
       $scope.username = 'Guest' + Math.floor(Math.random()*101);
       $scope.addMessage = function() {
         $scope.messages.add({from: $scope.username, content: $scope.message});
         $scope.message = "";
       }
-      testModule = new TestModule($scope);
+      _scope = $scope;
     }
-
-    function TestModule(scope) {
-      this._scope = scope;
+    function testIfInDOM(from, content, node) {
+      if (node.childNodes.length != 5) {
+        return false;
+      }
+      if (node.childNodes[1].innerHTML != from + ": ") {
+        return false;
+      }
+      if (node.childNodes[3].innerHTML != content) {
+        return false;
+      }
+      return true;
     }
-    TestModule.prototype.addMessage = function(from, msg) {
-      this._scope.username = from;
-      this._scope.message = msg;
-      this._scope.addMessage();
-    };
   </script>
 </body>
 </html>
