@@ -1,20 +1,15 @@
 
-var system = require("system");
-
 casper.test.comment("Testing Chat example with angularFireCollection");
 
 casper.start("tests/test_chat.html", function() {
   // Sanity test for the environment.
-  this.test.assertTitle("AngularFire Chat Demo");
+  this.test.assertTitle("AngularFire Chat Test");
   this.test.assertEval(function() {
-    return Firebase ? true : false;
-  }, "Firebase exists");
-  this.test.assertEval(function() {
-    return AngularFire ? true : false;
+    if (!Firebase) return false;
+    if (!AngularFire) return false;
+    if (!_scope) return false;
+    return true;
   }, "AngularFire exists");
-  this.test.assertEval(function() {
-    return _scope ? true : false;
-  }, "Angular scope exists");
 });
 
 casper.thenEvaluate(function() {
@@ -98,5 +93,5 @@ casper.then(function() {
 });
 
 casper.run(function() {
-  this.test.done(9);
+  this.test.done();
 });

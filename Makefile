@@ -2,4 +2,4 @@
 default: test
 
 test:
-	ROOTDIR=`pwd` casperjs test tests/
+	casperjs test tests/

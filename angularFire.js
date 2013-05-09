@@ -124,7 +124,7 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
     function getIndex(prevId) {
       return prevId ? indexes[prevId] + 1 : 0;
     }
-    
+
     function addChild(index, item) {
       indexes[item.$id] = index;
       collection.splice(index, 0, item);
@@ -185,7 +185,7 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
         var index = indexes[data.name()];
         var newIndex = getIndex(prevId);
         var item = new angularFireItem(data, index);
-        
+
         updateChild(index, item);
         if (newIndex !== index) {
           moveChild(index, newIndex, item);
