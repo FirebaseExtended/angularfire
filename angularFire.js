@@ -56,7 +56,7 @@ AngularFire.prototype = {
           return;
         }
         self._remoteValue = angular.copy(val);
-        if (angular.equals(val, $scope[name])) {
+        if (angular.equals(val, self._parse(name)($scope))) {
           return;
         }
       }
@@ -87,7 +87,7 @@ AngularFire.prototype = {
         self._initial = false;
         return;
       }
-      var val = JSON.parse(angular.toJson($scope[name]));
+      var val = JSON.parse(angular.toJson(self._parse(name)($scope)));
       if (angular.equals(val, self._remoteValue)) {
         return;
       }
