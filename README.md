@@ -136,6 +136,26 @@ See the source for the
 [controller behind the demo chat app](https://github.com/firebase/angularFire/blob/gh-pages/examples/chat/app.js)
 for a working example of this pattern.
 
+Development
+-----------
+If you'd like to hack on AngularFire itself, you'll need
+[UglifyJS](https://github.com/mishoo/UglifyJS2) and
+[CasperJS](https://github.com/n1k0/casperjs):
+
+```bash
+npm install uglifyjs -g
+brew install casperjs
+```
+
+A Makefile is included for your convenience:
+
+```bash
+# Run tests
+make test
+# Minify source
+make minify
+```
+
 License
 -------
 [MIT](http://firebase.mit-license.org).
