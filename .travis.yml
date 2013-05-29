@@ -7,6 +7,7 @@ branches:
 before_install:
   - git clone git://github.com/n1k0/casperjs.git ~/casperjs
   - export PATH=$PATH:~/casperjs/bin
+  - npm install -g uglifyjs
 before_script:
   - phantomjs --version
   - casperjs --version
