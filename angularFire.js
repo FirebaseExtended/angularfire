@@ -5,59 +5,65 @@ angular.module('firebase', []).value('Firebase', Firebase);
 // Implicit syncing. angularFire binds a model to $scope and keeps the dat
 // synchronized with a Firebase location both ways.
 // TODO: Optimize to use child events instead of whole 'value'.
-angular.module('firebase').factory('angularFire', ['$q', '$parse', function($q, $parse) {
-  return function(ref, scope, name, ret) {
-    var af = new AngularFire($q, $parse, ref);
-    return af.associate(scope, name, ret);
-  };
-}]);
+angular.module('firebase').factory('angularFire', ['$q', '$parse', '$timeout',
+  function($q, $parse, $timeout) {
+    return function(ref, scope, name, ret) {
+      var af = new AngularFire($q, $parse, $timeout, ref);
+      return af.associate(scope, name, ret);
+    };
+  }
+]);
 
-function AngularFire($q, $parse, ref) {
+function AngularFire($q, $parse, $timeout, ref) {
   this._q = $q;
   this._parse = $parse;
+  this._timeout = $timeout;
+
   this._initial = true;
   this._remoteValue = false;
 
-  if (typeof ref == "string") {
+  if (typeof ref === 'string') {
     this._fRef = new Firebase(ref);
   } else {
-    this._fRef = ref.ref();
+    this._fRef = ref;
   }
 }
 AngularFire.prototype = {
   associate: function($scope, name, ret) {
     var self = this;
-    if (ret == undefined) {
+    if (ret === undefined) {
       ret = [];
     }
     var deferred = this._q.defer();
     var promise = deferred.promise;
     this._fRef.on('value', function(snap) {
+      var errorMsg = 'Error: type mismatch';
       var resolve = false;
       if (deferred) {
         resolve = deferred;
         deferred = false;
       }
       self._remoteValue = ret;
-      if (snap && snap.val() != undefined) {
+      if (snap && snap.val() !== undefined) {
         var val = snap.val();
-        if (typeof val != typeof ret) {
-          self._log("Error: type mismatch");
+        if (typeof val !== typeof ret) {
+          self._log(errorMsg);
           return;
         }
         // Also distinguish between objects and arrays.
         var check = Object.prototype.toString;
-        if (check.call(ret) != check.call(val)) {
-          self._log("Error: type mismatch");
+        if (check.call(ret) !== check.call(val)) {
+          self._log(errorMsg);
           return;
         }
         self._remoteValue = angular.copy(val);
-        if (angular.equals(val, $scope[name])) {
+        if (angular.equals(val, self._parse(name)($scope))) {
           return;
         }
       }
-      self._safeApply($scope,
-        self._resolve.bind(self, $scope, name, resolve, self._remoteValue));
+      self._timeout(function() {
+        self._resolve($scope, name, resolve, self._remoteValue);
+      });
     });
     return promise;
   },
@@ -82,20 +88,12 @@ AngularFire.prototype = {
         self._initial = false;
         return;
       }
-      var val = JSON.parse(angular.toJson($scope[name]));
+      var val = JSON.parse(angular.toJson(self._parse(name)($scope)));
       if (angular.equals(val, self._remoteValue)) {
         return;
       }
-      self._fRef.set(val);
+      self._fRef.ref().set(val);
     }, true);
-  },
-  _safeApply: function($scope, fn) {
-    var phase = $scope.$root.$$phase;
-    if (phase == '$apply' || phase == '$digest') {
-      fn();
-    } else {
-      $scope.$apply(fn);
-    }
   }
 };
 
@@ -115,7 +113,7 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
     var indexes = {};
 
     var collectionRef;
-    if (typeof collectionUrlOrRef == "string") {
+    if (typeof collectionUrlOrRef === 'string') {
       collectionRef = new Firebase(collectionUrlOrRef);
     } else {
       collectionRef = collectionUrlOrRef;
@@ -159,7 +157,7 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
       }
     }
 
-    if (initialCb && typeof initialCb == 'function') {
+    if (initialCb && typeof initialCb === 'function') {
       collectionRef.once('value', initialCb);
     }
 
