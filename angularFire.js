@@ -104,7 +104,7 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
     this.$ref = ref.ref();
     this.$id = ref.name();
     this.$index = index;
-    angular.extend(this, ref.val());
+      angular.extend(this, ref.val(),{priority:ref.getPriority()});
   }
 
   return function(collectionUrlOrRef, initialCb) {
