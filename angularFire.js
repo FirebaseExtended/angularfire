@@ -29,6 +29,11 @@ function AngularFire($q, $parse, $timeout, ref) {
   }
 }
 AngularFire.prototype = {
+  disassociate: function() {
+    var self = this;
+    self.unregister();
+    this._fRef.off('value');
+  },
   associate: function($scope, name, ret) {
     var self = this;
     if (ret == undefined) {
@@ -72,17 +77,20 @@ AngularFire.prototype = {
     }
   },
   _resolve: function($scope, name, deferred, val) {
+    var self = this;
     this._parse(name).assign($scope, angular.copy(val));
     this._remoteValue = angular.copy(val);
     if (deferred) {
-      deferred.resolve(val);
+      deferred.resolve(function() {
+        self.disassociate();
+      });
       this._watch($scope, name);
     }
   },
   _watch: function($scope, name) {
     // Watch for local changes.
     var self = this;
-    $scope.$watch(name, function() {
+    self.unregister = $scope.$watch(name, function() {
       if (self._initial) {
         self._initial = false;
         return;
