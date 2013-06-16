@@ -32,7 +32,7 @@ casper.then(function() {
     _scope.username = params[0];
     _scope.message = params[1];
     _scope.addMessage();
-    return _scope.message == "";
+    return _scope.message === "";
   }, "Adding a new message", [_testName, _testMessage]);
 
   this.waitForSelector(".messageBlock", function() {
@@ -61,7 +61,7 @@ casper.then(function() {
   }, function() {
     this.test.assertEval(function(params) {
       var msgs = document.querySelectorAll(".messageBlock");
-      if (msgs.length != 2) {
+      if (msgs.length !== 2) {
         return false;
       }
       return testIfInDOM(params[0], params[1], msgs[1]);
@@ -79,11 +79,11 @@ casper.then(function() {
       window.__flag = snapshot.val();
     });
 
-    return _scope.message == "";
+    return _scope.message === "";
   }, "Adding limit message");
 
   this.waitFor(function() {
-    return this.getGlobal("__flag") != true;
+    return this.getGlobal("__flag") !== true;
   }, function() {
     this.test.assertEval(function() {
       var msgs = document.querySelectorAll(".messageBlock");
