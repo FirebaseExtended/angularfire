@@ -104,8 +104,34 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
     this.$ref = ref.ref();
     this.$id = ref.name();
     this.$index = index;
-      angular.extend(this, {priority:ref.getPriority()}, ref.val());
+    this.$priority = ref.getPriority();
+    angular.extend(this, ref.val());
   }
+
+    //Implementation of firebase priority ordering: 
+    //https://www.firebase.com/docs/javascript/firebase/setpriority.html
+    var firebaseOrder = [     
+      //Partition into [ no priority, number as priority, string as priority ]
+      function(item){
+        if(item.$priority == null){
+          return 0;
+        }
+        else if(angular.isNumber(item.$priority)){
+          return 1;
+        }
+        else if( angular.isString(item.$priority) ){
+          return 2;
+        }
+      },
+      //Within partions, sort first by priority (lexical or numerical,
+      //no priority skips this level of sorting by returning Infinity)
+      function(item){
+        return item.$priority ? item.$priority : Infinity;
+      },
+      //Finally, sort items of equal priority lexically by name
+      function(item){
+        return item.$id;
+      }];
 
   return function(collectionUrlOrRef, initialCb) {
     var collection = [];
@@ -223,6 +249,8 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
       });
       item.$ref.set(copy);
     };
+
+    collection.order = firebaseOrder;
 
     return collection;
   };
