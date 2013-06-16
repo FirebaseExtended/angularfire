@@ -12,6 +12,8 @@ that the changes are also sent to all other clients instead of just a server.
 ### Live Demo: <a target="_blank" href="http://firebase.github.com/angularFire/examples/chat/">Simple chat room</a>.
 ### Live Demo: <a target="_blank" href="http://firebase.github.com/angularFire/examples/todomvc/">Real-time TODO app</a>.
 
+[![Build Status](https://travis-ci.org/firebase/angularFire.png)](https://travis-ci.org/firebase/angularFire)
+
 Usage
 -----
 Include both firebase.js and angularFire.js in your application.
@@ -133,6 +135,26 @@ You can do the same with the `remove` and `update` methods.
 See the source for the
 [controller behind the demo chat app](https://github.com/firebase/angularFire/blob/gh-pages/examples/chat/app.js)
 for a working example of this pattern.
+
+Development
+-----------
+If you'd like to hack on AngularFire itself, you'll need
+[UglifyJS](https://github.com/mishoo/UglifyJS2) and
+[CasperJS](https://github.com/n1k0/casperjs):
+
+```bash
+npm install uglifyjs -g
+brew install casperjs
+```
+
+A Makefile is included for your convenience:
+
+```bash
+# Run tests
+make test
+# Minify source
+make minify
+```
 
 License
 -------

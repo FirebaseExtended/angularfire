@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en" ng-app="todo">
+<head>
+  <meta charset="UTF-8">
+  <title>AngularFire TODO Test</title>
+  <link rel="stylesheet" type="text/css" href="https://www.firebase.com/css/example.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.3/angular.min.js"></script>
+  <script src="https://cdn.firebase.com/v0/firebase.js"></script>
+  <script src="../angularfire.min.js"></script>
+  <style>
+    #new-todo {
+      width: 100%;
+      margin: 10px;
+    }
+    .edit {
+      width: 75%;
+    }
+  </style>
+</head>
+<body ng-controller="Todo">
+  <p></p>
+  <form ng-submit="addTodo()">
+    <input placeholder="What needs to be done?" ng-model="newTodo" autofocus>
+  </form>
+  <div id="messagesDiv" style="height:500px;">
+    <div ng-cloak ng-repeat="todo in todos">
+      <div class="todoView">
+        <input class="toggle" type="checkbox" ng-model="todo.completed"/>
+        <input class="edit" ng-model="todo.title"/>
+        <button ng-click="removeTodo(todo)">Remove</button>
+      </div>
+    </div>
+  </div>
+  <script type="text/javascript">
+    var _scope = null;
+    var _url = 'https://angularFireTests.firebaseio-demo.com/todo';
+
+    angular.module("todo", ["firebase"]);
+    function Todo($scope, angularFire) {
+      $scope.newTodo = '';
+      angularFire(new Firebase(_url), $scope, 'todos').then(function() {
+        _scope = $scope;
+        $scope.addTodo = function() {
+          if (!$scope.newTodo.length) {
+            return;
+          }
+          $scope.todos.push({
+            title: $scope.newTodo,
+            completed: false
+          });
+          $scope.newTodo = '';
+        };
+        $scope.removeTodo = function(todo) {
+          $scope.todos.splice($scope.todos.indexOf(todo), 1);
+        };
+      });
+    }
+
+    function testIfInDOM(todo, node) {
+      if (node.childNodes.length != 7) return false;
+      if (node.childNodes[1].checked != todo.completed) return false;
+      if (node.childNodes[3].value != todo.title) return false;
+      return true;
+    }
+  </script>
+</body>
+</html>

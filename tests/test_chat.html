@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en" ng-app="chat">
+<head>
+  <meta charset="UTF-8">
+  <title>AngularFire Chat Test</title>
+  <link rel="stylesheet" type="text/css" href="https://www.firebase.com/css/example.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.3/angular.min.js"></script>
+  <script src="https://cdn.firebase.com/v0/firebase.js"></script>
+  <script src="../angularfire.min.js"></script>
+</head>
+<body ng-controller="Chat">
+  <div>
+    <label for="">Your name: </label><input id="name" type="text" ng-model="username">
+  </div>
+  <p></p>
+  <div id="messagesDiv" style="height:500px;">
+    <div ng-cloak ng-repeat="message in messages">
+      <span class="messageBlock">
+        <em>{{message.from}}: </em>
+        <span class="content">{{message.content}}</span>
+      </span>
+    </div>
+  </div>
+  <form ng-submit="addMessage()">
+    <input id="message" type="text" ng-model="message" placeholder="Message...">
+    <input id="send" type="submit" id="submit" value="Send" style="font-size:24px;">
+  </form>
+  <script type="text/javascript">
+    var _scope;
+    var _url = 'https://angularFireTests.firebaseio-demo.com/chat';
+    angular.module("chat", ["firebase"]);
+    function Chat($scope, angularFireCollection) {
+      $scope.messages = angularFireCollection(new Firebase(_url).limit(2));
+      $scope.username = 'Guest' + Math.floor(Math.random()*101);
+      $scope.addMessage = function() {
+        $scope.messages.add({from: $scope.username, content: $scope.message});
+        $scope.message = "";
+      }
+      _scope = $scope;
+    }
+    function testIfInDOM(from, content, node) {
+      if (node.childNodes.length != 5) return false;
+      if (node.childNodes[1].innerHTML != from + ": ") return false;
+      if (node.childNodes[3].innerHTML != content) return false;
+      return true;
+    }
+  </script>
+</body>
+</html>

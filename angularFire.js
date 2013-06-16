@@ -67,11 +67,13 @@ AngularFire.prototype = {
     });
     return promise;
   },
+
   _log: function(msg) {
     if (console && console.log) {
       console.log(msg);
     }
   },
+
   _resolve: function($scope, name, deferred, val) {
     this._parse(name).assign($scope, angular.copy(val));
     this._remoteValue = angular.copy(val);
@@ -80,6 +82,7 @@ AngularFire.prototype = {
       this._watch($scope, name);
     }
   },
+
   _watch: function($scope, name) {
     // Watch for local changes.
     var self = this;
@@ -105,7 +108,9 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
     this.$ref = ref.ref();
     this.$id = ref.name();
     this.$index = index;
-    angular.extend(this, ref.val());
+    angular.extend(this, {
+      priority: ref.getPriority()
+    }, ref.val());
   }
 
   return function(collectionUrlOrRef, initialCb) {
@@ -130,7 +135,6 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
 
     function removeChild(id) {
       var index = indexes[id];
-      // Remove the item from the collection.
       collection.splice(index, 1);
       indexes[id] = undefined;
     }
@@ -201,12 +205,15 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
     });
 
     collection.add = function(item, cb) {
+      var ref;
       if (!cb) {
-        collectionRef.ref().push(item);
+        ref = collectionRef.ref().push(item);
       } else {
-        collectionRef.ref().push(item, cb);
+        ref = collectionRef.ref().push(item, cb);
       }
+      return ref;
     };
+
     collection.remove = function(itemOrId) {
       var item = angular.isString(itemOrId) ? collection[indexes[itemOrId]] : itemOrId;
       item.$ref.remove();
