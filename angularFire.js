@@ -22,7 +22,7 @@ function AngularFire($q, $parse, $timeout, ref) {
   this._initial = true;
   this._remoteValue = false;
 
-  if (typeof ref == "string") {
+  if (typeof ref === 'string') {
     this._fRef = new Firebase(ref);
   } else {
     this._fRef = ref;
@@ -31,28 +31,30 @@ function AngularFire($q, $parse, $timeout, ref) {
 AngularFire.prototype = {
   associate: function($scope, name, ret) {
     var self = this;
-    if (ret == undefined) {
-      ret = [];
-    }
     var deferred = this._q.defer();
     var promise = deferred.promise;
+
+    if (typeof ret === 'undefined') {
+      ret = [];
+    }
     this._fRef.on('value', function(snap) {
+      var errorMsg = 'Error: type mismatch';
       var resolve = false;
       if (deferred) {
         resolve = deferred;
         deferred = false;
       }
       self._remoteValue = ret;
-      if (snap && snap.val() != undefined) {
+      if (snap && snap.val() !== undefined) {
         var val = snap.val();
-        if (typeof val != typeof ret) {
-          self._log("Error: type mismatch");
+        if (typeof val !== typeof ret) {
+          self._log(errorMsg);
           return;
         }
         // Also distinguish between objects and arrays.
         var check = Object.prototype.toString;
-        if (check.call(ret) != check.call(val)) {
-          self._log("Error: type mismatch");
+        if (check.call(ret) !== check.call(val)) {
+          self._log(errorMsg);
           return;
         }
         self._remoteValue = angular.copy(val);
@@ -61,15 +63,10 @@ AngularFire.prototype = {
         }
       }
       self._timeout(function() {
-        self._resolve($scope, name, resolve, self._remoteValue)
+        self._resolve($scope, name, resolve, self._remoteValue);
       });
     });
     return promise;
-  },
-  _log: function(msg) {
-    if (console && console.log) {
-      console.log(msg);
-    }
   },
   _resolve: function($scope, name, deferred, val) {
     this._parse(name).assign($scope, angular.copy(val));
@@ -93,6 +90,11 @@ AngularFire.prototype = {
       }
       self._fRef.ref().set(val);
     }, true);
+  },
+  _log: function(msg) {
+    var console = (window.console = window.console || {});
+    console.log = function() {};
+    console.log(msg);
   }
 };
 
@@ -104,15 +106,18 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
     this.$ref = ref.ref();
     this.$id = ref.name();
     this.$index = index;
-      angular.extend(this, {priority:ref.getPriority()}, ref.val());
+
+    angular.extend(this, {
+      priority: ref.getPriority()
+    }, ref.val());
   }
 
   return function(collectionUrlOrRef, initialCb) {
     var collection = [];
     var indexes = {};
-
     var collectionRef;
-    if (typeof collectionUrlOrRef == "string") {
+
+    if (typeof collectionUrlOrRef === 'string') {
       collectionRef = new Firebase(collectionUrlOrRef);
     } else {
       collectionRef = collectionUrlOrRef;
@@ -129,7 +134,6 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
 
     function removeChild(id) {
       var index = indexes[id];
-      // Remove the item from the collection.
       collection.splice(index, 1);
       indexes[id] = undefined;
     }
@@ -156,7 +160,7 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
       }
     }
 
-    if (initialCb && typeof initialCb == 'function') {
+    if (initialCb && typeof initialCb === 'function') {
       collectionRef.once('value', initialCb);
     }
 
@@ -208,6 +212,7 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
       }
       return ref;
     };
+
     collection.remove = function(itemOrId) {
       var item = angular.isString(itemOrId) ? collection[indexes[itemOrId]] : itemOrId;
       item.$ref.remove();

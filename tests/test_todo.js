@@ -7,7 +7,7 @@ casper.start("tests/test_todo.html", function() {
   this.test.assertEval(function() {
     if (!Firebase) return false;
     if (!AngularFire) return false;
-    if (_scope != null) return false;
+    if (_scope !== null) return false;
     return true;
   }, "AngularFire exists");
 });
@@ -26,7 +26,7 @@ casper.waitFor(function() {
 
 casper.waitFor(function() {
   return this.evaluate(function() {
-    return _scope != null;
+    return _scope !== null;
   });
 });
 
@@ -37,7 +37,7 @@ casper.then(function() {
     _scope.newTodo = title;
     _scope.addTodo();
     _scope.$digest();
-    return _scope.newTodo == "";
+    return _scope.newTodo === "";
   }, "Adding a new TODO", _testTodo);
 
   this.waitForSelector(".todoView", function() {
@@ -65,12 +65,12 @@ casper.then(function() {
   this.test.assertEval(function(title) {
     _scope.todos.push({title: title, completed: false});
     _scope.$digest();
-    return _scope.newTodo == "";
+    return _scope.newTodo === "";
   }, "Adding another TODO", _testTodo);
 
   this.waitFor(function() {
     return this.evaluate(function() {
-      return document.querySelectorAll(".todoView").length == 2;
+      return document.querySelectorAll(".todoView").length === 2;
     });
   });
 });
