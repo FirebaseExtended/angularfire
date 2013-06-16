@@ -31,11 +31,12 @@ function AngularFire($q, $parse, $timeout, ref) {
 AngularFire.prototype = {
   associate: function($scope, name, ret) {
     var self = this;
-    if (ret === undefined) {
-      ret = [];
-    }
     var deferred = this._q.defer();
     var promise = deferred.promise;
+
+    if (typeof ret === 'undefined') {
+      ret = [];
+    }
     this._fRef.on('value', function(snap) {
       var errorMsg = 'Error: type mismatch';
       var resolve = false;
@@ -67,13 +68,6 @@ AngularFire.prototype = {
     });
     return promise;
   },
-
-  _log: function(msg) {
-    if (console && console.log) {
-      console.log(msg);
-    }
-  },
-
   _resolve: function($scope, name, deferred, val) {
     this._parse(name).assign($scope, angular.copy(val));
     this._remoteValue = angular.copy(val);
@@ -82,7 +76,6 @@ AngularFire.prototype = {
       this._watch($scope, name);
     }
   },
-
   _watch: function($scope, name) {
     // Watch for local changes.
     var self = this;
@@ -97,6 +90,11 @@ AngularFire.prototype = {
       }
       self._fRef.ref().set(val);
     }, true);
+  },
+  _log: function(msg) {
+    var console = (window.console = window.console || {});
+    console.log = function() {};
+    console.log(msg);
   }
 };
 
@@ -108,6 +106,7 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
     this.$ref = ref.ref();
     this.$id = ref.name();
     this.$index = index;
+
     angular.extend(this, {
       priority: ref.getPriority()
     }, ref.val());
@@ -116,8 +115,8 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
   return function(collectionUrlOrRef, initialCb) {
     var collection = [];
     var indexes = {};
-
     var collectionRef;
+
     if (typeof collectionUrlOrRef === 'string') {
       collectionRef = new Firebase(collectionUrlOrRef);
     } else {
