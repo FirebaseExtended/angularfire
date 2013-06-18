@@ -1,11 +1,11 @@
-'use strict';
+"use strict";
 
-angular.module('firebase', []).value('Firebase', Firebase);
+angular.module("firebase", []).value("Firebase", Firebase);
 
 // Implicit syncing. angularFire binds a model to $scope and keeps the dat
 // synchronized with a Firebase location both ways.
-// TODO: Optimize to use child events instead of whole 'value'.
-angular.module('firebase').factory('angularFire', ['$q', '$parse', '$timeout',
+// TODO: Optimize to use child events instead of whole "value".
+angular.module("firebase").factory("angularFire", ["$q", "$parse", "$timeout",
   function($q, $parse, $timeout) {
     return function(ref, scope, name, ret) {
       var af = new AngularFire($q, $parse, $timeout, ref);
@@ -31,8 +31,10 @@ function AngularFire($q, $parse, $timeout, ref) {
 AngularFire.prototype = {
   disassociate: function() {
     var self = this;
-    self.unregister();
-    this._fRef.off('value');
+    if (self._unregister) {
+      self._unregister();
+    }
+    this._fRef.off("value");
   },
   associate: function($scope, name, ret) {
     var self = this;
@@ -41,7 +43,7 @@ AngularFire.prototype = {
     }
     var deferred = this._q.defer();
     var promise = deferred.promise;
-    this._fRef.on('value', function(snap) {
+    this._fRef.on("value", function(snap) {
       var resolve = false;
       if (deferred) {
         resolve = deferred;
@@ -90,7 +92,7 @@ AngularFire.prototype = {
   _watch: function($scope, name) {
     // Watch for local changes.
     var self = this;
-    self.unregister = $scope.$watch(name, function() {
+    self._unregister = $scope.$watch(name, function() {
       if (self._initial) {
         self._initial = false;
         return;
@@ -107,7 +109,7 @@ AngularFire.prototype = {
 // Explicit syncing. Provides a collection object you can modify.
 // Original code by @petebacondarwin, from:
 // https://github.com/petebacondarwin/angular-firebase/blob/master/ng-firebase-collection.js
-angular.module('firebase').factory('angularFireCollection', ['$timeout', function($timeout) {
+angular.module("firebase").factory("angularFireCollection", ["$timeout", function($timeout) {
   function angularFireItem(ref, index) {
     this.$ref = ref.ref();
     this.$id = ref.name();
@@ -164,11 +166,11 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
       }
     }
 
-    if (initialCb && typeof initialCb == 'function') {
-      collectionRef.once('value', initialCb);
+    if (initialCb && typeof initialCb == "function") {
+      collectionRef.once("value", initialCb);
     }
 
-    collectionRef.on('child_added', function(data, prevId) {
+    collectionRef.on("child_added", function(data, prevId) {
       $timeout(function() {
         var index = getIndex(prevId);
         addChild(index, new angularFireItem(data, index));
@@ -176,7 +178,7 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
       });
     });
 
-    collectionRef.on('child_removed', function(data) {
+    collectionRef.on("child_removed", function(data) {
       $timeout(function() {
         var id = data.name();
         var pos = indexes[id];
@@ -185,7 +187,7 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
       });
     });
 
-    collectionRef.on('child_changed', function(data, prevId) {
+    collectionRef.on("child_changed", function(data, prevId) {
       $timeout(function() {
         var index = indexes[data.name()];
         var newIndex = getIndex(prevId);
@@ -198,7 +200,7 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
       });
     });
 
-    collectionRef.on('child_moved', function(ref, prevId) {
+    collectionRef.on("child_moved", function(ref, prevId) {
       $timeout(function() {
         var oldIndex = indexes[ref.name()];
         var newIndex = getIndex(prevId);
@@ -225,7 +227,7 @@ angular.module('firebase').factory('angularFireCollection', ['$timeout', functio
       var item = angular.isString(itemOrId) ? collection[indexes[itemOrId]] : itemOrId;
       var copy = {};
       angular.forEach(item, function(value, key) {
-        if (key.indexOf('$') !== 0) {
+        if (key.indexOf("$") !== 0) {
           copy[key] = value;
         }
       });
