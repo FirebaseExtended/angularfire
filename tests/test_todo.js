@@ -82,14 +82,14 @@ casper.then(function() {
   this.test.assertEval(function(title) {
     _scope.todos.push({title: title, completed: true});
     _scope.$digest();
-    return _scope.newTodo == "";
+    return _scope.newTodo === "";
   }, "Testing if limits and queries work", _testTodo);
 
   this.evaluate(function() {
     window.__flag = false;
     var ref = new Firebase(_url);
     ref.once("value", function(snapshot) {
-      if (snapshot.val().length == 3) {
+      if (snapshot.val().length === 3) {
         window.__flag = true;
       }
     });
