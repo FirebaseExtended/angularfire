@@ -2,7 +2,7 @@
 
 angular.module("firebase", []).value("Firebase", Firebase);
 
-// Implicit syncing. angularFire binds a model to $scope and keeps the dat
+// Implicit syncing. angularFire binds a model to $scope and keeps the data
 // synchronized with a Firebase location both ways.
 // TODO: Optimize to use child events instead of whole "value".
 angular.module("firebase").factory("angularFire", ["$q", "$parse", "$timeout",
@@ -237,3 +237,141 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout", functio
     return collection;
   };
 }]);
+
+
+// Authentication support for AngularFire.
+angular.module("firebase").factory("angularFireAuth", [
+  "$rootScope", "$parse", "$timeout", "$location",
+  function($rootScope, $parse, $timeout, $location) {
+
+    function deconstructJWT(token) {
+      var segments = token.split(".");
+      if (!segments instanceof Array || segments.length !== 3) {
+        throw new Error("Invalid JWT");
+      }
+      var claims = segments[1];
+      return JSON.parse(decodeURIComponent(escape(window.atob(claims))));
+    }
+
+    function updateExpression(scope, name, val, cb) {
+      if (name) {
+        $timeout(function() {
+          $parse(name).assign(scope, val);
+          cb();
+        });
+      }
+    }
+
+    return {
+      initialize: function(url, options) {
+        var self = this;
+
+        options = options || {};
+        this._scope = $rootScope;
+        if (options.scope) {
+          this._scope = options.scope;
+        }
+        if (options.name) {
+          this._name = options.name;
+        }
+        this._cb = function(){};
+        if (options.callback && typeof options.callback === "function") {
+          this._cb = options.callback;
+        }
+
+        this._redirectTo = null;
+        this._authenticated = false;
+        if (options.path) {
+          $rootScope.$on("$routeChangeStart", function(e, next, current) {
+            if (next.authRequired && !self._authenticated) {
+              self._redirectTo =
+                next.pathTo === options.path ? "/" : next.pathTo;
+              $location.path(options.path);
+            }
+          });
+        }
+
+        this._ref = new Firebase(url);
+        if (options.simple && options.simple === false) {
+          updateExpression(this._scope, this._name, null);
+          return;
+        }
+
+        // Simple Login.
+        if (!window.FirebaseAuthClient) {
+          var err = new Error("FirebaseAuthClient undefined, " +
+            "did you include firebase-auth-client.js?");
+          $rootScope.$broadcast("angularFireAuth:error", err);
+          return;
+        }
+        var client = new FirebaseAuthClient(this._ref, function(err, user) {
+          self._cb(err, user);
+          if (err) {
+            $rootScope.$broadcast("angularFireAuth:error", err);
+          } else if (user) {
+            self._loggedIn(user)
+          } else {
+            self._loggedOut();
+          }
+        });
+        this._authClient = client;
+      },
+      login: function(tokenOrProvider, options) {
+        switch (tokenOrProvider) {
+        case "github":
+        case "persona":
+        case "twitter":
+        case "facebook":
+        case "password":
+          if (!this._authClient) {
+            var err = new Error("Simple Login not initialized");
+            $rootScope.$broadcast("angularFireAuth:error", err);
+          } else {
+            this._authClient.login(tokenOrProvider, options);
+          }
+          break;
+        default:
+          // Custom Login.
+          var claims, self = this;
+          try {
+            claims = deconstructJWT(tokenOrProvider);
+            this._ref.auth(tokenOrProvider, function(err) {
+              if (err) {
+                $rootScope.$broadcast("angularFireAuth:error", err);
+              } else {
+                self._loggedIn();
+              }
+            });
+          } catch(e) {
+            $rootScope.$broadcast("angularFireAuth:error", e)
+          }
+        }
+      },
+      logout: function() {
+        if (this._authClient) {
+          this._authClient.logout();
+        } else {
+          this._ref.unauth();
+          this._loggedOut();
+        }
+      },
+      _loggedIn: function(user) {
+        var self = this;
+        this._authenticated = true;
+        updateExpression(this._scope, this._name, user, function() {
+          $rootScope.$broadcast("angularFireAuth:login", user);
+          if (self._redirectTo) {
+            $location.path(self._redirectTo);
+            self._redirectTo = null;
+          }
+        });
+      },
+      _loggedOut: function() {
+        this._authenticated = false;
+        updateExpression(this._scope, this._name, null, function() {
+          $rootScope.$broadcast("angularFireAuth:logout");
+        });
+      }
+    }
+  }
+]);
