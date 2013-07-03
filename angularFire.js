@@ -289,6 +289,7 @@ angular.module("firebase").factory("angularFireAuth", [
               } else {
                 self._redirectTo = next.pathTo === options.path ? "/" : next.pathTo;
               }
+              $location.replace();
               $location.path(options.path);
             }
           });
@@ -364,6 +365,7 @@ angular.module("firebase").factory("angularFireAuth", [
         updateExpression(this._scope, this._name, user, function() {
           $rootScope.$broadcast("angularFireAuth:login", user);
           if (self._redirectTo) {
+            $location.replace();
             $location.path(self._redirectTo);
             self._redirectTo = null;
           }
