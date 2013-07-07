@@ -241,8 +241,8 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout", functio
 
 // Authentication support for AngularFire.
 angular.module("firebase").factory("angularFireAuth", [
-  "$rootScope", "$parse", "$timeout", "$location",
-  function($rootScope, $parse, $timeout, $location) {
+  "$rootScope", "$parse", "$timeout", "$location", "$route",
+  function($rootScope, $parse, $timeout, $location, $route) {
 
     function deconstructJWT(token) {
       var segments = token.split(".");
@@ -261,7 +261,19 @@ angular.module("firebase").factory("angularFireAuth", [
         });
       }
     }
-
+    
+    function authRequiredRedirect(route, path) {
+      if(route.authRequired && !self._authenticated){
+        if(route.pathTo === undefined) {
+          self._redirectTo = $location.path();
+        } else {
+          self._redirectTo = route.pathTo === path ? "/" : route.pathTo;
+        }
+        $location.replace();
+        $location.path(path);
+      }
+    }
+    
     return {
       initialize: function(url, options) {
         var self = this;
@@ -282,16 +294,10 @@ angular.module("firebase").factory("angularFireAuth", [
         this._redirectTo = null;
         this._authenticated = false;
         if (options.path) {
+          authRequiredRedirect($route.current, options.path);
+          
           $rootScope.$on("$routeChangeStart", function(e, next, current) {
-            if (next.authRequired && !self._authenticated) {
-              if(next.pathTo === undefined) {
-                self._redirectTo = $location.path();
-              } else {
-                self._redirectTo = next.pathTo === options.path ? "/" : next.pathTo;
-              }
-              $location.replace();
-              $location.path(options.path);
-            }
+            authRequiredRedirect(next, options.path);
           });
         }
 
