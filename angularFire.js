@@ -262,7 +262,7 @@ angular.module("firebase").factory("angularFireAuth", [
       }
     }
     
-    function authRequiredRedirect(route, path) {
+    function authRequiredRedirect(route, path, self) {
       if(route.authRequired && !self._authenticated){
         if(route.pathTo === undefined) {
           self._redirectTo = $location.path();
@@ -294,10 +294,10 @@ angular.module("firebase").factory("angularFireAuth", [
         this._redirectTo = null;
         this._authenticated = false;
         if (options.path) {
-          authRequiredRedirect($route.current, options.path);
+          authRequiredRedirect($route.current, options.path, self);
           
           $rootScope.$on("$routeChangeStart", function(e, next, current) {
-            authRequiredRedirect(next, options.path);
+            authRequiredRedirect(next, options.path, self);
           });
         }
 
