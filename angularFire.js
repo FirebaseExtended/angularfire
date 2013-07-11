@@ -302,13 +302,13 @@ angular.module("firebase").factory("angularFireAuth", [
         }
 
         // Simple Login.
-        if (!window.FirebaseAuthClient) {
-          var err = new Error("FirebaseAuthClient undefined, " +
-            "did you include firebase-auth-client.js?");
+        if (!window.FirebaseSimpleLogin) {
+          var err = new Error("FirebaseSimpleLogin undefined, " +
+            "did you include firebase-simple-login.js?");
           $rootScope.$broadcast("angularFireAuth:error", err);
           return;
         }
-        var client = new FirebaseAuthClient(this._ref, function(err, user) {
+        var client = new FirebaseSimpleLogin(this._ref, function(err, user) {
           self._cb(err, user);
           if (err) {
             $rootScope.$broadcast("angularFireAuth:error", err);
