@@ -261,10 +261,10 @@ angular.module("firebase").factory("angularFireAuth", [
         });
       }
     }
-    
+
     function authRequiredRedirect(route, path, self) {
-      if(route.authRequired && !self._authenticated){
-        if(route.pathTo === undefined) {
+      if (route.authRequired && !self._authenticated){
+        if (route.pathTo === undefined) {
           self._redirectTo = $location.path();
         } else {
           self._redirectTo = route.pathTo === path ? "/" : route.pathTo;
@@ -273,7 +273,7 @@ angular.module("firebase").factory("angularFireAuth", [
         $location.path(path);
       }
     }
-    
+
     return {
       initialize: function(url, options) {
         var self = this;
@@ -295,8 +295,7 @@ angular.module("firebase").factory("angularFireAuth", [
         this._authenticated = false;
         if (options.path) {
           authRequiredRedirect($route.current, options.path, self);
-          
-          $rootScope.$on("$routeChangeStart", function(e, next, current) {
+          $rootScope.$on("$routeChangeStart", function(e, next) {
             authRequiredRedirect(next, options.path, self);
           });
         }
