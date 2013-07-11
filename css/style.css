@@ -1,0 +1,18 @@
+
+.navbar img {
+  margin-top: 5px;
+}
+
+.hero-unit {
+  margin: auto;
+  display: block;
+  text-align: center;
+}
+
+.modal-table tr {
+  margin-top: 10px;
+}
+
+.modal-table tr > td {
+  padding-right: 10px;
+}

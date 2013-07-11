@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>AngularFire, from Firebase</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AngularFire is an officially supported AngularJS binding for Firebase. Firebase is a full backend so you don't need servers to build your Angular app!">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+    </style>
+    <link href="css/bootstrap-responsive.min.css" rel="stylesheet">
+    <link href="css/font-awesome.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link rel="shortcut icon" href="favicon.ico">
+  </head>
+
+  <body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="#">AngularFire</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li class="active"><a href="#">Home</a></li>
+              <li><a href="quickstart.html">Quickstart</a></li>
+              <li><a href="documentation.html">Documentation</a></li>
+            </ul>
+            <ul class="pull-right">
+              <li><a href="https://www.firebase.com/" target="_blank"><img src="img/poweredby.png"/></a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="hero-unit">
+        <img src="img/af-logo.png"/>
+        <h1>AngularFire</h1>
+        <h4>The easiest and fastest way to write a backend for your AngularJS app!</h4><br/>
+        <p>
+          <a href="http://github.com/firebase/angularFire" class="btn btn-large"><i class="icon-github-sign"></i> View on Github &raquo;</a>
+          <a href="#downloadModal" role="button" data-toggle="modal" class="btn btn-primary btn-large"><i class="icon-cloud-download"></i> Download &raquo;</a>
+        </p><br/>
+        <p>
+          <iframe src="http://ghbtns.com/github-btn.html?user=firebase&repo=angularFire&type=watch&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe>
+          <a class="g-follow" data-href="https://plus.google.com/115330003035930967645" data-height="20" data-rel="publisher"></a>
+          <a href="https://twitter.com/Firebase" class="twitter-follow-button" data-show-count="false" data-dnt="true">Follow @Firebase</a>
+          <a href="https://twitter.com/share" class="twitter-share-button" data-dnt="true">Tweet</a>
+          <a class="fb-like" data-send="false" data-layout="button_count" data-width="450" data-show-faces="true"></a>
+        </p>
+      </div>
+
+      <div class="row">
+        <div class="span4">
+          <h3>Built for speed</h3>
+          <p>AngularFire is built to make sure you can prototype your app as quickly as possible without having to set up servers or write any backend code.</p>
+        </div>
+        <div class="span4">
+          <h3>3-way data binding</h3>
+          <p>Saving user or app data is a breeze with AngularFire's 3-way data binding. It's never been easier to extend Angular's quintessential 2-way data binding to the server.</p>
+       </div>
+        <div class="span4">
+          <h3>Flexible API</h3>
+          <p>Choose between an easy to use implicit sync API that will automatically keep all your Angular models persisted and updated, or a more powerful explicit sync API that gives you control over when data gets synchronized.</p>
+        </div>
+      </div>
+
+      <hr>
+
+      <footer>
+        <p></p>
+      </footer>
+
+    </div> <!-- /container -->
+
+    <!-- Modal -->
+    <div id="downloadModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        <h3 id="modalLabel">Download AngularFire</h3>
+      </div>
+      <div class="modal-body">
+        <form class="form-horizontal">
+          <div class="control-group">
+            <label class="control-label"><b>Build</b></label>
+            <div class="controls">
+              <span class="btn-group" data-toggle="buttons-radio">
+                <button type="button" class="btn active">Minified</button>
+                <button type="button" class="btn">Uncompressed</button>
+              </span>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label"><b>CDN</b></label>
+            <div class="controls">
+              <span><input readonly="readonly" value="//cdnjs.cloudflare.com/ajax/libs/angularFire/0.1.0/angularfire.min.js" type="text"></span>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label"><b>Bower</b></label>
+            <div class="controls">
+              <span><input readonly="readonly" value="bower install angular-fire" type="text"></span>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-large btn-primary"><i class="icon-cloud-download"></i> Download</button>
+      </div>
+    </div>
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+
+    <!-- Twitter -->
+    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+    <!-- Google+ -->
+    <script type="text/javascript">
+      (function() {
+        var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+        po.src = 'https://apis.google.com/js/plusone.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+      })();
+    </script>
+    <!-- Facebook -->
+    <div id="fb-root"></div>
+    <script>(function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=1387302698151882";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));</script>
+  </body>
+</html>
