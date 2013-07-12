@@ -30,7 +30,7 @@
           <a class="brand" href="#">AngularFire</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
-              <li class="active"><a href="#">Home</a></li>
+              <li class="active"><a href="/">Home</a></li>
               <li><a href="quickstart.html">Quickstart</a></li>
               <li><a href="documentation.html">Documentation</a></li>
             </ul>
@@ -46,7 +46,7 @@
       <div class="hero-unit">
         <img src="img/af-logo.png"/>
         <h1>AngularFire</h1>
-        <h4>The easiest and fastest way to write a backend for your AngularJS app!</h4><br/>
+        <h4>The easiest and fastest way to write a backend for your AngularJS app.</h4><br/>
         <p>
           <a href="http://github.com/firebase/angularFire" class="btn btn-large"><i class="icon-github-sign"></i> View on Github &raquo;</a>
           <a href="#downloadModal" role="button" data-toggle="modal" class="btn btn-primary btn-large"><i class="icon-cloud-download"></i> Download &raquo;</a>
@@ -77,6 +77,18 @@
 
       <hr>
 
+      <div class="row">
+        <div class="span12 chat-header">
+          <h2>Chat in just 30 lines of code!</h2><br/>
+        </div>
+      </div>
+      <div class="row">
+        <div class="span8">
+          <pre class="prettyprint lang-html linenums" id="chat-code"></pre>
+        </div>
+        <div class="span4" id="chat-output"></div>
+      </div>
+
       <footer>
         <p></p>
       </footer>
@@ -103,13 +115,19 @@
           <div class="control-group">
             <label class="control-label"><b>CDN</b></label>
             <div class="controls">
-              <span><input readonly="readonly" value="//cdnjs.cloudflare.com/ajax/libs/angularFire/0.1.0/angularfire.min.js" type="text"></span>
+              <span>
+                <input readonly="readonly" value="//cdnjs.cloudflare.com/ajax/libs/angularFire/0.1.0/angularfire.min.js" type="text">
+                <a data-clipboard-text="//cdnjs.cloudflare.com/ajax/libs/angularFire/0.1.0/angularfire.min.js" class="btn clipboard"><i class="icon-copy"></i></a>
+              </span>
             </div>
           </div>
           <div class="control-group">
             <label class="control-label"><b>Bower</b></label>
             <div class="controls">
-              <span><input readonly="readonly" value="bower install angular-fire" type="text"></span>
+              <span>
+                <input readonly="readonly" value="bower install angular-fire" type="text">
+                <a data-clipboard-text="bower install angular-fire" class="btn clipboard"><i class="icon-copy"></i></a>
+              </span>
             </div>
           </div>
         </form>
@@ -119,8 +137,71 @@
       </div>
     </div>
 
-    <script src="js/jquery.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
+    <script type="text/template" id="chat-code-html"><div class="well" ng-app="chat" ng-controller="Chat">
+  <form class="form-inline">
+    Your name: <input type="text" ng-model="username">
+  </form>
+  <div ng-cloak ng-repeat="message in messages">
+    <em>{{message.from}}: </em>{{message.content}}
+  </div><br/>
+  <form class="form-inline" ng-submit="addMessage()">
+    <input type="text" ng-model="message" placeholder="Message...">
+    <button class="btn" type="submit">
+      <i class="icon-reply"> Send</i>
+    </button>
+  </form>
+</div></script>
+
+    <script type="text/template" id="chat-code-js">
+  angular.module('chat', ['firebase']).controller('Chat', ['$scope', 'angularFire',
+    function($scope, angularFire) {
+      var ref = new Firebase('https://angularFire.firebaseio-demo.com/chat');
+      angularFire(ref.limit(15), $scope, "messages", {});
+      $scope.username = 'Guest' + Math.floor(Math.random()*101);
+      $scope.addMessage = function() {
+        $scope.messages[ref.push().name()] = {
+          from: $scope.username, content: $scope.message
+        };
+        $scope.message = "";
+      }}]);</script>
+
+    <script src='//cdn.firebase.com/v0/firebase.js'></script>
+    <script src='//cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.5/angular.min.js'></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/1.1.7/ZeroClipboard.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.js"></script>
+    <script src='http://firebase.github.io/angularFire/angularFire.js'></script>
+
+    <script type="text/javascript">
+      $(function() {
+        function setupClipboard() {
+          ZeroClipboard.setDefaults({moviePath: "css/zeroclipboard.swf"});
+          var clip = new ZeroClipboard($(".clipboard"));
+          clip.on("complete", function(cl, arg) {
+            this.innerHTML = "Copied!";
+          });
+        }
+
+        function setupCodeSample() {
+          var code = $("#chat-code-js").html();
+          var markup = $("#chat-code-html").html();
+          var includes = '\n&lt;script src="//cdn.firebase.com/v0/firebase.js"&gt;&lt;/script&gt;' +
+            '\n&lt;script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.5/angular.min.js"&gt;&lt;/script&gt;' +
+            '\n&lt;script src="http://firebase.github.io/angularFire/angularFire.js"&gt;&lt;/script&gt;' +
+            '\n&lt;script type="text/javascript"&gt;' + code + '\n&lt;/script&gt;'
+          $("#chat-output").html(markup);
+          $("#chat-code").html(_.escape(markup) + includes);
+          prettyPrint();
+          eval(code);
+          angular.bootstrap($("#chat-output")[0], ["chat"]);
+        }
+
+        setupClipboard();
+        setupCodeSample();
+      });
+    </script>
 
     <!-- Twitter -->
     <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
