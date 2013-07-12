@@ -26,6 +26,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
           </button>
           <a class="brand" href="#">AngularFire</a>
           <div class="nav-collapse collapse">
@@ -33,6 +34,7 @@
               <li class="active"><a href="/">Home</a></li>
               <li><a href="quickstart.html">Quickstart</a></li>
               <li><a href="documentation.html">Documentation</a></li>
+              <li><a href="showcase.html">Showcase</a></li>
             </ul>
             <ul class="pull-right">
               <li><a href="https://www.firebase.com/" target="_blank"><img src="img/poweredby.png"/></a></li>
@@ -44,9 +46,8 @@
 
     <div class="container">
       <div class="hero-unit">
-        <img src="img/af-logo.png"/>
-        <h1>AngularFire</h1>
-        <h4>The easiest and fastest way to write a backend for your AngularJS app.</h4><br/>
+        <img src="img/af-logo.png"/><h1>AngularFire</h1>
+        <h2>The easiest and fastest way to write a backend for your Angular app.</h2><br/>
         <p>
           <a href="http://github.com/firebase/angularFire" class="btn btn-large"><i class="icon-github-sign"></i> View on Github &raquo;</a>
           <a href="#downloadModal" role="button" data-toggle="modal" class="btn btn-primary btn-large"><i class="icon-cloud-download"></i> Download &raquo;</a>
@@ -79,7 +80,7 @@
 
       <div class="row">
         <div class="span12 chat-header">
-          <h2>Chat in just 30 lines of code!</h2><br/>
+          <h2>Build a chat app in just 30 lines of code!</h2><br/>
         </div>
       </div>
       <div class="row">
@@ -179,9 +180,6 @@
         function setupClipboard() {
           ZeroClipboard.setDefaults({moviePath: "css/zeroclipboard.swf"});
           var clip = new ZeroClipboard($(".clipboard"));
-          clip.on("complete", function(cl, arg) {
-            this.innerHTML = "Copied!";
-          });
         }
 
         function setupCodeSample() {
