@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en" ng-app="chat">
+<head>
+  <meta charset="UTF-8">
+  <title>AngularFire Chat Demo</title>
+  <link rel="stylesheet" type="text/css" href="https://www.firebase.com/css/example.css">
+  <script src="../todomvc/components/angular/angular.js"></script>
+</head>
+<body ng-controller="Chat">
+  <div>
+    <label for="">Your name: </label><input id="name" type="text" ng-model="username">
+  </div>
+  <p></p>
+  <div id="messagesDiv" auto-scroll="messages" style="height:500px;">
+    <div ng-cloak ng-repeat="message in messages">
+      <em>{{message.from}}: </em>{{message.content}}
+    </div>
+  </div>
+  <form ng-submit="addMessage()">
+    <input id="message" type="text" ng-model="message" placeholder="Message...">
+    <input id="send" type="submit" id="submit" value="Send" style="font-size:24px;">
+  </form>
+  <script src="https://cdn.firebase.com/v0/firebase.js"></script>
+  <script src="../../angularFire.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
