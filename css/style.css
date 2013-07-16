@@ -94,6 +94,10 @@ h2 {
   left: 0;
 }
 
+.bs-docs > section > h3 {
+  margin-top: 30px;
+}
+
 /* prettify.css */
 .com { color: #93a1a1; }
 .lit { color: #195f91; }
@@ -255,11 +259,6 @@ hr.soften {
 }
 .bs-docs-sidenav a:hover .icon-chevron-right {
   opacity: .5;
-}
-.bs-docs-sidenav .active .icon-chevron-right,
-.bs-docs-sidenav .active a:hover .icon-chevron-right {
-  background-image: url(../img/glyphicons-halflings-white.png);
-  opacity: 1;
 }
 .bs-docs-sidenav.affix {
   top: 40px;
