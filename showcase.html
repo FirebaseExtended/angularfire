@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Quickstart - AngularFire, from Firebase</title>
+    <title>Showcase - AngularFire, from Firebase</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="AngularFire is an officially supported AngularJS binding for Firebase. Firebase is a full backend so you don't need servers to build your Angular app!">
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -26,9 +26,9 @@
           <div class="nav-collapse collapse">
             <ul class="nav">
               <li><a href="index.html">Home</a></li>
-              <li class="active"><a href="quickstart.html">Quickstart</a></li>
+              <li><a href="quickstart.html">Quickstart</a></li>
               <li><a href="documentation.html">Documentation</a></li>
-              <li><a href="showcase.html">Showcase</a></li>
+              <li class="showcase"><a href="showcase.html">Showcase</a></li>
             </ul>
             <ul class="pull-right">
               <li><a href="https://www.firebase.com/" target="_blank"><img src="img/poweredby.png"/></a></li>
@@ -40,48 +40,28 @@
 
     <div class="container">
       <div class="header">
-        <h1>Quickstart</h1>
-        <h3>Get up and running in minutes.</h3>
+        <h1>Showcase</h1>
+        <h3>Check out apps built with AngularFire.</h3>
       </div>
+      <div class="row center">
+        <div class="span3 well">
+          Firereader
+        </div>
+        <div class="span3 well">
+          TODOMVC
+        </div>
+        <div class="span3 well">
+          Chat
+        </div>
+      </div>
+
       <div class="row">
-        <div class="span8 offset2 center well">
-          <ol>
-            <li>
-              <p>Include the Firebase and AngularFire libraries from their respective CDNs.</p>
-              <pre class="prettyprint lang-html">&lt;script src="https://cdn.firebase.com/v0/firebase.js"&gt;&lt;/script&gt;
-&lt;script src="http://firebase.github.io/angularFire/angularFire.js"&gt;&lt;/script&gt;</pre>
-            </li>
-            <li>
-              <p>Specify a dependency on <code>firebase</code> in your app module.</p>
-              <pre class="prettyprint lang-js">var myApp = angular.module("MyApp", ["firebase"]);</pre>
-            </li>
-            <li>
-              <p>Bind a model to a Firebase URL in your controller</p>
-              <pre class="prettyprint lang-js">function MyController($scope, angularFire) {
-  angularFire("https://&lt;my-firebase&gt;.firebaseio.com/list", $scope, "items");
-}</pre>
-            </li>
-            <li>
-              <p>Use and modify your model as you normally would, watch changes sync in realtime!</p>
-              <pre class="prettyprint lang-html">&lt;div ng-controller="MyController"&gt;
-  &lt;ul ng-repeat="item in items"&gt;
-    &lt;li&gt;{{item.name}}&lt;/li&gt;
-  &lt;/ul&gt;
-  &lt;input type="text" ng-model="newItem"/&gt;
-  &lt;button type="submit" ng-click="addItem()"&gt;Add New Item&lt;/button&gt;
-&lt;/div&gt;</pre>
-              <pre class="prettyprint lang-js">function MyController($scope, angularFire) {
-  var url = "https://&lt;my-firebase&gt;.firebaseio.com/list";
-  var promise = angularFire(url, $scope, "items");
-  promise.then(function() {
-    $scope.addItem = function() {
-      $scope.items.push($scope.newItem);
-      $scope.newItem = "";
-    }
-  });
-}</pre>
-            </li>
-          </ol>
+        <div class="span12">
+          <p style="text-align:center;"><b>
+            Did you build something cool with AngularFire?
+            <a href="mailto:support@firebase.com">Send us an email</a> so we
+            can add you to the showcase (or just submit a pull request)!
+          </b></p>
         </div>
       </div>
 
