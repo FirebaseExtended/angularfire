@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Documentation - AngularFire, from Firebase</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AngularFire is an officially supported AngularJS binding for Firebase. Firebase is a full backend so you don't need servers to build your Angular app!">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+    </style>
+    <link href="css/bootstrap-responsive.min.css" rel="stylesheet">
+    <link href="css/font-awesome.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link rel="shortcut icon" href="favicon.ico">
+  </head>
+
+  <body data-spy="scroll" data-target=".bs-docs-sidebar">
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="index.html">AngularFire</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li><a href="index.html">Home</a></li>
+              <li><a href="quickstart.html">Quickstart</a></li>
+              <li class="active"><a href="documentation.html">Documentation</a></li>
+              <li><a href="showcase.html">Showcase</a></li>
+            </ul>
+            <ul class="pull-right">
+              <li><a href="https://www.firebase.com/" target="_blank"><img src="img/poweredby.png"/></a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="row">
+        <div class="span8 offset2 header">
+          <h1>Documentation</h1>
+          <h3>API Reference for AngularFire.</h3>
+        </div>
+      </div>
+      <div class="row">
+        <div class="span3 bs-docs-sidebar">
+          <ul data-spy="affix" data-offset-top="150" class="nav nav-list bs-docs-sidenav affix-top">
+            <li><a href="#introduction"><i class="icon-chevron-right"></i> Introduction</a></li>
+            <li><a href="#implicit"><i class="icon-chevron-right"></i> Implicit Data Binding</a></li>
+            <li><a href="#explicit"><i class="icon-chevron-right"></i> Explicit Data Binding</a></li>
+            <li><a href="#authentication"><i class="icon-chevron-right"></i> Authentication</a></li>
+          </ul>
+        </div>
+        <div class="span9">
+
+          <section id="introduction">
+            <h3>Introduction</h3>
+            <p>AngularFire is an officially supported AngularJS binding for Firebase.
+            Firebase is a full backend so you don't need servers to build your Angular app!</p>
+            <p>The bindings let you associate a Firebase URL with a model (or set of models), and they will be transparently
+            kept in sync across all clients currently using your app. The 2-way data binding offered by AngularJS works as normal,
+            except that the changes are also sent to all other clients instead of just a server.</p>
+            <p>To get started, include both <code>firebase.js</code> and <code>angularFire.js</code> in your application.</p>
+            <pre class="prettyprint lang-html">&lt;script src="https://cdn.firebase.com/v0/firebase.js"&gt;&lt;/script&gt;
+&lt;script src="angularFire.js"&gt;&lt;/script&gt;</pre>
+            <p>Add the module firebase as a dependency to your app module:</p>
+            <pre class="prettyprint lang-js">var myapp = angular.module('myapp', ['firebase']);</pre>
+            <p>You now have two options: implicit or explicit synchronization.</p>
+          </section>
+
+          <section id="implicit">
+            <h3>Implicit Synchronization</h3>
+            <p>This method is great if you want to implicitly synchronize a model with Firebase.
+            All local changes will be automatically sent to Firebase, and all remote changes will instantly update the local model.</p>
+            <p>Set <code>angularFire</code> as a service dependency in your controller:</p>
+            <pre class="prettyprint lang-js">myapp.controller('MyCtrl', ['$scope', 'angularFire',
+  function MyCtrl($scope, angularFire) {
+    ...
+  }
+]);</pre>
+            <p>Bind a Firebase URL to any model in <code>$scope</code>. The fourth argument is the type of model you want to use
+            (can be any JavaScript type, you mostly want a dictionary or array):</p>
+            <pre class="prettyprint lang-js">var url = 'https://&lt;my-firebase&gt;.firebaseio.com/items';
+var promise = angularFire(url, $scope, 'items', []);</pre>
+            <p>Use the model in your markup as you normally would:</p>
+            <pre class="prettyprint lang-html">&lt;ul ng-controller="MyCtrl"&gt;
+  &lt;li ng-repeat="item in items"&gt;{{item.name}}: {{item.desc}}&lt;/li&gt;
+&lt;/ul&gt;</pre>
+            <p>Data from Firebase is loaded asynchronously, so make sure you edit the model <em>only after the promise has been fulfilled</em>.
+            You can do this using the <code>then</code> method (See the
+            <a href="http://docs.angularjs.org/api/ng.%24q">Angular documentation on $q</a> for more on how promises work).</p>
+            <p>Place all your logic that will manipulate the model like this:</p>
+            <pre class="prettyprint lang-js">promise.then(function() {
+  // Add a new item by simply modifying the model directly.
+  $scope.items.push({name: "Firebase", desc: "is awesome!"});
+  // Or, attach a function to $scope that will let a directive in markup manipulate the model.
+  $scope.removeItem = function() {
+    $scope.items.splice($scope.toRemove, 1);
+    $scope.toRemove = null;
+  };
+});</pre>
+          </section>
+          <section id="explicit">
+            <h3>Explicit Synchronization</h3>
+            <p>This method is great if you want control over when local changes are synchronized to Firebase.
+            Any changes made to a model won't be synchronized automatically, and you must invoke specific methods if you wish to update the remote data.
+            All remote changes will automatically appear in the local model (1-way synchronization).</p>
+            <p>Set <code>angularFireCollection</code> as a service dependency in your controller:</p>
+            <pre class="prettyprint lang-js">myapp.controller('MyCtrl', ['$scope', 'angularFireCollection',
+  function MyCtrl($scope, angularFireCollection) {
+    ...
+  }
+]);</pre>
+            <p>Create a collection at a specified Firebase URL and assign it to a model in <code>$scope</code>:</p>
+            <pre class="prettyprint lang-js">$scope.items = angularFireCollection(url);</pre>
+            <p>Use the model as you normally would in your markup:</p>
+            <pre class="prettyprint lang-html">&lt;ul ng-controller="MyCtrl"&gt;
+  &lt;li ng-repeat="item in items"&gt;{{item.name}}: {{item.desc}}&lt;/li&gt;
+&lt;/ul&gt;</pre>
+            <p>You can bind specific functions if you wish to add, remove or update objects in the collection with any Angular directive:</p>
+            <pre class="prettyprint lang-html">&lt;form ng-submit="items.add(item)"&gt;
+  &lt;input type="text" ng-model="item.name" placeholder="Name" required/&gt;
+  &lt;input type="text" ng-model="item.desc" placeholder="Description"/&gt;
+&lt;/form&gt;</pre>
+            <p>You can do the same with the <code>remove</code> and <code>update</code> methods.</p>
+          </section>
+          <section id="authentication">
+            Authentication goes here.
+          <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
+          <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
+          <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
+          <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
+            <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
+          </section>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <p>
+          Developed and Maintained by <a href="https://www.firebase.com/">Firebase</a> (C) 2013.
+          Code licensed under <a href="http://firebase.mit-license.org/">The MIT License</a>.
+        </p>
+      </footer>
+
+    </div> <!-- /container -->
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.js"></script>
+
+    <script type="text/javascript">
+      prettyPrint();
+    </script>
+  </body>
+</html>
