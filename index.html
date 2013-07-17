@@ -105,9 +105,9 @@
           <div class="control-group">
             <label class="control-label"><b>Build</b></label>
             <div class="controls">
-              <span class="btn-group" data-toggle="buttons-radio">
-                <button type="button" class="btn active">Minified</button>
-                <button type="button" class="btn">Uncompressed</button>
+              <span id="downloadGroup" class="btn-group" data-toggle="buttons-radio">
+                <button type="button" class="btn active" data-value="min">Minified</button>
+                <button type="button" class="btn" data-value="com">Uncompressed</button>
               </span>
             </div>
           </div>
@@ -132,7 +132,7 @@
         </form>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-large btn-primary"><i class="icon-cloud-download"></i> Download</button>
+        <button id="downloadButton" class="btn btn-large btn-primary"><i class="icon-cloud-download"></i> Download</button>
       </div>
     </div>
 
@@ -227,6 +227,18 @@
       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
       ga('create', 'UA-42491972-1', 'angularfire.com');
       ga('send', 'pageview');
+    </script>
+
+    <!-- Download box -->
+    <script>
+      $("#downloadButton").click(function () {
+        var typ = $("#downloadGroup .active").data("value");
+        if (typ == "min") {
+          window.location.href = "https://cdnjs.cloudflare.com/ajax/libs/angularFire/0.2.0/angularfire.min.js";
+        } else {
+          window.location.href = "http://angularfire.com/angularFire.js";
+        }
+      });
     </script>
   </body>
 </html>
