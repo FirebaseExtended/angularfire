@@ -296,14 +296,18 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
       };
 
       // Remove an object from the remote collection.
-      collection.remove = function(itemOrId) {
+      collection.remove = function(itemOrId, cb) {
         var item = angular.isString(itemOrId) ?
           collection[indexes[itemOrId]] : itemOrId;
-        item.$ref.remove();
+        if (!cb) {
+          item.$ref.remove();
+        } else {
+          item.$ref.remove(cb);
+        }
       };
 
       // Update an object in the remote collection.
-      collection.update = function(itemOrId) {
+      collection.update = function(itemOrId, cb) {
         var item = angular.isString(itemOrId) ?
           collection[indexes[itemOrId]] : itemOrId;
         var copy = {};
@@ -313,7 +317,11 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
             copy[key] = value;
           }
         });
-        item.$ref.set(copy);
+        if (!cb) {
+          item.$ref.set(copy);
+        } else {
+          item.$ref.set(copy, cb);
+        }
       };
 
       return collection;
