@@ -75,6 +75,31 @@ casper.then(function() {
   });
 });
 
+casper.then(function() {
+  var _testTodo = "This TODO should never show up";
+
+  this.test.assertEval(function(title) {
+    _scope.$destroy();
+    _scope.todos.push({title: title, completed: false});
+    _scope.$digest();
+    return _scope.todos.length == 3;
+  }, "Testing if destroying $scope causes disassociate", _testTodo);
+
+  this.evaluate(function() {
+    window.__flag = false;
+    var ref = new Firebase(_url);
+    ref.once("value", function(snapshot) {
+      if (snapshot.val().length == 2) {
+        window.__flag = true;
+      }
+    });
+  });
+
+  this.waitFor(function() {
+    return this.getGlobal("__flag") === true;
+  });
+});
+
 /*
 casper.then(function() {
   var _testTodo = "Pick up laundry";

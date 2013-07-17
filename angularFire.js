@@ -148,6 +148,10 @@ AngularFire.prototype = {
       }
       self._fRef.ref().set(val);
     }, true);
+    // Also watch for scope destruction and unregister.
+    $scope.$on("$destroy", function() {
+      self.disassociate();
+    });
   },
 
   // Helper function to log messages.
