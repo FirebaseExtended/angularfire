@@ -369,9 +369,11 @@ angular.module("firebase").factory("angularFireAuth", [
           } catch(e) {
             $rootScope.$broadcast("angularFireAuth:error", e);
           }
-          $timeout(function(){
-           cb(user);
-          });
+          if(cb) {
+            $timeout(function(){
+              cb(user);
+            });
+          }
         });
       },
       logout: function() {
