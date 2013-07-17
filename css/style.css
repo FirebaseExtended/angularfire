@@ -119,6 +119,12 @@ h2 {
   border: none;
 }
 
+/* Special case for footer on showcase page */
+.forcebottom {
+  position: fixed;
+  bottom: 0;
+}
+
 /* prettify.css */
 .com { color: #93a1a1; }
 .lit { color: #195f91; }
