@@ -113,8 +113,8 @@
             <label class="control-label"><b>CDN</b></label>
             <div class="controls">
               <span>
-                <input readonly="readonly" value="//cdnjs.cloudflare.com/ajax/libs/angularFire/0.1.0/angularfire.min.js" type="text">
-                <a data-clipboard-text="//cdnjs.cloudflare.com/ajax/libs/angularFire/0.1.0/angularfire.min.js" class="btn clipboard"><i class="icon-copy"></i></a>
+                <input readonly="readonly" value="//cdnjs.cloudflare.com/ajax/libs/angularFire/0.2.0/angularfire.min.js" type="text">
+                <a data-clipboard-text="//cdnjs.cloudflare.com/ajax/libs/angularFire/0.2.0/angularfire.min.js" class="btn clipboard"><i class="icon-copy"></i></a>
               </span>
             </div>
           </div>
@@ -169,7 +169,7 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/1.1.7/ZeroClipboard.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.js"></script>
-    <script src='http://firebase.github.io/angularFire/angularFire.js'></script>
+    <script src='//cdnjs.cloudflare.com/ajax/libs/angularFire/0.2.0/angularfire.min.js'></script>
 
     <script type="text/javascript">
       $(function() {
@@ -183,7 +183,7 @@
           var markup = $("#chat-code-html").html();
           var includes = '\n&lt;script src="//cdn.firebase.com/v0/firebase.js"&gt;&lt;/script&gt;' +
             '\n&lt;script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.5/angular.min.js"&gt;&lt;/script&gt;' +
-            '\n&lt;script src="http://firebase.github.io/angularFire/angularFire.js"&gt;&lt;/script&gt;' +
+            '\n&lt;script src="//cdnjs.cloudflare.com/ajax/libs/angularFire/0.2.0/angularfire.min.js"&gt;&lt;/script&gt;' +
             '\n&lt;script type="text/javascript"&gt;' + code + '\n&lt;/script&gt;'
           $("#chat-output").html(markup);
           $("#chat-code").html(_.escape(markup) + includes);
