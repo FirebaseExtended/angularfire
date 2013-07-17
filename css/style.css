@@ -20,7 +20,7 @@
 }
 
 .twitter-tweet {
-  width: 80px;
+  width: 78px;
 }
 
 /* Make nav items ocuppy full height of menu bar */
@@ -74,7 +74,7 @@ body > .navbar .brand {
 /* Make Download button the same size as the github button, emphasize the text with bold */
 .hero-unit .btn.btn-primary {
   width: 150px;
-  margin-left: 50px;
+  margin-left: 40px;
   font-weight: bold;
 }
 

@@ -41,10 +41,13 @@
     </div>
     <div class="container">
       <div class="hero-unit">
-        <img src="img/afire-logo.png"/>
-        <h2>The easiest and fastest way to wire up a backend for your Angular app.</h2><br/>
+        <img src="img/afire-logo.png" usemap="#logoMap" />
+        <map id="logoMap" name="logoMap">
+          <area shape="rect" coords="400,100,800,200" href="https://www.firebase.com" alt="By Firebase" title="By Firebase" />
+        </map>
+        <h2>The easiest and fastest way to wire up a backend for your <a href="http://angularjs.org/" target="_blank">Angular</a> app.</h2><br/>
         <p>
-          <a href="http://github.com/firebase/angularFire" class="btn btn-large"><i class="icon-github-sign"></i> View on Github &raquo;</a>
+          <a href="http://github.com/firebase/angularFire" class="btn btn-large" target="_blank"><i class="icon-github-sign"></i> View on Github &raquo;</a>
           <a href="#downloadModal" role="button" data-toggle="modal" class="btn btn-primary btn-large"><i class="icon-cloud-download"></i> Download &raquo;</a>
         </p><br/>
         <div class="social">
@@ -67,7 +70,7 @@
         </div>
         <div class="span4">
           <h3>3-way data binding</h3>
-          <p>Synchronizing and persisting user or app data is a breeze with AngularFire's 3-way data binding. It's never been easier to extend Angular's quintessential 2-way data binding concept to the server.</p>
+          <p>Synchronizing and persisting user or app data in realtime is a breeze with AngularFire's 3-way data binding. It's never been easier to extend Angular's quintessential 2-way data binding concept to the server.</p>
         </div>
       </div>
 
@@ -82,7 +85,17 @@
         <div class="span8">
           <pre class="prettyprint lang-html linenums" id="chat-code"></pre>
         </div>
-        <div class="span4" id="chat-output"></div>
+        <div class="span4">
+          <div id="chat-output">
+          </div>
+          <div>
+            <p style="font-size:3em;">&laquo;</p>
+            <p>
+              Just copy and paste the code on the left into your own
+              HTML file to recreate this simple chat application!
+            </p>
+          </div>
+        </div>
       </div>
 
       <footer class="footer">
