@@ -94,8 +94,17 @@ h2 {
   left: 0;
 }
 
+/* Ensure documentation links line up correctly on top */
 .bs-docs > section > h3 {
   margin-top: 30px;
+}
+
+/* Add padding to showcase apps */
+.showcase > div.well {
+  height: 150px;
+}
+.showcase > div > a > img {
+  padding-bottom: 20px;
 }
 
 /* prettify.css */
