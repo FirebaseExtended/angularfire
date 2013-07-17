@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>angularFire.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>angularFire.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="string">"use strict"</span>;
+
+angular.module(<span class="string">"firebase"</span>, []).value(<span class="string">"Firebase"</span>, Firebase);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>Implicit syncing. angularFire binds a model to $scope and keeps the data
+synchronized with a Firebase location both ways.
+TODO: Optimize to use child events instead of whole &quot;value&quot;.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>angular.module(<span class="string">"firebase"</span>).factory(<span class="string">"angularFire"</span>, [<span class="string">"$q"</span>, <span class="string">"$parse"</span>, <span class="string">"$timeout"</span>,
+  <span class="keyword">function</span>($q, $parse, $timeout) {
+    <span class="keyword">return</span> <span class="keyword">function</span>(ref, scope, name, ret) {
+      <span class="keyword">var</span> af = <span class="keyword">new</span> AngularFire($q, $parse, $timeout, ref);
+      <span class="keyword">return</span> af.associate(scope, name, ret);
+    };
+  }
+]);
+
+<span class="function"><span class="keyword">function</span> <span class="title">AngularFire</span><span class="params">($q, $parse, $timeout, ref)</span> {</span>
+  <span class="keyword">this</span>._q = $q;
+  <span class="keyword">this</span>._parse = $parse;
+  <span class="keyword">this</span>._timeout = $timeout;
+
+  <span class="keyword">this</span>._initial = <span class="literal">true</span>;
+  <span class="keyword">this</span>._remoteValue = <span class="literal">false</span>;
+
+  <span class="keyword">if</span> (<span class="keyword">typeof</span> ref == <span class="string">"string"</span>) {
+    <span class="keyword">this</span>._fRef = <span class="keyword">new</span> Firebase(ref);
+  } <span class="keyword">else</span> {
+    <span class="keyword">this</span>._fRef = ref;
+  }
+}
+AngularFire.prototype = {
+  disassociate: <span class="keyword">function</span>() {
+    <span class="keyword">var</span> self = <span class="keyword">this</span>;
+    <span class="keyword">if</span> (self._unregister) {
+      self._unregister();
+    }
+    <span class="keyword">this</span>._fRef.off(<span class="string">"value"</span>);
+  },
+  associate: <span class="keyword">function</span>($scope, name, ret) {
+    <span class="keyword">var</span> self = <span class="keyword">this</span>;
+    <span class="keyword">if</span> (ret == <span class="literal">undefined</span>) {
+      ret = [];
+    }
+    <span class="keyword">var</span> deferred = <span class="keyword">this</span>._q.defer();
+    <span class="keyword">var</span> promise = deferred.promise;
+    <span class="keyword">this</span>._fRef.on(<span class="string">"value"</span>, <span class="keyword">function</span>(snap) {
+      <span class="keyword">var</span> resolve = <span class="literal">false</span>;
+      <span class="keyword">if</span> (deferred) {
+        resolve = deferred;
+        deferred = <span class="literal">false</span>;
+      }
+      self._remoteValue = ret;
+      <span class="keyword">if</span> (snap &amp;&amp; snap.val() != <span class="literal">undefined</span>) {
+        <span class="keyword">var</span> val = snap.val();
+        <span class="keyword">if</span> (<span class="keyword">typeof</span> val != <span class="keyword">typeof</span> ret) {
+          self._log(<span class="string">"Error: type mismatch"</span>);
+          <span class="keyword">return</span>;
+        }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>Also distinguish between objects and arrays.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="keyword">var</span> check = Object.prototype.toString;
+        <span class="keyword">if</span> (check.call(ret) != check.call(val)) {
+          self._log(<span class="string">"Error: type mismatch"</span>);
+          <span class="keyword">return</span>;
+        }
+        self._remoteValue = angular.copy(val);
+        <span class="keyword">if</span> (angular.equals(val, self._parse(name)($scope))) {
+          <span class="keyword">return</span>;
+        }
+      }
+      self._timeout(<span class="keyword">function</span>() {
+        self._resolve($scope, name, resolve, self._remoteValue)
+      });
+    });
+    <span class="keyword">return</span> promise;
+  },
+  _log: <span class="keyword">function</span>(msg) {
+    <span class="keyword">if</span> (console &amp;&amp; console.log) {
+      console.log(msg);
+    }
+  },
+  _resolve: <span class="keyword">function</span>($scope, name, deferred, val) {
+    <span class="keyword">var</span> self = <span class="keyword">this</span>;
+    <span class="keyword">this</span>._parse(name).assign($scope, angular.copy(val));
+    <span class="keyword">this</span>._remoteValue = angular.copy(val);
+    <span class="keyword">if</span> (deferred) {
+      deferred.resolve(<span class="keyword">function</span>() {
+        self.disassociate();
+      });
+      <span class="keyword">this</span>._watch($scope, name);
+    }
+  },
+  _watch: <span class="keyword">function</span>($scope, name) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>Watch for local changes.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">var</span> self = <span class="keyword">this</span>;
+    self._unregister = $scope.$watch(name, <span class="keyword">function</span>() {
+      <span class="keyword">if</span> (self._initial) {
+        self._initial = <span class="literal">false</span>;
+        <span class="keyword">return</span>;
+      }
+      <span class="keyword">var</span> val = JSON.parse(angular.toJson(self._parse(name)($scope)));
+      <span class="keyword">if</span> (angular.equals(val, self._remoteValue)) {
+        <span class="keyword">return</span>;
+      }
+      self._fRef.ref().set(val);
+    }, <span class="literal">true</span>);
+  }
+};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>Explicit syncing. Provides a collection object you can modify.
+Original code by @petebacondarwin, from:
+<a href="https://github.com/petebacondarwin/angular-firebase/blob/master/ng-firebase-collection.js">https://github.com/petebacondarwin/angular-firebase/blob/master/ng-firebase-collection.js</a></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>angular.module(<span class="string">"firebase"</span>).factory(<span class="string">"angularFireCollection"</span>, [<span class="string">"$timeout"</span>, <span class="keyword">function</span>($timeout) {
+  <span class="function"><span class="keyword">function</span> <span class="title">angularFireItem</span><span class="params">(ref, index)</span> {</span>
+    <span class="keyword">this</span>.$ref = ref.ref();
+    <span class="keyword">this</span>.$id = ref.name();
+    <span class="keyword">this</span>.$index = index;
+      angular.extend(<span class="keyword">this</span>, {priority:ref.getPriority()}, ref.val());
+  }
+
+  <span class="keyword">return</span> <span class="keyword">function</span>(collectionUrlOrRef, initialCb) {
+    <span class="keyword">var</span> collection = [];
+    <span class="keyword">var</span> indexes = {};
+
+    <span class="keyword">var</span> collectionRef;
+    <span class="keyword">if</span> (<span class="keyword">typeof</span> collectionUrlOrRef == <span class="string">"string"</span>) {
+      collectionRef = <span class="keyword">new</span> Firebase(collectionUrlOrRef);
+    } <span class="keyword">else</span> {
+      collectionRef = collectionUrlOrRef;
+    }
+
+    <span class="function"><span class="keyword">function</span> <span class="title">getIndex</span><span class="params">(prevId)</span> {</span>
+      <span class="keyword">return</span> prevId ? indexes[prevId] + <span class="number">1</span> : <span class="number">0</span>;
+    }
+
+    <span class="function"><span class="keyword">function</span> <span class="title">addChild</span><span class="params">(index, item)</span> {</span>
+      indexes[item.$id] = index;
+      collection.splice(index, <span class="number">0</span>, item);
+    }
+
+    <span class="function"><span class="keyword">function</span> <span class="title">removeChild</span><span class="params">(id)</span> {</span>
+      <span class="keyword">var</span> index = indexes[id];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>Remove the item from the collection.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      collection.splice(index, <span class="number">1</span>);
+      indexes[id] = <span class="literal">undefined</span>;
+    }
+
+    <span class="function"><span class="keyword">function</span> <span class="title">updateChild</span> <span class="params">(index, item)</span> {</span>
+      collection[index] = item;
+    }
+
+    <span class="function"><span class="keyword">function</span> <span class="title">moveChild</span> <span class="params">(from, to, item)</span> {</span>
+      collection.splice(from, <span class="number">1</span>);
+      collection.splice(to, <span class="number">0</span>, item);
+      updateIndexes(from, to);
+    }
+
+    <span class="function"><span class="keyword">function</span> <span class="title">updateIndexes</span><span class="params">(from, to)</span> {</span>
+      <span class="keyword">var</span> length = collection.length;
+      to = to || length;
+      <span class="keyword">if</span> (to &gt; length) {
+        to = length;
+      }
+      <span class="keyword">for</span> (<span class="keyword">var</span> index = from; index &lt; to; index++) {
+        <span class="keyword">var</span> item = collection[index];
+        item.$index = indexes[item.$id] = index;
+      }
+    }
+
+    <span class="keyword">if</span> (initialCb &amp;&amp; <span class="keyword">typeof</span> initialCb == <span class="string">"function"</span>) {
+      collectionRef.once(<span class="string">"value"</span>, initialCb);
+    }
+
+    collectionRef.on(<span class="string">"child_added"</span>, <span class="keyword">function</span>(data, prevId) {
+      $timeout(<span class="keyword">function</span>() {
+        <span class="keyword">var</span> index = getIndex(prevId);
+        addChild(index, <span class="keyword">new</span> angularFireItem(data, index));
+        updateIndexes(index);
+      });
+    });
+
+    collectionRef.on(<span class="string">"child_removed"</span>, <span class="keyword">function</span>(data) {
+      $timeout(<span class="keyword">function</span>() {
+        <span class="keyword">var</span> id = data.name();
+        <span class="keyword">var</span> pos = indexes[id];
+        removeChild(id);
+        updateIndexes(pos);
+      });
+    });
+
+    collectionRef.on(<span class="string">"child_changed"</span>, <span class="keyword">function</span>(data, prevId) {
+      $timeout(<span class="keyword">function</span>() {
+        <span class="keyword">var</span> index = indexes[data.name()];
+        <span class="keyword">var</span> newIndex = getIndex(prevId);
+        <span class="keyword">var</span> item = <span class="keyword">new</span> angularFireItem(data, index);
+
+        updateChild(index, item);
+        <span class="keyword">if</span> (newIndex !== index) {
+          moveChild(index, newIndex, item);
+        }
+      });
+    });
+
+    collectionRef.on(<span class="string">"child_moved"</span>, <span class="keyword">function</span>(ref, prevId) {
+      $timeout(<span class="keyword">function</span>() {
+        <span class="keyword">var</span> oldIndex = indexes[ref.name()];
+        <span class="keyword">var</span> newIndex = getIndex(prevId);
+        <span class="keyword">var</span> item = collection[oldIndex];
+        moveChild(oldIndex, newIndex, item);
+      });
+    });
+
+    collection.add = <span class="keyword">function</span>(item, cb) {
+      <span class="keyword">var</span> ref;
+      <span class="keyword">if</span> (!cb) {
+        ref = collectionRef.ref().push(item);
+      } <span class="keyword">else</span> {
+        ref = collectionRef.ref().push(item, cb);
+      }
+      <span class="keyword">return</span> ref;
+    };
+    collection.remove = <span class="keyword">function</span>(itemOrId) {
+      <span class="keyword">var</span> item = angular.isString(itemOrId) ? collection[indexes[itemOrId]] : itemOrId;
+      item.$ref.remove();
+    };
+
+    collection.update = <span class="keyword">function</span>(itemOrId) {
+      <span class="keyword">var</span> item = angular.isString(itemOrId) ? collection[indexes[itemOrId]] : itemOrId;
+      <span class="keyword">var</span> copy = {};
+      angular.forEach(item, <span class="keyword">function</span>(value, key) {
+        <span class="keyword">if</span> (key.indexOf(<span class="string">"$"</span>) !== <span class="number">0</span>) {
+          copy[key] = value;
+        }
+      });
+      item.$ref.set(copy);
+    };
+
+    <span class="keyword">return</span> collection;
+  };
+}]);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>Authentication support for AngularFire.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>angular.module(<span class="string">"firebase"</span>).factory(<span class="string">"angularFireAuth"</span>, [
+  <span class="string">"$rootScope"</span>, <span class="string">"$parse"</span>, <span class="string">"$timeout"</span>, <span class="string">"$location"</span>, <span class="string">"$route"</span>,
+  <span class="keyword">function</span>($rootScope, $parse, $timeout, $location, $route) {
+
+    <span class="function"><span class="keyword">function</span> <span class="title">deconstructJWT</span><span class="params">(token)</span> {</span>
+      <span class="keyword">var</span> segments = token.split(<span class="string">"."</span>);
+      <span class="keyword">if</span> (!segments <span class="keyword">instanceof</span> Array || segments.length !== <span class="number">3</span>) {
+        <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Invalid JWT"</span>);
+      }
+      <span class="keyword">var</span> claims = segments[<span class="number">1</span>];
+      <span class="keyword">return</span> JSON.parse(decodeURIComponent(escape(window.atob(claims))));
+    }
+
+    <span class="function"><span class="keyword">function</span> <span class="title">updateExpression</span><span class="params">(scope, name, val, cb)</span> {</span>
+      <span class="keyword">if</span> (name) {
+        $timeout(<span class="keyword">function</span>() {
+          $parse(name).assign(scope, val);
+          cb();
+        });
+      }
+    }
+
+    <span class="function"><span class="keyword">function</span> <span class="title">authRequiredRedirect</span><span class="params">(route, path, self)</span> {</span>
+      <span class="keyword">if</span> (route.authRequired &amp;&amp; !self._authenticated){
+        <span class="keyword">if</span> (route.pathTo === <span class="literal">undefined</span>) {
+          self._redirectTo = $location.path();
+        } <span class="keyword">else</span> {
+          self._redirectTo = route.pathTo === path ? <span class="string">"/"</span> : route.pathTo;
+        }
+        $location.replace();
+        $location.path(path);
+      }
+    }
+
+    <span class="keyword">return</span> {
+      initialize: <span class="keyword">function</span>(url, options) {
+        <span class="keyword">var</span> self = <span class="keyword">this</span>;
+
+        options = options || {};
+        <span class="keyword">this</span>._scope = $rootScope;
+        <span class="keyword">if</span> (options.scope) {
+          <span class="keyword">this</span>._scope = options.scope;
+        }
+        <span class="keyword">if</span> (options.name) {
+          <span class="keyword">this</span>._name = options.name;
+        }
+        <span class="keyword">this</span>._cb = <span class="keyword">function</span>(){};
+        <span class="keyword">if</span> (options.callback &amp;&amp; <span class="keyword">typeof</span> options.callback === <span class="string">"function"</span>) {
+          <span class="keyword">this</span>._cb = options.callback;
+        }
+
+        <span class="keyword">this</span>._redirectTo = <span class="literal">null</span>;
+        <span class="keyword">this</span>._authenticated = <span class="literal">false</span>;
+        <span class="keyword">if</span> (options.path) {
+          authRequiredRedirect($route.current, options.path, self);
+          $rootScope.$on(<span class="string">"$routeChangeStart"</span>, <span class="keyword">function</span>(e, next) {
+            authRequiredRedirect(next, options.path, self);
+          });
+        }
+
+        <span class="keyword">this</span>._ref = <span class="keyword">new</span> Firebase(url);
+        <span class="keyword">if</span> (options.simple &amp;&amp; options.simple === <span class="literal">false</span>) {
+          updateExpression(<span class="keyword">this</span>._scope, <span class="keyword">this</span>._name, <span class="literal">null</span>);
+          <span class="keyword">return</span>;
+        }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>Simple Login.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="keyword">if</span> (!window.FirebaseSimpleLogin) {
+          <span class="keyword">var</span> err = <span class="keyword">new</span> Error(<span class="string">"FirebaseSimpleLogin undefined, "</span> +
+            <span class="string">"did you include firebase-simple-login.js?"</span>);
+          $rootScope.$broadcast(<span class="string">"angularFireAuth:error"</span>, err);
+          <span class="keyword">return</span>;
+        }
+        <span class="keyword">var</span> client = <span class="keyword">new</span> FirebaseSimpleLogin(<span class="keyword">this</span>._ref, <span class="keyword">function</span>(err, user) {
+          self._cb(err, user);
+          <span class="keyword">if</span> (err) {
+            $rootScope.$broadcast(<span class="string">"angularFireAuth:error"</span>, err);
+          } <span class="keyword">else</span> <span class="keyword">if</span> (user) {
+            self._loggedIn(user)
+          } <span class="keyword">else</span> {
+            self._loggedOut();
+          }
+        });
+        <span class="keyword">this</span>._authClient = client;
+      },
+      login: <span class="keyword">function</span>(tokenOrProvider, options) {
+        <span class="keyword">switch</span> (tokenOrProvider) {
+        <span class="keyword">case</span> <span class="string">"github"</span>:
+        <span class="keyword">case</span> <span class="string">"persona"</span>:
+        <span class="keyword">case</span> <span class="string">"twitter"</span>:
+        <span class="keyword">case</span> <span class="string">"facebook"</span>:
+        <span class="keyword">case</span> <span class="string">"password"</span>:
+          <span class="keyword">if</span> (!<span class="keyword">this</span>._authClient) {
+            <span class="keyword">var</span> err = <span class="keyword">new</span> Error(<span class="string">"Simple Login not initialized"</span>);
+            $rootScope.$broadcast(<span class="string">"angularFireAuth:error"</span>, err);
+          } <span class="keyword">else</span> {
+            <span class="keyword">this</span>._authClient.login(tokenOrProvider, options);
+          }
+          <span class="keyword">break</span>;
+        <span class="keyword">default</span>:</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>Custom Login.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="keyword">var</span> claims, self = <span class="keyword">this</span>;
+          <span class="keyword">try</span> {
+            claims = deconstructJWT(tokenOrProvider);
+            <span class="keyword">this</span>._ref.auth(tokenOrProvider, <span class="keyword">function</span>(err) {
+              <span class="keyword">if</span> (err) {
+                $rootScope.$broadcast(<span class="string">"angularFireAuth:error"</span>, err);
+              } <span class="keyword">else</span> {
+                self._loggedIn();
+              }
+            });
+          } <span class="keyword">catch</span>(e) {
+            $rootScope.$broadcast(<span class="string">"angularFireAuth:error"</span>, e)
+          }
+        }
+      },
+      logout: <span class="keyword">function</span>() {
+        <span class="keyword">if</span> (<span class="keyword">this</span>._authClient) {
+          <span class="keyword">this</span>._authClient.logout();
+        } <span class="keyword">else</span> {
+          <span class="keyword">this</span>._ref.unauth();
+          <span class="keyword">this</span>._loggedOut();
+        }
+      },
+      _loggedIn: <span class="keyword">function</span>(user) {
+        <span class="keyword">var</span> self = <span class="keyword">this</span>;
+        <span class="keyword">this</span>._authenticated = <span class="literal">true</span>;
+        updateExpression(<span class="keyword">this</span>._scope, <span class="keyword">this</span>._name, user, <span class="keyword">function</span>() {
+          $rootScope.$broadcast(<span class="string">"angularFireAuth:login"</span>, user);
+          <span class="keyword">if</span> (self._redirectTo) {
+            $location.replace();
+            $location.path(self._redirectTo);
+            self._redirectTo = <span class="literal">null</span>;
+          }
+        });
+      },
+      _loggedOut: <span class="keyword">function</span>() {
+        <span class="keyword">this</span>._authenticated = <span class="literal">false</span>;
+        updateExpression(<span class="keyword">this</span>._scope, <span class="keyword">this</span>._name, <span class="literal">null</span>, <span class="keyword">function</span>() {
+          $rootScope.$broadcast(<span class="string">"angularFireAuth:logout"</span>);
+        });
+      }
+    }
+  }
+]);</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>
