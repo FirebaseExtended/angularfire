@@ -1,7 +1,8 @@
 {
   "name": "angular-fire",
   "version": "0.2.0",
-  "main": "./angularFire.js",
+  "main": ["./angularFire.js", "./angularfire.min.js"],
+  "ignore": ["Makefile", "tests"],
   "dependencies": {
     "angular": "1.0.7"
   }
