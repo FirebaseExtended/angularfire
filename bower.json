@@ -1,6 +1,6 @@
 {
   "name": "angular-fire",
-  "version": "0.2",
+  "version": "0.2.0",
   "main": "./angularFire.js",
   "dependencies": {
     "angular": "1.0.7"
