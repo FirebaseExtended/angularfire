@@ -446,7 +446,8 @@ angular.module("firebase").factory("angularFireAuth", [
       // The login method takes a provider (for Simple Login) or a token
       // (for Custom Login) and authenticates the Firebase URL with which
       // the service was initialized.
-      login: function(tokenOrProvider, options) {
+      login: function(tokenOrProvider, options, callback) {
+         callback && this._notifyCallback(callback);
         switch (tokenOrProvider) {
         case "github":
         case "persona":
@@ -509,7 +510,23 @@ angular.module("firebase").factory("angularFireAuth", [
         updateExpression(this._scope, this._name, null, function() {
           $rootScope.$broadcast("angularFireAuth:logout");
         });
-      }
+      },
+
+       _notifyCallback: function(callback) {
+          var subs = [];
+          function done(err, user) {
+             callback(err, user);
+             for(var i=0; i < subs.length; i++) {
+                subs[i]();
+             }
+          }
+          subs.push($rootScope.$on("angularFireAuth:login", function(evt, user) {
+             done(null, user);
+          }));
+          subs.push($rootScope.$on("angularFireAuth:error", function(evt, err) {
+             done(err, null);
+          }));
+       }
     }
   }
 ]);
