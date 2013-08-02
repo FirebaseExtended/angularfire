@@ -332,8 +332,8 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
 // Defines the `angularFireAuth` service that provides authentication support
 // for AngularFire.
 angular.module("firebase").factory("angularFireAuth", [
-  "$rootScope", "$parse", "$timeout", "$location", "$route",
-  function($rootScope, $parse, $timeout, $location, $route) {
+  "$rootScope", "$parse", "$timeout", "$location", "$route", "$q",
+  function($rootScope, $parse, $timeout, $location, $route, $q) {
 
     // Helper function to extract claims from a JWT. Does *not* verify the
     // validity of the token.
@@ -446,8 +446,8 @@ angular.module("firebase").factory("angularFireAuth", [
       // The login method takes a provider (for Simple Login) or a token
       // (for Custom Login) and authenticates the Firebase URL with which
       // the service was initialized.
-      login: function(tokenOrProvider, options, callback) {
-         callback && this._notifyCallback(callback);
+      login: function(tokenOrProvider, options) {
+        var promise = this._watchForLogin();
         switch (tokenOrProvider) {
         case "github":
         case "persona":
@@ -478,6 +478,7 @@ angular.module("firebase").factory("angularFireAuth", [
             $rootScope.$broadcast("angularFireAuth:error", e)
           }
         }
+        return promise;
       },
 
       // Unauthenticate the Firebase reference.
@@ -512,10 +513,12 @@ angular.module("firebase").factory("angularFireAuth", [
         });
       },
 
-       _notifyCallback: function(callback) {
-          var subs = [];
+       _watchForLogin: function($q) {
+          var subs = [], def = $q.defer();
           function done(err, user) {
-             callback(err, user);
+             if( err ) { def.reject(err); }
+             else { def.resolve(user); }
+
              for(var i=0; i < subs.length; i++) {
                 subs[i]();
              }
@@ -526,6 +529,7 @@ angular.module("firebase").factory("angularFireAuth", [
           subs.push($rootScope.$on("angularFireAuth:error", function(evt, err) {
              done(err, null);
           }));
+          return def.promise;
        }
     }
   }
