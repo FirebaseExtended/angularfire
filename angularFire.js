@@ -280,8 +280,13 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
         });
       });
 
-      // `angularFireCollection` exposes three methods on the collection
+      // `angularFireCollection` exposes four methods on the collection
       // returned.
+
+      // Retrieve object by name.
+      collection.getByName = function(name) {
+        return collection[indexes[name]];
+      };
 
       // Add an object to the remote collection. Adding an object is the
       // equivalent of calling `push()` on a Firebase reference.
