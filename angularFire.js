@@ -544,31 +544,30 @@ angular.module("firebase").factory("angularFireAuth", [
       },
 
       _watchForLogin: function() {
-         var subs = [], def = $q.defer();
-         function done(err, user) {
-            // timeout is necessary because it a) allows the auth callbacks to take
-            // effect (applying auth parms before this is invoked) and b) forces
-            // $scope.apply(), which is necessary to make the promise resolve()
-            // event actually get sent to the listeners
-            $timeout(function() {
-               if( err ) {
-                  def.reject(err);
-               }
-               else {
-                  def.resolve(user);
-               }
-            });
-            for(var i=0; i < subs.length; i++) {
-               subs[i]();
+        var subs = [], def = $q.defer();
+        function done(err, user) {
+          // timeout is necessary because it a) allows the auth callbacks to take
+          // effect (applying auth parms before this is invoked) and b) forces
+          // $scope.apply(), which is necessary to make the promise resolve()
+          // event actually get sent to the listeners
+          $timeout(function() {
+            if (err) {
+              def.reject(err);
+            } else {
+              def.resolve(user);
             }
-         }
-         subs.push($rootScope.$on("angularFireAuth:login", function(evt, user) {
-            done(null, user);
-         }));
-         subs.push($rootScope.$on("angularFireAuth:error", function(evt, err) {
-            done(err, null);
-         }));
-         return def.promise;
+          });
+          for (var i=0; i < subs.length; i++) {
+            subs[i]();
+          }
+        }
+        subs.push($rootScope.$on("angularFireAuth:login", function(evt, user) {
+          done(null, user);
+        }));
+        subs.push($rootScope.$on("angularFireAuth:error", function(evt, err) {
+          done(err, null);
+        }));
+        return def.promise;
       }
     }
   }
