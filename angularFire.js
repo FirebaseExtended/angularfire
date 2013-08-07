@@ -5,7 +5,7 @@
 // as normal, except that the changes are also sent to all other clients
 // instead of just a server.
 //
-//      AngularFire 0.2
+//      AngularFire 0.3
 //      http://angularfire.com
 //      License: MIT
 
@@ -337,8 +337,8 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
 // Defines the `angularFireAuth` service that provides authentication support
 // for AngularFire.
 angular.module("firebase").factory("angularFireAuth", [
-  "$rootScope", "$parse", "$timeout", "$location", "$route",
-  function($rootScope, $parse, $timeout, $location, $route) {
+   "$rootScope", "$parse", "$timeout", "$location", "$route", "$q",
+   function($rootScope, $parse, $timeout, $location, $route, $q) {
 
     // Helper function to extract claims from a JWT. Does *not* verify the
     // validity of the token.
@@ -452,6 +452,7 @@ angular.module("firebase").factory("angularFireAuth", [
       // (for Custom Login) and authenticates the Firebase URL with which
       // the service was initialized.
       login: function(tokenOrProvider, options) {
+        var promise = this._watchForLogin();
         switch (tokenOrProvider) {
         case "github":
         case "persona":
@@ -482,6 +483,7 @@ angular.module("firebase").factory("angularFireAuth", [
             $rootScope.$broadcast("angularFireAuth:error", e)
           }
         }
+        return promise;
       },
 
       // Unauthenticate the Firebase reference.
@@ -514,6 +516,34 @@ angular.module("firebase").factory("angularFireAuth", [
         updateExpression(this._scope, this._name, null, function() {
           $rootScope.$broadcast("angularFireAuth:logout");
         });
+      },
+
+      _watchForLogin: function() {
+         var subs = [], def = $q.defer();
+         function done(err, user) {
+            // timeout is necessary because it a) allows the auth callbacks to take
+            // effect (applying auth parms before this is invoked) and b) forces
+            // $scope.apply(), which is necessary to make the promise resolve()
+            // event actually get sent to the listeners
+            $timeout(function() {
+               if( err ) {
+                  def.reject(err);
+               }
+               else {
+                  def.resolve(user);
+               }
+            });
+            for(var i=0; i < subs.length; i++) {
+               subs[i]();
+            }
+         }
+         subs.push($rootScope.$on("angularFireAuth:login", function(evt, user) {
+            done(null, user);
+         }));
+         subs.push($rootScope.$on("angularFireAuth:error", function(evt, err) {
+            done(err, null);
+         }));
+         return def.promise;
       }
     }
   }
