@@ -511,6 +511,27 @@ angular.module("firebase").factory("angularFireAuth", [
         return promise;
       },
 
+      // Function cb receives a Simple Login user object
+      createUser: function(email, password, cb){
+        var self = this;
+        this._authClient.createUser(email, password, function(err, user){
+          try {
+            if (err) {
+              $rootScope.$broadcast("angularFireAuth:error", err);
+            } else {
+              self._loggedIn(user);
+            }
+          } catch(e) {
+            $rootScope.$broadcast("angularFireAuth:error", e);
+          }
+          if (cb) {
+            $timeout(function(){
+              cb(user);
+            });
+          }
+        });
+      },
+
       // Unauthenticate the Firebase reference.
       logout: function() {
         if (this._authClient) {
