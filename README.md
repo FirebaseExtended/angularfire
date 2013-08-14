@@ -109,7 +109,7 @@ myapp.controller('MyCtrl', ['$scope', 'angularFireCollection',
 Create a collection at a specified Firebase URL and assign it to a model in `$scope`:
 
 ```js
-$scope.items = angularFireCollection(url);
+$scope.items = angularFireCollection(url,optionalCallbackOnInitialLoad);
 ```
 
 Use the model as you normally would in your markup:
