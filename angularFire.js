@@ -330,26 +330,31 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
 	}
 ]);
 
-// simple angularFire resource
-// scope & resource are optional
-// local resource type is set w/ firebase.on('value)
-// resolves promise on fire.on('value')
-// containing the resource, and a destroy method
+// angularFire resource
+// scope & reference params are optional
+// promise is resolved on fire.on('value')
+// passing the resultant snapshot.val()
+// scope.reference type is given by firebase.on('value) snapshot
+//
 //
 // JavaScript Example
+//
 // *optional
-// var promise = angularFireResource(url, *scope, *{} or [])
-// promise.then(function(resource, destroy) {
+// var promise = angularFireResource(url, *scope, *scope.<reference> or {} or [] or 'stringName')
+// promise.then(function(resource, explicit) {
 //	 $scope.stuff = resource;
 // });
 //
 // Directive Example
 //
 // attribute "domain" can be string or {{bind}}
+// attribute "location" is the firebase data-location path: "path/to/my/stuff"
 // <div firebase domain="https://myfirebase.firebaseio.com" location="stuff">
 //    <div ng-repeat="thing in stuff"><input type="text" ng-model="thing.name" /></div>
 // </div>
+// by @ItsLeeOwen: https://github.com/ItsLeeOwen/angularFire
 
+// resource directive
 angular.module("firebase").directive('firebase', ["$interpolate", "$parse", "angularFireResource", function($interpolate, $parse, angularFireResource) {
 	return {
 		restrict: 'A',
@@ -364,37 +369,57 @@ angular.module("firebase").directive('firebase', ["$interpolate", "$parse", "ang
 			} else {
 				name = location.substring(location.lastIndexOf('/')+1);
 			}
-			angularFireResource(domain+'/'+location, scope).then(function(resource) {
+			angularFireResource(domain+'/'+location, scope).promise.then(function(resource) {
 				$parse(name).assign(scope, resource);
 			})
 		}
 	}
 }]);
 
-angular.module("firebase").factory("angularFireResource", ["$timeout", "$q",
-	function($timeout, $q) {
-		return function(url, scope, resource) {
+// resource service
+angular.module("firebase").factory("angularFireResource", ["$parse", "$timeout", "$q",
+	function($parse, $timeout, $q) {
+		// resource can be name for scope assignment
+		// or array/object reference
+		return function(url, scope, reference) {
 			var deferred = $q.defer(),
-				firebase = new Firebase(url);
-			// remove scope.$watch & firebase.on(event, context)
-			var destroy = function() {
-				if (scope)
-					local.unWatch();
-				remote.unWatch();
-				firebase = null;
-			},
+				firebase = new Firebase(url),
+				name;
+			if (angular.isString(reference)) {
+				name = reference;
+				reference = undefined;
+			}
+			var explicit = {
+				promise: deferred.promise,
+				// remove scope.$watch & firebase.on(event, context)
+				destroy: function() {
+					if (scope)
+						local.unWatch();
+					remote.unWatch();
+					firebase = null;
+				},
+				set: function(value, cb) {
+					firebase.set(value, cb)
+				}
+			}
 			// private client utils
-			local = {
+			var local = {
 				set: function(value) {
-					if (angular.isDefined(resource))
-						angular.copy(value, resource);
-					else
-						resource = value;
+					if (angular.isDefined(reference)) {
+						angular.copy(value, reference);
+					} else {
+						reference = value;
+						if (scope && name) {
+							$parse(name).assign(scope, reference);
+						}
+					}
+					if (scope && !scope.$root.$$phase)
+						scope.$digest();
 				},
 				watch: function() {
 					local.unWatch();
 					local.unWatch = scope.$watch(function() {
-						return resource;
+						return reference;
 					}, local.change, true)
 				},
 				change: function(a, b) {
@@ -430,16 +455,17 @@ angular.module("firebase").factory("angularFireResource", ["$timeout", "$q",
 				},
 				change: function(snapshot) {
 					var value = snapshot.val();
-					// begin watching local resource
+					// begin watching local reference
 					if (!angular.isDefined(remote.value)) {
-						local.watch();
+						if (scope)
+							local.watch();
 					}
 					remote.value = angular.copy(value);
-					if (!angular.equals(resource, value)) {
+					if (!angular.equals(reference, value)) {
 						local.set(value);
 					}
 					$timeout(function() {
-						deferred.resolve(resource, destroy);
+						deferred.resolve(reference);
 					});
 				},
 				// compare local changes against
@@ -449,10 +475,10 @@ angular.module("firebase").factory("angularFireResource", ["$timeout", "$q",
 			remote.watch();
 			if (scope) {
 				scope.$on('$destroy', function() {
-					destroy();
+					explicit.destroy();
 				})
 			}
-			return deferred.promise;
+			return explicit;
 		}
 	}
 ]);
