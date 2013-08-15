@@ -139,21 +139,28 @@ for a working example of this pattern.
 Development
 -----------
 If you'd like to hack on AngularFire itself, you'll need
-[UglifyJS](https://github.com/mishoo/UglifyJS2) and
+[node.js](http://nodejs.org/download/) and
 [CasperJS](https://github.com/n1k0/casperjs):
 
 ```bash
-npm install uglifyjs -g
 brew install casperjs
+npm install
 ```
 
-A Makefile is included for your convenience:
+Use grunt to build and test the code:
 
 ```bash
+# Default task - validates with jshint, minifies source and then runs unit tests
+grunt
+
+# Watch for changes and run unit test after each change
+grunt watch
+
 # Run tests
-make test
+grunt test
+
 # Minify source
-make minify
+grunt build
 ```
 
 License
