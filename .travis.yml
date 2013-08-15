@@ -1,15 +1,16 @@
 language: node_js
 node_js:
-  - 0.8
+  - 0.10
 branches:
   only:
     - master
-before_install:
+install:
   - git clone git://github.com/n1k0/casperjs.git ~/casperjs
   - export PATH=$PATH:~/casperjs/bin
-  - npm install -g uglify-js
+  - npm install -g grunt-cli
+  - npm install
 before_script:
   - phantomjs --version
   - casperjs --version
 script:
-  - make test
+  - grunt
