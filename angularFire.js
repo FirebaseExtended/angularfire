@@ -174,7 +174,7 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
         this.$ref = ref.ref();
         this.$id = ref.name();
         this.$index = index;
-        angular.extend(this, {priority: ref.getPriority()}, ref.val());
+        angular.extend(this, {$priority: ref.getPriority()}, ref.val());
       }
 
       // Implementation of firebase priority ordering:
@@ -232,13 +232,13 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
       }
 
       // Update an existing child in the local collection.
-      function updateChild (index, item) {
+      function updateChild(index, item) {
         collection[index] = item;
       }
 
       // Move an existing child to a new location in the collection (usually
       // triggered by a priority change).
-      function moveChild (from, to, item) {
+      function moveChild(from, to, item) {
         collection.splice(from, 1);
         collection.splice(to, 0, item);
         updateIndexes(from, to);
