@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html style="width: 100%; height: 100%;">
+<head>
+  <title>Your Firebase App</title>
+  <script src="../js/libs/jquery.min.js"></script>
+  <script type="text/javascript" src="https://cdn.firebase.com/v0/firebase.js"></script>
+  <script type="text/javascript" src="js/ide.js"></script>
+  <script type="text/javascript" src="../js/libs/modernizr-2.0.6.min.js"></script>
+  <link rel="stylesheet" href="css/ide.css">
+</head>
+<body class="noborder playBody">
+  <script type="text/javascript">
+    // Display our code in a playframe whenever it's updated.
+    $(document).ready(function () {
+      var userToken = window.location.hash.replace(/#/, "");
+      var myData = new Firebase("http://firebase-tutorial.firebaseio.com/popouts/" + userToken + "");
+      var myFrame = new PlayFrame($(document.body));
+      myData.on("value", function(d) {
+        myFrame.setContents(d.val());
+      });
+    });
+  </script>
+  <script type="text/javascript" src="../js/analyze.js"></script>
+</body>
+</html>

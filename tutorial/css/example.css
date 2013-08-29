@@ -1,0 +1,138 @@
+/* Global */
+
+body {
+  margin-top: 10px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 500px;
+  background-color: #f8f8f8;
+  font-size: 24px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #424547;
+  text-align: center;
+}
+
+h1 {
+  font-size: 36px;
+  font-weight: bold;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #424547;
+}
+
+h3 {
+  font-size: 24px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #424547;
+}
+
+p {
+ font-size: 16px;
+}
+
+input {
+  font-size: 24px;
+}
+
+input[type=text] {
+  color: #424547;
+  border: 1px solid #c2c2c2;
+  background-color: white;
+}
+
+em {
+  font-style: normal;
+  font-weight: bold;
+  color: black;
+}
+
+/* Chat */
+#messagesDiv {
+  background-color: white;
+  overflow: auto;
+  height: 230px;
+  width: 100%;
+  padding: 10px;
+  border: 8px solid #424547;
+  margin-bottom: 5px;
+  text-align: left;
+}
+
+#nameInput {
+  width: 26%;
+}
+
+#messageInput {
+  width: 68%;
+}
+
+/* Drawing */
+
+#colorholder {
+  width: 480px;
+  height: 30px;
+  border: 2px solid #424547;
+  margin-top: 5px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#drawing-canvas {
+  border: 3px solid #999
+}
+
+.colorbox {
+  width: 22px;
+  height: 22px;
+  margin: 1px;
+  display: inline-block;
+  border: 3px solid black;
+}
+
+/* Leaderboard */
+
+#leaderboardTable {
+  background-color: white;
+  overflow: auto;
+  width: 100%;
+  padding: 10px;
+  border: 8px solid #424547;
+  margin-bottom: 5px;
+}
+
+#scoreInput {
+  width: 68%;
+}
+
+#highestscore {
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+/* Presence */
+
+#presenceDiv {
+  text-align: center;
+}
+
+/* Tetris */
+
+.tetris-body {
+    width: 600px;
+}
+
+#canvas0, #canvas1 {
+  display: inline-block;
+  border: 4px solid #424547;
+}
+
+#restartButton {
+    margin-top: 5px;
+}
+
+#gameInProgress {
+  font-size: 14px;
+}
+
+.hide {
+  display: none;
+}
