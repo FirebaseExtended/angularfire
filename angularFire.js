@@ -54,7 +54,9 @@ AngularFire.prototype = {
     // [Ticket #25](https://github.com/firebase/angularFire/issues/25).
     this._fRef.on("value", function(snap) {
       var remote = snap.val();
-      var local = JSON.parse(angular.toJson(self._parse(name)($scope)));
+      // We use toJson/fromJson to remove $$hashKey. Can be replaced by
+      // angular.copy, but only for later version of AngularJS.
+      var local = angular.fromJson(angular.toJson(self._parse(name)($scope)));
 
       if (self._initial) {
         // First value received from the server. We try and merge any local
@@ -149,7 +151,7 @@ AngularFire.prototype = {
       }
       // If the new local value matches the current remote value, we don't
       // trigger a remote update.
-      var val = JSON.parse(angular.toJson(self._parse(name)($scope)));
+      var val = angular.fromJson(angular.toJson(self._parse(name)($scope)));
       if (angular.equals(val, self._remoteValue)) {
         return;
       }
@@ -370,7 +372,10 @@ angular.module("firebase").factory("angularFireAuth", [
         throw new Error("Invalid JWT");
       }
       var claims = segments[1];
-      return JSON.parse(decodeURIComponent(escape(window.atob(claims))));
+      if (window.atob) {
+        return JSON.parse(decodeURIComponent(escape(window.atob(claims))));
+      }
+      return token;
     }
 
     // Updates the provided model.
