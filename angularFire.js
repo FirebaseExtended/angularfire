@@ -62,22 +62,46 @@ AngularFire.prototype = {
     // This needs to be optimized, see
     // [Ticket #25](https://github.com/firebase/angularFire/issues/25).
     this._fRef.on("value", function(snap) {
+      var remote = snap.val();
+      var local = JSON.parse(angular.toJson(self._parse(name)($scope)));
+
+      if (self._initial) {
+        // First value received from the server. We try and merge any local
+        // changes that may have been made with the server values.
+        self._initial = false;
+        var merged = false;
+        var check = Object.prototype.toString;
+        if (remote && check.call(local) == check.call(remote)) {
+          if (check.call(local) == "[object Array]") {
+            merged = local.concat(remote);
+          } else if (check.call(localval) == "[object Object]") {
+            merged = local;
+            for (var key in remote) {
+              merged[key] = remote[key];
+            }
+          }
+        }
+        // If remote value is null, overwrite remote value with local
+        if (remote === null) {
+          merged = local;
+        }
+        // If types don't match or the type is primitive, just overwrite the
+        // local value with the remote value.
+        if (merged) {
+          self._fRef.ref().set(merged);
+          return;
+        }
+      }
+
       var resolve = false;
       if (deferred) {
         resolve = deferred;
         deferred = false;
       }
-      if (snap && snap.val() !== undefined) {
-        var val = snap.val();
-        self._remoteValue = angular.copy(val);
-        // If the new remote value is the same as the local value, ignore.
-        if (angular.equals(val, self._parse(name)($scope))) {
-          return;
-        }
-      }
+
       // Update the local model to reflect remote changes.
       self._timeout(function() {
-        self._resolve($scope, name, resolve, self._remoteValue)
+        self._resolve($scope, name, resolve, remote)
       });
     });
     return promise;
@@ -113,8 +137,8 @@ AngularFire.prototype = {
         }
       }
     }
-    this._parse(name).assign($scope, angular.copy(val));
     this._remoteValue = angular.copy(val);
+    this._parse(name).assign($scope, angular.copy(val));
     if (deferred) {
       deferred.resolve(function() {
         self.disassociate();
@@ -127,10 +151,9 @@ AngularFire.prototype = {
   _watch: function($scope, name) {
     var self = this;
     self._unregister = $scope.$watch(name, function() {
-      // When the local value is set for the first time, via the .on('value')
-      // callback, we ignore it.
+      // We ignore local value changes until the first value was received
+      // from the server.
       if (self._initial) {
-        self._initial = false;
         return;
       }
       // If the new local value matches the current remote value, we don't

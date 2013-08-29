@@ -33,30 +33,38 @@
   </div>
   <script type="text/javascript">
     var _scope = null;
+    var _preTODO = {title: "Pre-existing TODO", completed: false};
     var _url = 'https://angularFireTests.firebaseio-demo.com/todo';
 
     angular.module("todo", ["firebase"]);
     function Todo($scope, angularFire) {
-      $scope.todos = [];
+      $scope.todos = [_preTODO];
       $scope.newTodo = '';
-      angularFire(new Firebase(_url), $scope, 'todos').then(function() {
-        _scope = $scope;
-        $scope.addTodo = function() {
-          if (!$scope.newTodo.length) {
-            return;
-          }
-          $scope.todos.push({
-            title: $scope.newTodo,
-            completed: false
-          });
-          $scope.newTodo = '';
-        };
-        $scope.removeTodo = function(todo) {
-          $scope.todos.splice($scope.todos.indexOf(todo), 1);
-        };
+
+      var ref = new Firebase(_url);
+      ref.set(null, function(err) {
+        if (!err) bindData($scope, ref, angularFire);
       });
     }
 
+    function bindData($scope, ref, angularFire) {
+      angularFire(ref, $scope, 'todos').then(function() {
+        _scope = $scope;
+      });
+      $scope.addTodo = function() {
+        if (!$scope.newTodo.length) {
+          return;
+        }
+        $scope.todos.push({
+          title: $scope.newTodo,
+          completed: false
+        });
+        $scope.newTodo = '';
+      };
+      $scope.removeTodo = function(todo) {
+        $scope.todos.splice($scope.todos.indexOf(todo), 1);
+      };
+    }
     function testIfInDOM(todo, node) {
       if (node.childNodes.length != 7) return false;
       if (node.childNodes[1].checked != todo.completed) return false;

@@ -7,25 +7,13 @@ casper.start("tests/test_todo.html", function() {
   this.test.assertEval(function() {
     if (!Firebase) return false;
     if (!AngularFire) return false;
-    if (_scope != null) return false;
     return true;
   }, "AngularFire exists");
 });
 
-casper.thenEvaluate(function() {
-  // Clean up Firebase to start fresh test.
-  var fbRef = new Firebase(_url);
-  fbRef.set(null, function(err) {
-    window.__flag = true;
-  });
-});
-
-casper.waitFor(function() {
-  return this.getGlobal("__flag") === true;
-});
-
 casper.waitFor(function() {
   return this.evaluate(function() {
+    // Wait for initial data to load to check if data was merged.
     return _scope != null;
   });
 });
@@ -40,9 +28,10 @@ casper.then(function() {
     return _scope.newTodo == "";
   }, "Adding a new TODO", _testTodo);
 
+  // By adding this new TODO, we now should have two in the list.
   this.waitForSelector(".todoView", function() {
     this.test.assertEval(function(todo) {
-      return testIfInDOM(todo, document.querySelector(".todoView"));
+      return testIfInDOM(todo, document.querySelectorAll(".todoView")[1]);
     }, "Testing if TODO is in the DOM", {title: _testTodo, completed: false});
   });
 });
@@ -70,7 +59,7 @@ casper.then(function() {
 
   this.waitFor(function() {
     return this.evaluate(function() {
-      return document.querySelectorAll(".todoView").length == 2;
+      return document.querySelectorAll(".todoView").length == 3;
     });
   });
 });
@@ -82,14 +71,14 @@ casper.then(function() {
     _scope.$destroy();
     _scope.todos.push({title: title, completed: false});
     _scope.$digest();
-    return _scope.todos.length == 3;
+    return _scope.todos.length == 4;
   }, "Testing if destroying $scope causes disassociate", _testTodo);
 
   this.evaluate(function() {
     window.__flag = false;
     var ref = new Firebase(_url);
     ref.once("value", function(snapshot) {
-      if (snapshot.val().length == 2) {
+      if (snapshot.val().length == 3) {
         window.__flag = true;
       }
     });
