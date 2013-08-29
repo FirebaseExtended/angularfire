@@ -22,8 +22,7 @@ angular.module("firebase").factory("angularFire", ["$q", "$parse", "$timeout",
     // The factory returns a new instance of the `AngularFire` object, defined
     // below, everytime it is called. The factory takes 3 arguments:
     //
-    //   * `ref`:    A Firebase URL or reference. A reference with limits
-    //   or queries applied may be provided.
+    //   * `ref`:    A Firebase reference. Queries or limits may be applied.
     //   * `$scope`: The scope with which the bound model is associated.
     //   * `name`:   The name of the model.
     return function(ref, scope, name) {
@@ -36,19 +35,11 @@ angular.module("firebase").factory("angularFire", ["$q", "$parse", "$timeout",
 // The `AngularFire` object that implements implicit synchronization.
 function AngularFire($q, $parse, $timeout, ref) {
   this._q = $q;
+  this._fRef = ref;
   this._parse = $parse;
   this._timeout = $timeout;
-
   this._initial = true;
   this._remoteValue = false;
-
-  // `ref` can either be a string (URL to a Firebase location), or a
-  // `Firebase` object.
-  if (typeof ref == "string") {
-    this._fRef = new Firebase(ref);
-  } else {
-    this._fRef = ref;
-  }
 }
 AngularFire.prototype = {
   // This function is called by the factory to create a new 2-way binding
@@ -184,7 +175,7 @@ AngularFire.prototype = {
 // by @petebacondarwin.
 angular.module("firebase").factory("angularFireCollection", ["$timeout",
   function($timeout) {
-    return function(collectionUrlOrRef, initialCb) {
+    return function(collectionRef, initialCb) {
       // An internal representation of a model present in the collection.
       function angularFireItem(ref, index) {
         this.$ref = ref.ref();
@@ -219,16 +210,6 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
 
       var indexes = {};
       var collection = [];
-
-      // The provided ref can either be a string (URL to a Firebase location)
-      // or an object of type `Firebase`. Firebase objects with limits or
-      // queries applies may also be provided.
-      var collectionRef;
-      if (typeof collectionUrlOrRef == "string") {
-        collectionRef = new Firebase(collectionUrlOrRef);
-      } else {
-        collectionRef = collectionUrlOrRef;
-      }
 
       function getIndex(prevId) {
         return prevId ? indexes[prevId] + 1 : 0;
@@ -469,7 +450,7 @@ angular.module("firebase").factory("angularFireAuth", [
 
         // Initialize user authentication state to `null`.
         this._ref = new Firebase(url);
-        if (options["simple"] === false) {
+        if (options.simple === false) {
           updateExpression(this._scope, this._name, null);
           return;
         }
