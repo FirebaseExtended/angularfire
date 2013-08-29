@@ -509,7 +509,8 @@ angular.module("firebase").factory("angularFireAuth", [
         return promise;
       },
 
-      // Function cb receives a Simple Login user object. Pass noLogin=true
+      // Function cb receives an error as the first argument and a
+      // Simple Login user object as the second argument. Pass noLogin=true
       // if you don't want the newly created user to also be logged in.
       createUser: function(email, password, cb, noLogin){
         var self = this;
