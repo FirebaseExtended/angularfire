@@ -37,6 +37,7 @@
 
     angular.module("todo", ["firebase"]);
     function Todo($scope, angularFire) {
+      $scope.todos = [];
       $scope.newTodo = '';
       angularFire(new Firebase(_url), $scope, 'todos').then(function() {
         _scope = $scope;

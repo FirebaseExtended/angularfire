@@ -20,19 +20,15 @@ angular.module("firebase", []).value("Firebase", Firebase);
 angular.module("firebase").factory("angularFire", ["$q", "$parse", "$timeout",
   function($q, $parse, $timeout) {
     // The factory returns a new instance of the `AngularFire` object, defined
-    // below, everytime it is called. The factory takes 4 arguments:
+    // below, everytime it is called. The factory takes 3 arguments:
     //
     //   * `ref`:    A Firebase URL or reference. A reference with limits
     //   or queries applied may be provided.
     //   * `$scope`: The scope with which the bound model is associated.
     //   * `name`:   The name of the model.
-    //   * `type`:   The type of data that will be stored it the model
-    //   (or is present on the Firebase URL provided). Pass in
-    //   `{}` for Object, `[]` for Array (default), `""` for
-    //   String and `true` for Boolean.
-    return function(ref, scope, name, type) {
+    return function(ref, scope, name) {
       var af = new AngularFire($q, $parse, $timeout, ref);
-      return af.associate(scope, name, type);
+      return af.associate(scope, name);
     };
   }
 ]);
@@ -58,11 +54,8 @@ AngularFire.prototype = {
   // This function is called by the factory to create a new 2-way binding
   // between a particular model in a `$scope` and a particular Firebase
   // location.
-  associate: function($scope, name, type) {
+  associate: function($scope, name) {
     var self = this;
-    if (type == undefined) {
-      type = [];
-    }
     var deferred = this._q.defer();
     var promise = deferred.promise;
     // We're currently listening for value changes to implement synchronization.
@@ -74,21 +67,8 @@ AngularFire.prototype = {
         resolve = deferred;
         deferred = false;
       }
-      self._remoteValue = type;
-      if (snap && snap.val() != undefined) {
+      if (snap && snap.val() !== undefined) {
         var val = snap.val();
-        // If the remote type doesn't match what was provided, log a message
-        // and exit.
-        if (typeof val != typeof type) {
-          self._log("Error: type mismatch");
-          return;
-        }
-        // Also distinguish between objects and arrays.
-        var check = Object.prototype.toString;
-        if (check.call(type) != check.call(val)) {
-          self._log("Error: type mismatch");
-          return;
-        }
         self._remoteValue = angular.copy(val);
         // If the new remote value is the same as the local value, ignore.
         if (angular.equals(val, self._parse(name)($scope))) {
@@ -120,6 +100,19 @@ AngularFire.prototype = {
   // will also be updated to the provided value.
   _resolve: function($scope, name, deferred, val) {
     var self = this;
+    if (val === null) {
+      // NULL values are special in Firebase. If received, set the local value
+      // to the initial state for Objects and Arrays.
+      var localVal = $scope[name];
+      if (typeof localVal == "object") {
+        var check = Object.prototype.toString;
+        if (check.call(localVal) == check.call([])) {
+          val = [];
+        } else {
+          val = {};
+        }
+      }
+    }
     this._parse(name).assign($scope, angular.copy(val));
     this._remoteValue = angular.copy(val);
     if (deferred) {
@@ -423,10 +416,15 @@ angular.module("firebase").factory("angularFireAuth", [
         this._scope = $rootScope;
         if (options.scope) {
           this._scope = options.scope;
+        } else {
+          throw new Exception("Scope not provided to angularFireAuth!");
         }
         if (options.name) {
           this._name = options.name;
+        } else {
+          throw new Exception("Model name not provided to angularFireAuth!");
         }
+
         this._cb = function(){};
         if (options.callback && typeof options.callback === "function") {
           this._cb = options.callback;
@@ -511,15 +509,18 @@ angular.module("firebase").factory("angularFireAuth", [
         return promise;
       },
 
-      // Function cb receives a Simple Login user object
-      createUser: function(email, password, cb){
+      // Function cb receives a Simple Login user object. Pass noLogin=true
+      // if you don't want the newly created user to also be logged in.
+      createUser: function(email, password, cb, noLogin){
         var self = this;
         this._authClient.createUser(email, password, function(err, user){
           try {
             if (err) {
               $rootScope.$broadcast("angularFireAuth:error", err);
             } else {
-              self._loggedIn(user);
+              if (!noLogin) {
+                self.login("password", {email: email, password: password});
+              }
             }
           } catch(e) {
             $rootScope.$broadcast("angularFireAuth:error", e);
