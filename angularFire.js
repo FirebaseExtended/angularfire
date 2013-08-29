@@ -528,7 +528,7 @@ angular.module("firebase").factory("angularFireAuth", [
           }
           if (cb) {
             $timeout(function(){
-              cb(user);
+              cb(err, user);
             });
           }
         });
