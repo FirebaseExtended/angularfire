@@ -177,7 +177,7 @@ AngularFire.prototype = {
 // by @petebacondarwin.
 angular.module("firebase").factory("angularFireCollection", ["$timeout",
   function($timeout) {
-    return function(collectionRef, initialCb) {
+    return function(collectionRef, initialCb, onItemChangeCb) {
       // An internal representation of a model present in the collection.
       function angularFireItem(ref, index) {
         this.$ref = ref.ref();
@@ -212,6 +212,11 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
 
       var indexes = {};
       var collection = [];
+
+      var _itemCb = null;
+      if (onItemChangeCb && typeof onItemChangeCb == "function") {
+        _itemCb = onItemChangeCb;
+      }
 
       function getIndex(prevId) {
         return prevId ? indexes[prevId] + 1 : 0;
@@ -266,9 +271,11 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
 
       collectionRef.on("child_added", function(data, prevId) {
         $timeout(function() {
-          var index = getIndex(prevId);
-          addChild(index, new angularFireItem(data, index));
+          var index = getIndex(prevId),
+              item = new angularFireItem(data, index);
+          addChild(index, item);
           updateIndexes(index);
+          _itemCb && _itemCb("item_added", item);
         });
       });
 
@@ -276,8 +283,10 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
         $timeout(function() {
           var id = data.name();
           var pos = indexes[id];
+          var item = collection[pos];
           removeChild(id);
           updateIndexes(pos);
+          _itemCb && _itemCb("item_removed", item);
         });
       });
 
@@ -285,12 +294,16 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
         $timeout(function() {
           var index = indexes[data.name()];
           var newIndex = getIndex(prevId);
+
+          _itemCb && _itemCb("item_removed", collection[index]);
+
           var item = new angularFireItem(data, index);
 
           updateChild(index, item);
           if (newIndex !== index) {
             moveChild(index, newIndex, item);
           }
+          _itemCb && _itemCb("item_added", item);
         });
       });
 
@@ -300,6 +313,7 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
           var newIndex = getIndex(prevId);
           var item = collection[oldIndex];
           moveChild(oldIndex, newIndex, item);
+          _itemCb && _itemCb("item_moved", item);
         });
       });
 
@@ -604,3 +618,4 @@ angular.module("firebase").factory("angularFireAuth", [
     }
   }
 ]);
+
