@@ -11,6 +11,8 @@
 
 "use strict";
 
+var AngularFire;
+
 // Define the `firebase` module under which all AngularFire services will live.
 angular.module("firebase", []).value("Firebase", Firebase);
 
@@ -33,7 +35,7 @@ angular.module("firebase").factory("angularFire", ["$q", "$parse", "$timeout",
 ]);
 
 // The `AngularFire` object that implements implicit synchronization.
-function AngularFire($q, $parse, $timeout, ref) {
+AngularFire = function($q, $parse, $timeout, ref) {
   this._q = $q;
   this._parse = $parse;
   this._timeout = $timeout;
@@ -45,7 +47,8 @@ function AngularFire($q, $parse, $timeout, ref) {
       "of a URL, eg: new Firebase(url)");
   }
   this._fRef = ref;
-}
+};
+
 AngularFire.prototype = {
   // This function is called by the factory to create a new 2-way binding
   // between a particular model in a `$scope` and a particular Firebase
@@ -102,7 +105,7 @@ AngularFire.prototype = {
 
       // Update the local model to reflect remote changes.
       self._timeout(function() {
-        self._resolve($scope, name, resolve, remote)
+        self._resolve($scope, name, resolve, remote);
       });
     });
     return promise;
@@ -202,12 +205,12 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
       }
 
       // An internal representation of a model present in the collection.
-      function angularFireItem(ref, index) {
+      var AngularFireItem = function(ref, index) {
         this.$ref = ref.ref();
         this.$id = ref.name();
         this.$index = index;
         angular.extend(this, {$priority: ref.getPriority()}, ref.val());
-      }
+      };
 
       // Implementation of firebase priority ordering:
       // https://www.firebase.com/docs/javascript/firebase/setpriority.html
@@ -290,7 +293,7 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
       collectionRef.on("child_added", function(data, prevId) {
         $timeout(function() {
           var index = getIndex(prevId);
-          addChild(index, new angularFireItem(data, index));
+          addChild(index, new AngularFireItem(data, index));
           updateIndexes(index);
         });
       });
@@ -308,7 +311,7 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
         $timeout(function() {
           var index = indexes[data.name()];
           var newIndex = getIndex(prevId);
-          var item = new angularFireItem(data, index);
+          var item = new AngularFireItem(data, index);
 
           updateChild(index, item);
           if (newIndex !== index) {
@@ -386,15 +389,15 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
 
       collection.order = firebaseOrder;
       return collection;
-    }
+    };
   }
 ]);
 
 // Defines the `angularFireAuth` service that provides authentication support
 // for AngularFire.
 angular.module("firebase").factory("angularFireAuth", [
-   "$rootScope", "$parse", "$timeout", "$location", "$route", "$q",
-   function($rootScope, $parse, $timeout, $location, $route, $q) {
+  "$rootScope", "$parse", "$timeout", "$location", "$route", "$q",
+  function($rootScope, $parse, $timeout, $location, $route, $q) {
 
     // Helper function to extract claims from a JWT. Does *not* verify the
     // validity of the token.
@@ -509,7 +512,7 @@ angular.module("firebase").factory("angularFireAuth", [
           if (err) {
             $rootScope.$broadcast("angularFireAuth:error", err);
           } else if (user) {
-            self._loggedIn(user)
+            self._loggedIn(user);
           } else {
             self._loggedOut();
           }
@@ -549,7 +552,7 @@ angular.module("firebase").factory("angularFireAuth", [
               }
             });
           } catch(e) {
-            $rootScope.$broadcast("angularFireAuth:error", e)
+            $rootScope.$broadcast("angularFireAuth:error", e);
           }
         }
         return promise;
@@ -638,6 +641,6 @@ angular.module("firebase").factory("angularFireAuth", [
         }));
         return def.promise;
       }
-    }
+    };
   }
 ]);
