@@ -67,23 +67,26 @@ AngularFire.prototype = {
         if (remote && check.call(local) == check.call(remote)) {
           if (check.call(local) == "[object Array]") {
             merged = local.concat(remote);
+            if (!angular.equals(merged, remote)) {
+              self._fRef.ref().set(merged);
+              remote = merged;
+            }
           } else if (check.call(local) == "[object Object]") {
             merged = local;
             for (var key in remote) {
               merged[key] = remote[key];
             }
+            self._fRef.ref().update(merged);
+            remote = merged;
           }
         }
         // If remote value is null, overwrite remote value with local
         if (remote === null) {
-          merged = local;
+          self._fRef.ref().set(local);
+          remote = local;
         }
         // If types don't match or the type is primitive, just overwrite the
         // local value with the remote value.
-        if (merged) {
-          self._fRef.ref().update(merged);
-          return;
-        }
       }
 
       var resolve = false;
@@ -155,7 +158,12 @@ AngularFire.prototype = {
       if (angular.equals(val, self._remoteValue)) {
         return;
       }
-      self._fRef.ref().update(val);
+      var check = Object.prototype.toString;
+      if (check.call(val) == "[object Object]") {
+        self._fRef.ref().update(val);
+      } else {
+        self._fRef.ref().set(val);
+      }
     }, true);
     // Also watch for scope destruction and unregister.
     $scope.$on("$destroy", function() {
