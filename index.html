@@ -172,7 +172,7 @@
     <script type="text/template" id="chat-code-js">
   angular.module('chat', ['firebase']).controller('Chat', ['$scope', 'angularFire',
     function($scope, angularFire) {
-      var ref = new Firebase('https://angularFire.firebaseio-demo.com/chat');
+      var ref = new Firebase('https://angularfire.firebaseio.com/chat');
       angularFire(ref.limit(15), $scope, "messages");
       $scope.username = 'Guest' + Math.floor(Math.random()*101);
       $scope.addMessage = function() {
