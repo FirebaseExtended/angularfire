@@ -48,7 +48,8 @@
         <h2>The easiest and fastest way to wire up a backend for your <a href="http://angularjs.org/" target="_blank">Angular</a> app.</h2><br/>
         <p>
           <a href="http://github.com/firebase/angularFire" class="btn btn-large" target="_blank"><i class="icon-github-sign"></i> View on Github &raquo;</a>
-          <a href="tutorial/" role="button" data-toggle="modal" class="btn btn-primary btn-large"><i class="icon-comment"></i> Build a Sample App in 5 Minutes &raquo;</a>
+          <a href="tutorial/" role="button" data-toggle="modal" class="btn btn-primary btn-large"><i class="icon-comment"></i> Build a Sample
+           App in 5 Minutes &raquo;</a>
           <a href="#downloadModal" role="button" data-toggle="modal" class="btn btn-large"><i class="icon-cloud-download"></i> Download &raquo;</a>
         </p><br/>
         <div class="social">
@@ -129,8 +130,8 @@
             <label class="control-label"><b>CDN</b></label>
             <div class="controls">
               <span>
-                <input readonly="readonly" value="https://cdn.firebase.com/angularFire/0.3.0/angularFire.min.js" type="text">
-                <a data-clipboard-text="https://cdn.firebase.com/angularFire/0.3.0/angularFire.min.js" class="btn clipboard"><i class="icon-copy"></i></a>
+                <input readonly="readonly" value="https://cdn.firebase.com/libs/angularfire/0.3.0/angularfire.min.js" type="text">
+                <a data-clipboard-text="https://cdn.firebase.com/libs/angularfire/0.3.0/angularfire.min.js" class="btn clipboard"><i class="icon-copy"></i></a>
               </span>
             </div>
           </div>
@@ -186,7 +187,7 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.js"></script>
 
     <script src='//cdn.firebase.com/v0/firebase.js'></script>
-    <script src='//cdn.firebase.com/angularFire/0.3.0/angularFire.min.js'></script>
+    <script src='//cdn.firebase.com/libs/angularfire/0.3.0/angularfire.min.js'></script>
 
     <script type="text/javascript">
       $(function() {
@@ -200,7 +201,7 @@
           var markup = $("#chat-code-html").html();
           var includes = '\n&lt;script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"&gt;&lt;/script&gt;' +
             '\n&lt;script src="//cdn.firebase.com/v0/firebase.js"&gt;&lt;/script&gt;' +
-            '\n&lt;script src="//cdn.firebase.com/angularFire/0.3.0/angularFire.min.js"&gt;&lt;/script&gt;' +
+            '\n&lt;script src="//cdn.firebase.com/libs/angularfire/0.3.0/angularfire.min.js"&gt;&lt;/script&gt;' +
             '\n&lt;script type="text/javascript"&gt;' + code + '\n&lt;/script&gt;'
           $("#chat-output").html(markup);
           $("#chat-code").html(_.escape(markup) + includes);
@@ -249,9 +250,9 @@
       $("#downloadButton").click(function () {
         var typ = $("#downloadGroup .active").data("value");
         if (typ == "min") {
-          window.location.href = "https://cdn.firebase.com/angularFire/0.3.0/angularFire.min.js";
+          window.location.href = "https://cdn.firebase.com/libs/angularfire/0.3.0/angularfire.min.js";
         } else {
-          window.location.href = "https://cdn.firebase.com/angularFire/0.3.0/angularFire.js";
+          window.location.href = "https://cdn.firebase.com/libs/angularfire/0.3.0/angularfire.js";
         }
       });
     </script>

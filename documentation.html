@@ -69,9 +69,9 @@
             <p>The bindings let you associate a Firebase URL with a model (or set of models), and they will be transparently
             kept in sync across all clients currently using your app. The 2-way data binding offered by AngularJS works as normal,
             except that the changes are also sent to all other clients instead of just a server.</p>
-            <p>To get started, include both <code>firebase.js</code> and <code>angularFire.js</code> in your application.</p>
+            <p>To get started, include both <code>firebase.js</code> and <code>angularfire.js</code> in your application.</p>
             <pre class="prettyprint lang-html">&lt;script src="https://cdn.firebase.com/v0/firebase.js"&gt;&lt;/script&gt;
-&lt;script src="https://cdn.firebase.com/angularFire/0.3.0/angularFire.js"&gt;&lt;/script&gt;</pre>
+&lt;script src="https://cdn.firebase.com/libs/angularfire/0.3.0/angularfire.js"&gt;&lt;/script&gt;</pre>
             <p>Add the module firebase as a dependency to your app module:</p>
             <pre class="prettyprint lang-js">var myapp = angular.module('myapp', ['firebase']);</pre>
             <p>You now have two options: implicit or explicit synchronization.</p>
@@ -141,7 +141,7 @@ $scope.removeItem = function() {
             </p>
             <pre class="prettyprint lang-html">&lt;script src="https://cdn.firebase.com/v0/firebase.js"/&gt;
 &lt;script src="https://cdn.firebase.com/v0/firebase-simple-login.js"/&gt;
-&lt;script src="https://cdn.firebase.com/angularFire/0.3.0/angularFire.js"/&gt;</pre>
+&lt;script src="https://cdn.firebase.com/libs/angularfire/0.3.0/angularfire.js"/&gt;</pre>
 
             <h4>Binding Authentication State</h4>
             <p>The easiest way to use the API is to bind a
