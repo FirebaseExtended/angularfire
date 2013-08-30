@@ -23,6 +23,10 @@
   width: 78px;
 }
 
+.center h4 {
+  text-align: center;
+}
+
 /* Make nav items ocuppy full height of menu bar */
 body > .navbar .brand {
   padding-top: 15px;

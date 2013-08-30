@@ -229,38 +229,41 @@ Tutorial.prototype.compareHTML_ = function(input, valid) {
   }
 
   var validParsed = $(valid.trim());
-  
+
   if(inputParsed.length > validParsed.length) {
     return "Oops! It looks like you have some extra HTML.";
   } else if(inputParsed.length < validParsed.length) {
     return "Oops! It looks like you're missing some HTML.";
   }
-  
+
   var buildMap = function (el) {
     var map = {}
+    if (!el.attributes) {
+      return map;
+    }
     $.each(el.attributes, function (ind, attr) {
       map[attr.name] = attr.value;
     });
     return map;
   }
-  
+
   for(var i = 0; i < inputParsed.length; i++) {
     var inputNode = inputParsed[i];
     var validNode = validParsed[i];
-    
+
     if(inputNode.nodeName != validNode.nodeName) {
-      return "Woops! Your tag should be a " + validNode.nodeName.toLowerCase() + 
+      return "Woops! Your tag should be a " + validNode.nodeName.toLowerCase() +
         " rather than a " + inputNode.nodeName.toLowerCase() + ".";
     }
 
     var inputAttrAsMap = buildMap(inputNode);
     var validAttrAsMap = buildMap(validNode);
-    
+
     //now lets compare the maps of attributes
     var keys = _.keys(validAttrAsMap);
 
-    for (var i = 0; i < keys.length; i++) {
-      var propName = keys[i];
+    for (var j = 0; j < keys.length; j++) {
+      var propName = keys[j];
       if (!inputAttrAsMap[propName]) {
         return "Oops! It looks like your script include is missing the \"" + propName + "\" attribute.";
       } else if (inputAttrAsMap[propName] != validAttrAsMap[propName]) {
@@ -284,7 +287,7 @@ Tutorial.prototype.compareJavascript_ = function(input, match) {
   try {
     this.compareAndExtract_(inputSyntax, matchSyntax, newSymbols);
   } catch(err) {
-    //if the syntax trees were different, return.
+      //if the syntax trees were different, return.
     return err.message;
   }
 
@@ -414,7 +417,7 @@ Tutorial.prototype.compareKeys_ = function(inputKey, matchKey){
     }
     return null;
   }
-  
+
   var k1text = getKeyText(inputKey);
   var k2text = getKeyText(matchKey);
   if(k1text === null || k2text === null) {

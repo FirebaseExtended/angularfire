@@ -16,10 +16,15 @@ lessons:
         **The first thing you need to do is include the Firebase and
         AngularFire libraries.**
 
+        This tutorial assumes you are already familiar with the basics of
+        Angular. If you aren't, please take the time to go through the
+        <a target="_blank" href="http://docs.angularjs.org/tutorial">AngularJS tutorial</a> first!
+
         To get you started we've created a simple HTML page below that already
         includes AngularJS and Firebase. Include AngularFire by adding the
         following line into the &lt;head&gt; section below:
 
+            <script src='$FIREBASE_JS'></script>
             <script src='$ANGULARFIRE_JS'></script>
       button: I installed AngularFire >
     exampleCode:
@@ -27,14 +32,14 @@ lessons:
         text: |-
           <html>
             <head>
-              <script src='$FIREBASE_JS'></script>
               <script src='$ANGULAR_JS'></script>
         readOnly: true
       -
         text: |-
-          ^   [ADD THE SCRIPT TAG HERE]
+          ^   [ADD THE SCRIPT TAGS HERE]
         validate:
           html: |-
+                    <script src='$FIREBASE_JS'></script>
                     <script src='$ANGULARFIRE_JS'></script>
       -
         text: |-
@@ -157,12 +162,16 @@ lessons:
         **All data stored in Firebase can be referenced by a URL.**
 
         We've already created a Firebase specifically for you at this URL:
-        [$TUTORIAL_FIREBASE]($TUTORIAL_FIREBASE).
+        [$TUTORIAL_FIREBASE]($TUTORIAL_FIREBASE) and seeded it with some initial
+        data.
 
-        Now, binding an `ng-model` to a Firebase location is as simple as invoking
-        the `angularFire` service with the right URL, scope and model name:
+        Now, binding an
+        <a target="_blank" href="http://docs.angularjs.org/api/ng.directive:ngModel">ng-model</a>
+        to a Firebase location is as simple as invoking
+        the `angularFire` service with the right Firebase reference, scope and
+        model name:
 
-            angularFire(url, $scope, "messages");
+            angularFire(ref, $scope, "messages");
       button: I bound a model to Firebase >
     exampleCode:
       -
@@ -177,14 +186,15 @@ lessons:
               <script>
                 var app = angular.module("myapp", ["firebase"]);
                 function MyController($scope, angularFire) {
-                  var url = "$TUTORIAL_FIREBASE";
+                  var ref = new Firebase("$TUTORIAL_FIREBASE");
+                  $scope.messages = [];
         readOnly: true
       -
         text: |-
           ^       [BIND MODEL HERE]
         validate:
           javascript: |-
-            ^       angularFire(url, $scope, "messages");
+            ^       angularFire(ref, $scope, "messages");
       -
         text: |-
           ^     }
@@ -198,6 +208,10 @@ lessons:
 
         Now you've bound the data stored at
         [$TUTORIAL_FIREBASE]($TUTORIAL_FIREBASE) to `$scope.messages`.
+
+        *Please note that this Firebase is for demo purposes only. You can
+        sign up your
+        <a target="_blank" href="https://www.firebase.com/signup/">very own Firebase here</a>!*
       button: Excellent. Go on >
 
   ##########################
@@ -210,13 +224,13 @@ lessons:
         **AngularFire will automatically update the model as needed.**
 
         Once you've bound a Firebase URL to a model via angularFire, you can
-        use your model as you normally would in a regular Angular app. The
-        difference is, this time, any changes to the data in Firebase will
-        automatically reflect in your model.
+        use your model as you normally would in a regular Angular app. But now,
+        your model will also update whenever data changes in Firebase.
 
-        To complete this step, copy the following code that iterates over all
-        the messages on the server and displays them in an unordered list
-        using `ng-repeat`.
+        This code iterates over all the messages on the server using
+        <a target="_blank" href="http://docs.angularjs.org/api/ng.directive:ngRepeat">ng-repeat</a>
+        and displays them in an unordered list. Copy it into your
+        controller to complete this step.
 
             <div id="messagesDiv">
               <div ng-repeat="msg in messages"><em>{{msg.from}}</em>: {{msg.body}}</div>
@@ -246,8 +260,9 @@ lessons:
           ^   <script>
                 var app = angular.module("myapp", ["firebase"]);
                 function MyController($scope, angularFire) {
-                  var url = "$TUTORIAL_FIREBASE";
-                  angularFire(url, $scope, "messages");
+                  var ref = new Firebase("$TUTORIAL_FIREBASE");
+                  $scope.messages = [];
+                  angularFire(ref, $scope, "messages");
                 }
               </script>
             </body>
@@ -255,7 +270,7 @@ lessons:
         readOnly: true
     completion:
       body: |-
-        **You just displayed data from Firebase!**
+        **The app can now display data from Firebase!**
 
         AngularFire will automatically populate `$scope.messages` with data
         stored on the server. The `ng-repeat` directive will iterate over
@@ -272,7 +287,7 @@ lessons:
         **Now let's write some data to Firebase.**
 
         You've done a great job of displaying messages, but to make this a real
-        chat room, we'll also need to allow the user to also add messages to the
+        chat room, we'll also need to allow the user to add messages to the
         list. We've already taken care of binding the `ng-keydown` directive
         from a text input field to a function called `addMessage`. You just have
         to implement the `addMessage` function by appending new messages to the
@@ -281,8 +296,9 @@ lessons:
             $scope.messages.push({from: $scope.name, body: $scope.msg});
 
         Just like Angular creates a 2-way data binding between a model and the
-        DOM, AngularFire creates a 2-way data bindings between a model and
-        Firebase.
+        DOM, AngularFire creates a 2-way data binding between a model and
+        Firebase; so when you add a new message to the model, it also gets
+        stored into Firebase.
       button: I attached a ng-submit handler >
     exampleCode:
       -
@@ -302,8 +318,9 @@ lessons:
               <script>
                 var app = angular.module("myapp", ["firebase"]);
                 function MyController($scope, angularFire) {
-                  var url = "$TUTORIAL_FIREBASE";
-                  angularFire(url, $scope, "messages");
+                  var ref = new Firebase("$TUTORIAL_FIREBASE");
+                  $scope.messages = [];
+                  angularFire(ref, $scope, "messages");
                   $scope.addMessage = function(e) {
                     if (e.keyCode != 13) return;
         readOnly: true
@@ -324,7 +341,7 @@ lessons:
         readOnly: true
     completion:
       body: |-
-        **Congratulations! You are now writing data to Firebase in real-time!.**
+        **Congratulations - you are now writing data to Firebase in real-time!**
 
         Just by modifying the model, in this case, calling `push` on the array,
         you've sent data to the Firebase servers. This will automatically
@@ -338,6 +355,9 @@ lessons:
         <iframe allowtransparency="true" frameborder="0" scrolling="no" src="https://platform.twitter.com/widgets/tweet_button.html?url=https%3A%2F%2Fwww.firebase.com%2Ftutorial%2F&text=I%20just%20built%20an%20app%20in%205%20minutes%20with%20%40Firebase!&count=none" style="width:60px; height:20px;"></iframe>
         </div>
         </div>
+
+        You can also sign up for your
+        <a href="https://www.firebase.com/signup/" target="_blank">very own Firebase for free</a>!
       button: Let me run my app >
 
 ##########################
@@ -361,8 +381,9 @@ final: |-
       <script>
         var app = angular.module("myapp", ["firebase"]);
         function MyController($scope, angularFire) {
-          var url = "$TUTORIAL_FIREBASE";
-          angularFire(url, $scope, "messages");
+          var ref = new Firebase("$TUTORIAL_FIREBASE");
+          $scope.messages = [];
+          angularFire(ref, $scope, "messages");
           $scope.addMessage = function(e) {
             if (e.keyCode != 13) return;
             $scope.messages.push({from: $scope.name, body: $scope.msg});
