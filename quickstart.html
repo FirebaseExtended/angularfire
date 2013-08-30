@@ -51,7 +51,7 @@
             <li>
               <p>Include the Firebase and AngularFire libraries from their respective CDNs.</p>
               <pre class="prettyprint lang-html">&lt;script src="https://cdn.firebase.com/v0/firebase.js"&gt;&lt;/script&gt;
-&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/angularFire/0.2.0/angularfire.min.js"&gt;&lt;/script&gt;</pre>
+&lt;script src="https:////cdn.firebase.com/angularFire/0.3.0/angularFire.min.js"&gt;&lt;/script&gt;</pre>
             </li>
             <li>
               <p>Specify a dependency on <code>firebase</code> in your app module.</p>
@@ -60,6 +60,7 @@
             <li>
               <p>Bind a model to a Firebase URL in your controller</p>
               <pre class="prettyprint lang-js">function MyController($scope, angularFire) {
+  $scope.items = [];
   angularFire("https://&lt;my-firebase&gt;.firebaseio.com/list", $scope, "items");
 }</pre>
             </li>
@@ -74,13 +75,12 @@
 &lt;/div&gt;</pre>
               <pre class="prettyprint lang-js">function MyController($scope, angularFire) {
   var url = "https://&lt;my-firebase&gt;.firebaseio.com/list";
-  var promise = angularFire(url, $scope, "items");
-  promise.then(function() {
-    $scope.addItem = function() {
-      $scope.items.push($scope.newItem);
-      $scope.newItem = "";
-    }
-  });
+  $scope.items = [];
+  $scope.addItem = function() {
+    $scope.items.push($scope.newItem);
+    $scope.newItem = "";
+  }
+  angularFire(url, $scope, "items");
 }</pre>
             </li>
           </ol>

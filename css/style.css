@@ -72,9 +72,12 @@ body > .navbar .brand {
 }
 
 /* Make Download button the same size as the github button, emphasize the text with bold */
+.btn {
+  margin-right: 20px;
+}
+
 .hero-unit .btn.btn-primary {
-  width: 150px;
-  margin-left: 40px;
+  width: 350px;
   font-weight: bold;
 }
 

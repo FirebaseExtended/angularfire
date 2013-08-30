@@ -48,7 +48,8 @@
         <h2>The easiest and fastest way to wire up a backend for your <a href="http://angularjs.org/" target="_blank">Angular</a> app.</h2><br/>
         <p>
           <a href="http://github.com/firebase/angularFire" class="btn btn-large" target="_blank"><i class="icon-github-sign"></i> View on Github &raquo;</a>
-          <a href="#downloadModal" role="button" data-toggle="modal" class="btn btn-primary btn-large"><i class="icon-cloud-download"></i> Download &raquo;</a>
+          <a href="tutorial/" role="button" data-toggle="modal" class="btn btn-primary btn-large"><i class="icon-comment"></i> Build a Sample App in 5 Minutes &raquo;</a>
+          <a href="#downloadModal" role="button" data-toggle="modal" class="btn btn-large"><i class="icon-cloud-download"></i> Download &raquo;</a>
         </p><br/>
         <div class="social">
           <div class="social github"><iframe src="http://ghbtns.com/github-btn.html?user=firebase&repo=angularFire&type=watch&count=true" allowtransparency="true" frameborder="0" scrolling="0" width="110" height="20"></iframe></div>
@@ -128,8 +129,8 @@
             <label class="control-label"><b>CDN</b></label>
             <div class="controls">
               <span>
-                <input readonly="readonly" value="//cdnjs.cloudflare.com/ajax/libs/angularFire/0.2.0/angularfire.min.js" type="text">
-                <a data-clipboard-text="//cdnjs.cloudflare.com/ajax/libs/angularFire/0.2.0/angularfire.min.js" class="btn clipboard"><i class="icon-copy"></i></a>
+                <input readonly="readonly" value="https://cdn.firebase.com/angularFire/0.3.0/angularFire.min.js" type="text">
+                <a data-clipboard-text="https://cdn.firebase.com/angularFire/0.3.0/angularFire.min.js" class="btn clipboard"><i class="icon-copy"></i></a>
               </span>
             </div>
           </div>
@@ -168,7 +169,7 @@
   angular.module('chat', ['firebase']).controller('Chat', ['$scope', 'angularFire',
     function($scope, angularFire) {
       var ref = new Firebase('https://angularFire.firebaseio-demo.com/chat');
-      angularFire(ref.limit(15), $scope, "messages", {});
+      angularFire(ref.limit(15), $scope, "messages");
       $scope.username = 'Guest' + Math.floor(Math.random()*101);
       $scope.addMessage = function() {
         $scope.messages[ref.push().name()] = {
@@ -177,14 +178,15 @@
         $scope.message = "";
       }}]);</script>
 
-    <script src='//cdn.firebase.com/v0/firebase.js'></script>
     <script src='//cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.5/angular.min.js'></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/1.1.7/ZeroClipboard.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.js"></script>
-    <script src='//cdnjs.cloudflare.com/ajax/libs/angularFire/0.2.0/angularfire.min.js'></script>
+
+    <script src='//cdn.firebase.com/v0/firebase.js'></script>
+    <script src='//cdn.firebase.com/angularFire/0.3.0/angularFire.min.js'></script>
 
     <script type="text/javascript">
       $(function() {
@@ -196,9 +198,9 @@
         function setupCodeSample() {
           var code = $("#chat-code-js").html();
           var markup = $("#chat-code-html").html();
-          var includes = '\n&lt;script src="//cdn.firebase.com/v0/firebase.js"&gt;&lt;/script&gt;' +
-            '\n&lt;script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.5/angular.min.js"&gt;&lt;/script&gt;' +
-            '\n&lt;script src="//cdnjs.cloudflare.com/ajax/libs/angularFire/0.2.0/angularfire.min.js"&gt;&lt;/script&gt;' +
+          var includes = '\n&lt;script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"&gt;&lt;/script&gt;' +
+            '\n&lt;script src="//cdn.firebase.com/v0/firebase.js"&gt;&lt;/script&gt;' +
+            '\n&lt;script src="//cdn.firebase.com/angularFire/0.3.0/angularFire.min.js"&gt;&lt;/script&gt;' +
             '\n&lt;script type="text/javascript"&gt;' + code + '\n&lt;/script&gt;'
           $("#chat-output").html(markup);
           $("#chat-code").html(_.escape(markup) + includes);
@@ -247,9 +249,9 @@
       $("#downloadButton").click(function () {
         var typ = $("#downloadGroup .active").data("value");
         if (typ == "min") {
-          window.location.href = "https://cdnjs.cloudflare.com/ajax/libs/angularFire/0.2.0/angularfire.min.js";
+          window.location.href = "https://cdn.firebase.com/angularFire/0.3.0/angularFire.min.js";
         } else {
-          window.location.href = "http://angularfire.com/angularFire.js";
+          window.location.href = "https://cdn.firebase.com/angularFire/0.3.0/angularFire.js";
         }
       });
     </script>
