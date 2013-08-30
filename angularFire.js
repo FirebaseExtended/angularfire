@@ -334,6 +334,15 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
         return collection[indexes[name]];
       };
 
+      // Retrieve a collection of objects by names.
+      collection.getByNames = function(names) {
+        var objs = [];
+        for (var i = 0, len = names.length; i < len; i++) {
+          objs.push(collection[indexes[names[i]]]);
+        }
+        return objs;
+      };
+
       // Add an object to the remote collection. Adding an object is the
       // equivalent of calling `push()` on a Firebase reference.
       collection.add = function(item, cb) {
