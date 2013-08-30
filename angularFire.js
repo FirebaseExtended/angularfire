@@ -67,7 +67,7 @@ AngularFire.prototype = {
         if (remote && check.call(local) == check.call(remote)) {
           if (check.call(local) == "[object Array]") {
             merged = local.concat(remote);
-          } else if (check.call(localval) == "[object Object]") {
+          } else if (check.call(local) == "[object Object]") {
             merged = local;
             for (var key in remote) {
               merged[key] = remote[key];
