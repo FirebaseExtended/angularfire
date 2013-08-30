@@ -21,8 +21,8 @@ lessons:
         <a target="_blank" href="http://docs.angularjs.org/tutorial">AngularJS tutorial</a> first!
 
         To get you started we've created a simple HTML page below that already
-        includes AngularJS and Firebase. Include AngularFire by adding the
-        following line into the &lt;head&gt; section below:
+        includes AngularJS. Include Firebase and AngularFire by adding the
+        following lines into the &lt;head&gt; section below:
 
             <script src='$FIREBASE_JS'></script>
             <script src='$ANGULARFIRE_JS'></script>
