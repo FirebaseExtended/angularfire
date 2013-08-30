@@ -350,10 +350,12 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
       // equivalent of calling `push()` on a Firebase reference.
       collection.add = function(item, cb) {
         var ref;
+        // Make sure to remove $$hashKey etc.
+        var newItem = angular.fromJson(angular.toJson(item));
         if (!cb) {
-          ref = collectionRef.ref().push(item);
+          ref = collectionRef.ref().push(newItem);
         } else {
-          ref = collectionRef.ref().push(item, cb);
+          ref = collectionRef.ref().push(newItem, cb);
         }
         return ref;
       };
@@ -373,13 +375,8 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
       collection.update = function(itemOrId, cb) {
         var item = angular.isString(itemOrId) ?
           collection[indexes[itemOrId]] : itemOrId;
-        var copy = {};
         // Update all properties, unless they're ones created by Angular.
-        angular.forEach(item, function(value, key) {
-          if (key.indexOf("$") !== 0) {
-            copy[key] = value;
-          }
-        });
+        var copy = angular.fromJson(angular.toJson(item));
         if (!cb) {
           item.$ref.set(copy);
         } else {
