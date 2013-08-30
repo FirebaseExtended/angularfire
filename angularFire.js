@@ -165,7 +165,12 @@ AngularFire.prototype = {
       }
       var check = Object.prototype.toString;
       if (check.call(val) == "[object Object]") {
-        self._fRef.ref().update(val);
+        // Use update if limits are in effect, set if not.
+        if (self._fRef.set) {
+          self._fRef.set(val);
+        } else {
+          self._fRef.ref().update(val);
+        }
       } else {
         self._fRef.ref().set(val);
       }
