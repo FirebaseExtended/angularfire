@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Documentation - AngularFire, from Firebase</title>
+    <title>Documentation for AngularFire - A real-time backend for AngularJS from Firebase</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="AngularFire is an officially supported AngularJS binding for Firebase. Firebase is a full backend so you don't need servers to build your Angular app!">
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -148,8 +148,8 @@ $scope.removeItem = function() {
             variable in $scope to user authentication state. You can do this by declaring
             <code>angularFireAuth</code> as a dependency in your controller:</p>
             <pre class="prettyprint lang-js">function MyController($scope, angularFireAuth) {
-var url = "https://&lt;my-firebase&gt;.firebaseio.com/";
-  angularFireAuth.initialize(url, {scope: $scope, name: "user"});
+var ref = new Firebase("https://&lt;my-firebase&gt;.firebaseio.com/");
+  angularFireAuth.initialize(ref, {scope: $scope, name: "user"});
 }</pre>
             <p>You can now use the bound variable to display user info or a login/logout button as appropriate.
             For instance, in <a href="http://github.com/anantn/firetube/">Firetube</a> we do something like:</p>
@@ -188,7 +188,7 @@ $scope.$on("angularFireAuth:error", function(evt, err) {
             <p>If you prefer a callback approach and only have one controller, you can also provide one when
             initializing <code>angularFireAuth</code>:</p>
             <pre class="prettyprint lang-js">function MyController($scope, angularFireAuth) {
-  var url = "https://&lt;my-firebase&gt;.firebaseio.com/";
+  var ref = new Firebase("https://&lt;my-firebase&gt;.firebaseio.com/");
   angularFireAuth.initialize(url, {
     scope: $scope, name: "user",
     callback: function(err, user) {
