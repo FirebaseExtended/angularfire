@@ -6,6 +6,10 @@
   margin-right: auto;
 }
 
+p.center {
+  text-align: center;
+}
+
 .header {
   margin-top: 30px;
   text-align: center;
@@ -25,6 +29,12 @@
 
 .center h4 {
   text-align: center;
+}
+
+.videoembed {
+  width: 780px;
+  display: block;
+  margin: auto;
 }
 
 /* Make nav items ocuppy full height of menu bar */
@@ -109,7 +119,7 @@ h2 {
 
 /* Add padding to showcase apps */
 .showcase > div.well {
-  height: 150px;
+  height: 175px;
 }
 .showcase > div > a > img {
   padding-bottom: 20px;
