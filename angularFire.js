@@ -81,7 +81,7 @@ AngularFire.prototype = {
         // If types don't match or the type is primitive, just overwrite the
         // local value with the remote value.
         if (merged) {
-          self._fRef.ref().set(merged);
+          self._fRef.ref().update(merged);
           return;
         }
       }
@@ -155,7 +155,7 @@ AngularFire.prototype = {
       if (angular.equals(val, self._remoteValue)) {
         return;
       }
-      self._fRef.ref().set(val);
+      self._fRef.ref().update(val);
     }, true);
     // Also watch for scope destruction and unregister.
     $scope.$on("$destroy", function() {
