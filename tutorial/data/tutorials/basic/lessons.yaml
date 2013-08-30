@@ -352,9 +352,9 @@ lessons:
         (if you like) share it with others.
 
         <div>Thanks for taking our tutorial! If you liked it, we'd really appreciate a <div style="display: inline-block; vertical-align: middle;">
-        <iframe allowtransparency="true" frameborder="0" scrolling="no" src="https://platform.twitter.com/widgets/tweet_button.html?url=https%3A%2F%2Fwww.firebase.com%2Ftutorial%2F&text=I%20just%20built%20an%20app%20in%205%20minutes%20with%20%40Firebase!&count=none" style="width:60px; height:20px;"></iframe>
+        <a href="https://twitter.com/share" class="twitter-share-button" data-url="http://angularfire.com/tutorial/" data-text="I just built an app with @AngularJS and @Firebase using AngularFire!" data-count="none">Tweet</a>
         </div>
-        </div>
+        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
 
         You can also sign up for your
         <a href="https://www.firebase.com/signup/" target="_blank">very own Firebase for free</a>!

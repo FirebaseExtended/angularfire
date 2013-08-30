@@ -111,8 +111,8 @@ function initializeGUI(globalEvents, editor) {
         if (instData.shareSessID) {
           //Ok, show the share widget instead
           var iframeURL = "https://platform.twitter.com/widgets/tweet_button.html" +
-            "?url=" + encodeURIComponent("https://www.firebase.com/tutorial/#session/" + instData.shareSessID) +
-            "&text=" + encodeURIComponent("Check out the app I built with @Firebase") +
+            "?url=" + encodeURIComponent("http://angularfire.com/tutorial/#session/" + instData.shareSessID) +
+            "&text=" + encodeURIComponent("Check out the app I built with @AngularJS and @Firebase using AngularFire!") +
             "&count=none";
           $("#shareWidget").show();
           var tweetButt = $('<iframe allowtransparency="true" frameborder="0" scrolling="no"' +
