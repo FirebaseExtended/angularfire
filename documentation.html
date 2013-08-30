@@ -120,7 +120,7 @@ $scope.removeItem = function() {
   }
 ]);</pre>
             <p>Create a collection at a specified Firebase reference and assign it to a model in <code>$scope</code>:</p>
-            <pre class="prettyprint lang-js">$scope.items = angularFireCollection(new Firebase(url));</pre>
+            <pre class="prettyprint lang-js">$scope.items = angularFireCollection(new Firebase(url), optionalCallbackOnInitialLoad);</pre>
             <p>Use the model as you normally would in your markup:</p>
             <pre class="prettyprint lang-html">&lt;ul ng-controller="MyCtrl"&gt;
   &lt;li ng-repeat="item in items"&gt;{{item.name}}: {{item.desc}}&lt;/li&gt;
