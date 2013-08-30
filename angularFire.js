@@ -35,11 +35,16 @@ angular.module("firebase").factory("angularFire", ["$q", "$parse", "$timeout",
 // The `AngularFire` object that implements implicit synchronization.
 function AngularFire($q, $parse, $timeout, ref) {
   this._q = $q;
-  this._fRef = ref;
   this._parse = $parse;
   this._timeout = $timeout;
   this._initial = true;
   this._remoteValue = false;
+
+  if (typeof ref == "string") {
+    throw new Exception("Please provide a Firebase reference instead " +
+      "of a URL, eg: new Firebase(url)");
+  }
+  this._fRef = ref;
 }
 AngularFire.prototype = {
   // This function is called by the factory to create a new 2-way binding
@@ -186,6 +191,11 @@ AngularFire.prototype = {
 angular.module("firebase").factory("angularFireCollection", ["$timeout",
   function($timeout) {
     return function(collectionRef, initialCb) {
+      if (typeof collectionRef == "string") {
+        throw new Exception("Please provide a Firebase reference instead " +
+          "of a URL, eg: new Firebase(url)");
+      }
+
       // An internal representation of a model present in the collection.
       function angularFireItem(ref, index) {
         this.$ref = ref.ref();
@@ -411,7 +421,7 @@ angular.module("firebase").factory("angularFireAuth", [
     }
 
     return {
-      // Initializes the authentication service. Takes a Firebase URL and
+      // Initializes the authentication service. Takes a Firebase reference and
       // an options object, that may contain the following properties:
       //
       // * `scope`: The scope to which user authentication status will be
@@ -426,8 +436,13 @@ angular.module("firebase").factory("angularFireAuth", [
       // `firebase-simple-login.js` file by default. If this value is set to
       // false, this requirement is waived, but only custom login functionality
       // will be enabled.
-      initialize: function(url, options) {
+      initialize: function(ref, options) {
         var self = this;
+
+        if (typeof ref == "string") {
+          throw new Exception("Please provide a Firebase reference instead " +
+            "of a URL, eg: new Firebase(url)");
+        }
 
         options = options || {};
         this._scope = $rootScope;
@@ -462,7 +477,7 @@ angular.module("firebase").factory("angularFireAuth", [
         }
 
         // Initialize user authentication state to `null`.
-        this._ref = new Firebase(url);
+        this._ref = ref;
         if (options.simple === false) {
           updateExpression(this._scope, this._name, null, function() {});
           return;
