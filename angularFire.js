@@ -456,7 +456,7 @@ angular.module("firebase").factory("angularFireAuth", [
         // Initialize user authentication state to `null`.
         this._ref = new Firebase(url);
         if (options.simple === false) {
-          updateExpression(this._scope, this._name, null);
+          updateExpression(this._scope, this._name, null, function() {});
           return;
         }
 
