@@ -41,7 +41,7 @@ function AngularFire($q, $parse, $timeout, ref) {
   this._remoteValue = false;
 
   if (typeof ref == "string") {
-    throw new Exception("Please provide a Firebase reference instead " +
+    throw new Error("Please provide a Firebase reference instead " +
       "of a URL, eg: new Firebase(url)");
   }
   this._fRef = ref;
@@ -197,7 +197,7 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
   function($timeout) {
     return function(collectionRef, initialCb) {
       if (typeof collectionRef == "string") {
-        throw new Exception("Please provide a Firebase reference instead " +
+        throw new Error("Please provide a Firebase reference instead " +
           "of a URL, eg: new Firebase(url)");
       }
 
@@ -445,7 +445,7 @@ angular.module("firebase").factory("angularFireAuth", [
         var self = this;
 
         if (typeof ref == "string") {
-          throw new Exception("Please provide a Firebase reference instead " +
+          throw new Error("Please provide a Firebase reference instead " +
             "of a URL, eg: new Firebase(url)");
         }
 
@@ -454,12 +454,12 @@ angular.module("firebase").factory("angularFireAuth", [
         if (options.scope) {
           this._scope = options.scope;
         } else {
-          throw new Exception("Scope not provided to angularFireAuth!");
+          throw new Error("Scope not provided to angularFireAuth!");
         }
         if (options.name) {
           this._name = options.name;
         } else {
-          throw new Exception("Model name not provided to angularFireAuth!");
+          throw new Error("Model name not provided to angularFireAuth!");
         }
 
         this._cb = function(){};
