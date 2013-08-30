@@ -87,6 +87,7 @@ body > .navbar .brand {
 
 /* Make Download button the same size as the github button, emphasize the text with bold */
 .btn {
+  margin-top: 10px;
   margin-right: 20px;
 }
 
@@ -387,6 +388,10 @@ hr.soften {
     padding-top: 0;
   }
 
+  .hero-unit .btn.btn-primary {
+    width: 250px;
+  }
+
   /* Widen masthead and social buttons to fill body padding */
   .jumbotron {
     padding: 40px 20px;
@@ -451,6 +456,10 @@ hr.soften {
   /* Remove padding above jumbotron */
   body {
     padding-top: 0;
+  }
+
+  .hero-unit .btn.btn-primary {
+    width: 200px;
   }
 
   /* Change up some type stuff */
