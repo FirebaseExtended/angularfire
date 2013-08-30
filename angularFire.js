@@ -371,11 +371,22 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
         }
       };
 
-      // Update an object in the remote collection.
+      // Incrementally update an object in the remote collection.
       collection.update = function(itemOrId, cb) {
         var item = angular.isString(itemOrId) ?
           collection[indexes[itemOrId]] : itemOrId;
-        // Update all properties, unless they're ones created by Angular.
+        var copy = angular.fromJson(angular.toJson(item));
+        if (!cb) {
+          item.$ref.update(copy);
+        } else {
+          item.$ref.update(copy, cb);
+        }
+      };
+
+      // Update an object in its entirety in the remote collection.
+      collection.set = function(itemOrId, cb) {
+        var item = angular.isString(itemOrId) ?
+          collection[indexes[itemOrId]] : itemOrId;
         var copy = angular.fromJson(angular.toJson(item));
         if (!cb) {
           item.$ref.set(copy);
