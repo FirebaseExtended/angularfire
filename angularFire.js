@@ -89,7 +89,7 @@ AngularFire.prototype = {
           }
         }
         // If remote value is null, overwrite remote value with local
-        if (remote === null) {
+        if (remote === null && local !== undefined) {
           self._fRef.ref().set(local);
           remote = local;
         }
