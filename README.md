@@ -9,6 +9,8 @@ Firebase is a full backend so you don't need servers to build your Angular app!
 [a quickstart guide](http://angularfire.com/quickstart.html),
 [documentation](http://angularfire.com/documentation.html) and more!*
 
+Join our [Firebase + Angular Google Group](https://groups.google.com/forum/#!forum/firebase-angular) to ask questions, provide feedback, and share apps you've built with Firebase and Angular.
+
 Development
 -----------
 [![Build Status](https://travis-ci.org/firebase/angularFire.png)](https://travis-ci.org/firebase/angularFire)
