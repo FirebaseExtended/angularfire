@@ -129,6 +129,10 @@ h2 {
    margin-bottom: 20px;
 }
 
+.showcase div.well > a.btn {
+   margin-top: 0;
+}
+
 /* Annotated source iframe */
 .source {
   min-height: 100%;
