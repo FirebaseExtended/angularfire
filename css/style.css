@@ -119,11 +119,14 @@ h2 {
 }
 
 /* Add padding to showcase apps */
-.showcase > div.well {
+.showcase div.well {
   height: 175px;
 }
-.showcase > div > a > img {
-  padding-bottom: 20px;
+
+.showcase div.well > a {
+   text-align: center;
+   display: block;
+   margin-bottom: 20px;
 }
 
 /* Annotated source iframe */
