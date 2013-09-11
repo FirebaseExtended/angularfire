@@ -473,8 +473,6 @@ angular.module("firebase").factory("angularFireAuth", [
         this._scope = $rootScope;
         if (options.scope) {
           this._scope = options.scope;
-        } else {
-          throw new Error("Scope not provided to angularFireAuth!");
         }
         if (options.name) {
           this._name = options.name;
