@@ -68,7 +68,8 @@
               <p>Bind a model to a Firebase URL in your controller</p>
               <pre class="prettyprint lang-js">function MyController($scope, angularFire) {
   $scope.items = [];
-  angularFire("https://&lt;my-firebase&gt;.firebaseio.com/list", $scope, "items");
+  var ref = new Firebase("https://&lt;my-firebase&gt;.firebaseio.com/list");
+  angularFire(ref, $scope, "items");
 }</pre>
             </li>
             <li>
@@ -81,13 +82,13 @@
   &lt;button type="submit" ng-click="addItem()"&gt;Add New Item&lt;/button&gt;
 &lt;/div&gt;</pre>
               <pre class="prettyprint lang-js">function MyController($scope, angularFire) {
-  var url = "https://&lt;my-firebase&gt;.firebaseio.com/list";
+  var ref = new Firebase("https://&lt;my-firebase&gt;.firebaseio.com/list");
   $scope.items = [];
   $scope.addItem = function() {
     $scope.items.push($scope.newItem);
     $scope.newItem = "";
   }
-  angularFire(url, $scope, "items");
+  angularFire(ref, $scope, "items");
 }</pre>
             </li>
           </ol>
