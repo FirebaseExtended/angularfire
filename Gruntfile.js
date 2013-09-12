@@ -13,7 +13,7 @@ module.exports = function(grunt) {
     uglify : {
       app : {
         files : {
-          'angularfire.min.js' : ['angularFire.js']
+          'angularfire.min.js' : ['angularfire.js']
         }
       }
     },
@@ -41,12 +41,12 @@ module.exports = function(grunt) {
         'unused'       : true,
         'trailing'     : true
       },
-      all : ['angularFire.js']
+      all : ['angularfire.js']
     },
 
     watch : {
       scripts : {
-        files : 'angularFire.js',
+        files : 'angularfire.js',
         tasks : ['default', 'notify:watch'],
         options : {
           interrupt : true
