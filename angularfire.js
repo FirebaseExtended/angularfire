@@ -60,7 +60,44 @@ AngularFire.prototype = {
     // We're currently listening for value changes to implement synchronization.
     // This needs to be optimized, see
     // [Ticket #25](https://github.com/firebase/angularFire/issues/25).
-    this._fRef.on("value", function(snap) {
+    this._fRef.on("child_added",function(snap)
+    {
+      // if parent item is undefinded create base object
+      if(typeof $scope[name] ===  'undefined')
+      {
+        var localVal = $scope[name];
+        var check = Object.prototype.toString;
+        if (check.call(localVal) == check.call([])) {
+          var val = [];
+        } else {
+          var val = {};
+        }
+         self._parse(name).assign($scope, val);
+      }
+      // create string of the name
+      var child_name = name+"['"+snap.name()+"']";
+
+      // add the child to the scope
+      self._parse(child_name).assign($scope, snap.val());
+
+    });
+    this._fRef.on('child_changed',function(snap)
+    {
+        // create string of the name
+      var child_name = name+"['"+snap.name()+"']";
+
+      // update the child to the scope
+      self._parse(child_name).assign($scope, snap.val());
+
+    });
+
+    this._fRef.on('child_removed',function(snap)
+    {
+       delete $scope[name][snap.name()];
+    });
+
+
+    this._fRef.once("value", function(snap) {
       var remote = snap.val();
       // We use toJson/fromJson to remove $$hashKey. Can be replaced by
       // angular.copy, but only for later version of AngularJS.
@@ -97,15 +134,20 @@ AngularFire.prototype = {
         // local value with the remote value.
       }
 
-      var resolve = false;
-      if (deferred) {
-        resolve = deferred;
-        deferred = false;
+      if(typeof remote !== "object")
+      {
+        self._parse(name).assign($scope, remote);
       }
 
       // Update the local model to reflect remote changes.
       self._timeout(function() {
-        self._resolve($scope, name, resolve, remote);
+         if (deferred) {
+            deferred.resolve(function() {
+              self.disassociate();
+            });
+            self._watch($scope, name);
+            deferred = false;
+          }
       });
     });
     return promise;
@@ -121,34 +163,6 @@ AngularFire.prototype = {
       self._unregister();
     }
     this._fRef.off("value");
-  },
-
-  // If `deferred` is a valid promise, it will be resolved with `val`, and
-  // the model will be watched for future (local) changes. `$scope[name]`
-  // will also be updated to the provided value.
-  _resolve: function($scope, name, deferred, val) {
-    var self = this;
-    if (val === null) {
-      // NULL values are special in Firebase. If received, set the local value
-      // to the initial state for Objects and Arrays.
-      var localVal = $scope[name];
-      if (typeof localVal == "object") {
-        var check = Object.prototype.toString;
-        if (check.call(localVal) == check.call([])) {
-          val = [];
-        } else {
-          val = {};
-        }
-      }
-    }
-    this._remoteValue = angular.copy(val);
-    this._parse(name).assign($scope, angular.copy(val));
-    if (deferred) {
-      deferred.resolve(function() {
-        self.disassociate();
-      });
-      this._watch($scope, name);
-    }
   },
 
   // Watch for local changes.
