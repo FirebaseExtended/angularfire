@@ -198,6 +198,10 @@ AngularFire.prototype = {
 // by @petebacondarwin.
 angular.module("firebase").factory("angularFireCollection", ["$timeout",
   function($timeout) {
+    // `angularFireCollection` takes a Firebase references as the first
+    // argument, and a function as an optional second argument. The callback
+    // (if provided in the 2nd argument) will be called with a Firebase
+    // snapshot when the initial data has been loaded.
     return function(collectionRef, initialCb) {
       if (typeof collectionRef == "string") {
         throw new Error("Please provide a Firebase reference instead " +
