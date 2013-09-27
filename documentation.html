@@ -125,6 +125,9 @@ $scope.removeItem = function() {
             <pre class="prettyprint lang-html">&lt;ul ng-controller="MyCtrl"&gt;
   &lt;li ng-repeat="item in items"&gt;{{item.name}}: {{item.desc}}&lt;/li&gt;
 &lt;/ul&gt;</pre>
+            <p>angularFireCollection takes an optional second argument - a callback that will be invoked when the initial data has
+            been loaded from the server. The callback will be provided with a
+            <a href="https://www.firebase.com/docs/javascript/datasnapshot/">Firebase snapshot</a> as the only argument.</p>
             <p>You can bind specific functions if you wish to add, remove or update objects in the collection with any Angular directive:</p>
             <pre class="prettyprint lang-html">&lt;form ng-submit="items.add(item)"&gt;
   &lt;input type="text" ng-model="item.name" placeholder="Name" required/&gt;
