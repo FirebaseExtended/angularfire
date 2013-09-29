@@ -143,13 +143,13 @@ AngularFire.prototype = {
       // Update the local model to reflect remote changes.
       self._timeout(function() {
         if (deferred) {
-            deferred.resolve(function() {
-              self.disassociate();
-            });
-            self._watch($scope, name);
-            deferred = false;
-          }
-        });
+          deferred.resolve(function() {
+            self.disassociate();
+          });
+          self._watch($scope, name);
+          deferred = false;
+        }
+      });
     });
     return promise;
   },
