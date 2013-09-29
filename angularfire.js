@@ -67,12 +67,13 @@ AngularFire.prototype = {
       {
         var localVal = $scope[name];
         var check = Object.prototype.toString;
+        var val;
         if (check.call(localVal) == check.call([])) {
-          var val = [];
+          val = [];
         } else {
-          var val = {};
+          val = {};
         }
-         self._parse(name).assign($scope, val);
+        self._parse(name).assign($scope, val);
       }
       // create string of the name
       var child_name = name+"['"+snap.name()+"']";
@@ -93,8 +94,8 @@ AngularFire.prototype = {
 
     this._fRef.on('child_removed',function(snap)
     {
-       delete $scope[name][snap.name()];
-    });
+        delete $scope[name][snap.name()];
+      });
 
 
     this._fRef.once("value", function(snap) {
@@ -141,14 +142,14 @@ AngularFire.prototype = {
 
       // Update the local model to reflect remote changes.
       self._timeout(function() {
-         if (deferred) {
+        if (deferred) {
             deferred.resolve(function() {
               self.disassociate();
             });
             self._watch($scope, name);
             deferred = false;
           }
-      });
+        });
     });
     return promise;
   },
