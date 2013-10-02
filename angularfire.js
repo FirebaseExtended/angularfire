@@ -413,8 +413,13 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
 // Defines the `angularFireAuth` service that provides authentication support
 // for AngularFire.
 angular.module("firebase").factory("angularFireAuth", [
-  "$rootScope", "$parse", "$timeout", "$location", "$route", "$q",
-  function($rootScope, $parse, $timeout, $location, $route, $q) {
+  "$injector", "$rootScope", "$parse", "$timeout", "$location", "$q",
+  function($injector, $rootScope, $parse, $timeout, $location, $q) {
+    // Check if '$route' is present, use if available.
+    var $route = null;
+    if ($injector.has("$route")) {
+      $route = $injector.get("$route");
+    }
 
     // Helper function to extract claims from a JWT. Does *not* verify the
     // validity of the token.
@@ -499,7 +504,7 @@ angular.module("firebase").factory("angularFireAuth", [
 
         this._redirectTo = null;
         this._authenticated = false;
-        if (options.path) {
+        if (options.path && $route !== null) {
           // Check if the current page requires authentication.
           if ($route.current) {
             authRequiredRedirect($route.current, options.path, self);
