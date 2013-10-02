@@ -207,7 +207,7 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
     // argument, and a function as an optional second argument. The callback
     // (if provided in the 2nd argument) will be called with a Firebase
     // snapshot when the initial data has been loaded.
-    return function(collectionRef, initialCb) {
+    return function(collectionRef, initialCb, onItemChangeCb) {
       if (typeof collectionRef == "string") {
         throw new Error("Please provide a Firebase reference instead " +
           "of a URL, eg: new Firebase(url)");
@@ -247,6 +247,12 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
 
       var indexes = {};
       var collection = [];
+
+      function broadcastChange(type, item) {
+        if (onItemChangeCb && typeof onItemChangeCb == "function") {
+          onItemChangeCb(type, item);
+        }
+      }
 
       function getIndex(prevId) {
         return prevId ? indexes[prevId] + 1 : 0;
@@ -302,8 +308,10 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
       collectionRef.on("child_added", function(data, prevId) {
         $timeout(function() {
           var index = getIndex(prevId);
-          addChild(index, new AngularFireItem(data, index));
+          var item = new AngularFireItem(data, index);
+          addChild(index, item);
           updateIndexes(index);
+          broadcastChange("item_added", item);
         });
       });
 
@@ -311,8 +319,10 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
         $timeout(function() {
           var id = data.name();
           var pos = indexes[id];
+          var item = collection[pos];
           removeChild(id);
           updateIndexes(pos);
+          broadcastChange("item_removed", item);
         });
       });
 
@@ -321,11 +331,12 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
           var index = indexes[data.name()];
           var newIndex = getIndex(prevId);
           var item = new AngularFireItem(data, index);
-
+          broadcastChange("item_removed", collection[index]);
           updateChild(index, item);
           if (newIndex !== index) {
             moveChild(index, newIndex, item);
           }
+          broadcastChange("item_added", item);
         });
       });
 
@@ -335,6 +346,7 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
           var newIndex = getIndex(prevId);
           var item = collection[oldIndex];
           moveChild(oldIndex, newIndex, item);
+          broadcastChange("item_moved", item);
         });
       });
 
@@ -667,3 +679,4 @@ angular.module("firebase").factory("angularFireAuth", [
     };
   }
 ]);
+
