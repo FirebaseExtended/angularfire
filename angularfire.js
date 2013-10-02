@@ -66,10 +66,14 @@ AngularFire.prototype = {
       // angular.copy, but only for later version of AngularJS.
       var local = angular.fromJson(angular.toJson(self._parse(name)($scope)));
 
+      // If remote value matches local value, don't do anything.
+      if (angular.equals(remote, local)) {
+        return;
+      }
+
       if (self._initial) {
         // First value received from the server. We try and merge any local
         // changes that may have been made with the server values.
-        self._initial = false;
         var merged = false;
         var check = Object.prototype.toString;
         if (remote && check.call(local) == check.call(remote)) {
@@ -95,6 +99,7 @@ AngularFire.prototype = {
         }
         // If types don't match or the type is primitive, just overwrite the
         // local value with the remote value.
+        self._initial = false;
       }
 
       var resolve = false;
@@ -128,10 +133,10 @@ AngularFire.prototype = {
   // will also be updated to the provided value.
   _resolve: function($scope, name, deferred, val) {
     var self = this;
+    var localVal = angular.fromJson(angular.toJson(this._parse(name)($scope)));
     if (val === null) {
       // NULL values are special in Firebase. If received, set the local value
       // to the initial state for Objects and Arrays.
-      var localVal = $scope[name];
       if (typeof localVal == "object") {
         var check = Object.prototype.toString;
         if (check.call(localVal) == check.call([])) {
