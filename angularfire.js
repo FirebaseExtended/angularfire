@@ -426,8 +426,9 @@ angular.module("firebase").factory("angularFireAuth", [
       var claims = segments[1];
       if (window.atob) {
         return JSON.parse(decodeURIComponent(escape(window.atob(claims))));
+      } else {
+        throw new Error("window.atob not found, consider using a polyfill!");
       }
-      return token;
     }
 
     // Updates the provided model.
