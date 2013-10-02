@@ -433,6 +433,37 @@ angular.module("firebase").factory("angularFireAuth", [
       $route = $injector.get("$route");
     }
 
+    // Helper function to decode Base64 (polyfill for window.btoa on IE).
+    // From: https://github.com/mshang/base64-js/blob/master/base64.js
+    function decodeBase64(str) {
+      var char_set =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+      var output = ""; // final output
+      var buf = ""; // binary buffer
+      var bits = 8;
+      for (var i = 0; i < str.length; ++i) {
+        if (str[i] == "=") {
+          break;
+        }
+        var c_num = char_set.indexOf(str.charAt(i));
+        if (c_num == -1) {
+          throw new Error("Not base64.");
+        }
+        var c_bin = c_num.toString(2);
+        while (c_bin.length < 6) {
+          c_bin = "0" + c_bin;
+        }
+        buf += c_bin;
+
+        while (buf.length >= bits) {
+          var octet = buf.slice(0, bits);
+          buf = buf.slice(bits);
+          output += String.fromCharCode(parseInt(octet, 2));
+        }
+      }
+      return output;
+    }
+
     // Helper function to extract claims from a JWT. Does *not* verify the
     // validity of the token.
     function deconstructJWT(token) {
@@ -440,12 +471,14 @@ angular.module("firebase").factory("angularFireAuth", [
       if (!segments instanceof Array || segments.length !== 3) {
         throw new Error("Invalid JWT");
       }
+      var decoded = "";
       var claims = segments[1];
       if (window.atob) {
-        return JSON.parse(decodeURIComponent(escape(window.atob(claims))));
+        decoded = window.atob(claims);
       } else {
-        throw new Error("window.atob not found, consider using a polyfill!");
+        decoded = decodeBase64(claims);
       }
+      return JSON.parse(decodeURIComponent(escape(decoded)));
     }
 
     // Updates the provided model.
