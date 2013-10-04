@@ -350,6 +350,12 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
         });
       });
 
+      collectionRef.once("value", function(ref, prevId) {
+        $timeout(function() {
+          broadcastChange("collection_loaded");
+        });
+      });
+
       // `angularFireCollection` exposes four methods on the collection
       // returned.
 
