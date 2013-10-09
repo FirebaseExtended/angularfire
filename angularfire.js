@@ -267,8 +267,10 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
       // Remove an item from the local collection.
       function removeChild(id) {
         var index = indexes[id];
-        collection.splice(index, 1);
-        indexes[id] = undefined;
+        if (index !== undefined) {
+          collection.splice(index, 1);
+          indexes[id] = undefined;
+        }
       }
 
       // Update an existing child in the local collection.
