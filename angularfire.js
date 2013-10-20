@@ -27,9 +27,10 @@ angular.module("firebase").factory("angularFire", ["$q", "$parse", "$timeout",
     //   * `ref`:    A Firebase reference. Queries or limits may be applied.
     //   * `$scope`: The scope with which the bound model is associated.
     //   * `name`:   The name of the model.
-    return function(ref, scope, name) {
+    //   * 'child'
+    return function(ref, scope, name, child) {
       var af = new AngularFire($q, $parse, $timeout, ref);
-      return af.associate(scope, name);
+      return af.associate(scope, name,child);
     };
   }
 ]);
@@ -53,91 +54,102 @@ AngularFire.prototype = {
   // This function is called by the factory to create a new 2-way binding
   // between a particular model in a `$scope` and a particular Firebase
   // location.
-  associate: function($scope, name) {
+  associate: function($scope, name, child) {
     var self = this;
     var deferred = this._q.defer();
     var promise = deferred.promise;
+    var fullname = self._get_name(name,child);
     // We're currently listening for value changes to implement synchronization.
     // This needs to be optimized, see
     // [Ticket #25](https://github.com/firebase/angularFire/issues/25).
     this._fRef.on("child_added",function(snap)
     {
-      // if parent item is undefinded create base object
-      if(typeof $scope[name] ===  'undefined')
+      self._timeout(function()
       {
-        var localVal = $scope[name];
-        var check = Object.prototype.toString;
-        var val;
-        if (check.call(localVal) == check.call([])) {
-          val = [];
-        } else {
-          val = {};
+        // if parent item is undefined create base object
+        if(typeof $scope[name] ===  'undefined')
+        {
+          self._parse(name).assign($scope, {});
         }
-        self._parse(name).assign($scope, val);
-      }
-      // create string of the name
-      var child_name = name+"['"+snap.name()+"']";
+        // if parent - child item is undefined create base object
+        if(typeof child !== 'undefined' && typeof $scope[name][child] === 'undefined')
+        {
+          self._parse(name+"['"+child+"']").assign($scope, {});
+        }
 
-      // add the child to the scope
-      self._parse(child_name).assign($scope, snap.val());
+        // create string of the name
+        var child_name = fullname+"['"+snap.name()+"']";
 
+        // add the child to the scope
+        self._parse(child_name).assign($scope, snap.val());
+      });
     });
     this._fRef.on('child_changed',function(snap)
     {
+      self._timeout(function()
+      {
         // create string of the name
-      var child_name = name+"['"+snap.name()+"']";
+        var child_name = fullname+"['"+snap.name()+"']";
 
-      // update the child to the scope
-      self._parse(child_name).assign($scope, snap.val());
-
+        // update the child to the scope
+        self._parse(child_name).assign($scope, snap.val());
+      });
     });
 
     this._fRef.on('child_removed',function(snap)
     {
-        delete $scope[name][snap.name()];
+      self._timeout(function()
+      {
+        if(typeof child !== 'undefined' && typeof $scope[name][child] !== 'undefined')
+        {
+          delete $scope[name][child][snap.name()];
+        }
+        else
+        {
+          delete $scope[name][snap.name()];
+        }
       });
-
-
+    });
+    // First value received from the server. We try and merge any local
+    // changes that may have been made with the server values.
     this._fRef.once("value", function(snap) {
       var remote = snap.val();
       // We use toJson/fromJson to remove $$hashKey. Can be replaced by
       // angular.copy, but only for later version of AngularJS.
-      var local = angular.fromJson(angular.toJson(self._parse(name)($scope)));
+      var local = angular.fromJson(angular.toJson(self._parse(fullname)($scope)));
 
-      if (self._initial) {
-        // First value received from the server. We try and merge any local
-        // changes that may have been made with the server values.
-        self._initial = false;
-        var merged = false;
-        var check = Object.prototype.toString;
-        if (remote && check.call(local) == check.call(remote)) {
-          if (check.call(local) == "[object Array]") {
-            merged = local.concat(remote);
-            if (!angular.equals(merged, remote)) {
-              self._fRef.ref().set(merged);
-              remote = merged;
-            }
-          } else if (check.call(local) == "[object Object]") {
-            merged = local;
-            for (var key in remote) {
-              merged[key] = remote[key];
-            }
-            self._fRef.ref().update(merged);
+
+      self._initial = false;
+      var merged = false;
+      var check = Object.prototype.toString;
+      if (remote && check.call(local) == check.call(remote)) {
+        if (check.call(local) == "[object Array]") {
+          merged = local.concat(remote);
+          if (!angular.equals(merged, remote)) {
+            self._fRef.ref().set(merged);
             remote = merged;
           }
+        } else if (check.call(local) == "[object Object]") {
+          merged = local;
+          for (var key in remote) {
+            merged[key] = remote[key];
+          }
+          self._fRef.ref().update(merged);
+          remote = merged;
         }
-        // If remote value is null, overwrite remote value with local
-        if (remote === null && local !== undefined) {
-          self._fRef.ref().set(local);
-          remote = local;
-        }
-        // If types don't match or the type is primitive, just overwrite the
-        // local value with the remote value.
+      }
+      // If remote value is null, overwrite remote value with local
+      if (remote === null && local !== undefined) {
+        self._fRef.ref().set(local);
+        remote = local;
       }
 
       if(typeof remote !== "object")
       {
-        self._parse(name).assign($scope, remote);
+        // create string of the name
+        var child_name = fullname+"['"+snap.name()+"']";
+
+        self._parse(child_name).assign($scope, remote);
       }
 
       // Update the local model to reflect remote changes.
@@ -146,7 +158,7 @@ AngularFire.prototype = {
           deferred.resolve(function() {
             self.disassociate();
           });
-          self._watch($scope, name);
+          self._watch($scope, fullname);
           deferred = false;
         }
       });
@@ -166,10 +178,27 @@ AngularFire.prototype = {
     this._fRef.off("value");
   },
 
+  _get_name: function(name,child)
+  {
+    if(typeof child !== 'undefined')
+    {
+      if(isNaN(child))
+      {
+        return name+"['"+child+"']";
+      }
+      else
+      {
+        return name+"["+child+"]";
+      }
+    }
+    return name;
+  },
+
   // Watch for local changes.
-  _watch: function($scope, name) {
+  _watch: function($scope,name,child) {
     var self = this;
-    self._unregister = $scope.$watch(name, function() {
+    var fullname = self._get_name(name,child);
+    self._unregister = $scope.$watch(fullname, function() {
       // We ignore local value changes until the first value was received
       // from the server.
       if (self._initial) {
