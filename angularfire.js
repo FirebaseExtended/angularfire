@@ -195,9 +195,8 @@ AngularFire.prototype = {
   },
 
   // Watch for local changes.
-  _watch: function($scope,name,child) {
+  _watch: function($scope,fullname) {
     var self = this;
-    var fullname = self._get_name(name,child);
     self._unregister = $scope.$watch(fullname, function() {
       // We ignore local value changes until the first value was received
       // from the server.
@@ -206,7 +205,7 @@ AngularFire.prototype = {
       }
       // If the new local value matches the current remote value, we don't
       // trigger a remote update.
-      var val = angular.fromJson(angular.toJson(self._parse(name)($scope)));
+      var val = angular.fromJson(angular.toJson(self._parse(fullname)($scope)));
       if (angular.equals(val, self._remoteValue)) {
         return;
       }
@@ -218,7 +217,7 @@ AngularFire.prototype = {
         } else {
           self._fRef.ref().update(val);
         }
-      } else {
+      } else if(typeof val !== 'undefined') {
         self._fRef.ref().set(val);
       }
     }, true);
