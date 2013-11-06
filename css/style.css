@@ -37,6 +37,11 @@ p.center {
   margin: auto;
 }
 
+#thinkster {
+  margin-top: -10px;
+  margin-bottom: 35px;
+}
+
 /* Make nav items ocuppy full height of menu bar */
 body > .navbar .brand {
   padding-top: 15px;
