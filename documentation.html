@@ -151,7 +151,7 @@ $scope.removeItem = function() {
             variable in $scope to user authentication state. You can do this by declaring
             <code>angularFireAuth</code> as a dependency in your controller:</p>
             <pre class="prettyprint lang-js">function MyController($scope, angularFireAuth) {
-var ref = new Firebase("https://&lt;my-firebase&gt;.firebaseio.com/");
+  var ref = new Firebase("https://&lt;my-firebase&gt;.firebaseio.com/");
   angularFireAuth.initialize(ref, {scope: $scope, name: "user"});
 }</pre>
             <p>You can now use the bound variable to display user info or a login/logout button as appropriate.
@@ -190,7 +190,7 @@ $scope.$on("angularFireAuth:error", function(evt, err) {
             initializing <code>angularFireAuth</code>:</p>
             <pre class="prettyprint lang-js">function MyController($scope, angularFireAuth) {
   var ref = new Firebase("https://&lt;my-firebase&gt;.firebaseio.com/");
-  angularFireAuth.initialize(url, {
+  angularFireAuth.initialize(ref, {
     scope: $scope, name: "user",
     callback: function(err, user) {
       // Called whenever there is a change in authentication state.
