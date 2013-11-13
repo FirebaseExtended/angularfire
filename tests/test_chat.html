@@ -29,18 +29,11 @@
     var _scope;
     var _url = 'https://angularFireTests.firebaseio-demo.com/chat';
     angular.module("chat", ["firebase"]);
-    function Chat($scope, angularFireCollection) {
-      
-      function log_item_action(action, item) {
-        $scope.item_log.push( {action: action, from: item.from, content: item.content} );
-      }
-      
-      $scope.item_log = [];
-     
-      $scope.messages = angularFireCollection(new Firebase(_url).limit(2), null, log_item_action);
+    function Chat($scope, $firebase) {
+      $scope.messages = $firebase(new Firebase(_url).limit(2));
       $scope.username = 'Guest' + Math.floor(Math.random()*101);
       $scope.addMessage = function() {
-        $scope.messages.add({from: $scope.username, content: $scope.message});
+        $scope.messages.$add({from: $scope.username, content: $scope.message});
         $scope.message = "";
       }
       _scope = $scope;
