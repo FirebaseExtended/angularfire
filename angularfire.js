@@ -280,18 +280,28 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
       // triggered by a priority change).
       function moveChild(from, to, item) {
         collection.splice(from, 1);
-        collection.splice(to, 0, item);
+        collection.splice(to > from ? to - 1 : to, 0, item);
         updateIndexes(from, to);
       }
 
       // Update the index table.
       function updateIndexes(from, to) {
         var length = collection.length;
-        to = to || length;
-        if (to > length) {
-          to = length;
+        if (to === undefined) {
+          to = length - 1;
         }
-        for (var index = from; index < to; index++) {
+        
+        if (to > length) {
+          to = length - 1;
+        }
+        
+        if (to < from) {
+          var swap = to;
+          to = from;
+          from = swap;
+        }
+        
+        for (var index = from; index <= to; index++) {
           var item = collection[index];
           item.$index = indexes[item.$id] = index;
         }
@@ -345,6 +355,7 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
           var oldIndex = indexes[ref.name()];
           var newIndex = getIndex(prevId);
           var item = collection[oldIndex];
+          item.$priority = ref.getPriority();
           moveChild(oldIndex, newIndex, item);
           broadcastChange("item_moved", item);
         });

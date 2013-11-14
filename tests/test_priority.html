@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en" ng-app="chat">
+<head>
+  <meta charset="UTF-8">
+  <title>AngularFire Chat Test</title>
+  <link rel="stylesheet" type="text/css" href="https://www.firebase.com/css/example.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.3/angular.min.js"></script>
+  <script src="https://cdn.firebase.com/v0/firebase.js"></script>
+  <script src="../angularfire.min.js"></script>
+</head>
+<body ng-controller="Chat">
+  <div>
+    <label for="">Your name: </label><input id="name" type="text" ng-model="username">
+  </div>
+  <p></p>
+  <div id="messagesDiv" style="height:500px;">
+    <div ng-cloak ng-repeat="message in messages">
+      <span class="messageBlock">
+        <em>{{message.from}}: </em>
+        <span class="content">{{message.content}}</span>
+      </span>
+    </div>
+  </div>
+  <form ng-submit="addMessage()">
+    <input id="message" type="text" ng-model="message" placeholder="Message...">
+    <input id="send" type="submit" id="submit" value="Send" style="font-size:24px;">
+  </form>
+  <script type="text/javascript">
+    var _scope;
+    var _url = 'https://angularFireTests.firebaseio-demo.com/chat';
+    angular.module("chat", ["firebase"]);
+    function Chat($scope, angularFireCollection) {
+      
+      function log_item_action(action, item) {
+        $scope.item_log.push( {action: action, from: item.from, content: item.content} );
+      }
+      
+      $scope.item_log = [];
+     
+      $scope.messages = angularFireCollection(new Firebase(_url), null, log_item_action);
+      $scope.username = 'Guest' + Math.floor(Math.random()*101);
+      $scope.addMessage = function() {
+        var ref = $scope.messages.add({from: $scope.username, content: $scope.message});
+        ref.setPriority($scope.messages.length);
+        $scope.message = "";
+      }
+      _scope = $scope;
+    }
+    function testIfInDOM(from, content, node) {
+      if (node.childNodes.length != 5) return false;
+      if (node.childNodes[1].innerHTML != from + ": ") return false;
+      if (node.childNodes[3].innerHTML != content) return false;
+      return true;
+    }
+    function testIfInDOMAtPos(from, content, nodes, pos) {
+      if (nodes.length <= pos) return false;
+      return testIfInDOM(from, content, nodes[pos]); 
+    }
+    function testMessagePriority(pos) {
+      //console.log('Pos: ' + pos + ', priority: ' + _scope.messages[pos].$priority);
+      return _scope.messages[pos]['$priority'];//.messages[pos].$priority == pos;
+    }
+    function getMessagePriority(pos) {
+      return _scope.messages[pos].$priority;
+    }
+  </script>
+</body>
+</html>
