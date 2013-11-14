@@ -127,9 +127,17 @@ AngularFire.prototype = {
     };
 
     // Remove this object from the remote data. Calling this is the equivalent
-    // of calling `remove()` on a Firebase reference.
-    object.$remove = function() {
-      self._fRef.ref().remove();
+    // of calling `remove()` on a Firebase reference. This function takes a
+    // single optional argument:
+    //
+    //    * `key`: Specify a child key to remove. If no key is specified, the
+    //             entire object will be removed from the remote data store.
+    object.$remove = function(key) {
+      if (key) {
+        self._fRef.ref().child(key).remove();
+      } else {
+        self._fRef.ref().remove();
+      }
     };
 
     // Get an AngularFire wrapper for a named child.
