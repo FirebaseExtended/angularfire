@@ -107,10 +107,17 @@ AngularFire.prototype = {
       }
     };
 
-    // Save the current state of the object to the remote data. Saving an
-    // object is the equivalent of calling `update()` on a Firebase reference.
-    object.$save = function() {
-      self._fRef.ref().update(self._parseObject(self._object));
+    // Save the current state of the object (or a child) to the remote.
+    // Takes a single optional argument:
+    //
+    //    * `key`: Specify a child key to save the data for. If no key is
+    //             specified, the entire object's current state will be saved.
+    object.$save = function(key) {
+      if (key) {
+        self._fRef.ref().child(key).set(self._parseObject(self._object[key]));
+      } else {
+        self._fRef.ref().set(self._parseObject(self._object));
+      }
     };
 
     // Set the current state of the object to the specified value. Calling
@@ -127,8 +134,10 @@ AngularFire.prototype = {
 
     // Get an AngularFire wrapper for a named child.
     object.$child = function(key) {
-        var af = new AngularFire(this._q, this._parse, this._timeout, this._fRef.ref().child(key));
-        return af.construct();
+      var af = new AngularFire(
+        this._q, this._parse, this._timeout, this._fRef.ref().child(key)
+      );
+      return af.construct();
     }
 
     // Attach an event handler for when the object is changed. You can attach
