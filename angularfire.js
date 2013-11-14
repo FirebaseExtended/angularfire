@@ -138,7 +138,7 @@ AngularFire.prototype = {
         this._q, this._parse, this._timeout, this._fRef.ref().child(key)
       );
       return af.construct();
-    }
+    };
 
     // Attach an event handler for when the object is changed. You can attach
     // handlers for the following events:
