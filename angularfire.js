@@ -31,12 +31,43 @@ angular.module("firebase").factory("$firebase", ["$q", "$parse", "$timeout",
   }
 ]);
 
+// Define the `orderByPriority` filter that sorts objects returned by
+// $firebase in the order of priority. Priority is defined by Firebase,
+// for more info see: https://www.firebase.com/docs/ordered-data.html
+angular.module("firebase").filter("orderByPriority", function() {
+  return function(input) {
+    if (!input.$getIndex || typeof input.$getIndex != "function") {
+      return input;
+    }
+
+    var sorted = [];
+    var index = input.$getIndex();
+    if (index.length <= 0) {
+      return input;
+    }
+
+    for (var i = 0; i < index.length; i++) {
+      var val = input[index[i]];
+      if (val) {
+        val.$id = index[i];
+        sorted.push(val);
+      }
+    }
+
+    return sorted;
+  };
+});
+
 // The `AngularFire` object that implements synchronization.
 AngularFire = function($q, $parse, $timeout, ref) {
   this._q = $q;
   this._bound = false;
   this._parse = $parse;
   this._timeout = $timeout;
+
+  this._index = [];
+  this._onChange = [];
+  this._onLoaded = [];
 
   if (typeof ref == "string") {
     throw new Error("Please provide a Firebase reference instead " +
@@ -69,21 +100,23 @@ AngularFire.prototype = {
     // Add an object to the remote data. Adding an object is the
     // equivalent of calling `push()` on a Firebase reference.
     object.$add = function(item) {
-      // We use toJson/fromJson to remove $$hashKey. Can be replaced by
-      // angular.copy, but only for later versions of AngularJS.
-      self._fRef.ref().push(angular.fromJson(angular.toJson(item)));
+      if (typeof item == "object") {
+        self._fRef.ref().push(self._parseObject(item));
+      } else {
+        self._fRef.ref().push(item);
+      }
     };
 
     // Save the current state of the object to the remote data. Saving an
     // object is the equivalent of calling `update()` on a Firebase reference.
     object.$save = function() {
-      self._fRef.ref().update(angular.fromJson(angular.toJson(self._object)));
+      self._fRef.ref().update(self._parseObject(self._object));
     };
 
     // Set the current state of the object to the remote data as-is. Calling
     // this is the equivalent of calling `set()` on a Firebase reference.
     object.$set = function() {
-      self._fRef.ref().set(angular.fromJson(angular.toJson(self._object)));
+      self._fRef.ref().set(self._parseObject(self._object));
     };
 
     // Remove this object from the remote data. Calling this is the equivalent
@@ -92,13 +125,31 @@ AngularFire.prototype = {
       self._fRef.ref().remove();
     };
 
-    // Attach an event handler for when the object is changed. Currently
-    // take a single type of argument, "change", with a callback.
+    // Attach an event handler for when the object is changed. You can attach
+    // handlers for the following events:
+    //
+    //  - "change": The provided function will be called whenever the local
+    //              object is modified because the remote data was updated.
+    //  - "loaded": This function will be called *once*, when the initial
+    //              data has been loaded. 'object' will be an empty object ({})
+    //              until this function is called.
     object.$on = function(type, callback) {
-      if (type != "change") {
+      switch (type) {
+      case "change":
+        self._onChange.push(callback);
+        break;
+      case "loaded":
+        self._onLoaded.push(callback);
+        break;
+      default:
         throw new Error("Invalid event type " + type + " specified");
       }
-      self._onChange = callback;
+    };
+
+    // Return the current index, which is a list of key names in an array,
+    // ordered by their Firebase priority.
+    object.$getIndex = function() {
+      return angular.copy(self._index);
     };
 
     self._object = object;
@@ -115,6 +166,7 @@ AngularFire.prototype = {
     var self = this;
     self._fRef.on("value", function(snapshot) {
       var value = snapshot.val();
+
       switch (typeof value) {
       // For primitive values, simply update the object returned.
       case "string":
@@ -130,23 +182,54 @@ AngularFire.prototype = {
       default:
         throw new Error("Unexpected type from remote data " + typeof value);
       }
+
+      // Call handlers for the "loaded" event.
+      self._broadcastEvent("loaded", value);
     });
   },
 
   // This function attaches child events for object and array types.
   _getChildValues: function() {
     var self = this;
-    self._fRef.on("child_added", function(snapshot) {
-      self._updateModel(snapshot.name(), snapshot.val());
-    });
-    self._fRef.on("child_changed", function(snapshot) {
-      self._updateModel(snapshot.name(), snapshot.val());
-    });
+    // Store the priority of the current property as "$priority". This can
+    // be used with the `toArray | orderBy:'$priority'` filter to sort objects.
+    function _processSnapshot(snapshot, prevChild) {
+      var key = snapshot.name();
+      var val = snapshot.val();
+
+      // If the item already exists in the index, remove it first.
+      var curIdx = self._index.indexOf(key);
+      if (curIdx !== -1) {
+        self._index.splice(curIdx, 1);
+      }
+
+      // Update index. This is used by $getIndex and the orderByPriority filter.
+      if (prevChild) {
+        var prevIdx = self._index.indexOf(prevChild);
+        self._index.splice(prevIdx + 1, 0, key);
+      } else {
+        self._index.unshift(key);
+      }
+
+      // Update local model with priority field, if needed.
+      if (snapshot.getPriority() !== null) {
+        val.$priority = snapshot.getPriority();
+      }
+      self._updateModel(key, val);
+    }
+
+    self._fRef.on("child_added", _processSnapshot);
+    self._fRef.on("child_moved", _processSnapshot);
+    self._fRef.on("child_changed", _processSnapshot);
     self._fRef.on("child_removed", function(snapshot) {
-      // 'null' mean deleted in Firebase.
-      self._updateModel(snapshot.name(), null);
+      // Remove from index.
+      var key = snapshot.name();
+      var idx = self._index.indexOf(key);
+      self._index.splice(idx, 1);
+
+      // Remove from local model.
+      self._updateModel(key, null);
     });
-    // TODO: Implement child_moved and ordering of items.
   },
 
   // Called whenever there is a remote change. Applies them to the local
@@ -160,9 +243,8 @@ AngularFire.prototype = {
         self._object[key] = value;
       }
 
-      if (self._onChange && typeof self._onChange == "function") {
-        self._onChange();
-      }
+      // Call change handlers.
+      self._broadcastEvent("change");
 
       // If there is an implicit binding, also update the local model.
       if (!self._bound) {
@@ -186,10 +268,8 @@ AngularFire.prototype = {
       // Primitive values are represented as a special object {$value: value}.
       self._object.$value = value;
 
-      // Call onChange handler, if one is associated.
-      if (self._onChange && typeof self._onChange == "function") {
-        self._onChange();
-      }
+      // Call change handlers.
+      self._broadcastEvent("change");
 
       // If there's an implicit binding, simply update the local scope model.
       if (self._bound) {
@@ -199,6 +279,29 @@ AngularFire.prototype = {
         }
       }
     });
+  },
+
+  // If event handlers for a specified event were attached, call them.
+  _broadcastEvent: function(evt, param) {
+    var cbs;
+    switch (evt) {
+    case "change":
+      cbs = this._onChange;
+      break;
+    case "loaded":
+      cbs = this._onLoaded;
+      break;
+    default:
+      cbs = [];
+      break;
+    }
+    if (cbs.length > 0) {
+      for (var i = 0; i < cbs.length; i++) {
+        if (typeof cbs[i] == "function") {
+          cbs[i](param);
+        }
+      }
+    }
   },
 
   // This function creates a 3-way binding between the provided scope model
@@ -219,7 +322,7 @@ AngularFire.prototype = {
     if (local === undefined) {
       self._parse(name).assign(scope, {});
     } else {
-      self._fRef.update(angular.fromJson(angular.toJson(local)));
+      self._fRef.update(self._parseObject(local));
     }
 
     // We're responsible for setting up scope.$watch to reflect local changes
@@ -227,7 +330,7 @@ AngularFire.prototype = {
     var unbind = scope.$watch(name, function() {
       // If the new local value matches the current remote value, we don't
       // trigger a remote update.
-      local = angular.fromJson(angular.toJson(self._parse(name)(scope)));
+      local = self._parseObject(self._parse(name)(scope));
       if (angular.equals(local, self._object)) {
         return;
       }
@@ -250,5 +353,27 @@ AngularFire.prototype = {
     });
 
     return deferred.promise;
+  },
+
+  // Parse a local model, removing all properties beginning with "$" and
+  // converting $priority to ".priority".
+  _parseObject: function(obj) {
+    function _findReplacePriority(item) {
+      for (var prop in item) {
+        if (item.hasOwnProperty(prop)) {
+          if (prop == "$priority") {
+            item[".priority"] = item.$priority;
+            delete item.$priority;
+          } else if (typeof item[prop] == "object") {
+            _findReplacePriority(item[prop]);
+          }
+        }
+      }
+      return item;
+    }
+
+    // We use toJson/fromJson to remove $$hashKey and others. Can be replaced
+    // by angular.copy, but only for later versions of AngularJS.
+    return angular.fromJson(angular.toJson(_findReplacePriority(obj)));
   }
 };
