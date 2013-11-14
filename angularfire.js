@@ -113,10 +113,10 @@ AngularFire.prototype = {
       self._fRef.ref().update(self._parseObject(self._object));
     };
 
-    // Set the current state of the object to the remote data as-is. Calling
+    // Set the current state of the object to the specified value. Calling
     // this is the equivalent of calling `set()` on a Firebase reference.
-    object.$set = function() {
-      self._fRef.ref().set(self._parseObject(self._object));
+    object.$set = function(newValue) {
+      self._fRef.ref().set(newValue);
     };
 
     // Remove this object from the remote data. Calling this is the equivalent
@@ -124,6 +124,12 @@ AngularFire.prototype = {
     object.$remove = function() {
       self._fRef.ref().remove();
     };
+
+    // Get an AngularFire wrapper for a named child.
+    object.$child = function(key) {
+        var af = new AngularFire(this._q, this._parse, this._timeout, this._fRef.ref().child(key));
+        return af.construct();
+    }
 
     // Attach an event handler for when the object is changed. You can attach
     // handlers for the following events:
