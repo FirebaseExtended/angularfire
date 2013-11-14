@@ -4,6 +4,7 @@
   "main": ["./angularfire.js", "./angularfire.min.js"],
   "ignore": ["Gruntfile.js", "package.js", "tests", "README.md", ".travis.yml"],
   "dependencies": {
-    "angular": "<=1.2.0"
+    "angular": "<=1.2.0",
+    "angular-mocks" : "<=1.2.0"
   }
 }

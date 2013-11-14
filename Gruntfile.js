@@ -61,8 +61,12 @@ module.exports = function(grunt) {
           message: 'Build Finished'
         }
       }
+    },
+    karma: {
+      unit: {
+        configFile: 'karma.conf.js'
+      }
     }
-
   });
 
   grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -70,9 +74,10 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-exec');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-notify');
+  grunt.loadNpmTasks('grunt-karma');
 
   grunt.registerTask('build', ['jshint', 'uglify']);
-  grunt.registerTask('test', ['exec:casperjs']);
+  grunt.registerTask('test', ['exec:casperjs', 'karma:unit']);
 
   grunt.registerTask('default', ['build', 'test']);
 };
