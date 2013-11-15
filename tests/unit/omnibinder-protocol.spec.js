@@ -37,9 +37,23 @@ describe('OmniBinder Protocol', function () {
 
 
     describe('child_added', function () {
-      var binder;
+      var binder, snapshot,
+          value = {foo: 'bar'};
       beforeEach(function (){
-        binder = {query: {url: 'foo/bar'}};
+        binder = {
+          query: {url: 'foo/bar'},
+          onProtocolChange: angular.noop
+        };
+
+        snapshot = {
+          val: 'foo',
+          name: function () {
+            return 'bar';
+          },
+          val: function () {
+            return value;
+          }
+        }
       });
 
 
@@ -60,27 +74,48 @@ describe('OmniBinder Protocol', function () {
           expect(spy).toHaveBeenCalled();
         });
 
-      it('should insert the child\'s name at the end of the binder index if no prev is provided',
+      it('should insert the child\'s name at the beginning of the binder index if no prev is provided',
         function () {
           firebinder.subscribe(binder);
           binder.index.push('baz', 'foo');
-          firebinder.onChildAdded.call(firebinder, binder, {val: 'foo', name: function () {
-            return 'bar';
-          }});
+          firebinder.onChildAdded.call(firebinder, binder, snapshot);
 
-          expect(binder.index.indexOf('bar')).toBe(2);
+          expect(binder.index.indexOf('bar')).toBe(0);
         });
 
       it('should insert the child\'s name after the prev in the binder index',
         function () {
           firebinder.subscribe(binder);
           binder.index.push('baz', 'foo');
-          firebinder.onChildAdded.call(firebinder, binder, {val: 'foo', name: function () {
-            return 'bar';
-          }}, 'baz');
+          firebinder.onChildAdded.call(firebinder, binder, snapshot, 'baz');
 
           expect(binder.index.indexOf('bar')).toBe(1);
         });
+
+      it('should call binder.onProtocolChange', function () {
+        var spy = spyOn(binder, 'onProtocolChange');
+        firebinder.subscribe(binder);
+
+        firebinder.onChildAdded(binder, snapshot);
+
+        expect(spy).toHaveBeenCalledWith([{
+          addedCount: 1,
+          added: [value],
+          index: 0,
+          removed: []
+        }]);
+      });
+
+
+      it('should not call binder.onProtocolChange if isLocal is true', function () {
+        var spy = spyOn(binder, 'onProtocolChange');
+        firebinder.subscribe(binder);
+        binder.isLocal = true;
+        firebinder.onChildAdded(binder, snapshot);
+
+        expect(spy).not.toHaveBeenCalled();
+        expect(binder.isLocal).toBe(false);
+      });
     });
   })
 });
