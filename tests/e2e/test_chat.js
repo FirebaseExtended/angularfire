@@ -1,7 +1,7 @@
 
 casper.test.comment("Testing Chat example with angularFireCollection");
 
-casper.start("tests/test_chat.html", function() {
+casper.start("tests/e2e/test_chat.html", function() {
   // Sanity test for the environment.
   this.test.assertTitle("AngularFire Chat Test");
   this.test.assertEval(function() {

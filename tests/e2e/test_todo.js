@@ -1,7 +1,7 @@
 
 casper.test.comment("Testing TODO example with implicit sync angularFire");
 
-casper.start("tests/test_todo.html", function() {
+casper.start("tests/e2e/test_todo.html", function() {
   // Sanity test for environment.
   this.test.assertTitle("AngularFire TODO Test");
   this.test.assertEval(function() {

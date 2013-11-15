@@ -6,7 +6,7 @@ module.exports = function(grunt) {
   grunt.initConfig({
     exec: {
       casperjs : {
-        command : 'casperjs test tests/'
+        command : 'casperjs test tests/e2e/'
       }
     },
 
