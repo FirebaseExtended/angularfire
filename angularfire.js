@@ -434,7 +434,7 @@ angular.module("firebase").factory("$firebaseAuth", [
     //    a minimum contain the `id` and `provider` properties.
     //
     // The returned object will also have the following methods available:
-    // login(), logout() and createUser().
+    // $login(), $logout() and $createUser().
     return function(ref, options) {
       var auth = new AngularFireAuth($t, $i, $rs, $l, ref, options);
       return auth.construct();
@@ -476,9 +476,9 @@ AngularFireAuth.prototype = {
     var self = this;
     var object = {
       user: null,
-      login: self.login.bind(self),
-      logout: self.logout.bind(self),
-      createUser: self.createUser.bind(self)
+      $login: self.login.bind(self),
+      $logout: self.logout.bind(self),
+      $createUser: self.createUser.bind(self)
     };
 
     if (self._options.path && self._route !== null) {
