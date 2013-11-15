@@ -214,8 +214,9 @@ AngularFire.prototype = {
   // This function attaches child events for object and array types.
   _getChildValues: function() {
     var self = this;
-    // Store the priority of the current property as "$priority". This can
-    // be used with the `toArray | orderBy:'$priority'` filter to sort objects.
+    // Store the priority of the current property as "$priority". Changing
+    // the value of this property will also update the priority of the
+    // object (see _parseObject).
     function _processSnapshot(snapshot, prevChild) {
       var key = snapshot.name();
       var val = snapshot.val();
@@ -226,7 +227,7 @@ AngularFire.prototype = {
         self._index.splice(curIdx, 1);
       }
 
-      // Update index. This is used by $getIndex and the orderByPriority filter.
+      // Update index. This is used by $getIndex and orderByPriority.
       if (prevChild) {
         var prevIdx = self._index.indexOf(prevChild);
         self._index.splice(prevIdx + 1, 0, key);
@@ -397,6 +398,7 @@ AngularFire.prototype = {
 
     // We use toJson/fromJson to remove $$hashKey and others. Can be replaced
     // by angular.copy, but only for later versions of AngularJS.
-    return angular.fromJson(angular.toJson(_findReplacePriority(angular.copy(obj))));
+    var newObj = _findReplacePriority(angular.copy(obj));
+    return angular.fromJson(angular.toJson(newObj));
   }
 };
