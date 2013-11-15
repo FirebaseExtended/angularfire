@@ -27,15 +27,17 @@ angular.module("firebase").factory("angularFire", ["$q", "$parse", "$timeout",
     //   * `ref`:    A Firebase reference. Queries or limits may be applied.
     //   * `$scope`: The scope with which the bound model is associated.
     //   * `name`:   The name of the model.
-    return function(ref, scope, name) {
-      var af = new AngularFire($q, $parse, $timeout, ref);
+    //   * `persist`: (Optional) Do not remove the Firebase event handlers when 
+    //                the scope is destroyed.
+    return function(ref, scope, name, persist) {
+      var af = new AngularFire($q, $parse, $timeout, ref, persist);
       return af.associate(scope, name);
     };
   }
 ]);
 
 // The `AngularFire` object that implements implicit synchronization.
-AngularFire = function($q, $parse, $timeout, ref) {
+AngularFire = function($q, $parse, $timeout, ref, persist) {
   this._q = $q;
   this._parse = $parse;
   this._timeout = $timeout;
@@ -47,6 +49,7 @@ AngularFire = function($q, $parse, $timeout, ref) {
       "of a URL, eg: new Firebase(url)");
   }
   this._fRef = ref;
+  this._persist = persist !== undefined ? persist : false;
 };
 
 AngularFire.prototype = {
@@ -60,7 +63,7 @@ AngularFire.prototype = {
     // We're currently listening for value changes to implement synchronization.
     // This needs to be optimized, see
     // [Ticket #25](https://github.com/firebase/angularFire/issues/25).
-    this._fRef.on("value", function(snap) {
+    var onValueCallback = function(snap) {
       var remote = snap.val();
       // We use toJson/fromJson to remove $$hashKey. Can be replaced by
       // angular.copy, but only for later version of AngularJS.
@@ -112,7 +115,17 @@ AngularFire.prototype = {
       self._timeout(function() {
         self._resolve($scope, name, resolve, remote);
       });
-    });
+    };
+
+    // In order to keep the Firebase cache from emptying, we add an empty "child_added" event.
+    self._fRef.on("child_added", function () {});
+    // Then we remove any "value" events, which may be left from previous calls where persist is true
+    self._fRef.off("value");
+    // Then we can add our new "value" callback
+    self._fRef.on("value", onValueCallback);
+    // And finally, remove the placeholder "child_added" event.
+    self._fRef.off("child_added");
+
     return promise;
   },
 
@@ -125,7 +138,9 @@ AngularFire.prototype = {
     if (self._unregister) {
       self._unregister();
     }
-    this._fRef.off("value");
+    if (!self._persist) {
+      this._fRef.off("value");
+    }
   },
 
   // If `deferred` is a valid promise, it will be resolved with `val`, and
