@@ -65,6 +65,11 @@ module.exports = function(grunt) {
     karma: {
       unit: {
         configFile: 'karma.conf.js'
+      },
+      continuous: {
+        configFile: 'karma.conf.js',
+        singleRun: true,
+        browsers: ['PhantomJS']
       }
     }
   });
@@ -77,7 +82,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-karma');
 
   grunt.registerTask('build', ['jshint', 'uglify']);
-  grunt.registerTask('test', ['exec:casperjs', 'karma:unit']);
+  grunt.registerTask('test', ['exec:casperjs', 'karma:continuous']);
 
   grunt.registerTask('default', ['build', 'test']);
 };

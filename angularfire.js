@@ -11,7 +11,7 @@
 
 "use strict";
 
-var AngularFire;
+var AngularFire, AngularFireAuth;
 
 // Define the `firebase` module under which all AngularFire services will live.
 angular.module("firebase", []).value("Firebase", Firebase);
@@ -23,7 +23,7 @@ angular.module("firebase").factory("$firebase", ["$q", "$parse", "$timeout",
     // the Firebase location provided, as well as several methods. It
     // takes a single argument:
     //
-    //   * `ref`:    A Firebase reference. Queries or limits may be applied.
+    //   * `ref`: A Firebase reference. Queries or limits may be applied.
     return function(ref) {
       var af = new AngularFire($q, $parse, $timeout, ref);
       return af.construct();
@@ -88,7 +88,7 @@ AngularFire.prototype = {
     // to automatically synchronize *all* local changes. It take two arguments:
     //
     //    * `$scope`: The scope with which the bound model is associated.
-    //    * `name`:   The name of the model.
+    //    * `name`  : The name of the model.
     //
     // This function also returns a promise, which when resolve will be
     // provided an `unbind` method, a function which you can call to stop
@@ -400,5 +400,282 @@ AngularFire.prototype = {
     // by angular.copy, but only for later versions of AngularJS.
     var newObj = _findReplacePriority(angular.copy(obj));
     return angular.fromJson(angular.toJson(newObj));
+  }
+};
+
+
+// Defines the `$firebaseAuth` service that provides authentication support
+// for AngularFire.
+angular.module("firebase").factory("$firebaseAuth", [
+  "$timeout", "$injector", "$rootScope", "$location",
+  function($t, $i, $rs, $l) {
+    // The factory returns an object containing the authentication state
+    // of the current user. This service takes 2 arguments:
+    //
+    //   * `ref`    : A Firebase reference.
+    //   * `options`: An object that may contain the following options:
+    //
+    //      * `path`    : The path to which the user will be redirected if the
+    //                    authRequired property was set to true in the
+    //                    $routeProvider, and the user isn't logged in.
+    //      * `simple`  : $firebaseAuth requires inclusion of the
+    //                    firebase-simple-login.js file by default. If this
+    //                    value is set to false, this requirement is waived,
+    //                    but only custom login functionality will be enabled.
+    //      * `callback`: A function that will be called when there is a change
+    //                    in authentication state.
+    //
+    // The returned object has the following properties:
+    //
+    //  * `user`: Set to "null" if the user is currently logged out. This value
+    //    will be changed to an object when the user successfully logs in. This
+    //    object will contain details of the logged in user. The exact
+    //    properties will vary based on the method used to login, but will at
+    //    a minimum contain the `id` and `provider` properties.
+    //
+    // The returned object will also have the following methods available:
+    // login(), logout() and createUser().
+    return function(ref, options) {
+      var auth = new AngularFireAuth($t, $i, $rs, $l, ref, options);
+      return auth.construct();
+    };
+  }
+]);
+
+AngularFireAuth = function($t, $i, $rs, $l, ref, options) {
+  this._timeout = $t;
+  this._injector = $i;
+  this._location = $l;
+  this._rootScope = $rs;
+
+  // Check if '$route' is present, use if available.
+  this._route = null;
+  if (this._injector.has("$route")) {
+    this._route = this._injector.get("$route");
+  }
+
+  // Setup options and callback.
+  this._cb = function(){};
+  this._options = options || {};
+  if (this._options.callback && typeof this._options.callback === "function") {
+    this._cb = options.callback;
+  }
+  this._deferred = null;
+  this._redirectTo = null;
+  this._authenticated = false;
+
+  if (typeof ref == "string") {
+    throw new Error("Please provide a Firebase reference instead " +
+      "of a URL, eg: new Firebase(url)");
+  }
+  this._fRef = ref;
+};
+
+AngularFireAuth.prototype = {
+  construct: function() {
+    var self = this;
+    var object = {
+      user: null,
+      login: self.login.bind(self),
+      logout: self.logout.bind(self),
+      createUser: self.createUser.bind(self)
+    };
+
+    if (self._options.path && self._route !== null) {
+      // Check if the current page requires authentication.
+      if (self._route.current) {
+        self._authRequiredRedirect(self._route.current, self._options.path);
+      }
+      // Set up a handler for all future route changes, so we can check
+      // if authentication is required.
+      self._rootScope.$on("$routeChangeStart", function(e, next) {
+        self._authRequiredRedirect(next, self._options.path);
+      });
+    }
+
+    // If Simple Login is disabled, simply return.
+    self._object = object;
+    if (self._options.simple === false) {
+      return;
+    }
+
+    // Initialize Simple Login.
+    if (!window.FirebaseSimpleLogin) {
+      var err = new Error("FirebaseSimpleLogin undefined, " +
+        "did you include firebase-simple-login.js?");
+      self._rootScope.$broadcast("$firebaseAuth:error", err);
+      return;
+    }
+
+    var client = new FirebaseSimpleLogin(self._fRef, function(err, user) {
+      self._cb(err, user);
+      if (err) {
+        self._rootScope.$broadcast("$firebaseAuth:error", err);
+      } else if (user) {
+        self._loggedIn(user);
+      } else {
+        self._loggedOut();
+      }
+    });
+
+    self._authClient = client;
+    return self._object;
+  },
+
+  // The login method takes a provider (for Simple Login) or a token
+  // (for Custom Login) and authenticates the Firebase URL with which
+  // the service was initialized.
+  login: function(tokenOrProvider, options) {
+    var self = this;
+    switch (tokenOrProvider) {
+    case "github":
+    case "persona":
+    case "twitter":
+    case "facebook":
+    case "password":
+      if (!self._authClient) {
+        var err = new Error("Simple Login not initialized");
+        self._rootScope.$broadcast("$firebaseAuth:error", err);
+      } else {
+        self._authClient.login(tokenOrProvider, options);
+      }
+      break;
+    // A token was provided, so initialize custom login.
+    default:
+      try {
+        // Extract claims and update user auth state to include them.
+        var claims = self._deconstructJWT(tokenOrProvider);
+        self._fRef.auth(tokenOrProvider, function(err) {
+          if (err) {
+            self._rootScope.$broadcast("$firebaseAuth:error", err);
+          } else {
+            self._loggedIn(claims);
+          }
+        });
+      } catch(e) {
+        self._rootScope.$broadcast("$firebaseAuth:error", e);
+      }
+    }
+  },
+
+  // Unauthenticate the Firebase reference.
+  logout: function() {
+    if (this._authClient) {
+      this._authClient.logout();
+    } else {
+      this._fRef.unauth();
+      this._loggedOut();
+    }
+  },
+
+  // Function 'cb' receives an error as the first argument and a
+  // Simple Login user object as the second argument. Pass noLogin=true
+  // if you don't want the newly created user to also be logged in.
+  createUser: function(email, password, cb, noLogin) {
+    var self = this;
+    self._authClient.createUser(email, password, function(err, user) {
+      try {
+        if (err) {
+          self._rootScope.$broadcast("$firebaseAuth:error", err);
+        } else {
+          if (!noLogin) {
+            self.login("password", {email: email, password: password});
+          }
+        }
+      } catch(e) {
+        self._rootScope.$broadcast("$firebaseAuth:error", e);
+      }
+      if (cb) {
+        self._timeout(function(){
+          cb(err, user);
+        });
+      }
+    });
+  },
+
+  // Common function to trigger a login event on the root scope.
+  _loggedIn: function(user) {
+    var self = this;
+    self._timeout(function() {
+      self._object.user = user;
+      self._rootScope.$broadcast("$firebaseAuth:login", user);
+      if (self._redirectTo) {
+        self._location.replace();
+        self._location.path(self._redirectTo);
+        self._redirectTo = null;
+      }
+    });
+  },
+
+  // Common function to trigger a logout event on the root scope.
+  _loggedOut: function() {
+    var self = this;
+    self._timeout(function() {
+      self._object.user = null;
+      self._authenticated = false;
+      self._rootScope.$broadcast("$firebaseAuth:logout");
+    });
+  },
+
+  // A function to check whether the current path requires authentication,
+  // and if so, whether a redirect to a login page is needed.
+  _authRequiredRedirect: function(route, path) {
+    if (route.authRequired && !this._authenticated){
+      if (route.pathTo === undefined) {
+        this._redirectTo = this._location.path();
+      } else {
+        this._redirectTo = route.pathTo === path ? "/" : route.pathTo;
+      }
+      this._location.replace();
+      this._location.path(path);
+    }
+  },
+
+  // Helper function to decode Base64 (polyfill for window.btoa on IE).
+  // From: https://github.com/mshang/base64-js/blob/master/base64.js
+  _decodeBase64: function(str) {
+    var char_set =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    var output = ""; // final output
+    var buf = ""; // binary buffer
+    var bits = 8;
+    for (var i = 0; i < str.length; ++i) {
+      if (str[i] == "=") {
+        break;
+      }
+      var c_num = char_set.indexOf(str.charAt(i));
+      if (c_num == -1) {
+        throw new Error("Not base64.");
+      }
+      var c_bin = c_num.toString(2);
+      while (c_bin.length < 6) {
+        c_bin = "0" + c_bin;
+      }
+      buf += c_bin;
+
+      while (buf.length >= bits) {
+        var octet = buf.slice(0, bits);
+        buf = buf.slice(bits);
+        output += String.fromCharCode(parseInt(octet, 2));
+      }
+    }
+    return output;
+  },
+
+  // Helper function to extract claims from a JWT. Does *not* verify the
+  // validity of the token.
+  _deconstructJWT: function(token) {
+    var segments = token.split(".");
+    if (!segments instanceof Array || segments.length !== 3) {
+      throw new Error("Invalid JWT");
+    }
+    var decoded = "";
+    var claims = segments[1];
+    if (window.atob) {
+      decoded = window.atob(claims);
+    } else {
+      decoded = this._decodeBase64(claims);
+    }
+    return JSON.parse(decodeURIComponent(escape(decoded)));
   }
 };
