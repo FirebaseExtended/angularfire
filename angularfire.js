@@ -397,6 +397,6 @@ AngularFire.prototype = {
 
     // We use toJson/fromJson to remove $$hashKey and others. Can be replaced
     // by angular.copy, but only for later versions of AngularJS.
-    return angular.fromJson(angular.toJson(_findReplacePriority(obj)));
+    return angular.fromJson(angular.toJson(_findReplacePriority(angular.copy(obj))));
   }
 };
