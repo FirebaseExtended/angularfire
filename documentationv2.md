@@ -51,7 +51,7 @@ If the Firebase reference points to a primitive value, it will be wrapped in
 an object with a key named `$value` containing the primitive value. If the
 reference pointed to an array, you'll get an object with the array indices as
 keys. If you'd like a native array ordered by priority instead, please take a
-look at the `sortByPriority` filter, explained later in this document.
+look at the `orderByPriority` filter, explained later in this document.
 
 ``` js
 myapp.controller("MyController", ["$scope", "$firebase",
@@ -104,7 +104,7 @@ var child = $scope.items.$child("foo");
 child.$remove();            // Same as calling $scope.items.$remove("foo");
 ```
 
-#### $set(value)
+### $set(value)
 
 Overwrites the remote value for this object to `newValue`. The local object
 will also be subsequently updated to this new value.
@@ -180,12 +180,12 @@ $scope.items.$bind($scope, "remote").then(function(unbind) {
 Ordered Data and Arrays
 -----------------------
 Since `$firebase` always returns a JavaScript object, you may want to convert
-it to an array using the `sortByPriority` filter if the order of items is
+it to an array using the `orderByPriority` filter if the order of items is
 important to you.
 
-### sortByPriority
+### orderByPriority
 
-The `sortByPriority` filter is provided by AngularFire to convert an object
+The `orderByPriority` filter is provided by AngularFire to convert an object
 returned by `$firebase` into an array. The objects in the array are ordered
 by priority (as defined in Firebase). Additionally, each object in the array
 will have a `$id` property defined on it, which will correspond to the key name
