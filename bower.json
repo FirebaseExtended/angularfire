@@ -5,6 +5,7 @@
   "ignore": ["Gruntfile.js", "package.js", "tests", "README.md", ".travis.yml"],
   "dependencies": {
     "angular": "<=1.2.0",
-    "angular-mocks" : "<=1.2.0"
+    "angular-mocks" : "<=1.2.0",
+    "observe-js": "https://github.com/jeffbcross/observe-js.git"
   }
 }
