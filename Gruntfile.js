@@ -84,5 +84,32 @@ module.exports = function(grunt) {
   grunt.registerTask('build', ['jshint', 'uglify']);
   grunt.registerTask('test', ['exec:casperjs', 'karma:continuous']);
 
+  grunt.registerTask('protractor', 'e2e tests for omnibinder', function () {
+    var done = this.async();
+
+    if (!grunt.file.isDir('selenium')) {
+      grunt.log.writeln('Installing selenium and chromedriver dependency');
+      grunt.util.spawn({
+        cmd: './node_modules/protractor/bin/install_selenium_standalone'
+      }, function (err) {
+        if (err) grunt.log.error(err);
+
+        runProtractor();
+      });
+    } else {
+      runProtractor();
+    }
+
+    function runProtractor() {
+      grunt.util.spawn({
+        cmd: './node_modules/protractor/bin/protractor',
+        args: ['protractorConf.js']
+      }, function (err, result, code) {
+        grunt.log.write(result);
+        done(err);
+      });
+    }
+  });
+
   grunt.registerTask('default', ['build', 'test']);
 };
