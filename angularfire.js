@@ -609,6 +609,9 @@ angular.module("firebase").factory("angularFireAuth", [
           }
           break;
         // A token was provided, so initialize custom login.
+        case "anonymous" :
+          this._authClient.login(tokenOrProvider);
+          break;
         default:
           var claims, self = this;
           try {
