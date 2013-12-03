@@ -190,8 +190,8 @@ AngularFire.prototype = {
   _preservePrototype: function(object) {
     if (object !== null && typeof(object) === "object") {
       var type = this._getPrototypeName(object);
-      if (type !== 'Object' && type !== 'Array') {
-        object.__type__ = this._getPrototypeName(object);
+      if (type !== "Object" && type !== "Array") {
+        object.__type__ = type;
       }
     }
 
@@ -232,7 +232,7 @@ AngularFire.prototype = {
   },
 
   _transformRemote: function (value) {
-    if (value.hasOwnProperty('__type__')) {
+    if (value.hasOwnProperty("__type__")) {
       var base = this._stringToFunction(value.__type__);
       delete value.__type__;
       if (base !== null) {
@@ -298,8 +298,8 @@ AngularFire.prototype = {
   // Returns the prototype name of an object
   _getPrototypeName: function(object) {
     var prototypeName = this._getPrototypeOf(object).constructor.toString();
-    prototypeName = prototypeName.substr('function '.length);
-    prototypeName = prototypeName.substr(0, prototypeName.indexOf('('));
+    prototypeName = prototypeName.substr("function ".length);
+    prototypeName = prototypeName.substr(0, prototypeName.indexOf("("));
 
     return prototypeName;
   }
