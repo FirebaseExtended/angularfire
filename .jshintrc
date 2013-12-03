@@ -18,5 +18,6 @@
   "nonstandard"  : true,
   "undef"        : true,
   "unused"       : true,
-  "trailing"     : true
+  "trailing"     : true,
+  "proto"        : true
 }

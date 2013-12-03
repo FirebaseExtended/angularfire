@@ -39,7 +39,8 @@ module.exports = function(grunt) {
         'nonstandard'  : true,
         'undef'        : true,
         'unused'       : true,
-        'trailing'     : true
+        'trailing'     : true,
+        'proto'        : true
       },
       all : ['angularfire.js']
     },

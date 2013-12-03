@@ -62,9 +62,7 @@ AngularFire.prototype = {
     // [Ticket #25](https://github.com/firebase/angularFire/issues/25).
     this._fRef.on("value", function(snap) {
       var remote = snap.val();
-      // We use toJson/fromJson to remove $$hashKey. Can be replaced by
-      // angular.copy, but only for later version of AngularJS.
-      var local = angular.fromJson(angular.toJson(self._parse(name)($scope)));
+      var local = self._transformLocalDeep(self._parse(name)($scope));
 
       // If remote value matches local value, don't do anything.
       if (angular.equals(remote, local)) {
@@ -133,7 +131,7 @@ AngularFire.prototype = {
   // will also be updated to the provided value.
   _resolve: function($scope, name, deferred, val) {
     var self = this;
-    var localVal = angular.fromJson(angular.toJson(this._parse(name)($scope)));
+    var localVal = this._transformLocalDeep(this._parse(name)($scope));
     if (val === null) {
       // NULL values are special in Firebase. If received, set the local value
       // to the initial state for Objects and Arrays.
@@ -147,7 +145,7 @@ AngularFire.prototype = {
       }
     }
     this._remoteValue = angular.copy(val);
-    this._parse(name).assign($scope, angular.copy(val));
+    this._parse(name).assign($scope, self._transformRemoteDeep(angular.copy(val)));
     if (deferred) {
       deferred.resolve(function() {
         self.disassociate();
@@ -167,7 +165,7 @@ AngularFire.prototype = {
       }
       // If the new local value matches the current remote value, we don't
       // trigger a remote update.
-      var val = angular.fromJson(angular.toJson(self._parse(name)($scope)));
+      var val = self._transformLocalDeep(self._parse(name)($scope));
       if (angular.equals(val, self._remoteValue)) {
         return;
       }
@@ -189,11 +187,121 @@ AngularFire.prototype = {
     });
   },
 
+  _preservePrototype: function(object) {
+    if (object !== null && typeof(object) === "object") {
+      var type = this._getPrototypeName(object);
+      if (type !== "Object" && type !== "Array") {
+        object.__type__ = type;
+      }
+    }
+
+    return object;
+  },
+
+  // Transforms the local value for syncing
+  _transformLocal: function (value) {
+    value = this._preservePrototype(value);
+
+    // We use toJson/fromJson to remove $$hashKey. Can be replaced by
+    // angular.copy, but only for later version of AngularJS.
+    value = angular.fromJson(angular.toJson(value));
+
+    return value;
+  },
+
+  _transformLocalDeep: function(object) {
+    object = this._transformLocalTraverse(object);
+
+    // We use toJson/fromJson to remove $$hashKey. Can be replaced by
+    // angular.copy, but only for later version of AngularJS.
+    object = angular.fromJson(angular.toJson(object));
+
+    return object;
+  },
+
+  _transformLocalTraverse: function(object) {
+    var self = this;
+    if (object !== null && typeof(object) === "object") {
+      object = self._preservePrototype(object);
+      angular.forEach(object, function (value, key) {
+        object[key] = self._transformLocalTraverse(value);
+      });
+    }
+
+    return object;
+  },
+
+  _transformRemote: function (value) {
+    if (value.hasOwnProperty("__type__")) {
+      var base = this._stringToFunction(value.__type__);
+      delete value.__type__;
+      if (base !== null) {
+        this._setPrototypeOf(value, base.prototype);
+      }
+    }
+
+    return value;
+  },
+
+  _transformRemoteDeep: function(object) {
+    var self = this;
+    if (object !== null && typeof(object) === "object") {
+      object = self._transformRemote(object);
+      angular.forEach(object, function (value, key) {
+        object[key] = self._transformRemoteDeep(value);
+      });
+    }
+
+    return object;
+  },
+
   // Helper function to log messages.
   _log: function(msg) {
     if (console && console.log) {
       console.log(msg);
     }
+  },
+
+  // Local cross-browser polyfill for Object.getPrototypeOf
+  _getPrototypeOf: function (object) {
+    if (Object.getPrototypeOf) {
+      return Object.getPrototypeOf(object);
+    } else {
+      return object.__proto__ || (
+        object.constructor ?
+          object.constructor.prototype :
+          Object.prototype
+        );
+    }
+  },
+
+  // Local cross-browser polyfill for Object.setPrototypeOf
+  _setPrototypeOf: Object.setPrototypeOf ||
+    function (object, prototype) {
+      object.__proto__ = prototype;
+
+      return object;
+    },
+
+  // Finds the function with the given name
+  _stringToFunction: function(string) {
+    var parts = string.split(".");
+
+    var fn = (window || this);
+    for (var i = 0, length = parts.length; i < length; i++) {
+      fn = fn[parts[i]];
+    }
+
+    return (typeof fn === "function") ? fn : null;
+  },
+
+  // Returns the prototype name of an object
+  _getPrototypeName: function(object) {
+    var prototypeName = this._getPrototypeOf(object).constructor.toString();
+    prototypeName = prototypeName.substr("function ".length);
+    prototypeName = prototypeName.substr(0, prototypeName.indexOf("("));
+
+    return prototypeName;
   }
 };
 
