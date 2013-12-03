@@ -65,11 +65,7 @@ module.exports = function(grunt) {
 
   });
 
-  grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-exec');
-  grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-notify');
+  require('load-grunt-tasks')(grunt);
 
   grunt.registerTask('build', ['jshint', 'uglify']);
   grunt.registerTask('test', ['exec:casperjs']);
