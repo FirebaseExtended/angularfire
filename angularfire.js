@@ -188,9 +188,11 @@ AngularFire.prototype = {
   },
 
   _preservePrototype: function(object) {
-    var type = this._getPrototypeName(object);
-    if (!this._isDefaultType(type)) {
-      object.__type__ = type;
+    if (object !== null && typeof(object) === "object") {
+      var type = this._getPrototypeName(object);
+      if (type !== 'Object' && type !== 'Array') {
+        object.__type__ = this._getPrototypeName(object);
+      }
     }
 
     return object;
@@ -300,14 +302,6 @@ AngularFire.prototype = {
     prototypeName = prototypeName.substr(0, prototypeName.indexOf('('));
 
     return prototypeName;
-  },
-
-  // Types that should not be preserved with __type__
-  _defaultTypes: ["String", "Number", "Object", "Array", "Function"],
-
-  // Checks if the given type is a default type
-  _isDefaultType: function(type) {
-    return this._defaultTypes.indexOf(type) !== -1;
   }
 };
 
