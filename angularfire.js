@@ -301,7 +301,9 @@ angular.module("firebase").factory("angularFireCollection", ["$timeout",
 
       // Trigger the initial callback, if one was provided.
       if (initialCb && typeof initialCb == "function") {
-        collectionRef.once("value", initialCb);
+        collectionRef.once("value", function() {
+          $timeout(initialCb);
+        });
       }
 
       // Attach handlers for remote child added, removed, changed and moved
