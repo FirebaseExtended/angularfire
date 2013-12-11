@@ -602,6 +602,7 @@ angular.module("firebase").factory("angularFireAuth", [
         case "persona":
         case "twitter":
         case "facebook":
+        case "anonymous":
         case "password":
           if (!this._authClient) {
             var err = new Error("Simple Login not initialized");
