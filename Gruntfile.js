@@ -64,22 +64,17 @@ module.exports = function(grunt) {
     },
     karma: {
       unit: {
-        configFile: 'karma.conf.js'
+        configFile: 'tests/karma.conf.js'
       },
       continuous: {
-        configFile: 'karma.conf.js',
+        configFile: 'tests/karma.conf.js',
         singleRun: true,
         browsers: ['PhantomJS']
       }
     }
   });
 
-  grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-exec');
-  grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-notify');
-  grunt.loadNpmTasks('grunt-karma');
+  require('load-grunt-tasks')(grunt);
 
   grunt.registerTask('build', ['jshint', 'uglify']);
   grunt.registerTask('test', ['exec:casperjs', 'karma:continuous']);
@@ -103,7 +98,7 @@ module.exports = function(grunt) {
     function runProtractor() {
       grunt.util.spawn({
         cmd: './node_modules/protractor/bin/protractor',
-        args: ['protractorConf.js']
+        args: ['tests/protractorConf.js']
       }, function (err, result, code) {
         grunt.log.write(result);
         done(err);

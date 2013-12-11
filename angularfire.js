@@ -533,6 +533,7 @@ AngularFireAuth.prototype = {
     case "twitter":
     case "facebook":
     case "password":
+    case "anonymous":
       if (!self._authClient) {
         var err = new Error("Simple Login not initialized");
         self._rootScope.$broadcast("$firebaseAuth:error", err);

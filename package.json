@@ -16,7 +16,9 @@
     "grunt-notify": "~0.2.7",
     "grunt-contrib-watch": "~0.5.1",
     "grunt-contrib-jshint": "~0.6.2",
+    "grunt-karma": "~0.6.2",
     "grunt-exec": "~0.4.2",
+    "load-grunt-tasks": "~0.2.0",
     "karma-jasmine": "~0.1.3",
     "karma-script-launcher": "~0.1.0",
     "karma-firefox-launcher": "~0.1.0",
@@ -26,7 +28,6 @@
     "karma-phantomjs-launcher": "~0.1.0",
     "karma": "~0.10.4",
     "karma-chrome-launcher": "~0.1.0",
-    "grunt-karma": "~0.6.2",
     "protractor": "~0.12.1"
   }
 }

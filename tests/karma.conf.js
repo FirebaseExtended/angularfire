@@ -5,11 +5,11 @@ module.exports = function(config) {
   config.set({
     frameworks: ['jasmine'],
     files: [
-      'bower_components/angular/angular.js',
-      'bower_components/angular-mocks/angular-mocks.js',
-      'lib/omnibinder-protocol.js',
-      'tests/firebase-mock.js',
-      'tests/unit/**/*.spec.js'
+      '../bower_components/angular/angular.js',
+      '../bower_components/angular-mocks/angular-mocks.js',
+      '../lib/omnibinder-protocol.js',
+      'firebase-mock.js',
+      'unit/**/*.spec.js'
     ],
 
     autoWatch: true,
