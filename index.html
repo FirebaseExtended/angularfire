@@ -137,8 +137,8 @@
             <label class="control-label"><b>CDN</b></label>
             <div class="controls">
               <span>
-                <input readonly="readonly" value="https://cdn.firebase.com/libs/angularfire/0.3.0/angularfire.min.js" type="text">
-                <a data-clipboard-text="https://cdn.firebase.com/libs/angularfire/0.3.0/angularfire.min.js" class="btn clipboard"><i class="icon-copy"></i></a>
+                <input readonly="readonly" value="https://cdn.firebase.com/libs/angularfire/0.5.0-rc1/angularfire.min.js" type="text">
+                <a data-clipboard-text="https://cdn.firebase.com/libs/angularfire/0.5.0-rc1/angularfire.min.js" class="btn clipboard"><i class="icon-copy"></i></a>
               </span>
             </div>
           </div>
@@ -174,15 +174,15 @@
 </div></script>
 
     <script type="text/template" id="chat-code-js">
-  angular.module('chat', ['firebase']).controller('Chat', ['$scope', 'angularFire',
-    function($scope, angularFire) {
+  angular.module('chat', ['firebase']).controller('Chat', ['$scope', '$firebase',
+    function($scope, $firebase) {
       var ref = new Firebase('https://angularfire.firebaseio.com/chat');
-      angularFire(ref.limit(15), $scope, "messages");
+      $scope.messages = $firebase(ref.limit(15));
       $scope.username = 'Guest' + Math.floor(Math.random()*101);
       $scope.addMessage = function() {
-        $scope.messages[ref.push().name()] = {
+        $scope.messages.$add({
           from: $scope.username, content: $scope.message
-        };
+        });
         $scope.message = "";
       }}]);</script>
 
@@ -194,7 +194,7 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.js"></script>
 
     <script src='//cdn.firebase.com/v0/firebase.js'></script>
-    <script src='//cdn.firebase.com/libs/angularfire/0.3.0/angularfire.min.js'></script>
+    <script src='//cdn.firebase.com/libs/angularfire/0.5.0-rc1/angularfire.min.js'></script>
 
     <script type="text/javascript">
       $(function() {
@@ -208,7 +208,7 @@
           var markup = $("#chat-code-html").html();
           var includes = '\n&lt;script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.5/angular.min.js"&gt;&lt;/script&gt;' +
             '\n&lt;script src="//cdn.firebase.com/v0/firebase.js"&gt;&lt;/script&gt;' +
-            '\n&lt;script src="//cdn.firebase.com/libs/angularfire/0.3.0/angularfire.min.js"&gt;&lt;/script&gt;' +
+            '\n&lt;script src="//cdn.firebase.com/libs/angularfire/0.5.0-rc1/angularfire.min.js"&gt;&lt;/script&gt;' +
             '\n&lt;script type="text/javascript"&gt;' + code + '\n&lt;/script&gt;'
           $("#chat-output").html(markup);
           $("#chat-code").html(_.escape(markup) + includes);
@@ -257,9 +257,9 @@
       $("#downloadButton").click(function () {
         var typ = $("#downloadGroup .active").data("value");
         if (typ == "min") {
-          window.location.href = "https://cdn.firebase.com/libs/angularfire/0.3.0/angularfire.min.js";
+          window.location.href = "https://cdn.firebase.com/libs/angularfire/0.5.0-rc1/angularfire.min.js";
         } else {
-          window.location.href = "https://cdn.firebase.com/libs/angularfire/0.3.0/angularfire.js";
+          window.location.href = "https://cdn.firebase.com/libs/angularfire/0.5.0-rc1/angularfire.js";
         }
       });
     </script>
