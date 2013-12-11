@@ -61,6 +61,12 @@ module.exports = function(grunt) {
           message: 'Build Finished'
         }
       }
+    },
+
+    changelog: {
+      options: {
+        dest: 'CHANGELOG.md'
+      }
     }
 
   });
@@ -70,6 +76,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-exec');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-notify');
+  grunt.loadNpmTasks('grunt-conventional-changelog');
 
   grunt.registerTask('build', ['jshint', 'uglify']);
   grunt.registerTask('test', ['exec:casperjs']);
