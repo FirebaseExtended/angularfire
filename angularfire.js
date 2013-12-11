@@ -598,6 +598,7 @@ AngularFireAuth.prototype = {
     var self = this;
     self._timeout(function() {
       self._object.user = user;
+      self._authenticated = true;
       self._rootScope.$broadcast("$firebaseAuth:login", user);
       if (self._redirectTo) {
         self._location.replace();
