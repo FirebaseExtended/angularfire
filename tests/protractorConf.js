@@ -19,7 +19,7 @@ exports.config = {
     'browserName': 'chrome'
   },
   specs: [
-    'tests/e2e/test_todo-omnibinder.js'
+    'tests/protractor/test_todo-omnibinder.js'
   ],
   // Options to be passed to Jasmine-node.
   jasmineNodeOpts: {
