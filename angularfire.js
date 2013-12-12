@@ -5,7 +5,7 @@
 // as normal, except that the changes are also sent to all other clients
 // instead of just a server.
 //
-//      AngularFire 0.5
+//      AngularFire 0.5.0
 //      http://angularfire.com
 //      License: MIT
 
@@ -37,6 +37,17 @@ angular.module("firebase").factory("$firebase", ["$q", "$parse", "$timeout",
 angular.module("firebase").filter("orderByPriority", function() {
   return function(input) {
     if (!input.$getIndex || typeof input.$getIndex != "function") {
+      // If input is an object, map it to an array for the time being.
+      var type = Object.prototype.toString.call(input);
+      if (typeof input == "object" && type == "[object Object]") {
+        var ret = [];
+        for (var prop in input) {
+          if (input.hasOwnProperty(prop)) {
+            ret.push(input[prop]);
+          }
+        }
+        return ret;
+      }
       return input;
     }
 
