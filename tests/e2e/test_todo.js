@@ -1,7 +1,7 @@
 
 casper.test.comment("Testing TODO example with implicit sync angularFire");
 
-casper.start("tests/test_todo.html", function() {
+casper.start("tests/e2e/test_todo.html", function() {
   // Sanity test for environment.
   this.test.assertTitle("AngularFire TODO Test");
   this.test.assertEval(function() {
@@ -38,7 +38,7 @@ casper.then(function() {
 
 casper.then(function() {
   this.evaluate(function() {
-    _scope.todos[0].completed = true;
+    _scope.todos[Object.keys(_scope.todos)[0]].completed = true;
     _scope.$digest();
   });
   this.waitFor(function() {
@@ -52,7 +52,8 @@ casper.then(function() {
   var _testTodo = "Run for 10 miles";
 
   this.test.assertEval(function(title) {
-    _scope.todos.push({title: title, completed: false});
+    _scope.newTodo = title;
+    _scope.addTodo();
     _scope.$digest();
     return _scope.newTodo == "";
   }, "Adding another TODO", _testTodo);
@@ -69,16 +70,17 @@ casper.then(function() {
 
   this.test.assertEval(function(title) {
     _scope.$destroy();
-    _scope.todos.push({title: title, completed: false});
+    _scope.newTodo = title;
+    _scope.addTodo();
     _scope.$digest();
-    return _scope.todos.length == 4;
+    return Object.keys(_scope.todos).length == 4;
   }, "Testing if destroying $scope causes disassociate", _testTodo);
 
   this.evaluate(function() {
     window.__flag = false;
     var ref = new Firebase(_url);
     ref.once("value", function(snapshot) {
-      if (snapshot.val().length == 3) {
+      if (Object.keys(snapshot.val()).length == 3) {
         window.__flag = true;
       }
     });
@@ -88,32 +90,6 @@ casper.then(function() {
     return this.getGlobal("__flag") === true;
   });
 });
-
-/*
-casper.then(function() {
-  var _testTodo = "Pick up laundry";
-
-  this.test.assertEval(function(title) {
-    _scope.todos.push({title: title, completed: true});
-    _scope.$digest();
-    return _scope.newTodo == "";
-  }, "Testing if limits and queries work", _testTodo);
-
-  this.evaluate(function() {
-    window.__flag = false;
-    var ref = new Firebase(_url);
-    ref.once("value", function(snapshot) {
-      if (snapshot.val().length == 3) {
-        window.__flag = true;
-      }
-    });
-  });
-
-  this.waitFor(function() {
-    return this.getGlobal("__flag") === true;
-  });
-});
-*/
 
 casper.run(function() {
   this.test.done();

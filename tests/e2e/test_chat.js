@@ -1,7 +1,7 @@
 
 casper.test.comment("Testing Chat example with angularFireCollection");
 
-casper.start("tests/test_chat.html", function() {
+casper.start("tests/e2e/test_chat.html", function() {
   // Sanity test for the environment.
   this.test.assertTitle("AngularFire Chat Test");
   this.test.assertEval(function() {
@@ -41,14 +41,6 @@ casper.then(function() {
         params[0], params[1], document.querySelector(".messageBlock")
       );
     }, "Testing if message is in the DOM", [_testName, _testMessage]);
-    this.test.assertEval(function(params) { 
-      var item = _scope.item_log[0];
-      return item.action  === params[0] &&
-             item.from    === params[1] &&
-             item.content === params[2];              
-      },
-      "Testing if callback called", ["item_added", _testName, _testMessage]);
-    
   });
 });
 
@@ -74,15 +66,6 @@ casper.then(function() {
       }
       return testIfInDOM(params[0], params[1], msgs[1]);
     }, "Testing if remote message is in the DOM", [_testName, _testMessage]);
-    
-    this.test.assertEval(function(params) { 
-      var item = _scope.item_log[1];
-      return item.action  === params[0] &&
-             item.from    === params[1] &&
-             item.content === params[2];              
-      },
-      "Testing if callback called", ["item_added", _testName, _testMessage]);
-    
   });
 });
 
@@ -106,18 +89,6 @@ casper.then(function() {
       var msgs = document.querySelectorAll(".messageBlock");
       return msgs.length === 2;
     }, "Testing if limits and queries work");
-    this.test.assertEval(function() { 
-      var item1 = _scope.item_log[0],
-          item1x = _scope.item_log[2],
-          item3 = _scope.item_log[3];
-      
-      return item1x.action  === 'item_removed' &&
-             item1x.from    === item1.from &&
-             item1x.content === item1.content &&
-             item3.action   === 'item_added' &&
-             item3.content  === "Limit Test";              
-      },
-      "Testing if callback called for limit test");
  });
 });
 

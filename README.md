@@ -22,6 +22,7 @@ If you'd like to hack on AngularFire itself, you'll need
 ```bash
 brew install casperjs
 npm install
+bower install
 ```
 
 Use grunt to build and test the code:

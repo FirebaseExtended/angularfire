@@ -6,7 +6,7 @@
   <link rel="stylesheet" type="text/css" href="https://www.firebase.com/css/example.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.3/angular.min.js"></script>
   <script src="https://cdn.firebase.com/v0/firebase.js"></script>
-  <script src="../angularfire.min.js"></script>
+  <script src="../../angularfire.js"></script>
 </head>
 <body ng-controller="Chat">
   <div>
@@ -14,7 +14,7 @@
   </div>
   <p></p>
   <div id="messagesDiv" style="height:500px;">
-    <div ng-cloak ng-repeat="message in messages">
+    <div ng-cloak ng-repeat="message in messages | orderByPriority">
       <span class="messageBlock">
         <em>{{message.from}}: </em>
         <span class="content">{{message.content}}</span>
@@ -29,18 +29,11 @@
     var _scope;
     var _url = 'https://angularFireTests.firebaseio-demo.com/chat';
     angular.module("chat", ["firebase"]);
-    function Chat($scope, angularFireCollection) {
-      
-      function log_item_action(action, item) {
-        $scope.item_log.push( {action: action, from: item.from, content: item.content} );
-      }
-      
-      $scope.item_log = [];
-     
-      $scope.messages = angularFireCollection(new Firebase(_url).limit(2), null, log_item_action);
+    function Chat($scope, $firebase) {
+      $scope.messages = $firebase(new Firebase(_url));
       $scope.username = 'Guest' + Math.floor(Math.random()*101);
       $scope.addMessage = function() {
-        $scope.messages.add({from: $scope.username, content: $scope.message});
+        $scope.messages.$add({from: $scope.username, content: $scope.message, '.priority':$scope.messages.$getIndex().length});
         $scope.message = "";
       }
       _scope = $scope;
@@ -50,6 +43,15 @@
       if (node.childNodes[1].innerHTML != from + ": ") return false;
       if (node.childNodes[3].innerHTML != content) return false;
       return true;
+    }
+    function testIfInDOMAtPos(from, content, nodes, pos) {
+      if (nodes.length <= pos) return false;
+      return testIfInDOM(from, content, nodes[pos]); 
+    }
+    function getMessagePriority(pos) {
+      var key = _scope.messages.$getIndex()[pos];
+      var obj = _scope.messages[key];
+      return obj.$priority;
     }
   </script>
 </body>
