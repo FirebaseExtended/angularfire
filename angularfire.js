@@ -209,7 +209,7 @@ AngularFire.prototype = {
   // a primitive, we'll continue to watch for value changes.
   _getInitialValue: function() {
     var self = this;
-    self._fRef.on("value", function(snapshot) {
+    var gotInitialValue = function(snapshot) {
       var value = snapshot.val();
 
       switch (typeof value) {
@@ -222,7 +222,7 @@ AngularFire.prototype = {
       // For arrays and objects, switch to child methods.
       case "object":
         self._getChildValues();
-        self._fRef.off("value");
+        self._fRef.off("value", gotInitialValue);
         break;
       default:
         throw new Error("Unexpected type from remote data " + typeof value);
@@ -230,7 +230,9 @@ AngularFire.prototype = {
 
       // Call handlers for the "loaded" event.
       self._broadcastEvent("loaded", value);
-    });
+    };
+
+    self._fRef.on("value", gotInitialValue);
   },
 
   // This function attaches child events for object and array types.
