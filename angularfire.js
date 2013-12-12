@@ -612,6 +612,7 @@ AngularFireAuth.prototype = {
     }
   },
 
+  // Creates a user for Firebase Simple Login.
   // Function 'cb' receives an error as the first argument and a
   // Simple Login user object as the second argument. Pass noLogin=true
   // if you don't want the newly created user to also be logged in.
@@ -631,6 +632,24 @@ AngularFireAuth.prototype = {
       }
       if (cb) {
         self._timeout(function(){
+          cb(err, user);
+        });
+      }
+    });
+  },
+
+  // Changes the password for a Firebase Simple Login user.
+  // Take an email, old password and new password as three mandatory arguments.
+  // An optional callback may be specified to be notified when the password
+  // has been changed successfully.
+  changePassword: function(email, old, np, cb) {
+    var self = this;
+    self._authClient.changePassword(email, old, np, function(err, user) {
+      if (err) {
+        self._rootScope.$broadcast("$firebaseAuth:error", err);
+      }
+      if (cb) {
+        self._timeout(function() {
           cb(err, user);
         });
       }
