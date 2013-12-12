@@ -431,8 +431,8 @@ AngularFire.prototype = {
 // Defines the `$firebaseAuth` service that provides authentication support
 // for AngularFire.
 angular.module("firebase").factory("$firebaseAuth", [
-  "$timeout", "$injector", "$rootScope", "$location",
-  function($t, $i, $rs, $l) {
+  "$q", "$timeout", "$injector", "$rootScope", "$location",
+  function($q, $t, $i, $rs, $l) {
     // The factory returns an object containing the authentication state
     // of the current user. This service takes 2 arguments:
     //
@@ -460,13 +460,14 @@ angular.module("firebase").factory("$firebaseAuth", [
     // The returned object will also have the following methods available:
     // $login(), $logout() and $createUser().
     return function(ref, options) {
-      var auth = new AngularFireAuth($t, $i, $rs, $l, ref, options);
+      var auth = new AngularFireAuth($q, $t, $i, $rs, $l, ref, options);
       return auth.construct();
     };
   }
 ]);
 
-AngularFireAuth = function($t, $i, $rs, $l, ref, options) {
+AngularFireAuth = function($q, $t, $i, $rs, $l, ref, options) {
+  this._q = $q;
   this._timeout = $t;
   this._injector = $i;
   this._location = $l;
@@ -534,8 +535,16 @@ AngularFireAuth.prototype = {
     var client = new FirebaseSimpleLogin(self._fRef, function(err, user) {
       self._cb(err, user);
       if (err) {
+        if (self._deferred) {
+          self._deferred.reject(err);
+          self._deferred = null;
+        }
         self._rootScope.$broadcast("$firebaseAuth:error", err);
       } else if (user) {
+        if (self._deferred) {
+          self._deferred.resolve(user);
+          self._deferred = null;
+        }
         self._loggedIn(user);
       } else {
         self._loggedOut();
@@ -548,9 +557,12 @@ AngularFireAuth.prototype = {
 
   // The login method takes a provider (for Simple Login) or a token
   // (for Custom Login) and authenticates the Firebase URL with which
-  // the service was initialized.
+  // the service was initialized. This method returns a promise, which will
+  // be resolved when the login succeeds (and rejected when an error occurs).
   login: function(tokenOrProvider, options) {
     var self = this;
+    var deferred = self._q.defer();
+
     switch (tokenOrProvider) {
     case "github":
     case "persona":
@@ -560,8 +572,10 @@ AngularFireAuth.prototype = {
     case "anonymous":
       if (!self._authClient) {
         var err = new Error("Simple Login not initialized");
+        deferred.reject(err);
         self._rootScope.$broadcast("$firebaseAuth:error", err);
       } else {
+        self._deferred = deferred;
         self._authClient.login(tokenOrProvider, options);
       }
       break;
@@ -572,15 +586,20 @@ AngularFireAuth.prototype = {
         var claims = self._deconstructJWT(tokenOrProvider);
         self._fRef.auth(tokenOrProvider, function(err) {
           if (err) {
+            deferred.reject(err);
             self._rootScope.$broadcast("$firebaseAuth:error", err);
           } else {
+            self._deferred = deferred;
             self._loggedIn(claims);
           }
         });
       } catch(e) {
+        deferred.reject(e);
         self._rootScope.$broadcast("$firebaseAuth:error", e);
       }
     }
+
+    return deferred.promise;
   },
 
   // Unauthenticate the Firebase reference.
