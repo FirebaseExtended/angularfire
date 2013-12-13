@@ -166,7 +166,7 @@ AngularFire.prototype = {
     // Get an AngularFire wrapper for a named child.
     object.$child = function(key) {
       var af = new AngularFire(
-        this._q, this._parse, this._timeout, this._fRef.ref().child(key)
+        self._q, self._parse, self._timeout, self._fRef.ref().child(key)
       );
       return af.construct();
     };
