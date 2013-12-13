@@ -33,13 +33,15 @@ models), and they will be transparently kept in sync across all clients
 currently using your app. The 2-way data binding offered by AngularJS works
 as normal, except that the changes are also sent to all other clients
 instead of just a server.</p>
-<pre><code> AngularFire 0.3
+<pre><code> AngularFire 0.5.0
  http://angularfire.com
  License: MIT</code></pre>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre><span class="string">"use strict"</span>;</pre></div></div>
+            <div class="content"><div class='highlight'><pre><span class="string">"use strict"</span>;
+
+<span class="keyword">var</span> AngularFire, AngularFireAuth;</pre></div></div>
             
         </li>
         
@@ -65,13 +67,11 @@ instead of just a server.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-3">&#182;</a>
               </div>
-              <p>Define the <code>angularFire</code> service for implicit syncing. <code>angularFire</code> binds a
-model to $scope and keeps the data synchronized with a Firebase location
-both ways.</p>
+              <p>Define the <code>$firebase</code> service that provides synchronization methods.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>angular.module(<span class="string">"firebase"</span>).factory(<span class="string">"angularFire"</span>, [<span class="string">"$q"</span>, <span class="string">"$parse"</span>, <span class="string">"$timeout"</span>,
+            <div class="content"><div class='highlight'><pre>angular.module(<span class="string">"firebase"</span>).factory(<span class="string">"$firebase"</span>, [<span class="string">"$q"</span>, <span class="string">"$parse"</span>, <span class="string">"$timeout"</span>,
   <span class="keyword">function</span>($q, $parse, $timeout) {</pre></div></div>
             
         </li>
@@ -83,19 +83,18 @@ both ways.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-4">&#182;</a>
               </div>
-              <p>The factory returns a new instance of the <code>AngularFire</code> object, defined
-below, everytime it is called. The factory takes 3 arguments:</p>
+              <p>The factory returns an object containing the value of the data at
+the Firebase location provided, as well as several methods. It
+takes a single argument:</p>
 <ul>
-<li><code>ref</code>:    A Firebase reference. Queries or limits may be applied.</li>
-<li><code>$scope</code>: The scope with which the bound model is associated.</li>
-<li><code>name</code>:   The name of the model.</li>
+<li><code>ref</code>: A Firebase reference. Queries or limits may be applied.</li>
 </ul>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    <span class="keyword">return</span> <span class="keyword">function</span>(ref, scope, name) {
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">return</span> <span class="keyword">function</span>(ref) {
       <span class="keyword">var</span> af = <span class="keyword">new</span> AngularFire($q, $parse, $timeout, ref);
-      <span class="keyword">return</span> af.associate(scope, name);
+      <span class="keyword">return</span> af.construct();
     };
   }
 ]);</pre></div></div>
@@ -109,24 +108,15 @@ below, everytime it is called. The factory takes 3 arguments:</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-5">&#182;</a>
               </div>
-              <p>The <code>AngularFire</code> object that implements implicit synchronization.</p>
+              <p>Define the <code>orderByPriority</code> filter that sorts objects returned by
+$firebase in the order of priority. Priority is defined by Firebase,
+for more info see: <a href="https://www.firebase.com/docs/ordered-data.html">https://www.firebase.com/docs/ordered-data.html</a></p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre><span class="function"><span class="keyword">function</span> <span class="title">AngularFire</span><span class="params">($q, $parse, $timeout, ref)</span> {</span>
-  <span class="keyword">this</span>._q = $q;
-  <span class="keyword">this</span>._parse = $parse;
-  <span class="keyword">this</span>._timeout = $timeout;
-  <span class="keyword">this</span>._initial = <span class="literal">true</span>;
-  <span class="keyword">this</span>._remoteValue = <span class="literal">false</span>;
-
-  <span class="keyword">if</span> (<span class="keyword">typeof</span> ref == <span class="string">"string"</span>) {
-    <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Please provide a Firebase reference instead "</span> +
-      <span class="string">"of a URL, eg: new Firebase(url)"</span>);
-  }
-  <span class="keyword">this</span>._fRef = ref;
-}
-AngularFire.prototype = {</pre></div></div>
+            <div class="content"><div class='highlight'><pre>angular.module(<span class="string">"firebase"</span>).filter(<span class="string">"orderByPriority"</span>, <span class="keyword">function</span>() {
+  <span class="keyword">return</span> <span class="keyword">function</span>(input) {
+    <span class="keyword">if</span> (!input.$getIndex || <span class="keyword">typeof</span> input.$getIndex != <span class="string">"function"</span>) {</pre></div></div>
             
         </li>
         
@@ -137,16 +127,40 @@ AngularFire.prototype = {</pre></div></div>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-6">&#182;</a>
               </div>
-              <p>This function is called by the factory to create a new 2-way binding
-between a particular model in a <code>$scope</code> and a particular Firebase
-location.</p>
+              <p>If input is an object, map it to an array for the time being.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  associate: <span class="keyword">function</span>($scope, name) {
-    <span class="keyword">var</span> self = <span class="keyword">this</span>;
-    <span class="keyword">var</span> deferred = <span class="keyword">this</span>._q.defer();
-    <span class="keyword">var</span> promise = deferred.promise;</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">var</span> type = Object.prototype.toString.call(input);
+      <span class="keyword">if</span> (<span class="keyword">typeof</span> input == <span class="string">"object"</span> &amp;&amp; type == <span class="string">"[object Object]"</span>) {
+        <span class="keyword">var</span> ret = [];
+        <span class="keyword">for</span> (<span class="keyword">var</span> prop <span class="keyword">in</span> input) {
+          <span class="keyword">if</span> (input.hasOwnProperty(prop)) {
+            ret.push(input[prop]);
+          }
+        }
+        <span class="keyword">return</span> ret;
+      }
+      <span class="keyword">return</span> input;
+    }
+
+    <span class="keyword">var</span> sorted = [];
+    <span class="keyword">var</span> index = input.$getIndex();
+    <span class="keyword">if</span> (index.length &lt;= <span class="number">0</span>) {
+      <span class="keyword">return</span> input;
+    }
+
+    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; index.length; i++) {
+      <span class="keyword">var</span> val = input[index[i]];
+      <span class="keyword">if</span> (val) {
+        val.$id = index[i];
+        sorted.push(val);
+      }
+    }
+
+    <span class="keyword">return</span> sorted;
+  };
+});</pre></div></div>
             
         </li>
         
@@ -157,14 +171,29 @@ location.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-7">&#182;</a>
               </div>
-              <p>We&#39;re currently listening for value changes to implement synchronization.
-This needs to be optimized, see
-<a href="https://github.com/firebase/angularFire/issues/25">Ticket #25</a>.</p>
+              <p>The <code>AngularFire</code> object that implements synchronization.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    <span class="keyword">this</span>._fRef.on(<span class="string">"value"</span>, <span class="keyword">function</span>(snap) {
-      <span class="keyword">var</span> remote = snap.val();</pre></div></div>
+            <div class="content"><div class='highlight'><pre>AngularFire = <span class="keyword">function</span>($q, $parse, $timeout, ref) {
+  <span class="keyword">this</span>._q = $q;
+  <span class="keyword">this</span>._bound = <span class="literal">false</span>;
+  <span class="keyword">this</span>._loaded = <span class="literal">false</span>;
+  <span class="keyword">this</span>._parse = $parse;
+  <span class="keyword">this</span>._timeout = $timeout;
+
+  <span class="keyword">this</span>._index = [];
+  <span class="keyword">this</span>._onChange = [];
+  <span class="keyword">this</span>._onLoaded = [];
+
+  <span class="keyword">if</span> (<span class="keyword">typeof</span> ref == <span class="string">"string"</span>) {
+    <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Please provide a Firebase reference instead "</span> +
+      <span class="string">"of a URL, eg: new Firebase(url)"</span>);
+  }
+  <span class="keyword">this</span>._fRef = ref;
+};
+
+AngularFire.prototype = {</pre></div></div>
             
         </li>
         
@@ -175,14 +204,14 @@ This needs to be optimized, see
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-8">&#182;</a>
               </div>
-              <p>We use toJson/fromJson to remove $$hashKey. Can be replaced by
-angular.copy, but only for later version of AngularJS.</p>
+              <p>This function is called by the factory to create a new explicit sync
+point between a particular model and a Firebase location.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="keyword">var</span> local = angular.fromJson(angular.toJson(self._parse(name)($scope)));
-
-      <span class="keyword">if</span> (self._initial) {</pre></div></div>
+            <div class="content"><div class='highlight'><pre>  construct: <span class="keyword">function</span>() {
+    <span class="keyword">var</span> self = <span class="keyword">this</span>;
+    <span class="keyword">var</span> object = {};</pre></div></div>
             
         </li>
         
@@ -193,30 +222,22 @@ angular.copy, but only for later version of AngularJS.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-9">&#182;</a>
               </div>
-              <p>First value received from the server. We try and merge any local
-changes that may have been made with the server values.</p>
+              <p>Establish a 3-way data binding (implicit sync) with the specified
+Firebase location and a model on $scope. To be used from a controller
+to automatically synchronize <em>all</em> local changes. It take two arguments:</p>
+<ul>
+<li><code>$scope</code>: The scope with which the bound model is associated.</li>
+<li><code>name</code>  : The name of the model.</li>
+</ul>
+<p>This function also returns a promise, which when resolve will be
+provided an <code>unbind</code> method, a function which you can call to stop
+watching the local model for changes.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        self._initial = <span class="literal">false</span>;
-        <span class="keyword">var</span> merged = <span class="literal">false</span>;
-        <span class="keyword">var</span> check = Object.prototype.toString;
-        <span class="keyword">if</span> (remote &amp;&amp; check.call(local) == check.call(remote)) {
-          <span class="keyword">if</span> (check.call(local) == <span class="string">"[object Array]"</span>) {
-            merged = local.concat(remote);
-            <span class="keyword">if</span> (!angular.equals(merged, remote)) {
-              self._fRef.ref().set(merged);
-              remote = merged;
-            }
-          } <span class="keyword">else</span> <span class="keyword">if</span> (check.call(local) == <span class="string">"[object Object]"</span>) {
-            merged = local;
-            <span class="keyword">for</span> (<span class="keyword">var</span> key <span class="keyword">in</span> remote) {
-              merged[key] = remote[key];
-            }
-            self._fRef.ref().update(merged);
-            remote = merged;
-          }
-        }</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    object.$bind = <span class="keyword">function</span>(scope, name) {
+      <span class="keyword">return</span> self._bind(scope, name);
+    };</pre></div></div>
             
         </li>
         
@@ -227,14 +248,29 @@ changes that may have been made with the server values.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-10">&#182;</a>
               </div>
-              <p>If remote value is null, overwrite remote value with local</p>
+              <p>Add an object to the remote data. Adding an object is the
+equivalent of calling <code>push()</code> on a Firebase reference. It takes
+up to two arguments:</p>
+<ul>
+<li><code>item</code>: The object or primitive to add.</li>
+<li><code>cb</code>  : An optional callback function to be invoked when the<pre><code>    item is added to the Firebase server. It will be called
+    with an Error object if one occurred, null otherwise.</code></pre>
+</li>
+</ul>
+<p>This function returns a Firebase reference to the newly added object
+or primitive. The key name can be extracted using <code>ref.name()</code>.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        <span class="keyword">if</span> (remote === <span class="literal">null</span>) {
-          self._fRef.ref().set(local);
-          remote = local;
-        }</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    object.$add = <span class="keyword">function</span>(item, cb) {
+      <span class="keyword">var</span> ref;
+      <span class="keyword">if</span> (<span class="keyword">typeof</span> item == <span class="string">"object"</span>) {
+        ref = self._fRef.ref().push(self._parseObject(item), cb);
+      } <span class="keyword">else</span> {
+        ref = self._fRef.ref().push(item, cb);
+      }
+      <span class="keyword">return</span> ref;
+    };</pre></div></div>
             
         </li>
         
@@ -245,18 +281,22 @@ changes that may have been made with the server values.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-11">&#182;</a>
               </div>
-              <p>If types don&#39;t match or the type is primitive, just overwrite the
-local value with the remote value.</p>
+              <p>Save the current state of the object (or a child) to the remote.
+Takes a single optional argument:</p>
+<ul>
+<li><code>key</code>: Specify a child key to save the data for. If no key is<pre><code>   specified, the entire object&#39;s current state will be saved.</code></pre>
+</li>
+</ul>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      }
-
-      <span class="keyword">var</span> resolve = <span class="literal">false</span>;
-      <span class="keyword">if</span> (deferred) {
-        resolve = deferred;
-        deferred = <span class="literal">false</span>;
-      }</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    object.$save = <span class="keyword">function</span>(key) {
+      <span class="keyword">if</span> (key) {
+        self._fRef.ref().child(key).set(self._parseObject(self._object[key]));
+      } <span class="keyword">else</span> {
+        self._fRef.ref().set(self._parseObject(self._object));
+      }
+    };</pre></div></div>
             
         </li>
         
@@ -267,16 +307,14 @@ local value with the remote value.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-12">&#182;</a>
               </div>
-              <p>Update the local model to reflect remote changes.</p>
+              <p>Set the current state of the object to the specified value. Calling
+this is the equivalent of calling <code>set()</code> on a Firebase reference.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      self._timeout(<span class="keyword">function</span>() {
-        self._resolve($scope, name, resolve, remote)
-      });
-    });
-    <span class="keyword">return</span> promise;
-  },</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    object.$set = <span class="keyword">function</span>(newValue) {
+      self._fRef.ref().set(newValue);
+    };</pre></div></div>
             
         </li>
         
@@ -287,20 +325,23 @@ local value with the remote value.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-13">&#182;</a>
               </div>
-              <p>Disassociation added via
-<a href="https://github.com/firebase/angularFire/pull/34">pull request #34</a>.
-This function is provided to the promise returned by <code>angularFire</code>
-when it is fulfilled. Invoking it will stop the two-way synchronization.</p>
+              <p>Remove this object from the remote data. Calling this is the equivalent
+of calling <code>remove()</code> on a Firebase reference. This function takes a
+single optional argument:</p>
+<ul>
+<li><code>key</code>: Specify a child key to remove. If no key is specified, the<pre><code>   entire object will be removed from the remote data store.</code></pre>
+</li>
+</ul>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  disassociate: <span class="keyword">function</span>() {
-    <span class="keyword">var</span> self = <span class="keyword">this</span>;
-    <span class="keyword">if</span> (self._unregister) {
-      self._unregister();
-    }
-    <span class="keyword">this</span>._fRef.off(<span class="string">"value"</span>);
-  },</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    object.$remove = <span class="keyword">function</span>(key) {
+      <span class="keyword">if</span> (key) {
+        self._fRef.ref().child(key).remove();
+      } <span class="keyword">else</span> {
+        self._fRef.ref().remove();
+      }
+    };</pre></div></div>
             
         </li>
         
@@ -311,15 +352,16 @@ when it is fulfilled. Invoking it will stop the two-way synchronization.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-14">&#182;</a>
               </div>
-              <p>If <code>deferred</code> is a valid promise, it will be resolved with <code>val</code>, and
-the model will be watched for future (local) changes. <code>$scope[name]</code>
-will also be updated to the provided value.</p>
+              <p>Get an AngularFire wrapper for a named child.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  _resolve: <span class="keyword">function</span>($scope, name, deferred, val) {
-    <span class="keyword">var</span> self = <span class="keyword">this</span>;
-    <span class="keyword">if</span> (val === <span class="literal">null</span>) {</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    object.$child = <span class="keyword">function</span>(key) {
+      <span class="keyword">var</span> af = <span class="keyword">new</span> AngularFire(
+        self._q, self._parse, self._timeout, self._fRef.ref().child(key)
+      );
+      <span class="keyword">return</span> af.construct();
+    };</pre></div></div>
             
         </li>
         
@@ -330,30 +372,30 @@ will also be updated to the provided value.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-15">&#182;</a>
               </div>
-              <p>NULL values are special in Firebase. If received, set the local value
-to the initial state for Objects and Arrays.</p>
+              <p>Attach an event handler for when the object is changed. You can attach
+handlers for the following events:</p>
+<ul>
+<li>&quot;change&quot;: The provided function will be called whenever the local<pre><code>      object is modified because the remote data was updated.</code></pre>
+</li>
+<li>&quot;loaded&quot;: This function will be called <em>once</em>, when the initial<pre><code>      data has been loaded. &#39;object&#39; will be an empty object ({})
+      until this function is called.</code></pre>
+</li>
+</ul>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="keyword">var</span> localVal = $scope[name];
-      <span class="keyword">if</span> (<span class="keyword">typeof</span> localVal == <span class="string">"object"</span>) {
-        <span class="keyword">var</span> check = Object.prototype.toString;
-        <span class="keyword">if</span> (check.call(localVal) == check.call([])) {
-          val = [];
-        } <span class="keyword">else</span> {
-          val = {};
-        }
+            <div class="content"><div class='highlight'><pre>    object.$on = <span class="keyword">function</span>(type, callback) {
+      <span class="keyword">switch</span> (type) {
+      <span class="keyword">case</span> <span class="string">"change"</span>:
+        self._onChange.push(callback);
+        <span class="keyword">break</span>;
+      <span class="keyword">case</span> <span class="string">"loaded"</span>:
+        self._onLoaded.push(callback);
+        <span class="keyword">break</span>;
+      <span class="keyword">default</span>:
+        <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Invalid event type "</span> + type + <span class="string">" specified"</span>);
       }
-    }
-    <span class="keyword">this</span>._remoteValue = angular.copy(val);
-    <span class="keyword">this</span>._parse(name).assign($scope, angular.copy(val));
-    <span class="keyword">if</span> (deferred) {
-      deferred.resolve(<span class="keyword">function</span>() {
-        self.disassociate();
-      });
-      <span class="keyword">this</span>._watch($scope, name);
-    }
-  },</pre></div></div>
+    };</pre></div></div>
             
         </li>
         
@@ -364,13 +406,20 @@ to the initial state for Objects and Arrays.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-16">&#182;</a>
               </div>
-              <p>Watch for local changes.</p>
+              <p>Return the current index, which is a list of key names in an array,
+ordered by their Firebase priority.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  _watch: <span class="keyword">function</span>($scope, name) {
-    <span class="keyword">var</span> self = <span class="keyword">this</span>;
-    self._unregister = $scope.$watch(name, <span class="keyword">function</span>() {</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    object.$getIndex = <span class="keyword">function</span>() {
+      <span class="keyword">return</span> angular.copy(self._index);
+    };
+
+    self._object = object;
+    self._getInitialValue();
+
+    <span class="keyword">return</span> self._object;
+  },</pre></div></div>
             
         </li>
         
@@ -381,14 +430,18 @@ to the initial state for Objects and Arrays.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-17">&#182;</a>
               </div>
-              <p>We ignore local value changes until the first value was received
-from the server.</p>
+              <p>This function is responsible for fetching the initial data for the
+given reference. If the data returned from the server is an object or
+array, we&#39;ll attach appropriate child event handlers. If the value is
+a primitive, we&#39;ll continue to watch for value changes.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="keyword">if</span> (self._initial) {
-        <span class="keyword">return</span>;
-      }</pre></div></div>
+            <div class="content"><div class='highlight'><pre>  _getInitialValue: <span class="keyword">function</span>() {
+    <span class="keyword">var</span> self = <span class="keyword">this</span>;
+    <span class="keyword">var</span> gotInitialValue = <span class="keyword">function</span>(snapshot) {
+      <span class="keyword">var</span> value = snapshot.val();
+      <span class="keyword">if</span> (value === <span class="literal">null</span>) {</pre></div></div>
             
         </li>
         
@@ -399,17 +452,15 @@ from the server.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-18">&#182;</a>
               </div>
-              <p>If the new local value matches the current remote value, we don&#39;t
-trigger a remote update.</p>
+              <p>NULLs are handled specially. If there&#39;s a 3-way data binding
+on a local primitive, then update that, otherwise switch to object
+binding using child events.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="keyword">var</span> val = angular.fromJson(angular.toJson(self._parse(name)($scope)));
-      <span class="keyword">if</span> (angular.equals(val, self._remoteValue)) {
-        <span class="keyword">return</span>;
-      }
-      <span class="keyword">var</span> check = Object.prototype.toString;
-      <span class="keyword">if</span> (check.call(val) == <span class="string">"[object Object]"</span>) {</pre></div></div>
+            <div class="content"><div class='highlight'><pre>        <span class="keyword">if</span> (self._bound) {
+          <span class="keyword">var</span> local = self._parseObject(self._parse(self._name)(self._scope));
+          <span class="keyword">switch</span> (<span class="keyword">typeof</span> local) {</pre></div></div>
             
         </li>
         
@@ -420,19 +471,25 @@ trigger a remote update.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-19">&#182;</a>
               </div>
-              <p>Use update if limits are in effect, set if not.</p>
+              <p>Primitive defaults.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        <span class="keyword">if</span> (self._fRef.set) {
-          self._fRef.set(val);
-        } <span class="keyword">else</span> {
-          self._fRef.ref().update(val);
+            <div class="content"><div class='highlight'><pre>          <span class="keyword">case</span> <span class="string">"string"</span>:
+          <span class="keyword">case</span> <span class="string">"undefined"</span>:
+            value = <span class="string">""</span>;
+            <span class="keyword">break</span>;
+          <span class="keyword">case</span> <span class="string">"number"</span>:
+            value = <span class="number">0</span>;
+            <span class="keyword">break</span>;
+          <span class="keyword">case</span> <span class="string">"boolean"</span>:
+            value = <span class="literal">false</span>;
+            <span class="keyword">break</span>;
+          }
         }
-      } <span class="keyword">else</span> {
-        self._fRef.ref().set(val);
       }
-    }, <span class="literal">true</span>);</pre></div></div>
+
+      <span class="keyword">switch</span> (<span class="keyword">typeof</span> value) {</pre></div></div>
             
         </li>
         
@@ -443,14 +500,15 @@ trigger a remote update.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-20">&#182;</a>
               </div>
-              <p>Also watch for scope destruction and unregister.</p>
+              <p>For primitive values, simply update the object returned.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    $scope.$on(<span class="string">"$destroy"</span>, <span class="keyword">function</span>() {
-      self.disassociate();
-    });
-  },</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">case</span> <span class="string">"string"</span>:
+      <span class="keyword">case</span> <span class="string">"number"</span>:
+      <span class="keyword">case</span> <span class="string">"boolean"</span>:
+        self._updatePrimitive(value);
+        <span class="keyword">break</span>;</pre></div></div>
             
         </li>
         
@@ -461,16 +519,17 @@ trigger a remote update.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-21">&#182;</a>
               </div>
-              <p>Helper function to log messages.</p>
+              <p>For arrays and objects, switch to child methods.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>  _log: <span class="keyword">function</span>(msg) {
-    <span class="keyword">if</span> (console &amp;&amp; console.log) {
-      console.log(msg);
-    }
-  }
-};</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">case</span> <span class="string">"object"</span>:
+        self._getChildValues();
+        self._fRef.off(<span class="string">"value"</span>, gotInitialValue);
+        <span class="keyword">break</span>;
+      <span class="keyword">default</span>:
+        <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Unexpected type from remote data "</span> + <span class="keyword">typeof</span> value);
+      }</pre></div></div>
             
         </li>
         
@@ -481,20 +540,16 @@ trigger a remote update.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-22">&#182;</a>
               </div>
-              <p>Define the <code>angularFireCollection</code> service for explicit syncing.
-<code>angularFireCollection</code> provides a collection object that you can modify.
-<a href="https://github.com/petebacondarwin/angular-firebase/blob/master/ng-firebase-collection.js">Original code</a>
-by @petebacondarwin.</p>
+              <p>Call handlers for the &quot;loaded&quot; event.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>angular.module(<span class="string">"firebase"</span>).factory(<span class="string">"angularFireCollection"</span>, [<span class="string">"$timeout"</span>,
-  <span class="keyword">function</span>($timeout) {
-    <span class="keyword">return</span> <span class="keyword">function</span>(collectionRef, initialCb) {
-      <span class="keyword">if</span> (<span class="keyword">typeof</span> collectionRef == <span class="string">"string"</span>) {
-        <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Please provide a Firebase reference instead "</span> +
-          <span class="string">"of a URL, eg: new Firebase(url)"</span>);
-      }</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      self._loaded = <span class="literal">true</span>;
+      self._broadcastEvent(<span class="string">"loaded"</span>, value);
+    };
+
+    self._fRef.on(<span class="string">"value"</span>, gotInitialValue);
+  },</pre></div></div>
             
         </li>
         
@@ -505,16 +560,12 @@ by @petebacondarwin.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-23">&#182;</a>
               </div>
-              <p>An internal representation of a model present in the collection.</p>
+              <p>This function attaches child events for object and array types.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="function"><span class="keyword">function</span> <span class="title">angularFireItem</span><span class="params">(ref, index)</span> {</span>
-        <span class="keyword">this</span>.$ref = ref.ref();
-        <span class="keyword">this</span>.$id = ref.name();
-        <span class="keyword">this</span>.$index = index;
-        angular.extend(<span class="keyword">this</span>, {$priority: ref.getPriority()}, ref.val());
-      }</pre></div></div>
+            <div class="content"><div class='highlight'><pre>  _getChildValues: <span class="keyword">function</span>() {
+    <span class="keyword">var</span> self = <span class="keyword">this</span>;</pre></div></div>
             
         </li>
         
@@ -525,12 +576,15 @@ by @petebacondarwin.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-24">&#182;</a>
               </div>
-              <p>Implementation of firebase priority ordering:
-<a href="https://www.firebase.com/docs/javascript/firebase/setpriority.html">https://www.firebase.com/docs/javascript/firebase/setpriority.html</a></p>
+              <p>Store the priority of the current property as &quot;$priority&quot;. Changing
+the value of this property will also update the priority of the
+object (see _parseObject).</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="keyword">var</span> firebaseOrder = [</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    <span class="function"><span class="keyword">function</span> <span class="title">_processSnapshot</span><span class="params">(snapshot, prevChild)</span> {</span>
+      <span class="keyword">var</span> key = snapshot.name();
+      <span class="keyword">var</span> val = snapshot.val();</pre></div></div>
             
         </li>
         
@@ -541,19 +595,14 @@ by @petebacondarwin.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-25">&#182;</a>
               </div>
-              <p>Partition into [ no priority, number as priority, string as priority ]</p>
+              <p>If the item already exists in the index, remove it first.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        <span class="keyword">function</span>(item) {
-          <span class="keyword">if</span> (item.$priority == <span class="literal">null</span>) {
-            <span class="keyword">return</span> <span class="number">0</span>;
-          } <span class="keyword">else</span> <span class="keyword">if</span> (angular.isNumber(item.$priority)) {
-            <span class="keyword">return</span> <span class="number">1</span>;
-          } <span class="keyword">else</span> <span class="keyword">if</span> (angular.isString(item.$priority)) {
-            <span class="keyword">return</span> <span class="number">2</span>;
-          }
-        },</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">var</span> curIdx = self._index.indexOf(key);
+      <span class="keyword">if</span> (curIdx !== -<span class="number">1</span>) {
+        self._index.splice(curIdx, <span class="number">1</span>);
+      }</pre></div></div>
             
         </li>
         
@@ -564,14 +613,16 @@ by @petebacondarwin.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-26">&#182;</a>
               </div>
-              <p>Within partions, sort first by priority (lexical or numerical,
-no priority skips this level of sorting by returning Infinity)</p>
+              <p>Update index. This is used by $getIndex and orderByPriority.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        <span class="keyword">function</span>(item) {
-          <span class="keyword">return</span> item.$priority ? item.$priority : <span class="literal">Infinity</span>;
-        },</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">if</span> (prevChild) {
+        <span class="keyword">var</span> prevIdx = self._index.indexOf(prevChild);
+        self._index.splice(prevIdx + <span class="number">1</span>, <span class="number">0</span>, key);
+      } <span class="keyword">else</span> {
+        self._index.unshift(key);
+      }</pre></div></div>
             
         </li>
         
@@ -582,21 +633,20 @@ no priority skips this level of sorting by returning Infinity)</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-27">&#182;</a>
               </div>
-              <p>Finally, sort items of equal priority lexically by name</p>
+              <p>Update local model with priority field, if needed.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        <span class="keyword">function</span>(item) {
-          <span class="keyword">return</span> item.$id;
-        }
-      ];
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">if</span> (snapshot.getPriority() !== <span class="literal">null</span>) {
+        val.$priority = snapshot.getPriority();
+      }
+      self._updateModel(key, val);
+    }
 
-      <span class="keyword">var</span> indexes = {};
-      <span class="keyword">var</span> collection = [];
-
-      <span class="function"><span class="keyword">function</span> <span class="title">getIndex</span><span class="params">(prevId)</span> {</span>
-        <span class="keyword">return</span> prevId ? indexes[prevId] + <span class="number">1</span> : <span class="number">0</span>;
-      }</pre></div></div>
+    self._fRef.on(<span class="string">"child_added"</span>, _processSnapshot);
+    self._fRef.on(<span class="string">"child_moved"</span>, _processSnapshot);
+    self._fRef.on(<span class="string">"child_changed"</span>, _processSnapshot);
+    self._fRef.on(<span class="string">"child_removed"</span>, <span class="keyword">function</span>(snapshot) {</pre></div></div>
             
         </li>
         
@@ -607,14 +657,13 @@ no priority skips this level of sorting by returning Infinity)</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-28">&#182;</a>
               </div>
-              <p>Add an item to the local collection.</p>
+              <p>Remove from index.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="function"><span class="keyword">function</span> <span class="title">addChild</span><span class="params">(index, item)</span> {</span>
-        indexes[item.$id] = index;
-        collection.splice(index, <span class="number">0</span>, item);
-      }</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">var</span> key = snapshot.name();
+      <span class="keyword">var</span> idx = self._index.indexOf(key);
+      self._index.splice(idx, <span class="number">1</span>);</pre></div></div>
             
         </li>
         
@@ -625,15 +674,13 @@ no priority skips this level of sorting by returning Infinity)</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-29">&#182;</a>
               </div>
-              <p>Remove an item from the local collection.</p>
+              <p>Remove from local model.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="function"><span class="keyword">function</span> <span class="title">removeChild</span><span class="params">(id)</span> {</span>
-        <span class="keyword">var</span> index = indexes[id];
-        collection.splice(index, <span class="number">1</span>);
-        indexes[id] = <span class="literal">undefined</span>;
-      }</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      self._updateModel(key, <span class="literal">null</span>);
+    });
+  },</pre></div></div>
             
         </li>
         
@@ -644,12 +691,18 @@ no priority skips this level of sorting by returning Infinity)</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-30">&#182;</a>
               </div>
-              <p>Update an existing child in the local collection.</p>
+              <p>Called whenever there is a remote change. Applies them to the local
+model for both explicit and implicit sync modes.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="function"><span class="keyword">function</span> <span class="title">updateChild</span><span class="params">(index, item)</span> {</span>
-        collection[index] = item;
+            <div class="content"><div class='highlight'><pre>  _updateModel: <span class="keyword">function</span>(key, value) {
+    <span class="keyword">var</span> self = <span class="keyword">this</span>;
+    self._timeout(<span class="keyword">function</span>() {
+      <span class="keyword">if</span> (value == <span class="literal">null</span>) {
+        <span class="keyword">delete</span> self._object[key];
+      } <span class="keyword">else</span> {
+        self._object[key] = value;
       }</pre></div></div>
             
         </li>
@@ -661,16 +714,11 @@ no priority skips this level of sorting by returning Infinity)</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-31">&#182;</a>
               </div>
-              <p>Move an existing child to a new location in the collection (usually
-triggered by a priority change).</p>
+              <p>Call change handlers.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="function"><span class="keyword">function</span> <span class="title">moveChild</span><span class="params">(from, to, item)</span> {</span>
-        collection.splice(from, <span class="number">1</span>);
-        collection.splice(to, <span class="number">0</span>, item);
-        updateIndexes(from, to);
-      }</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      self._broadcastEvent(<span class="string">"change"</span>);</pre></div></div>
             
         </li>
         
@@ -681,21 +729,16 @@ triggered by a priority change).</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-32">&#182;</a>
               </div>
-              <p>Update the index table.</p>
+              <p>If there is an implicit binding, also update the local model.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="function"><span class="keyword">function</span> <span class="title">updateIndexes</span><span class="params">(from, to)</span> {</span>
-        <span class="keyword">var</span> length = collection.length;
-        to = to || length;
-        <span class="keyword">if</span> (to &gt; length) {
-          to = length;
-        }
-        <span class="keyword">for</span> (<span class="keyword">var</span> index = from; index &lt; to; index++) {
-          <span class="keyword">var</span> item = collection[index];
-          item.$index = indexes[item.$id] = index;
-        }
-      }</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">if</span> (!self._bound) {
+        <span class="keyword">return</span>;
+      }
+
+      <span class="keyword">var</span> current = self._object;
+      <span class="keyword">var</span> local = self._parse(self._name)(self._scope);</pre></div></div>
             
         </li>
         
@@ -706,13 +749,16 @@ triggered by a priority change).</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-33">&#182;</a>
               </div>
-              <p>Trigger the initial callback, if one was provided.</p>
+              <p>If remote value matches local value, don&#39;t do anything, otherwise
+apply the change.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      <span class="keyword">if</span> (initialCb &amp;&amp; <span class="keyword">typeof</span> initialCb == <span class="string">"function"</span>) {
-        collectionRef.once(<span class="string">"value"</span>, initialCb);
-      }</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">if</span> (!angular.equals(current, local)) {
+        self._parse(self._name).assign(self._scope, angular.copy(current));
+      }
+    });
+  },</pre></div></div>
             
         </li>
         
@@ -723,49 +769,13 @@ triggered by a priority change).</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-34">&#182;</a>
               </div>
-              <p>Attach handlers for remote child added, removed, changed and moved
-events.</p>
+              <p>Called whenever there is a remote change for a primitive value.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      collectionRef.on(<span class="string">"child_added"</span>, <span class="keyword">function</span>(data, prevId) {
-        $timeout(<span class="keyword">function</span>() {
-          <span class="keyword">var</span> index = getIndex(prevId);
-          addChild(index, <span class="keyword">new</span> angularFireItem(data, index));
-          updateIndexes(index);
-        });
-      });
-
-      collectionRef.on(<span class="string">"child_removed"</span>, <span class="keyword">function</span>(data) {
-        $timeout(<span class="keyword">function</span>() {
-          <span class="keyword">var</span> id = data.name();
-          <span class="keyword">var</span> pos = indexes[id];
-          removeChild(id);
-          updateIndexes(pos);
-        });
-      });
-
-      collectionRef.on(<span class="string">"child_changed"</span>, <span class="keyword">function</span>(data, prevId) {
-        $timeout(<span class="keyword">function</span>() {
-          <span class="keyword">var</span> index = indexes[data.name()];
-          <span class="keyword">var</span> newIndex = getIndex(prevId);
-          <span class="keyword">var</span> item = <span class="keyword">new</span> angularFireItem(data, index);
-
-          updateChild(index, item);
-          <span class="keyword">if</span> (newIndex !== index) {
-            moveChild(index, newIndex, item);
-          }
-        });
-      });
-
-      collectionRef.on(<span class="string">"child_moved"</span>, <span class="keyword">function</span>(ref, prevId) {
-        $timeout(<span class="keyword">function</span>() {
-          <span class="keyword">var</span> oldIndex = indexes[ref.name()];
-          <span class="keyword">var</span> newIndex = getIndex(prevId);
-          <span class="keyword">var</span> item = collection[oldIndex];
-          moveChild(oldIndex, newIndex, item);
-        });
-      });</pre></div></div>
+            <div class="content"><div class='highlight'><pre>  _updatePrimitive: <span class="keyword">function</span>(value) {
+    <span class="keyword">var</span> self = <span class="keyword">this</span>;
+    self._timeout(<span class="keyword">function</span>() {</pre></div></div>
             
         </li>
         
@@ -776,15 +786,14 @@ events.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-35">&#182;</a>
               </div>
-              <p><code>angularFireCollection</code> exposes four methods on the collection
-returned.</p>
-<p>Retrieve object by name.</p>
+              <p>Primitive values are represented as a special object {$value: value}.
+Only update if the remote value is different from the local value.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      collection.getByName = <span class="keyword">function</span>(name) {
-        <span class="keyword">return</span> collection[indexes[name]];
-      };</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">if</span> (!self._object.$value || !angular.equals(self._object.$value, value)) {
+        self._object.$value = value;
+      }</pre></div></div>
             
         </li>
         
@@ -795,20 +804,11 @@ returned.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-36">&#182;</a>
               </div>
-              <p>Add an object to the remote collection. Adding an object is the
-equivalent of calling <code>push()</code> on a Firebase reference.</p>
+              <p>Call change handlers.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      collection.add = <span class="keyword">function</span>(item, cb) {
-        <span class="keyword">var</span> ref;
-        <span class="keyword">if</span> (!cb) {
-          ref = collectionRef.ref().push(item);
-        } <span class="keyword">else</span> {
-          ref = collectionRef.ref().push(item, cb);
-        }
-        <span class="keyword">return</span> ref;
-      };</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      self._broadcastEvent(<span class="string">"change"</span>);</pre></div></div>
             
         </li>
         
@@ -819,19 +819,18 @@ equivalent of calling <code>push()</code> on a Firebase reference.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-37">&#182;</a>
               </div>
-              <p>Remove an object from the remote collection.</p>
+              <p>If there&#39;s an implicit binding, simply update the local scope model.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      collection.remove = <span class="keyword">function</span>(itemOrId, cb) {
-        <span class="keyword">var</span> item = angular.isString(itemOrId) ?
-          collection[indexes[itemOrId]] : itemOrId;
-        <span class="keyword">if</span> (!cb) {
-          item.$ref.remove();
-        } <span class="keyword">else</span> {
-          item.$ref.remove(cb);
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">if</span> (self._bound) {
+        <span class="keyword">var</span> local = self._parseObject(self._parse(self._name)(self._scope));
+        <span class="keyword">if</span> (!angular.equals(local, value)) {
+          self._parse(self._name).assign(self._scope, value);
         }
-      };</pre></div></div>
+      }
+    });
+  },</pre></div></div>
             
         </li>
         
@@ -842,14 +841,31 @@ equivalent of calling <code>push()</code> on a Firebase reference.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-38">&#182;</a>
               </div>
-              <p>Update an object in the remote collection.</p>
+              <p>If event handlers for a specified event were attached, call them.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      collection.update = <span class="keyword">function</span>(itemOrId, cb) {
-        <span class="keyword">var</span> item = angular.isString(itemOrId) ?
-          collection[indexes[itemOrId]] : itemOrId;
-        <span class="keyword">var</span> copy = {};</pre></div></div>
+            <div class="content"><div class='highlight'><pre>  _broadcastEvent: <span class="keyword">function</span>(evt, param) {
+    <span class="keyword">var</span> cbs;
+    <span class="keyword">switch</span> (evt) {
+    <span class="keyword">case</span> <span class="string">"change"</span>:
+      cbs = <span class="keyword">this</span>._onChange;
+      <span class="keyword">break</span>;
+    <span class="keyword">case</span> <span class="string">"loaded"</span>:
+      cbs = <span class="keyword">this</span>._onLoaded;
+      <span class="keyword">break</span>;
+    <span class="keyword">default</span>:
+      cbs = [];
+      <span class="keyword">break</span>;
+    }
+    <span class="keyword">if</span> (cbs.length &gt; <span class="number">0</span>) {
+      <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; cbs.length; i++) {
+        <span class="keyword">if</span> (<span class="keyword">typeof</span> cbs[i] == <span class="string">"function"</span>) {
+          cbs[i](param);
+        }
+      }
+    }
+  },</pre></div></div>
             
         </li>
         
@@ -860,27 +876,15 @@ equivalent of calling <code>push()</code> on a Firebase reference.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-39">&#182;</a>
               </div>
-              <p>Update all properties, unless they&#39;re ones created by Angular.</p>
+              <p>This function creates a 3-way binding between the provided scope model
+and Firebase. All changes made to the local model are saved to Firebase
+and changes to the remote data automatically appear on the local model.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        angular.forEach(item, <span class="keyword">function</span>(value, key) {
-          <span class="keyword">if</span> (key.indexOf(<span class="string">"$"</span>) !== <span class="number">0</span>) {
-            copy[key] = value;
-          }
-        });
-        <span class="keyword">if</span> (!cb) {
-          item.$ref.set(copy);
-        } <span class="keyword">else</span> {
-          item.$ref.set(copy, cb);
-        }
-      };
-
-      collection.order = firebaseOrder;
-      <span class="keyword">return</span> collection;
-    }
-  }
-]);</pre></div></div>
+            <div class="content"><div class='highlight'><pre>  _bind: <span class="keyword">function</span>(scope, name) {
+    <span class="keyword">var</span> self = <span class="keyword">this</span>;
+    <span class="keyword">var</span> deferred = self._q.defer();</pre></div></div>
             
         </li>
         
@@ -891,14 +895,14 @@ equivalent of calling <code>push()</code> on a Firebase reference.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-40">&#182;</a>
               </div>
-              <p>Defines the <code>angularFireAuth</code> service that provides authentication support
-for AngularFire.</p>
+              <p>_updateModel or _updatePrimitive will take care of updating the local
+model if _bound is set to true.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>angular.module(<span class="string">"firebase"</span>).factory(<span class="string">"angularFireAuth"</span>, [
-   <span class="string">"$rootScope"</span>, <span class="string">"$parse"</span>, <span class="string">"$timeout"</span>, <span class="string">"$location"</span>, <span class="string">"$route"</span>, <span class="string">"$q"</span>,
-   <span class="keyword">function</span>($rootScope, $parse, $timeout, $location, $route, $q) {</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    self._name = name;
+    self._bound = <span class="literal">true</span>;
+    self._scope = scope;</pre></div></div>
             
         </li>
         
@@ -909,21 +913,13 @@ for AngularFire.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-41">&#182;</a>
               </div>
-              <p>Helper function to extract claims from a JWT. Does <em>not</em> verify the
-validity of the token.</p>
+              <p>If the local model is an object, call an update to set local values.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    <span class="function"><span class="keyword">function</span> <span class="title">deconstructJWT</span><span class="params">(token)</span> {</span>
-      <span class="keyword">var</span> segments = token.split(<span class="string">"."</span>);
-      <span class="keyword">if</span> (!segments <span class="keyword">instanceof</span> Array || segments.length !== <span class="number">3</span>) {
-        <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Invalid JWT"</span>);
-      }
-      <span class="keyword">var</span> claims = segments[<span class="number">1</span>];
-      <span class="keyword">if</span> (window.atob) {
-        <span class="keyword">return</span> JSON.parse(decodeURIComponent(escape(window.atob(claims))));
-      }
-      <span class="keyword">return</span> token;
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">var</span> local = self._parse(name)(scope);
+    <span class="keyword">if</span> (local !== <span class="literal">undefined</span> &amp;&amp; <span class="keyword">typeof</span> local == <span class="string">"object"</span>) {
+      self._fRef.update(self._parseObject(local));
     }</pre></div></div>
             
         </li>
@@ -935,18 +931,12 @@ validity of the token.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-42">&#182;</a>
               </div>
-              <p>Updates the provided model.</p>
+              <p>We&#39;re responsible for setting up scope.$watch to reflect local changes
+on the Firebase data.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    <span class="function"><span class="keyword">function</span> <span class="title">updateExpression</span><span class="params">(scope, name, val, cb)</span> {</span>
-      <span class="keyword">if</span> (name) {
-        $timeout(<span class="keyword">function</span>() {
-          $parse(name).assign(scope, val);
-          cb();
-        });
-      }
-    }</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">var</span> unbind = scope.$watch(name, <span class="keyword">function</span>() {</pre></div></div>
             
         </li>
         
@@ -957,24 +947,17 @@ validity of the token.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-43">&#182;</a>
               </div>
-              <p>A function to check whether the current path requires authentication,
-and if so, whether a redirect to a login page is needed.</p>
+              <p>If the new local value matches the current remote value, we don&#39;t
+trigger a remote update.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>    <span class="function"><span class="keyword">function</span> <span class="title">authRequiredRedirect</span><span class="params">(route, path, self)</span> {</span>
-      <span class="keyword">if</span> (route.authRequired &amp;&amp; !self._authenticated){
-        <span class="keyword">if</span> (route.pathTo === <span class="literal">undefined</span>) {
-          self._redirectTo = $location.path();
-        } <span class="keyword">else</span> {
-          self._redirectTo = route.pathTo === path ? <span class="string">"/"</span> : route.pathTo;
-        }
-        $location.replace();
-        $location.path(path);
-      }
-    }
-
-    <span class="keyword">return</span> {</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">var</span> local = self._parseObject(self._parse(name)(scope));
+      <span class="keyword">if</span> (self._object.$value &amp;&amp; angular.equals(local, self._object.$value)) {
+        <span class="keyword">return</span>;
+      } <span class="keyword">else</span> <span class="keyword">if</span> (angular.equals(local, self._object)) {
+        <span class="keyword">return</span>;
+      }</pre></div></div>
             
         </li>
         
@@ -985,54 +968,14 @@ and if so, whether a redirect to a login page is needed.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-44">&#182;</a>
               </div>
-              <p>Initializes the authentication service. Takes a Firebase reference and
-an options object, that may contain the following properties:</p>
-<ul>
-<li><code>scope</code>: The scope to which user authentication status will be
-bound to. Defaults to <code>$rootScope</code> if not provided.</li>
-<li><code>name</code>: Name of the model to which user auth state is bound.</li>
-<li><code>callback</code>: A function that will be called when there is a change
-in authentication state.</li>
-<li><code>path</code>: The path to which the user will be redirected if the
-<code>authRequired</code> property was set to true in the <code>$routeProvider</code>, and
-the user isn&#39;t logged in.</li>
-<li><code>simple</code>: AngularFireAuth requires inclusion of the
-<code>firebase-simple-login.js</code> file by default. If this value is set to
-false, this requirement is waived, but only custom login functionality
-will be enabled.</li>
-</ul>
+              <p>If the local model is undefined or the remote data hasn&#39;t been
+loaded yet, don&#39;t update.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      initialize: <span class="keyword">function</span>(ref, options) {
-        <span class="keyword">var</span> self = <span class="keyword">this</span>;
-
-        <span class="keyword">if</span> (<span class="keyword">typeof</span> ref == <span class="string">"string"</span>) {
-          <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Please provide a Firebase reference instead "</span> +
-            <span class="string">"of a URL, eg: new Firebase(url)"</span>);
-        }
-
-        options = options || {};
-        <span class="keyword">this</span>._scope = $rootScope;
-        <span class="keyword">if</span> (options.scope) {
-          <span class="keyword">this</span>._scope = options.scope;
-        } <span class="keyword">else</span> {
-          <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Scope not provided to angularFireAuth!"</span>);
-        }
-        <span class="keyword">if</span> (options.name) {
-          <span class="keyword">this</span>._name = options.name;
-        } <span class="keyword">else</span> {
-          <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Model name not provided to angularFireAuth!"</span>);
-        }
-
-        <span class="keyword">this</span>._cb = <span class="keyword">function</span>(){};
-        <span class="keyword">if</span> (options.callback &amp;&amp; <span class="keyword">typeof</span> options.callback === <span class="string">"function"</span>) {
-          <span class="keyword">this</span>._cb = options.callback;
-        }
-
-        <span class="keyword">this</span>._redirectTo = <span class="literal">null</span>;
-        <span class="keyword">this</span>._authenticated = <span class="literal">false</span>;
-        <span class="keyword">if</span> (options.path) {</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">if</span> (local === <span class="literal">undefined</span> || !self._loaded) {
+        <span class="keyword">return</span>;
+      }</pre></div></div>
             
         </li>
         
@@ -1043,13 +986,16 @@ will be enabled.</li>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-45">&#182;</a>
               </div>
-              <p>Check if the current page requires authentication.</p>
+              <p>Use update if limits are in effect, set if not.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>          <span class="keyword">if</span> ($route.current) {
-            authRequiredRedirect($route.current, options.path, self);
-          }</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">if</span> (self._fRef.set) {
+        self._fRef.set(local);
+      } <span class="keyword">else</span> {
+        self._fRef.ref().update(local);
+      }
+    }, <span class="literal">true</span>);</pre></div></div>
             
         </li>
         
@@ -1060,15 +1006,13 @@ will be enabled.</li>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-46">&#182;</a>
               </div>
-              <p>Set up a handler for all future route changes, so we can check
-if authentication is required.</p>
+              <p>When the scope is destroyed, unbind automatically.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>          $rootScope.$on(<span class="string">"$routeChangeStart"</span>, <span class="keyword">function</span>(e, next) {
-            authRequiredRedirect(next, options.path, self);
-          });
-        }</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    scope.$on(<span class="string">"$destroy"</span>, <span class="keyword">function</span>() {
+      unbind();
+    });</pre></div></div>
             
         </li>
         
@@ -1079,15 +1023,16 @@ if authentication is required.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-47">&#182;</a>
               </div>
-              <p>Initialize user authentication state to <code>null</code>.</p>
+              <p>Once we receive the initial value, resolve the promise.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        <span class="keyword">this</span>._ref = ref;
-        <span class="keyword">if</span> (options.simple === <span class="literal">false</span>) {
-          updateExpression(<span class="keyword">this</span>._scope, <span class="keyword">this</span>._name, <span class="literal">null</span>, <span class="keyword">function</span>() {});
-          <span class="keyword">return</span>;
-        }</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    self._fRef.once(<span class="string">"value"</span>, <span class="keyword">function</span>() {
+      deferred.resolve(unbind);
+    });
+
+    <span class="keyword">return</span> deferred.promise;
+  },</pre></div></div>
             
         </li>
         
@@ -1098,28 +1043,25 @@ if authentication is required.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-48">&#182;</a>
               </div>
-              <p>Initialize Simple Login.</p>
+              <p>Parse a local model, removing all properties beginning with &quot;$&quot; and
+converting $priority to &quot;.priority&quot;.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        <span class="keyword">if</span> (!window.FirebaseSimpleLogin) {
-          <span class="keyword">var</span> err = <span class="keyword">new</span> Error(<span class="string">"FirebaseSimpleLogin undefined, "</span> +
-            <span class="string">"did you include firebase-simple-login.js?"</span>);
-          $rootScope.$broadcast(<span class="string">"angularFireAuth:error"</span>, err);
-          <span class="keyword">return</span>;
-        }
-        <span class="keyword">var</span> client = <span class="keyword">new</span> FirebaseSimpleLogin(<span class="keyword">this</span>._ref, <span class="keyword">function</span>(err, user) {
-          self._cb(err, user);
-          <span class="keyword">if</span> (err) {
-            $rootScope.$broadcast(<span class="string">"angularFireAuth:error"</span>, err);
-          } <span class="keyword">else</span> <span class="keyword">if</span> (user) {
-            self._loggedIn(user)
-          } <span class="keyword">else</span> {
-            self._loggedOut();
+            <div class="content"><div class='highlight'><pre>  _parseObject: <span class="keyword">function</span>(obj) {
+    <span class="function"><span class="keyword">function</span> <span class="title">_findReplacePriority</span><span class="params">(item)</span> {</span>
+      <span class="keyword">for</span> (<span class="keyword">var</span> prop <span class="keyword">in</span> item) {
+        <span class="keyword">if</span> (item.hasOwnProperty(prop)) {
+          <span class="keyword">if</span> (prop == <span class="string">"$priority"</span>) {
+            item[<span class="string">".priority"</span>] = item.$priority;
+            <span class="keyword">delete</span> item.$priority;
+          } <span class="keyword">else</span> <span class="keyword">if</span> (<span class="keyword">typeof</span> item[prop] == <span class="string">"object"</span>) {
+            _findReplacePriority(item[prop]);
           }
-        });
-        <span class="keyword">this</span>._authClient = client;
-      },</pre></div></div>
+        }
+      }
+      <span class="keyword">return</span> item;
+    }</pre></div></div>
             
         </li>
         
@@ -1130,27 +1072,15 @@ if authentication is required.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-49">&#182;</a>
               </div>
-              <p>The login method takes a provider (for Simple Login) or a token
-(for Custom Login) and authenticates the Firebase URL with which
-the service was initialized.</p>
+              <p>We use toJson/fromJson to remove $$hashKey and others. Can be replaced
+by angular.copy, but only for later versions of AngularJS.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      login: <span class="keyword">function</span>(tokenOrProvider, options) {
-        <span class="keyword">var</span> promise = <span class="keyword">this</span>._watchForLogin();
-        <span class="keyword">switch</span> (tokenOrProvider) {
-        <span class="keyword">case</span> <span class="string">"github"</span>:
-        <span class="keyword">case</span> <span class="string">"persona"</span>:
-        <span class="keyword">case</span> <span class="string">"twitter"</span>:
-        <span class="keyword">case</span> <span class="string">"facebook"</span>:
-        <span class="keyword">case</span> <span class="string">"password"</span>:
-          <span class="keyword">if</span> (!<span class="keyword">this</span>._authClient) {
-            <span class="keyword">var</span> err = <span class="keyword">new</span> Error(<span class="string">"Simple Login not initialized"</span>);
-            $rootScope.$broadcast(<span class="string">"angularFireAuth:error"</span>, err);
-          } <span class="keyword">else</span> {
-            <span class="keyword">this</span>._authClient.login(tokenOrProvider, options);
-          }
-          <span class="keyword">break</span>;</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">var</span> newObj = _findReplacePriority(angular.copy(obj));
+    <span class="keyword">return</span> angular.fromJson(angular.toJson(newObj));
+  }
+};</pre></div></div>
             
         </li>
         
@@ -1161,13 +1091,14 @@ the service was initialized.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-50">&#182;</a>
               </div>
-              <p>A token was provided, so initialize custom login.</p>
+              <p>Defines the <code>$firebaseAuth</code> service that provides authentication support
+for AngularFire.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>        <span class="keyword">default</span>:
-          <span class="keyword">var</span> claims, self = <span class="keyword">this</span>;
-          <span class="keyword">try</span> {</pre></div></div>
+            <div class="content"><div class='highlight'><pre>angular.module(<span class="string">"firebase"</span>).factory(<span class="string">"$firebaseAuth"</span>, [
+  <span class="string">"$q"</span>, <span class="string">"$timeout"</span>, <span class="string">"$injector"</span>, <span class="string">"$rootScope"</span>, <span class="string">"$location"</span>,
+  <span class="keyword">function</span>($q, $t, $i, $rs, $l) {</pre></div></div>
             
         </li>
         
@@ -1178,24 +1109,50 @@ the service was initialized.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-51">&#182;</a>
               </div>
-              <p>Extract claims and update user auth state to include them.</p>
+              <p>The factory returns an object containing the authentication state
+of the current user. This service takes 2 arguments:</p>
+<ul>
+<li><code>ref</code>    : A Firebase reference.</li>
+<li><p><code>options</code>: An object that may contain the following options:</p>
+<ul>
+<li><code>path</code>    : The path to which the user will be redirected if the<pre><code>        authRequired property was set to true in the
+        $routeProvider, and the user isn&#39;t logged in.</code></pre>
+</li>
+<li><code>simple</code>  : $firebaseAuth requires inclusion of the<pre><code>        firebase-simple-login.js file by default. If this
+        value is set to false, this requirement is waived,
+        but only custom login functionality will be enabled.</code></pre>
+</li>
+<li><code>callback</code>: A function that will be called when there is a change<pre><code>        in authentication state.</code></pre>
+</li>
+</ul>
+</li>
+</ul>
+<p>The returned object has the following properties:</p>
+<ul>
+<li><code>user</code>: Set to &quot;null&quot; if the user is currently logged out. This value
+will be changed to an object when the user successfully logs in. This
+object will contain details of the logged in user. The exact
+properties will vary based on the method used to login, but will at
+a minimum contain the <code>id</code> and <code>provider</code> properties.</li>
+</ul>
+<p>The returned object will also have the following methods available:
+$login(), $logout() and $createUser().</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>            claims = deconstructJWT(tokenOrProvider);
-            <span class="keyword">this</span>._ref.auth(tokenOrProvider, <span class="keyword">function</span>(err) {
-              <span class="keyword">if</span> (err) {
-                $rootScope.$broadcast(<span class="string">"angularFireAuth:error"</span>, err);
-              } <span class="keyword">else</span> {
-                self._loggedIn(claims);
-              }
-            });
-          } <span class="keyword">catch</span>(e) {
-            $rootScope.$broadcast(<span class="string">"angularFireAuth:error"</span>, e)
-          }
-        }
-        <span class="keyword">return</span> promise;
-      },</pre></div></div>
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">return</span> <span class="keyword">function</span>(ref, options) {
+      <span class="keyword">var</span> auth = <span class="keyword">new</span> AngularFireAuth($q, $t, $i, $rs, $l, ref, options);
+      <span class="keyword">return</span> auth.construct();
+    };
+  }
+]);
+
+AngularFireAuth = <span class="keyword">function</span>($q, $t, $i, $rs, $l, ref, options) {
+  <span class="keyword">this</span>._q = $q;
+  <span class="keyword">this</span>._timeout = $t;
+  <span class="keyword">this</span>._injector = $i;
+  <span class="keyword">this</span>._location = $l;
+  <span class="keyword">this</span>._rootScope = $rs;</pre></div></div>
             
         </li>
         
@@ -1206,33 +1163,14 @@ the service was initialized.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-52">&#182;</a>
               </div>
-              <p>Function cb receives an error as the first argument and a
-Simple Login user object as the second argument. Pass noLogin=true
-if you don&#39;t want the newly created user to also be logged in.</p>
+              <p>Check if &#39;$route&#39; is present, use if available.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      createUser: <span class="keyword">function</span>(email, password, cb, noLogin){
-        <span class="keyword">var</span> self = <span class="keyword">this</span>;
-        <span class="keyword">this</span>._authClient.createUser(email, password, <span class="keyword">function</span>(err, user){
-          <span class="keyword">try</span> {
-            <span class="keyword">if</span> (err) {
-              $rootScope.$broadcast(<span class="string">"angularFireAuth:error"</span>, err);
-            } <span class="keyword">else</span> {
-              <span class="keyword">if</span> (!noLogin) {
-                self.login(<span class="string">"password"</span>, {email: email, password: password});
-              }
-            }
-          } <span class="keyword">catch</span>(e) {
-            $rootScope.$broadcast(<span class="string">"angularFireAuth:error"</span>, e);
-          }
-          <span class="keyword">if</span> (cb) {
-            $timeout(<span class="keyword">function</span>(){
-              cb(err, user);
-            });
-          }
-        });
-      },</pre></div></div>
+            <div class="content"><div class='highlight'><pre>  <span class="keyword">this</span>._route = <span class="literal">null</span>;
+  <span class="keyword">if</span> (<span class="keyword">this</span>._injector.has(<span class="string">"$route"</span>)) {
+    <span class="keyword">this</span>._route = <span class="keyword">this</span>._injector.get(<span class="string">"$route"</span>);
+  }</pre></div></div>
             
         </li>
         
@@ -1243,18 +1181,37 @@ if you don&#39;t want the newly created user to also be logged in.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-53">&#182;</a>
               </div>
-              <p>Unauthenticate the Firebase reference.</p>
+              <p>Setup options and callback.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      logout: <span class="keyword">function</span>() {
-        <span class="keyword">if</span> (<span class="keyword">this</span>._authClient) {
-          <span class="keyword">this</span>._authClient.logout();
-        } <span class="keyword">else</span> {
-          <span class="keyword">this</span>._ref.unauth();
-          <span class="keyword">this</span>._loggedOut();
-        }
-      },</pre></div></div>
+            <div class="content"><div class='highlight'><pre>  <span class="keyword">this</span>._cb = <span class="keyword">function</span>(){};
+  <span class="keyword">this</span>._options = options || {};
+  <span class="keyword">if</span> (<span class="keyword">this</span>._options.callback &amp;&amp; <span class="keyword">typeof</span> <span class="keyword">this</span>._options.callback === <span class="string">"function"</span>) {
+    <span class="keyword">this</span>._cb = options.callback;
+  }
+  <span class="keyword">this</span>._deferred = <span class="literal">null</span>;
+  <span class="keyword">this</span>._redirectTo = <span class="literal">null</span>;
+  <span class="keyword">this</span>._authenticated = <span class="literal">false</span>;
+
+  <span class="keyword">if</span> (<span class="keyword">typeof</span> ref == <span class="string">"string"</span>) {
+    <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Please provide a Firebase reference instead "</span> +
+      <span class="string">"of a URL, eg: new Firebase(url)"</span>);
+  }
+  <span class="keyword">this</span>._fRef = ref;
+};
+
+AngularFireAuth.prototype = {
+  construct: <span class="keyword">function</span>() {
+    <span class="keyword">var</span> self = <span class="keyword">this</span>;
+    <span class="keyword">var</span> object = {
+      user: <span class="literal">null</span>,
+      $login: self.login.bind(self),
+      $logout: self.logout.bind(self),
+      $createUser: self.createUser.bind(self)
+    };
+
+    <span class="keyword">if</span> (self._options.path &amp;&amp; self._route !== <span class="literal">null</span>) {</pre></div></div>
             
         </li>
         
@@ -1265,22 +1222,13 @@ if you don&#39;t want the newly created user to also be logged in.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-54">&#182;</a>
               </div>
-              <p>Common function to trigger a login event on the root scope.</p>
+              <p>Check if the current page requires authentication.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      _loggedIn: <span class="keyword">function</span>(user) {
-        <span class="keyword">var</span> self = <span class="keyword">this</span>;
-        <span class="keyword">this</span>._authenticated = <span class="literal">true</span>;
-        updateExpression(<span class="keyword">this</span>._scope, <span class="keyword">this</span>._name, user, <span class="keyword">function</span>() {
-          $rootScope.$broadcast(<span class="string">"angularFireAuth:login"</span>, user);
-          <span class="keyword">if</span> (self._redirectTo) {
-            $location.replace();
-            $location.path(self._redirectTo);
-            self._redirectTo = <span class="literal">null</span>;
-          }
-        });
-      },</pre></div></div>
+            <div class="content"><div class='highlight'><pre>      <span class="keyword">if</span> (self._route.current) {
+        self._authRequiredRedirect(self._route.current, self._options.path);
+      }</pre></div></div>
             
         </li>
         
@@ -1291,20 +1239,15 @@ if you don&#39;t want the newly created user to also be logged in.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-55">&#182;</a>
               </div>
-              <p>Common function to trigger a logout event on the root scope.</p>
+              <p>Set up a handler for all future route changes, so we can check
+if authentication is required.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>      _loggedOut: <span class="keyword">function</span>() {
-        <span class="keyword">this</span>._authenticated = <span class="literal">false</span>;
-        updateExpression(<span class="keyword">this</span>._scope, <span class="keyword">this</span>._name, <span class="literal">null</span>, <span class="keyword">function</span>() {
-          $rootScope.$broadcast(<span class="string">"angularFireAuth:logout"</span>);
-        });
-      },
-
-      _watchForLogin: <span class="keyword">function</span>() {
-        <span class="keyword">var</span> subs = [], def = $q.defer();
-        <span class="function"><span class="keyword">function</span> <span class="title">done</span><span class="params">(err, user)</span> {</span></pre></div></div>
+            <div class="content"><div class='highlight'><pre>      self._rootScope.$on(<span class="string">"$routeChangeStart"</span>, <span class="keyword">function</span>(e, next) {
+        self._authRequiredRedirect(next, self._options.path);
+      });
+    }</pre></div></div>
             
         </li>
         
@@ -1315,35 +1258,380 @@ if you don&#39;t want the newly created user to also be logged in.</p>
               <div class="pilwrap ">
                 <a class="pilcrow" href="#section-56">&#182;</a>
               </div>
-              <p>timeout is necessary because it a) allows the auth callbacks to take
-effect (applying auth parms before this is invoked) and b) forces
-$scope.apply(), which is necessary to make the promise resolve()
-event actually get sent to the listeners</p>
+              <p>If Simple Login is disabled, simply return.</p>
 
             </div>
             
-            <div class="content"><div class='highlight'><pre>          $timeout(<span class="keyword">function</span>() {
-            <span class="keyword">if</span> (err) {
-              def.reject(err);
-            } <span class="keyword">else</span> {
-              def.resolve(user);
-            }
-          });
-          <span class="keyword">for</span> (<span class="keyword">var</span> i=<span class="number">0</span>; i &lt; subs.length; i++) {
-            subs[i]();
-          }
+            <div class="content"><div class='highlight'><pre>    self._object = object;
+    <span class="keyword">if</span> (self._options.simple === <span class="literal">false</span>) {
+      <span class="keyword">return</span>;
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-57">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-57">&#182;</a>
+              </div>
+              <p>Initialize Simple Login.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">if</span> (!window.FirebaseSimpleLogin) {
+      <span class="keyword">var</span> err = <span class="keyword">new</span> Error(<span class="string">"FirebaseSimpleLogin undefined, "</span> +
+        <span class="string">"did you include firebase-simple-login.js?"</span>);
+      self._rootScope.$broadcast(<span class="string">"$firebaseAuth:error"</span>, err);
+      <span class="keyword">return</span>;
+    }
+
+    <span class="keyword">var</span> client = <span class="keyword">new</span> FirebaseSimpleLogin(self._fRef, <span class="keyword">function</span>(err, user) {
+      self._cb(err, user);
+      <span class="keyword">if</span> (err) {
+        <span class="keyword">if</span> (self._deferred) {
+          self._deferred.reject(err);
+          self._deferred = <span class="literal">null</span>;
         }
-        subs.push($rootScope.$on(<span class="string">"angularFireAuth:login"</span>, <span class="keyword">function</span>(evt, user) {
-          done(<span class="literal">null</span>, user);
-        }));
-        subs.push($rootScope.$on(<span class="string">"angularFireAuth:error"</span>, <span class="keyword">function</span>(evt, err) {
-          done(err, <span class="literal">null</span>);
-        }));
-        <span class="keyword">return</span> def.promise;
+        self._rootScope.$broadcast(<span class="string">"$firebaseAuth:error"</span>, err);
+      } <span class="keyword">else</span> <span class="keyword">if</span> (user) {
+        <span class="keyword">if</span> (self._deferred) {
+          self._deferred.resolve(user);
+          self._deferred = <span class="literal">null</span>;
+        }
+        self._loggedIn(user);
+      } <span class="keyword">else</span> {
+        self._loggedOut();
+      }
+    });
+
+    self._authClient = client;
+    <span class="keyword">return</span> self._object;
+  },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-58">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-58">&#182;</a>
+              </div>
+              <p>The login method takes a provider (for Simple Login) or a token
+(for Custom Login) and authenticates the Firebase URL with which
+the service was initialized. This method returns a promise, which will
+be resolved when the login succeeds (and rejected when an error occurs).</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  login: <span class="keyword">function</span>(tokenOrProvider, options) {
+    <span class="keyword">var</span> self = <span class="keyword">this</span>;
+    <span class="keyword">var</span> deferred = self._q.defer();
+
+    <span class="keyword">switch</span> (tokenOrProvider) {
+    <span class="keyword">case</span> <span class="string">"github"</span>:
+    <span class="keyword">case</span> <span class="string">"persona"</span>:
+    <span class="keyword">case</span> <span class="string">"twitter"</span>:
+    <span class="keyword">case</span> <span class="string">"facebook"</span>:
+    <span class="keyword">case</span> <span class="string">"password"</span>:
+    <span class="keyword">case</span> <span class="string">"anonymous"</span>:
+      <span class="keyword">if</span> (!self._authClient) {
+        <span class="keyword">var</span> err = <span class="keyword">new</span> Error(<span class="string">"Simple Login not initialized"</span>);
+        deferred.reject(err);
+        self._rootScope.$broadcast(<span class="string">"$firebaseAuth:error"</span>, err);
+      } <span class="keyword">else</span> {
+        self._deferred = deferred;
+        self._authClient.login(tokenOrProvider, options);
+      }
+      <span class="keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-59">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-59">&#182;</a>
+              </div>
+              <p>A token was provided, so initialize custom login.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="keyword">default</span>:
+      <span class="keyword">try</span> {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-60">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-60">&#182;</a>
+              </div>
+              <p>Extract claims and update user auth state to include them.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="keyword">var</span> claims = self._deconstructJWT(tokenOrProvider);
+        self._fRef.auth(tokenOrProvider, <span class="keyword">function</span>(err) {
+          <span class="keyword">if</span> (err) {
+            deferred.reject(err);
+            self._rootScope.$broadcast(<span class="string">"$firebaseAuth:error"</span>, err);
+          } <span class="keyword">else</span> {
+            self._deferred = deferred;
+            self._loggedIn(claims);
+          }
+        });
+      } <span class="keyword">catch</span>(e) {
+        deferred.reject(e);
+        self._rootScope.$broadcast(<span class="string">"$firebaseAuth:error"</span>, e);
       }
     }
+
+    <span class="keyword">return</span> deferred.promise;
+  },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-61">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-61">&#182;</a>
+              </div>
+              <p>Unauthenticate the Firebase reference.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  logout: <span class="keyword">function</span>() {
+    <span class="keyword">if</span> (<span class="keyword">this</span>._authClient) {
+      <span class="keyword">this</span>._authClient.logout();
+    } <span class="keyword">else</span> {
+      <span class="keyword">this</span>._fRef.unauth();
+      <span class="keyword">this</span>._loggedOut();
+    }
+  },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-62">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-62">&#182;</a>
+              </div>
+              <p>Creates a user for Firebase Simple Login.
+Function &#39;cb&#39; receives an error as the first argument and a
+Simple Login user object as the second argument. Pass noLogin=true
+if you don&#39;t want the newly created user to also be logged in.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  createUser: <span class="keyword">function</span>(email, password, cb, noLogin) {
+    <span class="keyword">var</span> self = <span class="keyword">this</span>;
+    self._authClient.createUser(email, password, <span class="keyword">function</span>(err, user) {
+      <span class="keyword">try</span> {
+        <span class="keyword">if</span> (err) {
+          self._rootScope.$broadcast(<span class="string">"$firebaseAuth:error"</span>, err);
+        } <span class="keyword">else</span> {
+          <span class="keyword">if</span> (!noLogin) {
+            self.login(<span class="string">"password"</span>, {email: email, password: password});
+          }
+        }
+      } <span class="keyword">catch</span>(e) {
+        self._rootScope.$broadcast(<span class="string">"$firebaseAuth:error"</span>, e);
+      }
+      <span class="keyword">if</span> (cb) {
+        self._timeout(<span class="keyword">function</span>(){
+          cb(err, user);
+        });
+      }
+    });
+  },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-63">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-63">&#182;</a>
+              </div>
+              <p>Changes the password for a Firebase Simple Login user.
+Take an email, old password and new password as three mandatory arguments.
+An optional callback may be specified to be notified when the password
+has been changed successfully.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  changePassword: <span class="keyword">function</span>(email, old, np, cb) {
+    <span class="keyword">var</span> self = <span class="keyword">this</span>;
+    self._authClient.changePassword(email, old, np, <span class="keyword">function</span>(err, user) {
+      <span class="keyword">if</span> (err) {
+        self._rootScope.$broadcast(<span class="string">"$firebaseAuth:error"</span>, err);
+      }
+      <span class="keyword">if</span> (cb) {
+        self._timeout(<span class="keyword">function</span>() {
+          cb(err, user);
+        });
+      }
+    });
+  },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-64">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-64">&#182;</a>
+              </div>
+              <p>Common function to trigger a login event on the root scope.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  _loggedIn: <span class="keyword">function</span>(user) {
+    <span class="keyword">var</span> self = <span class="keyword">this</span>;
+    self._timeout(<span class="keyword">function</span>() {
+      self._object.user = user;
+      self._authenticated = <span class="literal">true</span>;
+      self._rootScope.$broadcast(<span class="string">"$firebaseAuth:login"</span>, user);
+      <span class="keyword">if</span> (self._redirectTo) {
+        self._location.replace();
+        self._location.path(self._redirectTo);
+        self._redirectTo = <span class="literal">null</span>;
+      }
+    });
+  },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-65">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-65">&#182;</a>
+              </div>
+              <p>Common function to trigger a logout event on the root scope.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  _loggedOut: <span class="keyword">function</span>() {
+    <span class="keyword">var</span> self = <span class="keyword">this</span>;
+    self._timeout(<span class="keyword">function</span>() {
+      self._object.user = <span class="literal">null</span>;
+      self._authenticated = <span class="literal">false</span>;
+      self._rootScope.$broadcast(<span class="string">"$firebaseAuth:logout"</span>);
+    });
+  },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-66">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-66">&#182;</a>
+              </div>
+              <p>A function to check whether the current path requires authentication,
+and if so, whether a redirect to a login page is needed.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  _authRequiredRedirect: <span class="keyword">function</span>(route, path) {
+    <span class="keyword">if</span> (route.authRequired &amp;&amp; !<span class="keyword">this</span>._authenticated){
+      <span class="keyword">if</span> (route.pathTo === <span class="literal">undefined</span>) {
+        <span class="keyword">this</span>._redirectTo = <span class="keyword">this</span>._location.path();
+      } <span class="keyword">else</span> {
+        <span class="keyword">this</span>._redirectTo = route.pathTo === path ? <span class="string">"/"</span> : route.pathTo;
+      }
+      <span class="keyword">this</span>._location.replace();
+      <span class="keyword">this</span>._location.path(path);
+    }
+  },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-67">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-67">&#182;</a>
+              </div>
+              <p>Helper function to decode Base64 (polyfill for window.btoa on IE).
+From: <a href="https://github.com/mshang/base64-js/blob/master/base64.js">https://github.com/mshang/base64-js/blob/master/base64.js</a></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  _decodeBase64: <span class="keyword">function</span>(str) {
+    <span class="keyword">var</span> char_set =
+      <span class="string">"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"</span>;
+    <span class="keyword">var</span> output = <span class="string">""</span>; <span class="comment">// final output</span>
+    <span class="keyword">var</span> buf = <span class="string">""</span>; <span class="comment">// binary buffer</span>
+    <span class="keyword">var</span> bits = <span class="number">8</span>;
+    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; str.length; ++i) {
+      <span class="keyword">if</span> (str[i] == <span class="string">"="</span>) {
+        <span class="keyword">break</span>;
+      }
+      <span class="keyword">var</span> c_num = char_set.indexOf(str.charAt(i));
+      <span class="keyword">if</span> (c_num == -<span class="number">1</span>) {
+        <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Not base64."</span>);
+      }
+      <span class="keyword">var</span> c_bin = c_num.toString(<span class="number">2</span>);
+      <span class="keyword">while</span> (c_bin.length &lt; <span class="number">6</span>) {
+        c_bin = <span class="string">"0"</span> + c_bin;
+      }
+      buf += c_bin;
+
+      <span class="keyword">while</span> (buf.length &gt;= bits) {
+        <span class="keyword">var</span> octet = buf.slice(<span class="number">0</span>, bits);
+        buf = buf.slice(bits);
+        output += String.fromCharCode(parseInt(octet, <span class="number">2</span>));
+      }
+    }
+    <span class="keyword">return</span> output;
+  },</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-68">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-68">&#182;</a>
+              </div>
+              <p>Helper function to extract claims from a JWT. Does <em>not</em> verify the
+validity of the token.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  _deconstructJWT: <span class="keyword">function</span>(token) {
+    <span class="keyword">var</span> segments = token.split(<span class="string">"."</span>);
+    <span class="keyword">if</span> (!segments <span class="keyword">instanceof</span> Array || segments.length !== <span class="number">3</span>) {
+      <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Invalid JWT"</span>);
+    }
+    <span class="keyword">var</span> decoded = <span class="string">""</span>;
+    <span class="keyword">var</span> claims = segments[<span class="number">1</span>];
+    <span class="keyword">if</span> (window.atob) {
+      decoded = window.atob(claims);
+    } <span class="keyword">else</span> {
+      decoded = <span class="keyword">this</span>._decodeBase64(claims);
+    }
+    <span class="keyword">return</span> JSON.parse(decodeURIComponent(escape(decoded)));
   }
-]);</pre></div></div>
+};</pre></div></div>
             
         </li>
         
