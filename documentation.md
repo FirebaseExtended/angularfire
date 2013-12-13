@@ -51,7 +51,7 @@ If the Firebase reference points to a primitive value, it will be wrapped in
 an object with a key named `$value` containing the primitive value. If the
 reference pointed to an array, you'll get an object with the array indices as
 keys. If you'd like a native array ordered by priority instead, please take a
-look at the `orderByPriority` filter, explained later in this document.
+look at the [orderByPriority](#orderbypriority) filter.
 
 ``` js
 myapp.controller("MyController", ["$scope", "$firebase",
@@ -112,6 +112,19 @@ will also be subsequently updated to this new value.
 ``` js
 $scope.items.$set({bar: "baz"});  // new Firebase(URL + "/foo") is now null.
 ```
+
+### $getIndex()
+
+Returns an ordered list of keys in the data object, sorted by their Firebase priorities.
+If you're looking for a quick way to convert the items to a sorted array for use in tools
+ like `ng-repeat`, see the [orderByPriority](#orderbypriority) filter.
+
+ ``` js
+ var keys = $scope.items.$getIndex();
+ keys.forEach(function(key, i) {
+    console.log(i, $scope.items[key]); // prints items in order they appear in Firebase
+ });
+ ```
 
 Priorities
 ----------
@@ -286,6 +299,18 @@ pass in a valid JWT token.
   * `options`: This is useful for Simple Login only, where the provided options
 will be passed as-is to the Simple Login method. For a "password" provider,
 for example, you will want to provide the username and password as an object.
+
+The `$login` method returns a promise which is resolved or rejected when the authentication
+attempt is completed. The success callback receives the user object and the error callback receives
+an Error object.
+
+``` js
+auth.$login('persona').then(function(user) {
+   console.log('Logged in as: ', user.uid);
+}, function(error) {
+   console.error('Login failed: ', error);
+});
+```
 
 ### $logout()
 
