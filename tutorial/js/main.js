@@ -12,7 +12,7 @@ var DEFAULT_TUTORIAL_TOKEN = "tutorial/basic/0";
 
 var SCRIPT_ROOT = 'https://cdn.firebase.com/v0/firebase.js';
 var ANGULAR_JS = 'https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.5/angular.min.js';
-var ANGULARFIRE_JS = 'https://cdn.firebase.com/libs/angularfire/0.3.0/angularfire.min.js';
+var ANGULARFIRE_JS = 'https://cdn.firebase.com/libs/angularfire/0.5.0/angularfire.min.js';
 var DEMO_SERVER_DOMAIN_SUFFIX = ".firebaseio-demo.com/";
 
 var AppRouter = Backbone.Router.extend({

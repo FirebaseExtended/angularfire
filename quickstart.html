@@ -28,8 +28,8 @@
             <ul class="nav">
               <li class="active"><a href="quickstart.html">Quickstart</a></li>
               <li><a href="tutorial/">Tutorial</a></li>
-              <li><a href="documentation.html">Documentation</a></li>
               <li><a href="showcase.html">Showcase</a></li>
+              <li><a href="documentation.html">Documentation</a></li>
               <li><a href="source.html">Annotated Source</a></li>
             </ul>
             <ul class="pull-right">
@@ -46,9 +46,6 @@
         <h3>Get up and running in minutes.</h3>
       </div>
       <div class="row">
-        <div class="videoembed">
-          <iframe src="//player.vimeo.com/video/73441243" width="780" height="440" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-        </div>
         <div class="center">
           <p>&nbsp;</p>
           <h4>Add a Firebase powered backend to your existing Angular app in 4 easy steps!</h4>
@@ -58,22 +55,21 @@
             <li>
               <p>Include the Firebase and AngularFire libraries from their respective CDNs.</p>
               <pre class="prettyprint lang-html">&lt;script src="https://cdn.firebase.com/v0/firebase.js"&gt;&lt;/script&gt;
-&lt;script src="https://cdn.firebase.com/libs/angularfire/0.3.0/angularfire.min.js"&gt;&lt;/script&gt;</pre>
+&lt;script src="https://cdn.firebase.com/libs/angularfire/0.5.0/angularfire.min.js"&gt;&lt;/script&gt;</pre>
             </li>
             <li>
               <p>Specify a dependency on <code>firebase</code> in your app module.</p>
               <pre class="prettyprint lang-js">var myApp = angular.module("MyApp", ["firebase"]);</pre>
             </li>
             <li>
-              <p>Bind a model to a Firebase URL in your controller</p>
-              <pre class="prettyprint lang-js">function MyController($scope, angularFire) {
-  $scope.items = [];
+              <p>Import the <code>$firebase</code> service in your controller and instantiate it with a Firebase reference.</p>
+              <pre class="prettyprint lang-js">function MyController($scope, $firebase) {
   var ref = new Firebase("https://&lt;my-firebase&gt;.firebaseio.com/list");
-  angularFire(ref, $scope, "items");
+  $scope.items = $firebase(ref);
 }</pre>
             </li>
             <li>
-              <p>Use and modify your model as you normally would, watch changes sync in realtime!</p>
+              <p>Modify the data using methods like <code>$add</code>, <code>$remove</code> and <code>$update</code>; watch changes sync in realtime!</p>
               <pre class="prettyprint lang-html">&lt;div ng-controller="MyController"&gt;
   &lt;ul ng-repeat="item in items"&gt;
     &lt;li&gt;{{item.name}}&lt;/li&gt;
@@ -81,14 +77,13 @@
   &lt;input type="text" ng-model="newItem"/&gt;
   &lt;button type="submit" ng-click="addItem()"&gt;Add New Item&lt;/button&gt;
 &lt;/div&gt;</pre>
-              <pre class="prettyprint lang-js">function MyController($scope, angularFire) {
+              <pre class="prettyprint lang-js">function MyController($scope, $firebase) {
   var ref = new Firebase("https://&lt;my-firebase&gt;.firebaseio.com/list");
-  $scope.items = [];
+  $scope.items = $firebase(ref);
   $scope.addItem = function() {
-    $scope.items.push($scope.newItem);
+    $scope.items.$add($scope.newItem);
     $scope.newItem = "";
   }
-  angularFire(ref, $scope, "items");
 }</pre>
             </li>
           </ol>
@@ -126,7 +121,7 @@
 
       <footer class="footer">
           <p>
-              Join our <a href="https://groups.google.com/forum/#!forum/firebase-angular" target="_blank">Firebase + Angular Google Group</a> to ask questions, provide feedback, and share apps you've built with Firebase and Angular.
+            Join our <a href="https://groups.google.com/forum/#!forum/firebase-angular" target="_blank">Firebase + Angular Google Group</a> to ask questions, provide feedback, and share apps you've built with Firebase and Angular.
           </p>
           <p>
           Developed and Maintained by <a href="https://www.firebase.com/">Firebase</a> (C) 2013.

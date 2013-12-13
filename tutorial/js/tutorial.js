@@ -401,6 +401,13 @@ Tutorial.prototype.compareAndExtract_ = function(input, match, symbols) {
       this.compareArrays_(input.defaults, match.defaults, symbols);
       this.compareArrays_(input.params, match.params, symbols);
       break;
+    case "AssignmentExpression":
+      if (input.right.callee.name != match.right.callee.name) {
+        throw new JSCompareException(JSCompareException.MISC, defaultJSMatchError);
+      }
+      this.compareAndExtract_(input.left, match.left, symbols);
+      this.compareAndExtract_(input.right, match.right, symbols);
+      break;
     default:
       //We may have more things to implement here.
       throw new JSCompareException("unimplemented", "JSMatch: Unimplemented AST type: " + input.type);

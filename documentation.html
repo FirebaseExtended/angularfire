@@ -34,8 +34,8 @@
             <ul class="nav">
               <li><a href="quickstart.html">Quickstart</a></li>
               <li><a href="tutorial/">Tutorial</a></li>
-              <li class="active"><a href="documentation.html">Documentation</a></li>
               <li><a href="showcase.html">Showcase</a></li>
+              <li class="active"><a href="documentation.html">Documentation</a></li>
               <li><a href="source.html">Annotated Source</a></li>
             </ul>
             <ul class="pull-right">
@@ -46,169 +46,22 @@
       </div>
     </div>
 
-    <div class="container">
-      <div class="row">
-        <div class="span8 offset2 header">
-          <h1>Documentation</h1>
-          <h3>Learn how to use AngularFire.</h3>
-        </div>
-      </div>
-      <div class="row">
-        <div class="span3 bs-docs-sidebar">
-          <ul data-spy="affix" data-offset-top="150" class="nav nav-list bs-docs-sidenav affix-top">
-            <li><a href="#overview"><i class="icon-chevron-right"></i> Overview</a></li>
-            <li><a href="#implicit"><i class="icon-chevron-right"></i> Implicit Data Binding</a></li>
-            <li><a href="#explicit"><i class="icon-chevron-right"></i> Explicit Data Binding</a></li>
-            <li><a href="#authentication"><i class="icon-chevron-right"></i> Authentication</a></li>
-          </ul>
-        </div>
-        <div class="span9 bs-docs">
-          <section id="overview">
-            <p>AngularFire is an officially supported AngularJS binding for Firebase.</p>
-            <h3>Overview</h3>
-            <p>The bindings let you associate a Firebase URL with a model (or set of models), and they will be transparently
-            kept in sync across all clients currently using your app. The 2-way data binding offered by AngularJS works as normal,
-            except that the changes are also sent to all other clients instead of just a server.</p>
-            <p>To get started, include both <code>firebase.js</code> and <code>angularfire.js</code> in your application.</p>
-            <pre class="prettyprint lang-html">&lt;script src="https://cdn.firebase.com/v0/firebase.js"&gt;&lt;/script&gt;
-&lt;script src="https://cdn.firebase.com/libs/angularfire/0.3.0/angularfire.js"&gt;&lt;/script&gt;</pre>
-            <p>Add the module firebase as a dependency to your app module:</p>
-            <pre class="prettyprint lang-js">var myapp = angular.module('myapp', ['firebase']);</pre>
-            <p>You now have two options: implicit or explicit synchronization.</p>
-          </section>
-
-          <section id="implicit">
-            <h3>Implicit Synchronization</h3>
-            <p>This method is great if you want to implicitly synchronize a model with Firebase.
-            All local changes will be automatically sent to Firebase, and all remote changes will instantly update the local model.</p>
-            <p>Set <code>angularFire</code> as a service dependency in your controller:</p>
-            <pre class="prettyprint lang-js">myapp.controller('MyCtrl', ['$scope', 'angularFire',
-  function MyCtrl($scope, angularFire) {
-    ...
-  }
-]);</pre>
-            <p>Bind a Firebase reference to any model in <code>$scope</code>.</p>
-            <pre class="prettyprint lang-js">var ref = new Firebase('https://&lt;my-firebase&gt;.firebaseio.com/items');
-angularFire(ref, $scope, 'items');</pre>
-            <p>Use the model in your markup as you normally would:</p>
-            <pre class="prettyprint lang-html">&lt;ul ng-controller="MyCtrl"&gt;
-  &lt;li ng-repeat="item in items"&gt;{{item.name}}: {{item.desc}}&lt;/li&gt;
-&lt;/ul&gt;</pre>
-            <p>Data from Firebase is loaded asynchronously, you can use the
-            <a href="http://docs.angularjs.org/api/ng.%24q">promise</a> to be notified
-            when initial data from the server has loaded. You are free to make local changed to the model though,
-            AngularFire will automatically merge them with the remote data when it arrives.
-
-            You can manipulate the model as you normally would, like so:
-            <pre class="prettyprint lang-js">// Add a new item by simply modifying the model directly.
-$scope.items.push({name: "Firebase", desc: "is awesome!"});
-// Or, attach a function to $scope that will let a directive in markup manipulate the model.
-$scope.removeItem = function() {
-  $scope.items.splice($scope.toRemove, 1);
-  $scope.toRemove = null;
-};</pre>
-          </section>
-          <section id="explicit">
-            <h3>Explicit Synchronization</h3>
-            <p>This method is great if you want control over when local changes are synchronized to Firebase.
-            Any changes made to a model won't be synchronized automatically, and you must invoke specific methods if you wish to update the remote data.
-            All remote changes will automatically appear in the local model (1-way synchronization).</p>
-            <p>Set <code>angularFireCollection</code> as a service dependency in your controller:</p>
-            <pre class="prettyprint lang-js">myapp.controller('MyCtrl', ['$scope', 'angularFireCollection',
-  function MyCtrl($scope, angularFireCollection) {
-    ...
-  }
-]);</pre>
-            <p>Create a collection at a specified Firebase reference and assign it to a model in <code>$scope</code>:</p>
-            <pre class="prettyprint lang-js">$scope.items = angularFireCollection(new Firebase(url), optionalCallbackOnInitialLoad);</pre>
-            <p>Use the model as you normally would in your markup:</p>
-            <pre class="prettyprint lang-html">&lt;ul ng-controller="MyCtrl"&gt;
-  &lt;li ng-repeat="item in items"&gt;{{item.name}}: {{item.desc}}&lt;/li&gt;
-&lt;/ul&gt;</pre>
-            <p>angularFireCollection takes an optional second argument - a callback that will be invoked when the initial data has
-            been loaded from the server. The callback will be provided with a
-            <a href="https://www.firebase.com/docs/javascript/datasnapshot/">Firebase snapshot</a> as the only argument.</p>
-            <p>You can bind specific functions if you wish to add, remove or update objects in the collection with any Angular directive:</p>
-            <pre class="prettyprint lang-html">&lt;form ng-submit="items.add(item)"&gt;
-  &lt;input type="text" ng-model="item.name" placeholder="Name" required&gt;&lt;/script&gt;
-  &lt;input type="text" ng-model="item.desc" placeholder="Description"&gt;&lt;/script&gt;
-&lt;/form&gt;</pre>
-            <p>You can do the same with the <code>remove</code> and <code>update</code> methods.</p>
-          </section>
-          <section id="authentication">
-            <h3>Authentication</h3>
-            <p>
-              There are two main aspects to the AngularFire Auth API,
-              <em>binding auth state</em> and <em>events</em>. Before you
-              get started, make sure you're including the following 3 JS files:
-            </p>
-            <pre class="prettyprint lang-html">&lt;script src="https://cdn.firebase.com/v0/firebase.js"&gt;&lt;/script&gt;
-&lt;script src="https://cdn.firebase.com/v0/firebase-simple-login.js"&gt;&lt;/script&gt;
-&lt;script src="https://cdn.firebase.com/libs/angularfire/0.3.0/angularfire.js"&gt;&lt;/script&gt;</pre>
-
-            <h4>Binding Authentication State</h4>
-            <p>The easiest way to use the API is to bind a
-            variable in $scope to user authentication state. You can do this by declaring
-            <code>angularFireAuth</code> as a dependency in your controller:</p>
-            <pre class="prettyprint lang-js">function MyController($scope, angularFireAuth) {
-  var ref = new Firebase("https://&lt;my-firebase&gt;.firebaseio.com/");
-  angularFireAuth.initialize(ref, {scope: $scope, name: "user"});
-}</pre>
-            <p>You can now use the bound variable to display user info or a login/logout button as appropriate.
-            For instance, in <a href="http://github.com/anantn/firetube/">Firetube</a> we do something like:</p>
-            <pre class="prettyprint lang-html">&lt;span ng-show="user"&gt;
-  {{user.name}} | &lt;a ng-click="logout()"&gt;Logout&lt;/a&gt;
-&lt;/span&gt;
-&lt;span ng-hide="user"&gt;&lt;a ng-click="login()"&gt;Login&lt;/a&gt;&lt;/span&gt;</pre>
-            <p>You can implement the login and logout methods easily, by calling their equivalent
-            methods on the angularFireAuth service. For instance, to do a Facebook login via the
-            Simple Login service:</p>
-            <pre class="prettyprint lang-js">$scope.login = function() {
-  angularFireAuth.login("facebook");
-};
-$scope.logout = function() {
-  angularFireAuth.logout();
-};</pre>
-            <p>Note that you may also pass in a regular token to the
-            <code>angularFireAuth.login</code> method, if you're obtaining a
-            <a href="https://www.firebase.com/docs/security/custom-login.html">custom JWT</a>
-            from your server.
-
-            <h4>Events</h4>
-            <p>AngularFire raises events on the <code>$rootScope</code> for various authentication related events.
-            You may listen to the following:</p>
-            <pre class="prettyprint lang-js">$scope.$on("angularFireAuth:login", function(evt, user) {
-  // User logged in.
-});
-$scope.$on("angularFireAuth:logout", function(evt) {
-  // User logged out.
-});
-$scope.$on("angularFireAuth:error", function(evt, err) {
-  // There was an error during authentication.
-});</pre>
-            <p>If you prefer a callback approach and only have one controller, you can also provide one when
-            initializing <code>angularFireAuth</code>:</p>
-            <pre class="prettyprint lang-js">function MyController($scope, angularFireAuth) {
-  var ref = new Firebase("https://&lt;my-firebase&gt;.firebaseio.com/");
-  angularFireAuth.initialize(ref, {
-    scope: $scope, name: "user",
-    callback: function(err, user) {
-      // Called whenever there is a change in authentication state.
+    <script type="text/javascript">
+    function setFrameHeight() {
+      try {
+        var frame = document.getElementById("flatdoc-iframe");
+        if (frame) {
+          innerDoc = (frame.contentDocument) ? frame.contentDocument : frame.contentWindow.document;
+          var h = innerDoc.body.scrollHeight + 15;
+          $("#source").height(h);
+          $("#flatdoc-iframe").height(h);
+        }
+      } catch(err) {}
     }
-  });
-}</pre>
-          </section>
-        </div>
-      </div>
-
-      <footer class="footer">
-        <p>
-          Developed and Maintained by <a href="https://www.firebase.com/">Firebase</a> (C) 2013.
-          Code licensed under <a href="http://firebase.mit-license.org/">The MIT License</a>.
-        </p>
-      </footer>
-
-    </div> <!-- /container -->
+    </script>
+    <div class="source">
+      <iframe id="flatdoc-iframe" onload="setFrameHeight()" src="flatdoc.html"></iframe>
+    </div>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
