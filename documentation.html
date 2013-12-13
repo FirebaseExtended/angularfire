@@ -130,8 +130,8 @@ $scope.removeItem = function() {
             <a href="https://www.firebase.com/docs/javascript/datasnapshot/">Firebase snapshot</a> as the only argument.</p>
             <p>You can bind specific functions if you wish to add, remove or update objects in the collection with any Angular directive:</p>
             <pre class="prettyprint lang-html">&lt;form ng-submit="items.add(item)"&gt;
-  &lt;input type="text" ng-model="item.name" placeholder="Name" required/&gt;
-  &lt;input type="text" ng-model="item.desc" placeholder="Description"/&gt;
+  &lt;input type="text" ng-model="item.name" placeholder="Name" required&gt;&lt;/script&gt;
+  &lt;input type="text" ng-model="item.desc" placeholder="Description"&gt;&lt;/script&gt;
 &lt;/form&gt;</pre>
             <p>You can do the same with the <code>remove</code> and <code>update</code> methods.</p>
           </section>
@@ -142,9 +142,9 @@ $scope.removeItem = function() {
               <em>binding auth state</em> and <em>events</em>. Before you
               get started, make sure you're including the following 3 JS files:
             </p>
-            <pre class="prettyprint lang-html">&lt;script src="https://cdn.firebase.com/v0/firebase.js"/&gt;
-&lt;script src="https://cdn.firebase.com/v0/firebase-simple-login.js"/&gt;
-&lt;script src="https://cdn.firebase.com/libs/angularfire/0.3.0/angularfire.js"/&gt;</pre>
+            <pre class="prettyprint lang-html">&lt;script src="https://cdn.firebase.com/v0/firebase.js"&gt;&lt;/script&gt;
+&lt;script src="https://cdn.firebase.com/v0/firebase-simple-login.js"&gt;&lt;/script&gt;
+&lt;script src="https://cdn.firebase.com/libs/angularfire/0.3.0/angularfire.js"&gt;&lt;/script&gt;</pre>
 
             <h4>Binding Authentication State</h4>
             <p>The easiest way to use the API is to bind a
