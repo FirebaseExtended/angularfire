@@ -15,7 +15,7 @@ served off of Firebase's CDN, which you are welcome to use!
 
 ``` html
 <script src="https://cdn.firebase.com/v0/firebase.js"></script>
-<script src="https://cdn.firebase.com/libs/angularfire/0.5.0-rc1/angularfire.js"></script>
+<script src="https://cdn.firebase.com/libs/angularfire/0.5.0/angularfire.js"></script>
 ```
 
 Next, add the Firebase module as a depedency for your Angular app.

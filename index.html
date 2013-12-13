@@ -123,38 +123,12 @@
         <h3 id="modalLabel">Download AngularFire</h3>
       </div>
       <div class="modal-body">
-        <form class="form-horizontal">
-          <div class="control-group">
-            <label class="control-label"><b>Build</b></label>
-            <div class="controls">
-              <span id="downloadGroup" class="btn-group" data-toggle="buttons-radio">
-                <button type="button" class="btn active" data-value="min">Minified</button>
-                <button type="button" class="btn" data-value="com">Uncompressed</button>
-              </span>
-            </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label"><b>CDN</b></label>
-            <div class="controls">
-              <span>
-                <input readonly="readonly" value="https://cdn.firebase.com/libs/angularfire/0.5.0-rc1/angularfire.min.js" type="text">
-                <a data-clipboard-text="https://cdn.firebase.com/libs/angularfire/0.5.0-rc1/angularfire.min.js" class="btn clipboard"><i class="icon-copy"></i></a>
-              </span>
-            </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label"><b>Bower</b></label>
-            <div class="controls">
-              <span>
-                <input readonly="readonly" value="bower install angular-fire" type="text">
-                <a data-clipboard-text="bower install angular-fire" class="btn clipboard"><i class="icon-copy"></i></a>
-              </span>
-            </div>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button id="downloadButton" class="btn btn-large btn-primary"><i class="icon-cloud-download"></i> Download</button>
+        <div>
+          <p>You can get AngularFire from Github, or from our CDN and Bower:</p>
+          <p>CDN (Minified): <input style="width:500px" type="text" value="https://cdn.firebase.com/libs/angularfire/0.5.0/angularfire.min.js"/></p>
+          <p>CDN (Debug): <input style="width:500px" type="text" value="https://cdn.firebase.com/libs/angularfire/0.5.0/angularfire.js"/>
+          <p>Bower: <input style="width:500px" type="text" value="bower install angularfire"/></p>
+        </div>
       </div>
     </div>
 
@@ -190,25 +164,19 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/1.1.7/ZeroClipboard.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.js"></script>
 
     <script src='//cdn.firebase.com/v0/firebase.js'></script>
-    <script src='//cdn.firebase.com/libs/angularfire/0.5.0-rc1/angularfire.min.js'></script>
+    <script src='//cdn.firebase.com/libs/angularfire/0.5.0/angularfire.min.js'></script>
 
     <script type="text/javascript">
       $(function() {
-        function setupClipboard() {
-          ZeroClipboard.setDefaults({moviePath: "css/zeroclipboard.swf"});
-          var clip = new ZeroClipboard($(".clipboard"));
-        }
-
         function setupCodeSample() {
           var code = $("#chat-code-js").html();
           var markup = $("#chat-code-html").html();
           var includes = '\n&lt;script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.5/angular.min.js"&gt;&lt;/script&gt;' +
             '\n&lt;script src="//cdn.firebase.com/v0/firebase.js"&gt;&lt;/script&gt;' +
-            '\n&lt;script src="//cdn.firebase.com/libs/angularfire/0.5.0-rc1/angularfire.min.js"&gt;&lt;/script&gt;' +
+            '\n&lt;script src="//cdn.firebase.com/libs/angularfire/0.5.0/angularfire.min.js"&gt;&lt;/script&gt;' +
             '\n&lt;script type="text/javascript"&gt;' + code + '\n&lt;/script&gt;'
           $("#chat-output").html(markup);
           $("#chat-code").html(_.escape(markup) + includes);
@@ -216,8 +184,6 @@
           eval(code);
           angular.bootstrap($("#chat-output")[0], ["chat"]);
         }
-
-        setupClipboard();
         setupCodeSample();
       });
     </script>
@@ -250,18 +216,6 @@
       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
       ga('create', 'UA-42491972-1', 'angularfire.com');
       ga('send', 'pageview');
-    </script>
-
-    <!-- Download box -->
-    <script>
-      $("#downloadButton").click(function () {
-        var typ = $("#downloadGroup .active").data("value");
-        if (typ == "min") {
-          window.location.href = "https://cdn.firebase.com/libs/angularfire/0.5.0-rc1/angularfire.min.js";
-        } else {
-          window.location.href = "https://cdn.firebase.com/libs/angularfire/0.5.0-rc1/angularfire.js";
-        }
-      });
     </script>
   </body>
 </html>
