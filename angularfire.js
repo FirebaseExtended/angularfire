@@ -73,6 +73,7 @@ angular.module("firebase").filter("orderByPriority", function() {
 AngularFire = function($q, $parse, $timeout, ref) {
   this._q = $q;
   this._bound = false;
+  this._loaded = false;
   this._parse = $parse;
   this._timeout = $timeout;
 
@@ -211,6 +212,27 @@ AngularFire.prototype = {
     var self = this;
     var gotInitialValue = function(snapshot) {
       var value = snapshot.val();
+      if (value === null) {
+        // NULLs are handled specially. If there's a 3-way data binding
+        // on a local primitive, then update that, otherwise switch to object
+        // binding using child events.
+        if (self._bound) {
+          var local = self._parseObject(self._parse(self._name)(self._scope));
+          switch (typeof local) {
+          // Primitive defaults.
+          case "string":
+          case "undefined":
+            value = "";
+            break;
+          case "number":
+            value = 0;
+            break;
+          case "boolean":
+            value = false;
+            break;
+          }
+        }
+      }
 
       switch (typeof value) {
       // For primitive values, simply update the object returned.
@@ -229,6 +251,7 @@ AngularFire.prototype = {
       }
 
       // Call handlers for the "loaded" event.
+      self._loaded = true;
       self._broadcastEvent("loaded", value);
     };
 
@@ -314,15 +337,18 @@ AngularFire.prototype = {
     var self = this;
     self._timeout(function() {
       // Primitive values are represented as a special object {$value: value}.
-      self._object.$value = value;
+      // Only update if the remote value is different from the local value.
+      if (!self._object.$value || !angular.equals(self._object.$value, value)) {
+        self._object.$value = value;
+      }
 
       // Call change handlers.
       self._broadcastEvent("change");
 
       // If there's an implicit binding, simply update the local scope model.
       if (self._bound) {
-        var local = self._parse(self._name)(self._scope);
-        if (!angular.equals(value, local)) {
+        var local = self._parseObject(self._parse(self._name)(self._scope));
+        if (!angular.equals(local, value)) {
           self._parse(self._name).assign(self._scope, value);
         }
       }
@@ -359,17 +385,15 @@ AngularFire.prototype = {
     var self = this;
     var deferred = self._q.defer();
 
-    // _updateModel will take care of updating the local model if _bound
-    // is set to true.
+    // _updateModel or _updatePrimitive will take care of updating the local
+    // model if _bound is set to true.
     self._name = name;
     self._bound = true;
     self._scope = scope;
 
-    // If the model on $scope is not set yet, make it an object.
+    // If the local model is an object, call an update to set local values.
     var local = self._parse(name)(scope);
-    if (local === undefined) {
-      self._parse(name).assign(scope, {});
-    } else {
+    if (local !== undefined && typeof local == "object") {
       self._fRef.update(self._parseObject(local));
     }
 
@@ -378,10 +402,19 @@ AngularFire.prototype = {
     var unbind = scope.$watch(name, function() {
       // If the new local value matches the current remote value, we don't
       // trigger a remote update.
-      local = self._parseObject(self._parse(name)(scope));
-      if (angular.equals(local, self._object)) {
+      var local = self._parseObject(self._parse(name)(scope));
+      if (self._object.$value && angular.equals(local, self._object.$value)) {
+        return;
+      } else if (angular.equals(local, self._object)) {
         return;
       }
+
+      // If the local model is undefined or the remote data hasn't been
+      // loaded yet, don't update.
+      if (local === undefined || !self._loaded) {
+        return;
+      }
+
       // Use update if limits are in effect, set if not.
       if (self._fRef.set) {
         self._fRef.set(local);
@@ -402,6 +435,7 @@ AngularFire.prototype = {
 
     return deferred.promise;
   },
+
 
   // Parse a local model, removing all properties beginning with "$" and
   // converting $priority to ".priority".
