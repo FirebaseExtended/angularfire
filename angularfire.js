@@ -623,8 +623,8 @@ AngularFireAuth.prototype = {
             deferred.reject(err);
             self._rootScope.$broadcast("$firebaseAuth:error", err);
           } else {
-            self._deferred = deferred;
-            self._loggedIn(claims);
+            deferred.resolve(claims.d);
+            self._loggedIn(claims.d, claims);
           }
         });
       } catch(e) {
@@ -691,10 +691,11 @@ AngularFireAuth.prototype = {
   },
 
   // Common function to trigger a login event on the root scope.
-  _loggedIn: function(user) {
+  _loggedIn: function(user, claims) {
     var self = this;
     self._timeout(function() {
       self._object.user = user;
+      self._object.claims = claims||null;
       self._authenticated = true;
       self._rootScope.$broadcast("$firebaseAuth:login", user);
       if (self._redirectTo) {
