@@ -16,11 +16,11 @@ Development
 [![Build Status](https://travis-ci.org/firebase/angularFire.png)](https://travis-ci.org/firebase/angularFire)
 
 If you'd like to hack on AngularFire itself, you'll need
-[node.js](http://nodejs.org/download/) and
+[node.js](http://nodejs.org/download/), [Bower](http://bower.io), and
 [CasperJS](https://github.com/n1k0/casperjs):
 
 ```bash
-brew install casperjs
+brew install casperjs # windows: npm install -g phantomjs casperjs
 npm install
 bower install
 ```
