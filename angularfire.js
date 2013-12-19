@@ -358,6 +358,8 @@ AngularFire.prototype = {
   // If event handlers for a specified event were attached, call them.
   _broadcastEvent: function(evt, param) {
     var cbs;
+    var self = this;
+
     switch (evt) {
     case "change":
       cbs = this._onChange;
@@ -369,10 +371,17 @@ AngularFire.prototype = {
       cbs = [];
       break;
     }
+
+    function _wrapTimeout(cb, param) {
+      self._timeout(function() {
+        cb(param);
+      });
+    }
+
     if (cbs.length > 0) {
       for (var i = 0; i < cbs.length; i++) {
         if (typeof cbs[i] == "function") {
-          cbs[i](param);
+          _wrapTimeout(cbs[i], param);
         }
       }
     }
