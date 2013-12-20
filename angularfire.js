@@ -546,7 +546,8 @@ AngularFireAuth.prototype = {
       user: null,
       $login: self.login.bind(self),
       $logout: self.logout.bind(self),
-      $createUser: self.createUser.bind(self)
+      $createUser: self.createUser.bind(self),
+      $changePassword: self.changePassword.bind(self)
     };
 
     if (self._options.path && self._route !== null) {
