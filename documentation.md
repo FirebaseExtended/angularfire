@@ -305,7 +305,7 @@ attempt is completed. The success callback receives the user object and the erro
 an Error object.
 
 ``` js
-auth.$login('persona').then(function(user) {
+$scope.auth.$login('persona').then(function(user) {
    console.log('Logged in as: ', user.uid);
 }, function(error) {
    console.error('Login failed: ', error);
