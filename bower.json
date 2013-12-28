@@ -1,7 +1,7 @@
 {
   "name": "angularfire",
   "version": "0.5.0",
-  "main": ["./angularfire.js", "./angularfire.min.js"],
+  "main": ["./angularfire.js"],
   "ignore": ["Gruntfile.js", "package.js", "tests", "README.md", ".travis.yml"],
   "dependencies": {
     "angular": "~1.2.0",
