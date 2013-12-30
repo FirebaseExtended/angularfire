@@ -20,7 +20,7 @@ If you'd like to hack on AngularFire itself, you'll need
 [CasperJS](https://github.com/n1k0/casperjs):
 
 ```bash
-brew install casperjs # windows: npm install -g phantomjs casperjs
+npm install -g phantomjs casperjs
 npm install
 bower install
 ```
