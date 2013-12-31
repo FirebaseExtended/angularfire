@@ -6,10 +6,9 @@ casper.start("tests/e2e/test_chat.html", function() {
   this.test.assertTitle("AngularFire Chat Test");
   this.test.assertEval(function() {
     if (!Firebase) return false;
-    if (!AngularFire) return false;
     if (!_scope) return false;
     return true;
-  }, "AngularFire exists");
+  }, "Firebase exists");
 });
 
 casper.thenEvaluate(function() {

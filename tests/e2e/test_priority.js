@@ -2,13 +2,12 @@ casper.test.comment("Testing priority changes with $firebase");
 
 casper.start("tests/e2e/test_priority.html", function() {
   // Sanity test for the environment.
-  this.test.assertTitle("AngularFire Chat Test");
+  this.test.assertTitle("AngularFire Priority Test");
   this.test.assertEval(function() {
     if (!Firebase) return false;
-    if (!AngularFire) return false;
     if (!_scope) return false;
     return true;
-  }, "AngularFire exists");
+  }, "Firebase exists");
 });
 
 casper.thenEvaluate(function() {

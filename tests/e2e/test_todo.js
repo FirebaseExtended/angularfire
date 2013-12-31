@@ -6,9 +6,8 @@ casper.start("tests/e2e/test_todo.html", function() {
   this.test.assertTitle("AngularFire TODO Test");
   this.test.assertEval(function() {
     if (!Firebase) return false;
-    if (!AngularFire) return false;
     return true;
-  }, "AngularFire exists");
+  }, "Firebase exists");
 });
 
 casper.waitFor(function() {
