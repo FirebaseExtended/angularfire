@@ -575,7 +575,7 @@
         var err = new Error("FirebaseSimpleLogin undefined, " +
           "did you include firebase-simple-login.js?");
         self._rootScope.$broadcast("$firebaseAuth:error", err);
-        return;
+        throw err;
       }
 
       var client = new FirebaseSimpleLogin(self._fRef, function(err, user) {
