@@ -194,6 +194,25 @@
         }
       };
 
+      // Authenticate this Firebase reference with a custom auth token.
+      // Refer to the Firebase documentation on "Custom Login" for details.
+      // Returns a promise that will be resolved when authentication is
+      // successfully completed.
+      object.$auth = function(token) {
+        var self = this;
+        var deferred = self._q.defer();
+        self._fRef.auth(token, function(err, obj) {
+          if (err !== null) {
+            deferred.reject(err);
+          } else {
+            deferred.resolve(obj);
+          }
+        }, function(rej) {
+          deferred.reject(rej);
+        });
+        return deferred.promise;
+      };
+
       // Return the current index, which is a list of key names in an array,
       // ordered by their Firebase priority.
       object.$getIndex = function() {
