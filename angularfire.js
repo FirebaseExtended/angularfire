@@ -497,11 +497,9 @@
   angular.module("firebase").factory("$firebaseSimpleLogin", [
     "$q", "$timeout", "$rootScope", function($q, $t, $rs) {
       // The factory returns an object containing the authentication state
-      // of the current user. This service takes 2 arguments:
+      // of the current user. This service takes one argument:
       //
       //   * `ref`     : A Firebase reference.
-      //   * `callback`: A function that will be called when there is a change
-      //                 in authentication state.
       //
       // The returned object has the following properties:
       //
@@ -513,25 +511,19 @@
       //
       // The returned object will also have the following methods available:
       // $login(), $logout(), $createUser() and $changePassword().
-      return function(ref, cb) {
-        var auth = new AngularFireAuth($q, $t, $rs, ref, cb);
+      return function(ref) {
+        var auth = new AngularFireAuth($q, $t, $rs, ref);
         return auth.construct();
       };
     }
   ]);
 
-  AngularFireAuth = function($q, $t, $rs, ref, cb) {
+  AngularFireAuth = function($q, $t, $rs, ref) {
     this._q = $q;
     this._timeout = $t;
     this._rootScope = $rs;
     this._deferred = null;
     this._authenticated = false;
-
-    // Setup callback.
-    this._cb = function(){};
-    if (cb && typeof cb === "function") {
-      this._cb = cb;
-    }
 
     if (typeof ref == "string") {
       throw new Error("Please provide a Firebase reference instead " +
@@ -626,7 +618,6 @@
     // Internal callback for any Simple Login event.
     _onLoginEvent: function(err, user) {
       var self = this;
-      self._cb(err, user);
       if (err) {
         if (self._deferred) {
           self._deferred.reject(err);
