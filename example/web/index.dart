@@ -1,20 +1,26 @@
 
 import 'package:angular/angular.dart';
 import 'package:firebase/firebase.dart';
-import 'angularfire.dart';
+import 'package:angularfire/angularfire.dart';
 
 @NgController(
     selector: '[af-test]',
     publishAs: 'ctrl')
 class TestController {
   String test;
-  Map testMap;
-  AngularFire aF;
+  AngularFire sample;
   TestController() {
-    this.aF = new AngularFire(new Firebase("https://anant.firebaseio.com/dart"));
-    this.testMap = new Map();
-    this.testMap['foo'] = 'bar';
     this.test = 'Foo';
+    this.sample = new AngularFire(new Firebase("https://anant.firebaseio.com/dart"));
+  }
+  void addItem(e) {
+    if (e.keyCode != 13) {
+      return;
+    }
+    this.sample.add(this.test).then((f) {
+      this.test = "";
+    });
+    e.preventDefault();
   }
 }
 

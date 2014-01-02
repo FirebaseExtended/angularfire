@@ -1,15 +1,14 @@
-library AngularFire;
+library angularfire;
 
 import 'dart:async';
-import 'package:firebase/firebase.dart';
 import 'package:angular/angular.dart';
+import 'package:firebase/firebase.dart';
 
 @NgInjectableService()
 class AngularFire {
   List _idx;
   Firebase _fRef;
 
-  // TODO: Use dart:mirrors to dynamically set properties on this class?
   Map value;
   List<String> index;
 
@@ -75,5 +74,4 @@ class AngularFire {
 
     this.value[key] = snap.val();
   }
-
 }

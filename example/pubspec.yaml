@@ -1,0 +1,6 @@
+name: angularfire-example
+version: 0.0.1
+dependencies:
+  angular: any
+  browser: any
+  firebase: any
