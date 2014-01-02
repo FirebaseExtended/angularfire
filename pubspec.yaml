@@ -1,0 +1,9 @@
+name: AngularFire
+version: 0.1.0
+author: Anant Narayanan <anant@kix.in>
+description: The AngularFire library in Dart.
+homepage: https://github.com/firebase/angularFire/tree/dart
+dependencies:
+  angular: any
+  browser: any
+  firebase: any

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html ng-app>
+  <head>
+    <title>AngularFire Test</title>
+  </head>
+ 
+  <body af-test>
+    <input type="text" ng-model="ctrl.testMap.foo"/>
+    <p>{{ctrl.testMap.foo}}</p>
+    
+    <div ng-repeat="k in ctrl.aF.index">
+      <p>{{k}}: {{ctrl.aF.value[k]}}</p>
+    </div>
+    <script type="application/javascript" src="https://cdn.firebase.com/v0/firebase.js"></script>
+    <script type="application/dart" src="index.dart"></script>
+    <script src="packages/browser/dart.js"></script>
+  </body>
+</html>
