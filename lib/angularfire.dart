@@ -4,17 +4,38 @@ import 'dart:async';
 import 'package:angular/angular.dart';
 import 'package:firebase/firebase.dart';
 
+/**
+ * Top-level Firebase module.
+ */
+class FirebaseModule extends Module {
+  FirebaseModule() {
+    type(AngularFire);
+  }
+}
+
+/**
+ * AngularFire service.
+ */
 @NgInjectableService()
 class AngularFire {
-  List _idx;
+  AngularFire();
+  AngularFireInstance create(Firebase ref) {
+    return new AngularFireInstance(ref);
+  }
+}
+
+/**
+ * A particular instance of AngularFire tied to a specific URL.
+ */
+class AngularFireInstance {
   Firebase _fRef;
 
-  Map value;
+  List values;
   List<String> index;
 
-  AngularFire(this._fRef) {
+  AngularFireInstance(this._fRef) {
     this.index = new List();
-    this.value = new Map<String, dynamic>();
+    this.values = new List();
     this._initialize();
   }
 
@@ -25,9 +46,10 @@ class AngularFire {
 
   Future save([String key=null]) {
     if (key != null) {
-      return this._fRef.child(key).set(this.value[key]);
+      var idx = this.index.indexOf(key);
+      return this._fRef.child(key).set(this._serialize(this.values[idx]));
     } else {
-      return this._fRef.set(this.value);
+      return this._fRef.set(this._serialize(this.values));
     }
   }
 
@@ -51,8 +73,9 @@ class AngularFire {
     this._fRef.onChildRemoved.listen((Event e) {
       // Remove from index.
       var key = e.snapshot.name();
+      var idx = this.index.indexOf(key);
       this.index.remove(key);
-      this.value[key] = null;
+      this.values.removeAt(idx);
     });
   }
 
@@ -62,16 +85,30 @@ class AngularFire {
     var key = snap.name();
 
     // If the item is already in the list, remove it first.
-    this.index.remove(key);
-
-    // Update index. This will be used by the orderByPriority filter.
-    if (prevChild != null) {
-      var prevIdx = this.index.indexOf(prevChild);
-      this.index.insert(prevIdx + 1, key);
-    } else {
-      this.index.add(key);
+    var idx = this.index.indexOf(key);
+    if (idx != -1) {
+      this.index.remove(key);
+      this.values.removeAt(idx);
     }
 
-    this.value[key] = snap.val();
+    // Setup value.
+    var val = {
+      '\$key': key, '\$value': snap.val()
+    };
+
+    // Update index and value.
+    if (prevChild != null) {
+      var idx = this.index.indexOf(prevChild) + 1;
+      this.index.insert(idx, key);
+      this.values.insert(idx, val);
+    } else {
+      this.index.add(key);
+      this.values.add(val);
+    }
+  }
+
+  // TODO: Implement, convert Lists to Maps and change $ properties.
+  _serialize(obj) {
+    return obj;
   }
 }

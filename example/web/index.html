@@ -7,8 +7,8 @@
   <body af-test>
     <input type="text" ng-model="ctrl.test" ng-keypress="ctrl.addItem($event)"/>
     <p>{{ctrl.test}}</p>
-    <div ng-repeat="k in ctrl.sample.index">
-      <p>{{k}}: {{ctrl.sample.value[k]}}</p>
+    <div ng-repeat="k in ctrl.sample.values">
+      <p>{{k.$key}}: {{k.$value}}</p>
     </div>
     <script type="application/javascript" src="https://cdn.firebase.com/v0/firebase.js"></script>
     <script type="application/dart" src="index.dart"></script>

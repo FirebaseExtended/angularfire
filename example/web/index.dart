@@ -8,10 +8,11 @@ import 'package:angularfire/angularfire.dart';
     publishAs: 'ctrl')
 class TestController {
   String test;
-  AngularFire sample;
+  AngularFire afire;
+  AngularFireInstance sample;
   TestController() {
     this.test = 'Foo';
-    this.sample = new AngularFire(new Firebase("https://anant.firebaseio.com/dart"));
+    this.sample = new AngularFire().create(new Firebase("https://dart.firebaseio-demo.com/test"));
   }
   void addItem(e) {
     if (e.keyCode != 13) {
@@ -26,6 +27,7 @@ class TestController {
 
 class TestAppModule extends Module {
   TestAppModule() {
+    type(FirebaseModule);
     type(TestController);
   }
 }
