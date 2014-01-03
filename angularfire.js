@@ -545,8 +545,8 @@
 
       // Initialize Simple Login.
       if (!window.FirebaseSimpleLogin) {
-        var err = new Error("FirebaseSimpleLogin undefined, " +
-          "did you include firebase-simple-login.js?");
+        var err = new Error("FirebaseSimpleLogin is undefined. " +
+          "Did you forget to include firebase-simple-login.js?");
         this._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
         throw err;
       }
