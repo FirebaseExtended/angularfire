@@ -81,7 +81,7 @@
 
     this._index = [];
 
-    // An object storing handler used for different events.
+    // An object storing handlers used for different events.
     this._on = {
       change: [],
       loaded: [],
