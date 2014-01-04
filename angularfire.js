@@ -522,8 +522,9 @@
     this._q = $q;
     this._timeout = $t;
     this._rootScope = $rs;
-    this._deferred = null;
-    this._authenticated = false;
+    this._loginDeferred = null;
+    this._getUserInfoDeferred = [];
+    this._currentUserData = undefined;
 
     if (typeof ref == "string") {
       throw new Error("Please provide a Firebase reference instead " +
@@ -539,7 +540,9 @@
         $login: this.login.bind(this),
         $logout: this.logout.bind(this),
         $createUser: this.createUser.bind(this),
-        $changePassword: this.changePassword.bind(this)
+        $changePassword: this.changePassword.bind(this),
+        $removeUser: this.removeUser.bind(this),
+        $getUserInfo: this.getUserInfo.bind(this)
       };
       this._object = object;
 
@@ -561,9 +564,10 @@
     // method returns a promise, which will be resolved when the login succeeds
     // (and rejected when an error occurs).
     login: function(provider, options) {
-      this._deferred = this._q.defer();
+      var deferred = this._q.defer();
+      this._loginDeferred = deferred;
       this._authClient.login(provider, options);
-      return this._deferred.promise;
+      return deferred.promise;
     },
 
     // Unauthenticate the Firebase reference.
@@ -615,33 +619,55 @@
       });
     },
 
+    //Gets a future for the current user info
+    getUserInfo: function() {
+      var self = this;
+      var deferred = this._q.defer();
+
+      if(self._currentUserData !== undefined) {
+        deferred.resolve(self._currentUserData);
+      } else {
+        self._getUserInfoDeferred.push(deferred);
+      }
+
+      return deferred.promise;
+    },
+
+    //Removed a user for the listed email address
+    removeUser: function() {
+      //TODO
+    },
+
     // Internal callback for any Simple Login event.
     _onLoginEvent: function(err, user) {
       var self = this;
       if (err) {
-        if (self._deferred) {
-          self._deferred.reject(err);
-          self._deferred = null;
+        if (self._loginDeferred) {
+          self._loginDeferred.reject(err);
+          self._loginDeferred = null;
         }
         self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
-      } else if (user) {
-        if (self._deferred) {
-          self._deferred.resolve(user);
-          self._deferred = null;
+      } else {
+        this._currentUserData = user;
+        if (self._loginDeferred) {
+          self._loginDeferred.resolve(user);
+          self._loginDeferred = null;
+        }
+        while(self._getUserInfoDeferred.length > 0) {
+          var def = self._getUserInfoDeferred.pop();
+          def.resolve(user);
         }
         self._timeout(function() {
           self._object.user = user;
-          self._authenticated = true;
-          self._rootScope.$broadcast("$firebaseSimpleLogin:login", user);
-        });
-      } else {
-        self._timeout(function() {
-          self._object.user = null;
-          self._authenticated = false;
-          self._rootScope.$broadcast("$firebaseSimpleLogin:logout");
+          if(user) {
+            self._rootScope.$broadcast("$firebaseSimpleLogin:login", user);
+
+          } else {
+            self._rootScope.$broadcast("$firebaseSimpleLogin:logout");
+          }
         });
       }
-    },
+    }
   };
 
 })();
