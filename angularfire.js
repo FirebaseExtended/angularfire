@@ -265,35 +265,35 @@
           if (self._bound) {
             var local = self._parseObject(self._parse(self._name)(self._scope));
             switch (typeof local) {
-              // Primitive defaults.
-              case "string":
-              case "undefined":
-                value = "";
-                break;
-              case "number":
-                value = 0;
-                break;
-              case "boolean":
-                value = false;
-                break;
+            // Primitive defaults.
+            case "string":
+            case "undefined":
+              value = "";
+              break;
+            case "number":
+              value = 0;
+              break;
+            case "boolean":
+              value = false;
+              break;
             }
           }
         }
 
         switch (typeof value) {
-          // For primitive values, simply update the object returned.
-          case "string":
-          case "number":
-          case "boolean":
-            self._updatePrimitive(value);
-            break;
-            // For arrays and objects, switch to child methods.
-          case "object":
-            self._getChildValues();
-            self._fRef.off("value", gotInitialValue);
-            break;
-          default:
-            throw new Error("Unexpected type from remote data " + typeof value);
+        // For primitive values, simply update the object returned.
+        case "string":
+        case "number":
+        case "boolean":
+          self._updatePrimitive(value);
+          break;
+          // For arrays and objects, switch to child methods.
+        case "object":
+          self._getChildValues();
+          self._fRef.off("value", gotInitialValue);
+          break;
+        default:
+          throw new Error("Unexpected type from remote data " + typeof value);
         }
 
         // Call handlers for the "loaded" event.
@@ -525,8 +525,7 @@
   // Defines the `$firebaseSimpleLogin` service that provides simple
   // user authentication support for AngularFire.
   angular.module("firebase").factory("$firebaseSimpleLogin", [
-    "$q", "$timeout", "$rootScope",
-    function($q, $t, $rs) {
+    "$q", "$timeout", "$rootScope", function($q, $t, $rs) {
       // The factory returns an object containing the authentication state
       // of the current user. This service takes one argument:
       //
@@ -614,13 +613,10 @@
             self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
           } else {
             if (!noLogin) {
-              self.login("password", {
-                email: email,
-                password: password
-              });
+              self.login("password", {email: email, password: password});
             }
           }
-        } catch (e) {
+        } catch(e) {
           self._rootScope.$broadcast("$firebaseSimpleLogin:error", e);
         }
         if (cb) {
