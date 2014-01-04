@@ -287,7 +287,7 @@
         case "boolean":
           self._updatePrimitive(value);
           break;
-          // For arrays and objects, switch to child methods.
+        // For arrays and objects, switch to child methods.
         case "object":
           self._getChildValues();
           self._fRef.off("value", gotInitialValue);
