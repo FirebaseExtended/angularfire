@@ -80,8 +80,16 @@
     this._timeout = $timeout;
 
     this._index = [];
-    this._onChange = [];
-    this._onLoaded = [];
+
+    // An object storing handler used for different events.
+    this._on = {
+      change: [],
+      loaded: [],
+      child_added: [],
+      child_moved: [],
+      child_changed: [],
+      child_removed: []
+    };
 
     if (typeof ref == "string") {
       throw new Error("Please provide a Firebase reference instead " +
@@ -174,7 +182,8 @@
       };
 
       // Attach an event handler for when the object is changed. You can attach
-      // handlers for the following events:
+      // handlers for all firebase events. Additionally, the following events,
+      // specific to AngularFire, can be attached to.
       //
       //  - "change": The provided function will be called whenever the local
       //              object is modified because the remote data was updated.
@@ -182,14 +191,9 @@
       //              data has been loaded. 'object' will be an empty object ({})
       //              until this function is called.
       object.$on = function(type, callback) {
-        switch (type) {
-        case "change":
-          self._onChange.push(callback);
-          break;
-        case "loaded":
-          self._onLoaded.push(callback);
-          break;
-        default:
+        if (self._on.hasOwnProperty(type)) {
+          self._on[type].push(callback);
+        } else {
           throw new Error("Invalid event type " + type + " specified");
         }
       };
@@ -240,35 +244,35 @@
           if (self._bound) {
             var local = self._parseObject(self._parse(self._name)(self._scope));
             switch (typeof local) {
-            // Primitive defaults.
-            case "string":
-            case "undefined":
-              value = "";
-              break;
-            case "number":
-              value = 0;
-              break;
-            case "boolean":
-              value = false;
-              break;
+              // Primitive defaults.
+              case "string":
+              case "undefined":
+                value = "";
+                break;
+              case "number":
+                value = 0;
+                break;
+              case "boolean":
+                value = false;
+                break;
             }
           }
         }
 
         switch (typeof value) {
-        // For primitive values, simply update the object returned.
-        case "string":
-        case "number":
-        case "boolean":
-          self._updatePrimitive(value);
-          break;
-        // For arrays and objects, switch to child methods.
-        case "object":
-          self._getChildValues();
-          self._fRef.off("value", gotInitialValue);
-          break;
-        default:
-          throw new Error("Unexpected type from remote data " + typeof value);
+          // For primitive values, simply update the object returned.
+          case "string":
+          case "number":
+          case "boolean":
+            self._updatePrimitive(value);
+            break;
+            // For arrays and objects, switch to child methods.
+          case "object":
+            self._getChildValues();
+            self._fRef.off("value", gotInitialValue);
+            break;
+          default:
+            throw new Error("Unexpected type from remote data " + typeof value);
         }
 
         // Call handlers for the "loaded" event.
@@ -310,10 +314,27 @@
         self._updateModel(key, val);
       }
 
-      self._fRef.on("child_added", _processSnapshot);
-      self._fRef.on("child_moved", _processSnapshot);
-      self._fRef.on("child_changed", _processSnapshot);
-      self._fRef.on("child_removed", function(snapshot) {
+      function _handleAndBroadcastEvent(type, handler) {
+        return function(snapshot, prevChild) {
+          handler(snapshot, prevChild);
+          self._broadcastEvent(type, {
+            snapshot: {
+              name: snapshot.name(),
+              value: snapshot.val()
+            },
+            prevChild: prevChild
+          });
+        };
+      }
+
+      function _handleFirebaseEvent(type, handler) {
+        self._fRef.on(type, _handleAndBroadcastEvent(type, handler));
+      }
+
+      _handleFirebaseEvent("child_added", _processSnapshot);
+      _handleFirebaseEvent("child_moved", _processSnapshot);
+      _handleFirebaseEvent("child_changed", _processSnapshot);
+      _handleFirebaseEvent("child_removed", function(snapshot) {
         // Remove from index.
         var key = snapshot.name();
         var idx = self._index.indexOf(key);
@@ -378,20 +399,8 @@
 
     // If event handlers for a specified event were attached, call them.
     _broadcastEvent: function(evt, param) {
-      var cbs;
+      var cbs = this._on[evt] || [];
       var self = this;
-
-      switch (evt) {
-      case "change":
-        cbs = this._onChange;
-        break;
-      case "loaded":
-        cbs = this._onLoaded;
-        break;
-      default:
-        cbs = [];
-        break;
-      }
 
       function _wrapTimeout(cb, param) {
         self._timeout(function() {
@@ -495,7 +504,8 @@
   // Defines the `$firebaseSimpleLogin` service that provides simple
   // user authentication support for AngularFire.
   angular.module("firebase").factory("$firebaseSimpleLogin", [
-    "$q", "$timeout", "$rootScope", function($q, $t, $rs) {
+    "$q", "$timeout", "$rootScope",
+    function($q, $t, $rs) {
       // The factory returns an object containing the authentication state
       // of the current user. This service takes one argument:
       //
@@ -583,14 +593,17 @@
             self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
           } else {
             if (!noLogin) {
-              self.login("password", {email: email, password: password});
+              self.login("password", {
+                email: email,
+                password: password
+              });
             }
           }
-        } catch(e) {
+        } catch (e) {
           self._rootScope.$broadcast("$firebaseSimpleLogin:error", e);
         }
         if (cb) {
-          self._timeout(function(){
+          self._timeout(function() {
             cb(err, user);
           });
         }
