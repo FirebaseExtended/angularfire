@@ -198,6 +198,27 @@
         }
       };
 
+      // Detach an event handler from a specified event type.
+      object.$off = function(type, callback) {
+        if (self._on.hasOwnProperty(type)) {
+          var index = self._on[type].indexOf(callback);
+          if (index !== -1) {
+            self._on[type].splice(index, 1);
+          }
+        } else {
+          throw new Error("Invalid event type " + type + " specified");
+        }
+      };
+
+      // Detach all event handlers from a specified event type.
+      object.$unbind = function(type) {
+        if (self._on.hasOwnProperty(type)) {
+          self._on[type] = [];
+        } else {
+          throw new Error("Invalid event type " + type + " specified");
+        }
+      };
+
       // Authenticate this Firebase reference with a custom auth token.
       // Refer to the Firebase documentation on "Custom Login" for details.
       // Returns a promise that will be resolved when authentication is
