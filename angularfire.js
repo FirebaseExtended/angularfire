@@ -638,6 +638,11 @@
       //TODO
     },
 
+    //Send a password reset email to the user for an email + password account.
+    resetPassword: function() {
+      //TODO
+    },
+
     // Internal callback for any Simple Login event.
     _onLoginEvent: function(err, user) {
       var self = this;
