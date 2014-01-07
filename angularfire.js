@@ -38,6 +38,9 @@
   // for more info see: https://www.firebase.com/docs/ordered-data.html
   angular.module("firebase").filter("orderByPriority", function() {
     return function(input) {
+      if (!input) {
+        return [];
+      }
       if (!input.$getIndex || typeof input.$getIndex != "function") {
         // If input is an object, map it to an array for the time being.
         var type = Object.prototype.toString.call(input);
