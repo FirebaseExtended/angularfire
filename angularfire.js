@@ -202,7 +202,6 @@
       // Returns a promise that will be resolved when authentication is
       // successfully completed.
       object.$auth = function(token) {
-        var self = this;
         var deferred = self._q.defer();
         self._fRef.auth(token, function(err, obj) {
           if (err !== null) {
