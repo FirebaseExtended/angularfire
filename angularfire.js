@@ -767,14 +767,14 @@
         }
         self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
       } else if (user) {
-        if (self._deferred) {
-          self._deferred.resolve(user);
-          self._deferred = null;
-        }
         self._timeout(function() {
           self._object.user = user;
           self._authenticated = true;
           self._rootScope.$broadcast("$firebaseSimpleLogin:login", user);
+          if (self._deferred) {
+            self._deferred.resolve(user);
+            self._deferred = null;
+          }
         });
       } else {
         self._timeout(function() {
