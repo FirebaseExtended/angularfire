@@ -299,8 +299,11 @@
       };
 
       // Detach an event handler from a specified event type. If no callback
-      // is specified, all evnet handlers for the specified event type will
+      // is specified, all event handlers for the specified event type will
       // be detached.
+      //
+      // If no type if provided, synchronization for this instance of $firebase
+      // will be turned off complete.
       object.$off = function(type, callback) {
         if (self._on.hasOwnProperty(type)) {
           if (callback) {
@@ -312,7 +315,7 @@
             self._on[type] = [];
           }
         } else {
-          throw new Error("Invalid event type " + type + " specified");
+          self._fRef.off();
         }
       };
 
