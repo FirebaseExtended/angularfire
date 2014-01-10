@@ -560,9 +560,19 @@
         unbind();
       });
 
-      // Once we receive the initial value, resolve the promise.
-      self._fRef.once("value", function() {
-        deferred.resolve(unbind);
+      // Once we receive the initial value, the promise will be resolved.
+      self._fRef.once("value", function(snap) {
+        self._timeout(function() {
+          // Objects require a second event loop run, since we switch from
+          // value events to child_added.
+          if (typeof snap.val() != "object") {
+            deferred.resolve(unbind);
+          } else {
+            self._timeout(function() {
+              deferred.resolve(unbind);
+            });
+          }
+        });
       });
 
       return deferred.promise;
