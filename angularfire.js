@@ -291,6 +291,14 @@
       //              data has been loaded. 'object' will be an empty
       //              object ({}) until this function is called.
       object.$on = function(type, callback) {
+        // One exception if made for the 'loaded' event. If we already loaded
+        // data (perhaps because it was synced), simply fire the callback.
+        if (type == "loaded" && self._loaded) {
+          self._timeout(function() {
+            callback();
+          });
+          return;
+        }
         if (self._on.hasOwnProperty(type)) {
           self._on[type].push(callback);
         } else {
