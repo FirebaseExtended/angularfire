@@ -282,7 +282,7 @@
       };
 
       // Attach an event handler for when the object is changed. You can attach
-      // handlers for all firebase events. Additionally, the following events,
+      // handlers for all Firebase events. Additionally, the following events,
       // specific to AngularFire, can be attached to.
       //
       //  - "change": The provided function will be called whenever the local
@@ -298,22 +298,19 @@
         }
       };
 
-      // Detach an event handler from a specified event type.
+      // Detach an event handler from a specified event type. If no callback
+      // is specified, all evnet handlers for the specified event type will
+      // be detached.
       object.$off = function(type, callback) {
         if (self._on.hasOwnProperty(type)) {
-          var index = self._on[type].indexOf(callback);
-          if (index !== -1) {
-            self._on[type].splice(index, 1);
+          if (callback) {
+            var index = self._on[type].indexOf(callback);
+            if (index !== -1) {
+              self._on[type].splice(index, 1);
+            }
+          } else {
+            self._on[type] = [];
           }
-        } else {
-          throw new Error("Invalid event type " + type + " specified");
-        }
-      };
-
-      // Detach all event handlers from a specified event type.
-      object.$unbind = function(type) {
-        if (self._on.hasOwnProperty(type)) {
-          self._on[type] = [];
         } else {
           throw new Error("Invalid event type " + type + " specified");
         }
@@ -450,7 +447,6 @@
       function _handleFirebaseEvent(type, handler) {
         self._fRef.on(type, _handleAndBroadcastEvent(type, handler));
       }
-
       _handleFirebaseEvent("child_added", _processSnapshot);
       _handleFirebaseEvent("child_moved", _processSnapshot);
       _handleFirebaseEvent("child_changed", _processSnapshot);
