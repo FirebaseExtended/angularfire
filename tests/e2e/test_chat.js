@@ -1,5 +1,5 @@
 
-casper.test.comment("Testing Chat example with angularFireCollection");
+casper.test.comment("Testing Chat example with $firebase");
 
 casper.start("tests/e2e/test_chat.html", function() {
   // Sanity test for the environment.
@@ -82,13 +82,28 @@ casper.then(function() {
   }, "Adding limit message");
 
   this.waitFor(function() {
-    return this.getGlobal("__flag") != true;
+    return this.getGlobal("__flag") !== true;
   }, function() {
     this.test.assertEval(function() {
       var msgs = document.querySelectorAll(".messageBlock");
       return msgs.length === 2;
     }, "Testing if limits and queries work");
  });
+});
+
+casper.then(function() {
+  this.test.assertEval(function() {
+    _scope.message = "Testing add promise";
+    var promise = _scope.addMessage();
+    if (typeof promise.then != "function") return false;
+    promise = _scope.messages.$set({foo: "bar"});
+    if (typeof promise.then != "function") return false;
+    promise = _scope.messages.$save();
+    if (typeof promise.then != "function") return false;
+    promise = _scope.messages.$remove();
+    if (typeof promise.then != "function") return false;
+    return true;
+  }, "Testing if $add, $set, $save and $remove return a promise");
 });
 
 casper.run(function() {

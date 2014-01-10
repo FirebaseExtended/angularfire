@@ -15,7 +15,8 @@
 
   var AngularFire, AngularFireAuth;
 
-  // Define the `firebase` module under which all AngularFire services will live.
+  // Define the `firebase` module under which all AngularFire
+  // services will live.
   angular.module("firebase", []).value("Firebase", Firebase);
 
   // Define the `$firebase` service that provides synchronization methods.
@@ -135,7 +136,8 @@
 
       // Establish a 3-way data binding (implicit sync) with the specified
       // Firebase location and a model on $scope. To be used from a controller
-      // to automatically synchronize *all* local changes. It take two arguments:
+      // to automatically synchronize *all* local changes. It take two
+      // arguments:
       //
       //    * `$scope`: The scope with which the bound model is associated.
       //    * `name`  : The name of the model.
@@ -149,59 +151,121 @@
 
       // Add an object to the remote data. Adding an object is the
       // equivalent of calling `push()` on a Firebase reference. It takes
-      // up to two arguments:
+      // one argument:
       //
       //    * `item`: The object or primitive to add.
-      //    * `cb`  : An optional callback function to be invoked when the
-      //              item is added to the Firebase server. It will be called
-      //              with an Error object if one occurred, null otherwise.
       //
-      // This function returns a Firebase reference to the newly added object
-      // or primitive. The key name can be extracted using `ref.name()`.
-      object.$add = function(item, cb) {
+      // This function returns a promise that will be resolved when the data
+      // has been successfully written to the server. If the promise is
+      // resolved, it will be provided with a  reference to the newly added
+      // object or primitive. The key name can be extracted using `ref.name()`.
+      // If the promise fails, it will resolve to an error.
+      object.$add = function(item) {
         var ref;
-        if (typeof item == "object") {
-          ref = self._fRef.ref().push(self._parseObject(item), cb);
-        } else {
-          ref = self._fRef.ref().push(item, cb);
+        var deferred = self._q.defer();
+
+        function _addCb(err) {
+          if (err) {
+            deferred.reject(err);
+          } else {
+            deferred.resolve();
+          }
         }
-        return ref;
+
+        if (typeof item == "object") {
+          ref = self._fRef.ref().push(self._parseObject(item), _addCb);
+        } else {
+          ref = self._fRef.ref().push(item, _addCb);
+        }
+
+        return deferred.promise;
       };
 
       // Save the current state of the object (or a child) to the remote.
       // Takes a single optional argument:
       //
       //    * `key`: Specify a child key to save the data for. If no key is
-      //             specified, the entire object's current state will be saved.
+      //             specified, the entire object's current state will
+      //             be saved.
+      //
+      // This function returns a promise that will be resolved when the
+      // data has been successfully saved to the server.
       object.$save = function(key) {
-        if (key) {
-          self._fRef.ref().child(key).set(self._parseObject(self._object[key]));
-        } else {
-          self._fRef.ref().set(self._parseObject(self._object));
+        var deferred = self._q.defer();
+
+        function _saveCb(err) {
+          if (err) {
+            deferred.reject(err);
+          } else {
+            deferred.resolve();
+          }
         }
+
+        if (key) {
+          var obj = self._parseObject(self._object[key]);
+          self._fRef.ref().child(key).set(obj, _saveCb);
+        } else {
+          self._fRef.ref().set(self._parseObject(self._object), _saveCb);
+        }
+
+        return deferred.promise;
       };
 
       // Set the current state of the object to the specified value. Calling
       // this is the equivalent of calling `set()` on a Firebase reference.
+      // Takes a single mandatory argument:
+      //
+      //    * `newValue`: The value which should overwrite data stored at
+      //                  this location.
+      //
+      // This function returns a promise that will be resolved when the
+      // data has been successfully saved to the server.
       object.$set = function(newValue) {
-        self._fRef.ref().set(newValue);
+        var deferred = self._q.defer();
+        self._fRef.ref().set(newValue, function(err) {
+          if (err) {
+            deferred.reject(err);
+          } else {
+            deferred.resolve();
+          }
+        });
+        return deferred.promise;
       };
 
-      // Remove this object from the remote data. Calling this is the equivalent
-      // of calling `remove()` on a Firebase reference. This function takes a
-      // single optional argument:
+      // Remove this object from the remote data. Calling this is the
+      // equivalent of calling `remove()` on a Firebase reference. This
+      // function takes a single optional argument:
       //
       //    * `key`: Specify a child key to remove. If no key is specified, the
       //             entire object will be removed from the remote data store.
+      //
+      // This function returns a promise that will be resolved when the
+      // object has been successfully removed from the server.
       object.$remove = function(key) {
-        if (key) {
-          self._fRef.ref().child(key).remove();
-        } else {
-          self._fRef.ref().remove();
+        var deferred = self._q.defer();
+
+        function _removeCb(err) {
+          if (err) {
+            deferred.reject(err);
+          } else {
+            deferred.resolve();
+          }
         }
+
+        if (key) {
+          self._fRef.ref().child(key).remove(_removeCb);
+        } else {
+          self._fRef.ref().remove(_removeCb);
+        }
+
+        return deferred.promise;
       };
 
-      // Get an AngularFire wrapper for a named child.
+      // Get an AngularFire wrapper for a named child. This function takes
+      // one mandatory argument:
+      //
+      //    * `key`: The key name that will point to the child reference to be
+      //             returned.
       object.$child = function(key) {
         var af = new AngularFire(
           self._q, self._parse, self._timeout, self._fRef.ref().child(key)
@@ -215,8 +279,8 @@
       //  - "change": The provided function will be called whenever the local
       //              object is modified because the remote data was updated.
       //  - "loaded": This function will be called *once*, when the initial
-      //              data has been loaded. 'object' will be an empty object ({})
-      //              until this function is called.
+      //              data has been loaded. 'object' will be an empty
+      //              object ({}) until this function is called.
       object.$on = function(type, callback) {
         switch (type) {
         case "change":
@@ -392,9 +456,11 @@
     _updatePrimitive: function(value) {
       var self = this;
       self._timeout(function() {
-        // Primitive values are represented as a special object {$value: value}.
-        // Only update if the remote value is different from the local value.
-        if (!self._object.$value || !angular.equals(self._object.$value, value)) {
+        // Primitive values are represented as a special object
+        // {$value: value}. Only update if the remote value is different from
+        // the local value.
+        if (!self._object.$value ||
+            !angular.equals(self._object.$value, value)) {
           self._object.$value = value;
         }
 
@@ -468,7 +534,8 @@
         // If the new local value matches the current remote value, we don't
         // trigger a remote update.
         var local = self._parseObject(self._parse(name)(scope));
-        if (self._object.$value && angular.equals(local, self._object.$value)) {
+        if (self._object.$value &&
+            angular.equals(local, self._object.$value)) {
           return;
         } else if (angular.equals(local, self._object)) {
           return;
@@ -586,7 +653,8 @@
         throw err;
       }
 
-      var client = new FirebaseSimpleLogin(this._fRef, this._onLoginEvent.bind(this));
+      var client = new FirebaseSimpleLogin(this._fRef,
+                                           this._onLoginEvent.bind(this));
       this._authClient = client;
       return this._object;
     },
@@ -633,9 +701,9 @@
     },
 
     // Changes the password for a Firebase Simple Login user.
-    // Take an email, old password and new password as three mandatory arguments.
-    // An optional callback may be specified to be notified when the password
-    // has been changed successfully.
+    // Take an email, old password and new password as three mandatory
+    // arguments. An optional callback may be specified to be notified when the
+    // password has been changed successfully.
     changePassword: function(email, old, np, cb) {
       var self = this;
       self._authClient.changePassword(email, old, np, function(err, user) {
