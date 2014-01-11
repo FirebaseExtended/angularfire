@@ -635,12 +635,22 @@
 
     //Removed a user for the listed email address
     removeUser: function() {
-      //TODO
+      var self = this;
+      self._authClient.removeUser(email, old, np, function(err, user) {
+        if (err) {
+          self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
+        }
+        if (cb) {
+          self._timeout(function() {
+            cb(err, user);
+          });
+        }
+      });
     },
 
     //Send a password reset email to the user for an email + password account.
     resetPassword: function() {
-      //TODO
+      //coming soon...
     },
 
     // Internal callback for any Simple Login event.
