@@ -784,15 +784,15 @@
     },
 
     //Removed a user for the listed email address
-    removeUser: function() {
+    removeUser: function(email, password, callback) {
       var self = this;
-      self._authClient.removeUser(email, old, np, function(err, user) {
+      self._authClient.removeUser(email, password, function(err) {
         if (err) {
           self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
         }
-        if (cb) {
+        if(callback) {
           self._timeout(function() {
-            cb(err, user);
+            callback(err);
           });
         }
       });
