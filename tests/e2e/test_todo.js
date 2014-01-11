@@ -1,5 +1,5 @@
 
-casper.test.comment("Testing TODO example with implicit sync angularFire");
+casper.test.comment("Testing TODO example with $firebase.$bind");
 
 casper.start("tests/e2e/test_todo.html", function() {
   // Sanity test for environment.
