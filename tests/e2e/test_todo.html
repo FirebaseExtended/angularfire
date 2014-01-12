@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>AngularFire TODO Test</title>
-  <link rel="stylesheet" type="text/css" href="https://www.firebase.com/css/example.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.3/angular.min.js"></script>
-  <script src="https://cdn.firebase.com/v0/firebase.js"></script>
+  <script src="../../bower_components/angular/angular.min.js"></script>
+  <script src="../../bower_components/firebase/firebase.js"></script>
   <script src="../../angularfire.min.js"></script>
   <style>
     #new-todo {
@@ -34,7 +33,7 @@
   <script type="text/javascript">
     var _scope = null;
     var _preTODO = {title: "Pre-existing TODO", completed: false};
-    var _url = 'https://angularFireTests.firebaseio-demo.com/todo';
+    var _url = 'https://angularfiretests.firebaseio.com/todo';
 
     angular.module("todo", ["firebase"]);
     function Todo($scope, $firebase) {

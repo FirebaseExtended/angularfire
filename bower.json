@@ -6,6 +6,8 @@
   "dependencies": {
     "angular": "~1.2.0",
     "angular-mocks" : "~1.2.0",
-    "observe-js": "https://github.com/jeffbcross/observe-js.git"
+    "observe-js": "https://github.com/jeffbcross/observe-js.git",
+    "firebase": "latest",
+    "firebase-simple-login": "latest"
   }
 }

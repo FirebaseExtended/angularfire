@@ -671,8 +671,9 @@
     this._q = $q;
     this._timeout = $t;
     this._rootScope = $rs;
-    this._deferred = null;
-    this._authenticated = false;
+    this._loginDeferred = null;
+    this._getCurrentUserDeferred = [];
+    this._currentUserData = undefined;
 
     if (typeof ref == "string") {
       throw new Error("Please provide a Firebase reference instead " +
@@ -688,7 +689,9 @@
         $login: this.login.bind(this),
         $logout: this.logout.bind(this),
         $createUser: this.createUser.bind(this),
-        $changePassword: this.changePassword.bind(this)
+        $changePassword: this.changePassword.bind(this),
+        $removeUser: this.removeUser.bind(this),
+        $getCurrentUser: this.getCurrentUser.bind(this)
       };
       this._object = object;
 
@@ -711,87 +714,145 @@
     // method returns a promise, which will be resolved when the login succeeds
     // (and rejected when an error occurs).
     login: function(provider, options) {
-      this._deferred = this._q.defer();
-      this._authClient.login(provider, options);
-      return this._deferred.promise;
+      var deferred = this._q.defer();
+      var self = this;
+
+      //To avoid the promise from being fulfilled by our initial login state, make sure we have it before
+      //triggering the login and creating a new promise.
+      this.getCurrentUser().then(function() {
+        self._loginDeferred = deferred;
+        self._authClient.login(provider, options);
+      });
+
+      return deferred.promise;
     },
 
     // Unauthenticate the Firebase reference.
     logout: function() {
+      //tell the simple login client to log us out.
       this._authClient.logout();
+
+      //forget who we were, so that any getCurrentUser calls will wait for another user event.
+      delete this._currentUserData;
     },
 
     // Creates a user for Firebase Simple Login.
     // Function 'cb' receives an error as the first argument and a
     // Simple Login user object as the second argument. Pass noLogin=true
     // if you don't want the newly created user to also be logged in.
-    createUser: function(email, password, cb, noLogin) {
+    createUser: function(email, password, noLogin) {
       var self = this;
+      var deferred = this._q.defer();
+
       self._authClient.createUser(email, password, function(err, user) {
-        try {
-          if (err) {
-            self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
+        if (err) {
+          self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
+          deferred.reject(err);
+        } else {
+          if (!noLogin) {
+            //resolve the promise with a new promise for login
+            deferred.resolve(self.login("password", {email: email, password: password}));
           } else {
-            if (!noLogin) {
-              self.login("password", {email: email, password: password});
-            }
+            deferred.resolve(user);
           }
-        } catch(e) {
-          self._rootScope.$broadcast("$firebaseSimpleLogin:error", e);
-        }
-        if (cb) {
-          self._timeout(function() {
-            cb(err, user);
-          });
         }
       });
+
+      return deferred.promise;
     },
 
     // Changes the password for a Firebase Simple Login user.
     // Take an email, old password and new password as three mandatory
-    // arguments. An optional callback may be specified to be notified when the
-    // password has been changed successfully.
-    changePassword: function(email, old, np, cb) {
+    // arguments. Returns a promise.
+    changePassword: function(email, oldPassword, newPassword) {
       var self = this;
-      self._authClient.changePassword(email, old, np, function(err, user) {
+      var deferred = this._q.defer();
+
+      self._authClient.changePassword(email, oldPassword, newPassword, function(err) {
         if (err) {
           self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
-        }
-        if (cb) {
-          self._timeout(function() {
-            cb(err, user);
-          });
+          deferred.reject(err);
+        } else {
+          deferred.resolve();
         }
       });
+
+      return deferred.promise;
     },
+
+    //Gets a promise for the current user info
+    getCurrentUser: function() {
+      var self = this;
+      var deferred = this._q.defer();
+
+      if(self._currentUserData !== undefined) {
+        deferred.resolve(self._currentUserData);
+      } else {
+        self._getCurrentUserDeferred.push(deferred);
+      }
+
+      return deferred.promise;
+    },
+
+    //Remove a user for the listed email address. Returns a promise.
+    removeUser: function(email, password) {
+      var self = this;
+      var deferred = this._q.defer();
+
+      self._authClient.removeUser(email, password, function(err) {
+        if (err) {
+          self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
+          deferred.reject(err);
+        } else {
+          deferred.resolve();
+        }
+      });
+
+      return deferred.promise;
+    },
+
+    //Send a password reset email to the user for an email + password account.
+    //resetPassword: function() {
+      //coming soon...
+    //},
 
     // Internal callback for any Simple Login event.
     _onLoginEvent: function(err, user) {
+
+      // HACK -- calls to logout() trigger events even if we're not logged in,
+      // making us get extra events. Throw them away. This should be fixed by
+      // changing Simple Login so that its callbacks refer directly to the action that caused them.
+      if(this._currentUserData === user && err === null) {
+        return;
+      }
+
       var self = this;
       if (err) {
-        if (self._deferred) {
-          self._deferred.reject(err);
-          self._deferred = null;
+        if (self._loginDeferred) {
+          self._loginDeferred.reject(err);
+          self._loginDeferred = null;
         }
         self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
-      } else if (user) {
+      } else {
+        this._currentUserData = user;
+
         self._timeout(function() {
           self._object.user = user;
-          self._authenticated = true;
-          self._rootScope.$broadcast("$firebaseSimpleLogin:login", user);
-          if (self._deferred) {
-            self._deferred.resolve(user);
-            self._deferred = null;
+          if(user) {
+            self._rootScope.$broadcast("$firebaseSimpleLogin:login", user);
+          } else {
+            self._rootScope.$broadcast("$firebaseSimpleLogin:logout");
           }
-        });
-      } else {
-        self._timeout(function() {
-          self._object.user = null;
-          self._authenticated = false;
-          self._rootScope.$broadcast("$firebaseSimpleLogin:logout");
+          if (self._loginDeferred) {
+            self._loginDeferred.resolve(user);
+            self._loginDeferred = null;
+          }
+          while (self._getCurrentUserDeferred.length > 0) {
+            var def = self._getCurrentUserDeferred.pop();
+            def.resolve(user);
+          }
         });
       }
     }
   };
-
 })();
