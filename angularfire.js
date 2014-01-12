@@ -715,14 +715,25 @@
     // (and rejected when an error occurs).
     login: function(provider, options) {
       var deferred = this._q.defer();
-      this._loginDeferred = deferred;
-      this._authClient.login(provider, options);
+      var self = this;
+
+      //To avoid the promise from being fulfilled by our initial login state, make sure we have it before
+      //triggering the login and creating a new promise.
+      this.getCurrentUser().then(function() {
+        self._loginDeferred = deferred;
+        self._authClient.login(provider, options);
+      });
+
       return deferred.promise;
     },
 
     // Unauthenticate the Firebase reference.
     logout: function() {
+      //tell the simple login client to log us out.
       this._authClient.logout();
+
+      //forget who we were, so that any getCurrentUser calls will wait for another user event.
+      delete this._currentUserData;
     },
 
     // Creates a user for Firebase Simple Login.
