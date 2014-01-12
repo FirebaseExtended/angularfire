@@ -1,33 +1,41 @@
-angular.module('testx', ['firebase'])
-  .value('mode', 'app')
-  .value('version', 'v1.0.1');
-
-
+angular.module('testx', ['firebase']);
 
 describe("AngularFireAuth Test Suite", function() {
 
   var $firebase;
   var $firebaseSimpleLogin;
+  var $timeout;
   var ngFireRef;
   var ngSimpleLogin;
 
-  beforeEach(module("testx"));
-  beforeEach(inject(function(_$firebase_, _$firebaseSimpleLogin_) {
-    $firebase = _$firebase_;
-    $firebaseSimpleLogin = _$firebaseSimpleLogin_;
-    var ref = new Firebase("https://angularfiretests.firebaseio.com");
-    ngFireRef = $firebase(ref);
-    ngSimpleLogin = $firebaseSimpleLogin(ref);
-  }));
+  beforeEach(function() {
+    if(ngFireRef == null) {
+      module("testx")
+      inject(function(_$firebase_, _$firebaseSimpleLogin_, _$timeout_) {
+        $firebase = _$firebase_;
+        $firebaseSimpleLogin = _$firebaseSimpleLogin_;
+        $timeout = _$timeout_;
+        var ref = new Firebase("https://angularfiretests.firebaseio.com");
+        ngFireRef = $firebase(ref);
+        ngSimpleLogin = $firebaseSimpleLogin(ref);
+      });
+    }
+  });
 
-  it("getUserInfo() is initially null.", function() {
+  it("getUserInfo() triggers promise and is initially null.", function() {
     var done = false;
     ngSimpleLogin.$getCurrentUser().then(function(info) {
         done = true;
         expect(info).toBe(null);
     });
 
-    waitsFor(function() { return done == true; }, "Getting current user info", 100);
+    waitsFor(function() {
+      try {
+        //We have to call this because the angular $timeout service is mocked for these tests.
+        $timeout.flush();
+      } catch(err) {}
+      return done == true;
+    }, "Getting current user info", 100);
   });
 
 
