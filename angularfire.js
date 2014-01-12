@@ -768,7 +768,7 @@
       var self = this;
       var deferred = this._q.defer();
 
-      self._authClient.changePassword(email, oldPassword, newPassword, function(err, success) {
+      self._authClient.changePassword(email, oldPassword, newPassword, function(err) {
         if (err) {
           self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
           deferred.reject(err);
@@ -819,8 +819,9 @@
     // Internal callback for any Simple Login event.
     _onLoginEvent: function(err, user) {
 
-      //HACK -- calls to logout() trigger events even if we're not logged in, making us get extra events. Throw them away.
-      //This should be fixed by changing Simple Login so that its callbacks refer directly to the action that caused them.
+      // HACK -- calls to logout() trigger events even if we're not logged in,
+      // making us get extra events. Throw them away. This should be fixed by
+      // changing Simple Login so that its callbacks refer directly to the action that caused them.
       if(this._currentUserData === user && err === null) {
         return;
       }
