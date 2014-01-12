@@ -672,7 +672,7 @@
     this._timeout = $t;
     this._rootScope = $rs;
     this._loginDeferred = null;
-    this._getUserInfoDeferred = [];
+    this._getCurrentUserDeferred = [];
     this._currentUserData = undefined;
 
     if (typeof ref == "string") {
@@ -691,7 +691,7 @@
         $createUser: this.createUser.bind(this),
         $changePassword: this.changePassword.bind(this),
         $removeUser: this.removeUser.bind(this),
-        $getUserInfo: this.getUserInfo.bind(this)
+        $getCurrentUser: this.getCurrentUser.bind(this)
       };
       this._object = object;
 
@@ -777,7 +777,7 @@
       if(self._currentUserData !== undefined) {
         deferred.resolve(self._currentUserData);
       } else {
-        self._getUserInfoDeferred.push(deferred);
+        self._getCurrentUserDeferred.push(deferred);
       }
 
       return deferred.promise;
@@ -826,8 +826,8 @@
             self._loginDeferred.resolve(user);
             self._loginDeferred = null;
           }
-          while (self._getUserInfoDeferred.length > 0) {
-            var def = self._getUserInfoDeferred.pop();
+          while (self._getCurrentUserDeferred.length > 0) {
+            var def = self._getCurrentUserDeferred.pop();
             def.resolve(user);
           }
         });
