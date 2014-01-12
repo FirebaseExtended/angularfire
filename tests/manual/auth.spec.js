@@ -7,6 +7,11 @@ describe("AngularFireAuth Test Suite", function() {
     email: "user@domain.com",
     password: "aaaaaaaa"
   }
+  var newUserInf = {
+    email: "a" + Math.round(Math.random()*10000000000) + "@email.com",
+    password: "Pw",
+    newPW: "sdljf"
+  };
 
   //globals
   var $firebase;
@@ -50,13 +55,16 @@ describe("AngularFireAuth Test Suite", function() {
         var ref = new Firebase("https://angularfiretests.firebaseio.com");
         ngFireRef = $firebase(ref);
         ngSimpleLogin = $firebaseSimpleLogin(ref);
+
+        //make sure we start logged-out.
+        ngSimpleLogin.$logout();
       });
     }
   });
 
   //We have this test first, to make sure that initial login state doesn't mess up the promise returned by
   //login.
-  xit("Email: failed login", function() {
+  it("Email: failed login", function() {
     var waiter = new AsyncWaiter(["future_failed", "error_event"]);
 
     var loginFuture = ngSimpleLogin.$login("password", {
@@ -65,7 +73,7 @@ describe("AngularFireAuth Test Suite", function() {
     });
 
     //make sure the future fails.
-    loginFuture.then(function() {
+    loginFuture.then(function(user) {
       expect(true).toBe(false); // we should never get here.
     }, function(err) {
       expect(err).not.toBe(null);
@@ -79,12 +87,11 @@ describe("AngularFireAuth Test Suite", function() {
       off();
     });
 
-
-    waiter.wait("email login failure", 500);
+    waiter.wait("email login failure", 1000);
   });
 
   //Ensure that getUserInfo gives us a null if we're logged out.
-  xit("getUserInfo() triggers promise and is initially null.", function() {
+  it("getUserInfo() triggers promise and is initially null.", function() {
     var waiter = new AsyncWaiter();
 
     ngSimpleLogin.$getCurrentUser().then(function(info) {
@@ -92,11 +99,11 @@ describe("AngularFireAuth Test Suite", function() {
       waiter.done();
     });
 
-    waiter.wait("get user info from promise", 100);
+    waiter.wait("get user info from promise");
   });
 
   //Make sure logins to providers we haven't enabled fail.
-  xit("Failed Facebook login", function() {
+  it("Failed Facebook login", function() {
     var waiter = new AsyncWaiter(["future_failed", "error_event"]);
 
     var loginFuture = ngSimpleLogin.$login("facebook");
@@ -166,14 +173,29 @@ describe("AngularFireAuth Test Suite", function() {
         expect(user.email).toBe(existingUser.email);
         waiter.done("login_event");
         off();
+
+        //now check that the user model has actually been updated
+        expect(ngSimpleLogin.user.email).toBe(existingUser.email);
       });
     });
 
-    waiter.wait("email login success", 2000);
+    waiter.wait("email login success", 1000);
+  });
+
+  it("getCurrentUser for logged-in state", function() {
+    var waiter = new AsyncWaiter();
+
+    var promise = ngSimpleLogin.$getCurrentUser();
+    promise.then(function(user) {
+      expect(user.email).toBe(existingUser.email);
+      waiter.done();
+    })
+
+    waiter.wait("getting user info");
   });
 
   //Check to make sure logout works.
-  xit("Logout", function() {
+  it("Logout", function() {
     var waiter = new AsyncWaiter(["future", "event"]);
 
     ngSimpleLogin.$logout();
@@ -191,11 +213,11 @@ describe("AngularFireAuth Test Suite", function() {
       off();
     });
 
-    waiter.wait("get user info after logout", 2000);
+    waiter.wait("get user info after logout", 1000);
   });
 
   //Ensure we properly handle errors on account creation.
-  xit("Email: failed account creation", function() {
+  it("Email: failed account creation", function() {
     var waiter = new AsyncWaiter(["promise", "event"]);
 
     var promise = ngSimpleLogin.$createUser(existingUser.email, "xaaa");
@@ -206,18 +228,17 @@ describe("AngularFireAuth Test Suite", function() {
       waiter.done("promise");
     })
 
-    //verify that a logout event is triggered on the root scope
     var off = $rootScope.$on("$firebaseSimpleLogin:error", function(event, err) {
       expect(err).not.toBe(null);
       waiter.done("event");
       off();
     });
 
-    waiter.wait("failed account creation", 2000);
+    waiter.wait("failed account creation", 1000);
   });
 
   //Handle the noLogin flag correctly.
-  xit("Email: account creation noLogin", function() {
+  it("Email: account creation noLogin", function() {
     var waiter = new AsyncWaiter(["promise", "getuser"]);
 
     var accountEmail = "a" + Math.round(Math.random()*10000000000) + "@email.com";
@@ -236,18 +257,16 @@ describe("AngularFireAuth Test Suite", function() {
       waiter.done("getuser");
     });
 
-    waiter.wait("account creation with noLogin", 15000);
+    waiter.wait("account creation with noLogin", 2000);
   });
 
   //Test account creation.
-  xit("Email: account creation", function() {
+  it("Email: account creation with login", function() {
     var waiter = new AsyncWaiter(["promise", "event", "getuser"]);
 
-    var accountEmail = "a" + Math.round(Math.random()*10000000000) + "@email.com";
-
-    var promise = ngSimpleLogin.$createUser(accountEmail, "aaa");
+    var promise = ngSimpleLogin.$createUser(newUserInf.email, newUserInf.password);
     promise.then(function(user) {
-      expect(user.email).toBe(accountEmail);
+      expect(user.email).toBe(newUserInf.email);
       waiter.done("promise");
     }, function(err) {
       expect(false).toBe(true); //die
@@ -256,48 +275,89 @@ describe("AngularFireAuth Test Suite", function() {
     //make sure a logout event fired. Wrap it so we don't get the initial login event.
     ngSimpleLogin.$getCurrentUser().then(function() {
       var off = $rootScope.$on("$firebaseSimpleLogin:login", function(event, user) {
-        expect(user.email).toBe(accountEmail);
+        expect(user.email).toBe(newUserInf.email);
         waiter.done("event");
         off();
 
         //now make sure if we get the user info it's correct
         ngSimpleLogin.$getCurrentUser().then(function(user2) {
-          expect(user2.email).toBe(accountEmail);
+          expect(user2.email).toBe(newUserInf.email);
           waiter.done("getuser");
         });
       });
     });
 
-    waiter.wait("account creation", 15000);
+    waiter.wait("account creation", 2000);
   });
 
-  xit("Email: failed change password", function() {
-    var waiter = new AsyncWaiter();
+  it("Email: failed change password", function() {
+    var waiter = new AsyncWaiter(["promise", "event"]);
 
-    //waiter.wait("xxx", 15000);
+    var promise = ngSimpleLogin.$changePassword(existingUser.email, "pxz", "sdf");
+    promise.then(function() {
+      expect(false).toBe(true); //die
+    }, function(err) {
+      expect(err).not.toBe(null);
+      waiter.done("promise");
+    })
+
+    var off = $rootScope.$on("$firebaseSimpleLogin:error", function(event, err) {
+      expect(err).not.toBe(null);
+      waiter.done("event");
+      off();
+    });
+
+    waiter.wait("failed change password", 2000);
   });
 
-  xit("getCurrentUser for logged-in state", function() {
-    var waiter = new AsyncWaiter();
+  it("Email: change password", function() {
+    var waiter = new AsyncWaiter(["fail", "succeed"]);
 
-    //waiter.wait("xxx", 15000);
+    //this should fail
+    ngSimpleLogin.$changePassword(newUserInf.email, "88dfhjgerqwqq", newUserInf.newPW).then(function(user) {
+      expect(true).toBe(false); //die
+    }, function(err) {
+      waiter.done("fail");
+      expect(err.code).toBe('INVALID_PASSWORD');
+
+    });
+
+    //this should succeed
+    var promise = ngSimpleLogin.$changePassword(newUserInf.email, newUserInf.password, newUserInf.newPW);
+    promise.then(function() {
+      expect(true).toBe(true);
+      waiter.done("succeed");
+    }, function(err) {
+      expect(true).toBe(false); //die
+    });
+
+    waiter.wait("change password", 2000);
   });
 
-  xit("Email: change password", function() {
-    var waiter = new AsyncWaiter();
+  it("Email: remove user", function() {
+    var waiter = new AsyncWaiter(["fail", "success"]);
 
-    //waiter.wait("xxx", 15000);
-  });
+    ngSimpleLogin.$removeUser(newUserInf.email + "x", newUserInf.newPW).then(function() {
+      expect(true).toBe(false); //die
+    }, function(err) {
+      //this one doesn't exist, so it should fail
+      expect(err).not.toBe(null);
+      waiter.done("fail");
+    });
 
-  xit("user model object is accurate", function() {
-    var waiter = new AsyncWaiter();
+    ngSimpleLogin.$removeUser(newUserInf.email, newUserInf.newPW).then(function() {
+      waiter.done("success");
 
-    //waiter.wait("xxx", 15000);
-  });
+      //TODO: this test should prob work, but we need to make Simple Login support this first
+      //now make sure we've been logged out if we removed our own account
+      //ngSimpleLogin.$getCurrentUser().then(function(user) {
+      //  expect(user).toBe(null);
+      //  waiter.done("check");
+      //});
+    }, function(err) {
+      expect(true).toBe(false); //die
+    });
 
-  xit("Email: remove user", function() {
-    var waiter = new AsyncWaiter();
-
-    //waiter.wait("xxx", 15000);
+    waiter.wait("removeuser fail and success", 1000);
   });
 });
