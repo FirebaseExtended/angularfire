@@ -770,7 +770,7 @@
     },
 
     //Gets a future for the current user info
-    getUserInfo: function() {
+    getCurrentUser: function() {
       var self = this;
       var deferred = this._q.defer();
 
@@ -799,9 +799,9 @@
     },
 
     //Send a password reset email to the user for an email + password account.
-    resetPassword: function() {
+    //resetPassword: function() {
       //coming soon...
-    },
+    //},
 
     // Internal callback for any Simple Login event.
     _onLoginEvent: function(err, user) {

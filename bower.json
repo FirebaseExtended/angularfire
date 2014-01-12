@@ -7,7 +7,6 @@
     "angular": "~1.2.0",
     "angular-mocks" : "~1.2.0",
     "observe-js": "https://github.com/jeffbcross/observe-js.git",
-    "jasmine": "~2.0.0",
     "firebase": "latest",
     "firebase-simple-login": "latest"
   }
