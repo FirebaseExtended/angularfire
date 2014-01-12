@@ -740,47 +740,47 @@
     // Function 'cb' receives an error as the first argument and a
     // Simple Login user object as the second argument. Pass noLogin=true
     // if you don't want the newly created user to also be logged in.
-    createUser: function(email, password, cb, noLogin) {
+    createUser: function(email, password, noLogin) {
       var self = this;
+      var deferred = this._q.defer();
+
       self._authClient.createUser(email, password, function(err, user) {
-        try {
-          if (err) {
-            self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
+        if (err) {
+          self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
+          deferred.reject(err);
+        } else {
+          if (!noLogin) {
+            //resolve the promise with a new promise for login
+            deferred.resolve(self.login("password", {email: email, password: password}));
           } else {
-            if (!noLogin) {
-              self.login("password", {email: email, password: password});
-            }
+            deferred.resolve(user);
           }
-        } catch(e) {
-          self._rootScope.$broadcast("$firebaseSimpleLogin:error", e);
-        }
-        if (cb) {
-          self._timeout(function() {
-            cb(err, user);
-          });
         }
       });
+
+      return deferred.promise;
     },
 
     // Changes the password for a Firebase Simple Login user.
     // Take an email, old password and new password as three mandatory
-    // arguments. An optional callback may be specified to be notified when the
-    // password has been changed successfully.
-    changePassword: function(email, old, np, cb) {
+    // arguments. Returns a promise.
+    changePassword: function(email, oldPassword, newPassword) {
       var self = this;
-      self._authClient.changePassword(email, old, np, function(err, user) {
+      var deferred = this._q.defer();
+
+      self._authClient.changePassword(email, oldPassword, newPassword, function(err, user) {
         if (err) {
           self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
-        }
-        if (cb) {
-          self._timeout(function() {
-            cb(err, user);
-          });
+          deferred.reject(err);
+        } else {
+          deferred.resolve(user);
         }
       });
+
+      return deferred.promise;
     },
 
-    //Gets a future for the current user info
+    //Gets a promise for the current user info
     getCurrentUser: function() {
       var self = this;
       var deferred = this._q.defer();
@@ -794,19 +794,21 @@
       return deferred.promise;
     },
 
-    //Removed a user for the listed email address
-    removeUser: function(email, password, callback) {
+    //Remove a user for the listed email address. Returns a promise.
+    removeUser: function(email, password) {
       var self = this;
+      var deferred = this._q.defer();
+
       self._authClient.removeUser(email, password, function(err) {
         if (err) {
           self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
-        }
-        if(callback) {
-          self._timeout(function() {
-            callback(err);
-          });
+          deferred.reject(err);
+        } else {
+          deferred.resolve();
         }
       });
+
+      return deferred.promise;
     },
 
     //Send a password reset email to the user for an email + password account.
