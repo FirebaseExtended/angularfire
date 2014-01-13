@@ -254,7 +254,7 @@
       //                    transaction has completed before events are raised.
       //
       //  This function returns a promise that will be resolved when the transaction function has completed.
-      //  A successful transaction is resolved with the snapshot.val(). If the transaction is aborted,
+      //  A successful transaction is resolved with the snapshot. If the transaction is aborted,
       //  the promise will be resolved with null.
       object.$transaction = function(updateFn, applyLocally) {
         var deferred = self._q.defer();
@@ -264,7 +264,7 @@
           } else if(!committed) {
             deferred.resolve(null);
           } else {
-            deferred.resolve(snapshot.val());
+            deferred.resolve(snapshot);
           }
         }, applyLocally);
       };
