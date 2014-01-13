@@ -484,7 +484,7 @@
         }
 
         // Call change handlers.
-        self._broadcastEvent("change");
+        self._broadcastEvent("change", key);
 
         // If there is an implicit binding, also update the local model.
         if (!self._bound) {
