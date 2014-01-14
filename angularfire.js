@@ -5,7 +5,7 @@
 // as normal, except that the changes are also sent to all other clients
 // instead of just a server.
 //
-//      AngularFire 0.5.0
+//      AngularFire 0.6.0
 //      http://angularfire.com
 //      License: MIT
 

@@ -1,13 +1,13 @@
 {
   "name": "angularfire",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "main": ["./angularfire.js"],
   "ignore": ["Gruntfile.js", "package.js", "tests", "README.md", ".travis.yml"],
   "dependencies": {
     "angular": "~1.2.0",
     "angular-mocks" : "~1.2.0",
-    "observe-js": "https://github.com/jeffbcross/observe-js.git",
-    "firebase": "latest",
-    "firebase-simple-login": "latest"
+    "firebase": "~1.0.2",
+    "firebase-simple-login": "~1.0.2",
+    "observe-js": "https://github.com/jeffbcross/observe-js.git
   }
 }
