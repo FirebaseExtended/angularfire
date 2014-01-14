@@ -795,7 +795,7 @@
       var self = this;
       var deferred = this._q.defer();
 
-      if(self._currentUserData !== undefined) {
+      if (self._currentUserData !== undefined) {
         deferred.resolve(self._currentUserData);
       } else {
         self._getCurrentUserDeferred.push(deferred);
@@ -848,7 +848,7 @@
 
         self._timeout(function() {
           self._object.user = user;
-          if(user) {
+          if (user) {
             self._rootScope.$broadcast("$firebaseSimpleLogin:login", user);
           } else {
             self._rootScope.$broadcast("$firebaseSimpleLogin:logout");
