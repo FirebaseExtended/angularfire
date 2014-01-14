@@ -282,8 +282,9 @@
       };
 
       // Attach an event handler for when the object is changed. You can attach
-      // handlers for all Firebase events. Additionally, the following events,
-      // specific to AngularFire, can be attached to.
+      // handlers for all Firebase events like "child_added", "value", and
+      // "child_removed". Additionally, the following events, specific to
+      // AngularFire, can be listened to.
       //
       //  - "change": The provided function will be called whenever the local
       //              object is modified because the remote data was updated.
@@ -442,6 +443,7 @@
         self._updateModel(key, val);
       }
 
+      // Helper function to attach and broadcast events.
       function _handleAndBroadcastEvent(type, handler) {
         return function(snapshot, prevChild) {
           handler(snapshot, prevChild);
@@ -659,7 +661,8 @@
       //    will at a minimum contain the `id` and `provider` properties.
       //
       // The returned object will also have the following methods available:
-      // $login(), $logout(), $createUser() and $changePassword().
+      // $login(), $logout(), $createUser(), $changePassword(), $removeUser(),
+      // and $getCurrentUser().
       return function(ref) {
         var auth = new AngularFireAuth($q, $t, $rs, ref);
         return auth.construct();
@@ -717,8 +720,9 @@
       var deferred = this._q.defer();
       var self = this;
 
-      //To avoid the promise from being fulfilled by our initial login state, make sure we have it before
-      //triggering the login and creating a new promise.
+      // To avoid the promise from being fulfilled by our initial login state,
+      // make sure we have it before triggering the login and creating a new
+      // promise.
       this.getCurrentUser().then(function() {
         self._loginDeferred = deferred;
         self._authClient.login(provider, options);
@@ -729,17 +733,18 @@
 
     // Unauthenticate the Firebase reference.
     logout: function() {
-      //tell the simple login client to log us out.
+      // Tell the simple login client to log us out.
       this._authClient.logout();
 
-      //forget who we were, so that any getCurrentUser calls will wait for another user event.
+      // Forget who we were, so that any getCurrentUser calls will wait for
+      // another user event.
       delete this._currentUserData;
     },
 
-    // Creates a user for Firebase Simple Login.
-    // Function 'cb' receives an error as the first argument and a
-    // Simple Login user object as the second argument. Pass noLogin=true
-    // if you don't want the newly created user to also be logged in.
+    // Creates a user for Firebase Simple Login. Function 'cb' receives an
+    // error as the first argument and a Simple Login user object as the second
+    // argument. Set the optional 'noLogin' argument to true if you don't want
+    // the newly created user to also be logged in.
     createUser: function(email, password, noLogin) {
       var self = this;
       var deferred = this._q.defer();
@@ -750,8 +755,11 @@
           deferred.reject(err);
         } else {
           if (!noLogin) {
-            //resolve the promise with a new promise for login
-            deferred.resolve(self.login("password", {email: email, password: password}));
+            // Resolve the promise with a new promise for login.
+            deferred.resolve(self.login("password", {
+              email: email,
+              password: password
+            }));
           } else {
             deferred.resolve(user);
           }
@@ -761,26 +769,28 @@
       return deferred.promise;
     },
 
-    // Changes the password for a Firebase Simple Login user.
-    // Take an email, old password and new password as three mandatory
-    // arguments. Returns a promise.
+    // Changes the password for a Firebase Simple Login user. Take an email,
+    // old password and new password as three mandatory arguments. Returns a
+    // promise.
     changePassword: function(email, oldPassword, newPassword) {
       var self = this;
       var deferred = this._q.defer();
 
-      self._authClient.changePassword(email, oldPassword, newPassword, function(err) {
-        if (err) {
-          self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
-          deferred.reject(err);
-        } else {
-          deferred.resolve();
+      self._authClient.changePassword(email, oldPassword, newPassword,
+        function(err) {
+          if (err) {
+            self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
+            deferred.reject(err);
+          } else {
+            deferred.resolve();
+          }
         }
-      });
+      );
 
       return deferred.promise;
     },
 
-    //Gets a promise for the current user info
+    // Gets a promise for the current user info.
     getCurrentUser: function() {
       var self = this;
       var deferred = this._q.defer();
@@ -794,7 +804,7 @@
       return deferred.promise;
     },
 
-    //Remove a user for the listed email address. Returns a promise.
+    // Remove a user for the listed email address. Returns a promise.
     removeUser: function(email, password) {
       var self = this;
       var deferred = this._q.defer();
@@ -811,18 +821,18 @@
       return deferred.promise;
     },
 
-    //Send a password reset email to the user for an email + password account.
-    //resetPassword: function() {
-      //coming soon...
+    // Send a password reset email to the user for an email + password account.
+    // resetPassword: function() {
+    // Stub: Coming soon to Simple Login.
     //},
 
     // Internal callback for any Simple Login event.
     _onLoginEvent: function(err, user) {
-
       // HACK -- calls to logout() trigger events even if we're not logged in,
       // making us get extra events. Throw them away. This should be fixed by
-      // changing Simple Login so that its callbacks refer directly to the action that caused them.
-      if(this._currentUserData === user && err === null) {
+      // changing Simple Login so that its callbacks refer directly to the
+      // action that caused them.
+      if (this._currentUserData === user && err === null) {
         return;
       }
 
