@@ -36,12 +36,12 @@ myapp.controller("MyController", ["$scope", "$firebase",
 
 ### Constructor
 
-The `$firebase` service takes a single argument: a Firebase reference. You
-may apply queries and limits on it if required.
+The `$firebase` service takes a single argument: a Firebase reference. Note that you
+may apply queries and limits on it if you want to only sync a subset of your data.
 
 The object returned by `$firebase` will automatically be kept in sync with
 the remote Firebase data. **Note that any changes to that object will *not*
-result in any changes being made to the remote data**. All such changes will
+automatically result in any changes to the remote data**. All such changes will
 have to performed via one of the methods prefixed with "$" available on this
 object.
 
