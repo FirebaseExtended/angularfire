@@ -213,38 +213,32 @@ for that object.
 </ul>
 ```
 
-$firebaseAuth
+$firebaseSimpleLogin
 -------------
-AngularFire includes support for user authentication via the Firebase
-[Simple Login](https://www.firebase.com/docs/security/simple-login-overview.html)
-and [Custom Login](https://www.firebase.com/docs/security/custom-login.html)
-methods. This is provided via the `$firebaseAuth` service, which is available
-in your controllers and services once you've defined `firebase` as a dependency
-in your app's module.
+AngularFire includes support for user authentication via
+[Firebase Simple Login](https://www.firebase.com/docs/security/simple-login-overview.html) with the
+$firebaseSimpleLogin service. You'll need to include `firebase` as a dependency of your app's module to
+use this service.
+
+Note that Firebase provides a low-level, extremely flexible authentication system called
+[Custom Login](https://www.firebase.com/docs/security/custom-login.html). Simple
+Login is intended to handle the common use cases that most applications encounter with a drop-in, hosted solution.
+
+
+### Login Service Constructor
+
+The `$firebaseSimpleLogin` factory takes a Firebase reference (not a $firebase object) as its only argument.
 
 ``` js
-myapp.controller("MyAuthController", ["$scope", "$firebaseAuth",
-  function($scope, $firebaseAuth) {}
+myapp.controller("MyAuthController", ["$scope", "$firebaseSimpleLogin",
+  function($scope, $firebaseSimpleLogin) {
+    var dataRef = new Firebase("https://myapp.firebaseio.com");
+    var $loginObj = $firebaseSimpleLogin(dataRef);
+  }
 ]);
 ```
 
-### Auth Constructor
-
-The `$firebaseAuth` factory takes two arguments: a Firebase reference, and
-an optional object with options. The object may contain the following
-properties:
-
-  * `path`: The path to which the user will be redirected if the `authRequired`
-property was set to `true` in the `$routeProvider`, and the user isn't
-logged in.
-  * `simple`: `$firebaseAuth` requires inclusion of the
-`firebase-simple-login.js` file by default. If this value is set to false, this
-requirement is waived, but only custom login functionality will be enabled.
-  * `callback`: A function that will be called when there is a change in
-authentication state. This is an alternative to events fired on `$rootScope`,
-which is the recommended way to handle changes in auth state.
-
-The object returned by `$firebaseAuth` contains a single property, named `user`.
+The object returned by `$firebaseSimpleLogin` contains a single property, named `user`.
 This property will be set to `null` if the user is logged out and will change
 to an object containing the user's details once they are logged in.
 
@@ -254,38 +248,11 @@ properties. Please refer to the
 [Firebase Simple Login](https://www.firebase.com/docs/security/simple-login-overview.html)
 documentation for additional properties (such as `name`) that may be available.
 
-``` js
-myapp.controller("MyAuthController", ["$scope", "$firebaseAuth",
-  function($scope, $firebaseAuth) {
-    var ref = new Firebase(URL);
-    $scope.auth = $firebaseAuth(ref);
-    // $scope.auth.user will be `null` until the user logs in.
-  }
-]);
-```
+In addition, this object has several functions for managing your login state, as listed below.
 
-### Auth Events
+### $login(provider, [options])
 
-The following events will be broadcasted on the `$rootScope`. Authentication
-state is global, it is not possible to be logged in as a different user in
-each controller (unless you log out and log back in manually, of course).
-
-``` js
-$rootScope.$on("$firebaseAuth:login", function(e, user) {
-  console.log("User " + user.id + " successfully logged in!");
-});
-```
-
-  * `$firebaseAuth:login`: Fired when a user successfully logs in. Will be
-passed a single argument, the user object.
-  * `$firebaseAuth:logout`: Fired when a user logs out. No arguments are
-passed.
-  * `$firebaseAuth:error`: Fired when there was error during logging in or out.
-Will be passed a single argument, the error.
-
-### $login(token, [options])
-
-The `$login` method should be called when you want to login in a user.
+The `$login` method should be called when you want to login a user.
 Typically, this is in response to the user clicking a login button. This
 function takes two arguments:
 
@@ -293,7 +260,7 @@ function takes two arguments:
 <a href="#" ng-hide="auth.user" ng-click="auth.$login('persona')">Login</a>
 ```
 
-  * `tokenOrProvider`: If you're using Firebase Simple Login, simply pass in a
+  * `provider`: If you're using Firebase Simple Login, simply pass in a
 provider name, such as 'facebook' or 'persona'. If you're using Custom Login,
 pass in a valid JWT token.
   * `options`: This is useful for Simple Login only, where the provided options
@@ -331,3 +298,30 @@ with Firebase Simple Login. It takes the same arguments as the `createUser()`
 method provided by Simple Login, see the documentation for the
 [Email / Password provider](https://www.firebase.com/docs/security/simple-login-email-password.html)
 for more info.
+
+
+### $changePassword
+
+
+### $removeUser
+
+
+### Auth Events
+
+The following events will be broadcasted on the `$rootScope`. Authentication
+state is global, it is not possible to be logged in as a different user in
+each controller (unless you log out and log back in manually, of course).
+
+``` js
+$rootScope.$on("$firebaseAuth:login", function(e, user) {
+  console.log("User " + user.id + " successfully logged in!");
+});
+```
+
+  * `$firebaseAuth:login`: Fired when a user successfully logs in. Will be
+passed a single argument, the user object.
+  * `$firebaseAuth:logout`: Fired when a user logs out. No arguments are
+passed.
+  * `$firebaseAuth:error`: Fired when there was error during logging in or out.
+Will be passed a single argument, the error.
+
