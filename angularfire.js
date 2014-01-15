@@ -240,6 +240,36 @@
         return deferred.promise;
       };
 
+      // Update a value within a transaction. Calling this is the
+      // equivalent of calling `transaction()` on a Firebase reference.
+      //
+      //  * `updateFn`:     A developer-supplied function which will be passed the current data
+      //                    stored at this location (as a Javascript object). The function should
+      //                    return the new value it would like written (as a Javascript object).
+      //                    If "undefined" is returned (i.e. you "return;" with no arguments) the
+      //                    transaction will be aborted and the data at this location will not be modified.
+      //  * `applyLocally`: By default, events are raised each time the transaction update function runs. So
+      //                    if it is run multiple times, you may see intermediate states. You can set this
+      //                    to false to suppress these intermediate states and instead wait until the
+      //                    transaction has completed before events are raised.
+      //
+      //  This function returns a promise that will be resolved when the transaction function has completed.
+      //  A successful transaction is resolved with the snapshot. If the transaction is aborted,
+      //  the promise will be resolved with null.
+      object.$transaction = function(updateFn, applyLocally) {
+        var deferred = self._q.defer();
+        self._fRef.ref().transaction(updateFn, function(err, committed, snapshot) {
+          if(err) {
+            deferred.reject(err);
+          } else if(!committed) {
+            deferred.resolve(null);
+          } else {
+            deferred.resolve(snapshot);
+          }
+        }, applyLocally);
+      };
+
+
       // Remove this object from the remote data. Calling this is the
       // equivalent of calling `remove()` on a Firebase reference. This
       // function takes a single optional argument:

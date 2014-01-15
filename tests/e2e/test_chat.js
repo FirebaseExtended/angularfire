@@ -14,9 +14,11 @@ casper.start("tests/e2e/test_chat.html", function() {
 casper.thenEvaluate(function() {
   // Clean up Firebase to start fresh test.
   var fbRef = new Firebase(_url);
+  var fbTnRef = new Firebase(_tnUrl);
   fbRef.set(null, function(err) {
     window.__flag = true;
   });
+  fbTnRef.set(null, function(err) {});
 });
 
 casper.waitFor(function() {
@@ -26,6 +28,7 @@ casper.waitFor(function() {
 casper.then(function() {
   var _testName = "TestGuest";
   var _testMessage = "This is a test message";
+  var _testCountMessage = 1;
 
   this.test.assertEval(function(params) {
     _scope.username = params[0];
@@ -41,6 +44,15 @@ casper.then(function() {
       );
     }, "Testing if message is in the DOM", [_testName, _testMessage]);
   });
+
+  this.waitForSelector(".messageCountBlock", function() {
+    this.test.assertEval(function(params) {
+      return testMessageCount(
+        params[0], document.querySelector(".messageCountBlock")
+      );
+    }, "Testing if message count is in the DOM", [_testCountMessage]);
+  });
+
 });
 
 casper.then(function() {
