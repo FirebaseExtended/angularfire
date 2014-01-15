@@ -8,6 +8,6 @@
     "angular-mocks" : "~1.2.0",
     "firebase": "~1.0.2",
     "firebase-simple-login": "~1.0.2",
-    "observe-js": "https://github.com/jeffbcross/observe-js.git
+    "observe-js": "https://github.com/jeffbcross/observe-js.git"
   }
 }
