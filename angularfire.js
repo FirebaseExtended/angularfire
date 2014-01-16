@@ -165,7 +165,7 @@
       //
       // This function returns a promise that will be resolved when the data
       // has been successfully written to the server. If the promise is
-      // resolved, it will be provided with a  reference to the newly added
+      // resolved, it will be provided with a reference to the newly added
       // object or primitive. The key name can be extracted using `ref.name()`.
       // If the promise fails, it will resolve to an error.
       object.$add = function(item) {
@@ -176,7 +176,7 @@
           if (err) {
             deferred.reject(err);
           } else {
-            deferred.resolve();
+            deferred.resolve(ref);
           }
         }
 
