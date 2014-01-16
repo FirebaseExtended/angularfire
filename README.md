@@ -4,10 +4,13 @@ AngularFire is an officially supported [AngularJS](http://angularjs.org/) bindin
 for [Firebase](http://www.firebase.com/?utm_medium=web&utm_source=angularFire).
 Firebase is a full backend so you don't need servers to build your Angular app!
 
-*Please visit [AngularFire.com](http://angularfire.com) for a
-[tutorial](http://angularfire.com/tutorial),
-[a quickstart guide](http://angularfire.com/quickstart.html),
-[documentation](http://angularfire.com/documentation.html) and more!*
+*Please visit the
+[Firebase + Angular Quickstart guide](https://www.firebase.com/quickstart/angularjs.html)
+for more information*.
+
+We also have a [tutorial](https://www.firebase.com/tutorial/#tutorial/angular/0),
+[documentation](https://www.firebase.com/docs/angular/index.html) and an
+[API reference](https://www.firebase.com/docs/angular/reference.html).
 
 Join our [Firebase + Angular Google Group](https://groups.google.com/forum/#!forum/firebase-angular) to ask questions, provide feedback, and share apps you've built with Firebase and Angular.
 
