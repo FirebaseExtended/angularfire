@@ -859,9 +859,21 @@
     },
 
     // Send a password reset email to the user for an email + password account.
-    // resetPassword: function() {
-    // Stub: Coming soon to Simple Login.
-    //},
+    sendPasswordResetEmail: function() {
+      var self = this;
+      var deferred = this._q.defer();
+
+      self._authClient.sendPasswordResetEmail(email, function(err) {
+        if (err) {
+          self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
+          deferred.reject(err);
+        } else {
+          deferred.resolve();
+        }
+      });
+
+      return deferred.promise;
+    },
 
     // Internal callback for any Simple Login event.
     _onLoginEvent: function(err, user) {
