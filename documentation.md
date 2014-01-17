@@ -329,6 +329,13 @@ The `$removeUser` function deletes the user account for the specified email addr
 that is resolved when the user has been successfully removed on the Firebase servers.
 
 
+### $sendPasswordResetEmail(email)
+
+The `$sendPasswordResetEmail` function sends a password reset email to the specified email address, containing a new,
+temporary password that the user may use to log in and update their credentials. This function returns a promise
+that is resolved when the email notification has been sent successfully.
+
+
 ### Login-related Events
 
 The following events will be broadcast on `$rootScope` as a result of AngularFire login activity.
