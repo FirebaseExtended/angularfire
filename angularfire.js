@@ -731,7 +731,8 @@
         $createUser: this.createUser.bind(this),
         $changePassword: this.changePassword.bind(this),
         $removeUser: this.removeUser.bind(this),
-        $getCurrentUser: this.getCurrentUser.bind(this)
+        $getCurrentUser: this.getCurrentUser.bind(this),
+        $sendPasswordResetEmail: this.sendPasswordResetEmail.bind(this)
       };
       this._object = object;
 
@@ -859,7 +860,7 @@
     },
 
     // Send a password reset email to the user for an email + password account.
-    sendPasswordResetEmail: function() {
+    sendPasswordResetEmail: function(email) {
       var self = this;
       var deferred = this._q.defer();
 
