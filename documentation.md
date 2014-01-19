@@ -235,7 +235,7 @@ are created.
 myapp.controller("MyAuthController", ["$scope", "$firebaseSimpleLogin",
   function($scope, $firebaseSimpleLogin) {
     var dataRef = new Firebase("https://myapp.firebaseio.com");
-    var $scope.loginObj = $firebaseSimpleLogin(dataRef);
+    $scope.loginObj = $firebaseSimpleLogin(dataRef);
   }
 ]);
 ```
