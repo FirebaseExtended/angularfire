@@ -144,17 +144,19 @@
 
       // Establish a 3-way data binding (implicit sync) with the specified
       // Firebase location and a model on $scope. To be used from a controller
-      // to automatically synchronize *all* local changes. It take two
+      // to automatically synchronize *all* local changes. It take three
       // arguments:
       //
-      //    * `$scope`: The scope with which the bound model is associated.
-      //    * `name`  : The name of the model.
+      //    * `$scope`   : The scope with which the bound model is associated.
+      //    * `name`     : The name of the model.
+      //    * `defaultFn`: A function that provides a default value if the
+      //                   remote value is not set. Optional.
       //
       // This function also returns a promise, which when resolve will be
       // provided an `unbind` method, a function which you can call to stop
       // watching the local model for changes.
-      object.$bind = function(scope, name) {
-        return self._bind(scope, name);
+      object.$bind = function(scope, name, defaultFn) {
+        return self._bind(scope, name, defaultFn);
       };
 
       // Add an object to the remote data. Adding an object is the
@@ -588,7 +590,7 @@
     // This function creates a 3-way binding between the provided scope model
     // and Firebase. All changes made to the local model are saved to Firebase
     // and changes to the remote data automatically appear on the local model.
-    _bind: function(scope, name) {
+    _bind: function(scope, name, defaultFn) {
       var self = this;
       var deferred = self._q.defer();
 
@@ -642,9 +644,19 @@
           // Objects require a second event loop run, since we switch from
           // value events to child_added.
           if (typeof snap.val() != "object") {
+            // If the remote value is not set and defaultFn was provided,
+            // initialize the local value with the result of defaultFn().
+            if (snap.val() == null && typeof defaultFn === 'function') {
+              scope[name] = defaultFn();
+            }
             deferred.resolve(unbind);
           } else {
             self._timeout(function() {
+              // If the remote value is not set and defaultFn was provided,
+              // initialize the local value with the result of defaultFn().
+              if (snap.val() == null && typeof defaultFn === 'function') {
+                scope[name] = defaultFn();
+              }
               deferred.resolve(unbind);
             });
           }
