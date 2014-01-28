@@ -143,8 +143,10 @@ event handlers.
 
 ### $on(eventName, handler)
 
-Adds an event handler for the specified event. Currently, there are two types
-of events you can associate handlers with.
+Adds an event handler for the specified event. You can attach events for
+regular Firebase events (such as `child_added` and `value`, see the
+[Firebase docs](https://www.firebase.com/docs/javascript/query/on.html) for a
+full list), and two additional ones:
 
 ``` js
 $scope.items.$on("loaded", function() {
@@ -159,6 +161,21 @@ $scope.items.$on("change", function() {
 is received from Firebase.
 * `change`: This event is triggered every time there is a remote change
 in the data which was applied to the local object.
+
+### $off([eventName], [handler])
+
+Detaches a parituclar event handler. If no handler is specified, all callbacks
+for the specified event type will be detached. If no event type is specified,
+synchronization will be turned off for this entire `$firebase` instance.
+
+```js
+// Detaches all `loaded` event handlers.
+$scope.items.$off('loaded');
+// Stops synchronization on `$scope.items` completely.
+function stopSync() {
+  $scope.items.$off();
+}
+```
 
 3-Way Data Binding
 ------------------
