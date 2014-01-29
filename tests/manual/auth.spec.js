@@ -360,4 +360,14 @@ describe("AngularFireAuth Test Suite", function() {
 
     waiter.wait("removeuser fail and success", 1000);
   });
+
+  it("Email: reset password", function() {
+    var waiter = new AsyncWaiter(["fail", "success"]);
+
+    ngSimpleLogin.$sendPasswordResetEmail("angularfiretests@mailinator.com").then(function() {
+      waiter.done("success");
+    }, function(err) {
+      expect(true).toBe(false);
+    });
+  });
 });
