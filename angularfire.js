@@ -120,6 +120,7 @@
 
     // An object storing handlers used for different events.
     this._on = {
+      value: [],
       change: [],
       loaded: [],
       child_added: [],

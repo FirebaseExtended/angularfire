@@ -6,9 +6,9 @@
   "devel"   : true,
   "eqnull"  : true,
   "globals" : {
-		"angular"             : false,
-		"Firebase"            : false,
-		"FirebaseSimpleLogin" : false
+    "angular"             : false,
+    "Firebase"            : false,
+    "FirebaseSimpleLogin" : false
   },
   "globalstrict" : true,
   "indent"       : 2,

@@ -43,7 +43,6 @@ casper.then(function() {
     this.test.assertEvalEquals(function(params) {
       return getMessagePriority(0);
     }, 0, "Testing first message is at priority 0");
-    
   });
 });
 
@@ -92,23 +91,22 @@ casper.then(function() {
     this.test.assertEvalEquals(function(params) {
       return getMessagePriority(2);
     }, 2, "Testing if third message is at priority 2");
-    
   });
 });
 
 casper.then(function() {
   this.evaluate(function() {
-  	_scope.messages[_scope.messages.$getIndex()[1]].$priority = 0;
-  	_scope.messages[_scope.messages.$getIndex()[0]].$priority = 1;
-  	_scope.messages.$save();
-  	
-  	window.__flag = null;
-  	var ref = new Firebase(_url);
+    _scope.messages[_scope.messages.$getIndex()[1]].$priority = 0;
+    _scope.messages[_scope.messages.$getIndex()[0]].$priority = 1;
+    _scope.messages.$save();
+
+    window.__flag = null;
+    var ref = new Firebase(_url);
     ref.once("value", function(snapshot) {
       window.__flag = snapshot.val();
     });
   }, "Moving second to first");
-  
+
   this.waitFor(function() {
     return this.getGlobal("__flag") != null;
   }, function() {
@@ -133,17 +131,17 @@ casper.then(function() {
 
 casper.then(function() {
   this.evaluate(function() {
-  	_scope.messages[_scope.messages.$getIndex()[1]].$priority = 0;
-  	_scope.messages[_scope.messages.$getIndex()[0]].$priority = 1;
-  	_scope.messages.$save();
-  	
-  	window.__flag = null;
-  	var ref = new Firebase(_url);
+    _scope.messages[_scope.messages.$getIndex()[1]].$priority = 0;
+    _scope.messages[_scope.messages.$getIndex()[0]].$priority = 1;
+    _scope.messages.$save();
+
+    window.__flag = null;
+    var ref = new Firebase(_url);
     ref.once("value", function(snapshot) {
       window.__flag = snapshot.val();
     });
   }, "Moving first message back to first position");
-  
+
   this.waitFor(function() {
     return this.getGlobal("__flag") != null;
   }, function() {
