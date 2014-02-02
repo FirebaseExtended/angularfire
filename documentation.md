@@ -112,6 +112,44 @@ will also be subsequently updated to this new value.
 $scope.items.$set({bar: "baz"});  // new Firebase(URL + "/foo") is now null.
 ```
 
+### $transaction(updateFn, [applyLocally])
+
+Used to atomically modify data at the Firebase location. $transaction is used to modify the
+existing value to a new value, ensuring there are no conflicts with other clients writing
+to the same location at the same time. See [Firebase docs](https://www.firebase.com/docs/javascript/firebase/transaction.html)
+for more details. 
+
+$transaction takes an `updateFn` argument which is a developer-supplied function
+that will be passed the current data stored at the location (as a JS object). The function should
+return the new value it would like written (as a JS object). If `undefined` is returned, the transaction
+will be aborted and the data at the location will not be modified.
+
+By default, events are raised each time the transaction update function runs. So if it is run
+multiple times, you may see intermediate states. You can set the `applyLocally` argument to false
+to suppress these intermediate states and instead wait until the transaction has complted before
+events are raised.
+
+$transaction returns a promise which will resolve to null if the transaction is aborted, otherwise
+it resolves with the snapshot of the new data at the location.
+
+``` js
+$scope.messageCount = $firebase(new Firebase(URL + "/messageCount"));
+// Increment the message count by 1
+$scope.messageCount.$transaction(function(currentCount) {
+	if(!currentCount) { return 1; }
+	if(currentCount < 0) { return; } 	// return undefined to abort transaction
+	return currentCount + 1;			// increment the count by 1
+}).then(function(snapshot) {
+	if(!snapshot) {
+		// handle aborted transaction
+	} else {
+		// do something
+	}
+}, function(err) {
+	// handle the error condition
+});
+```
+
 ### $getIndex()
 
 Returns an ordered list of keys in the data object, sorted by their Firebase priorities.
