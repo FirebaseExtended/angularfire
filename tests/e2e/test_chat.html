@@ -46,7 +46,11 @@
           } else {
             return currentCount+1;
           }
-        });
+        }).then(function(snapshot) {
+			var val = snapshot.val();
+		}, function(err) {
+			
+		});
 
         $scope.message = "";
         return promise;
