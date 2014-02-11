@@ -608,7 +608,7 @@
       // If the local model is an object, call an update to set local values.
       var local = self._parse(name)(scope);
       if (local !== undefined && typeof local == "object") {
-        self._fRef.update(self._parseObject(local));
+        self._fRef.ref().update(self._parseObject(local));
       }
 
       // We're responsible for setting up scope.$watch to reflect local changes
