@@ -17,6 +17,8 @@ Join our [Firebase + Angular Google Group](https://groups.google.com/forum/#!for
 Development
 -----------
 [![Build Status](https://travis-ci.org/firebase/angularFire.png)](https://travis-ci.org/firebase/angularFire)
+[![Bower version](https://badge.fury.io/bo/angularfire.png)](http://badge.fury.io/bo/angularfire)
+[![Built with Grunt](https://cdn.gruntjs.com/builtwith.png)](http://gruntjs.com/)
 
 If you'd like to hack on AngularFire itself, you'll need
 [node.js](http://nodejs.org/download/), [Bower](http://bower.io), and
