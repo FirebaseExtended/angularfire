@@ -618,7 +618,6 @@
           return;
 	} else if (angular.equals(local,  self._parseObject(self._object))) {
           return;
-          return;
         }
 
         // If the local model is undefined or the remote data hasn't been
