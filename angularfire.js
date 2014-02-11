@@ -437,6 +437,10 @@
           break;
         // For arrays and objects, switch to child methods.
         case "object":
+          // Before switching to child methods, save priority for top node.
+          if (snapshot.getPriority() !== null) {
+            self._updateModel("$priority", snapshot.getPriority());
+          }
           self._getChildValues();
           self._fRef.off("value", gotInitialValue);
           break;
@@ -616,7 +620,7 @@
         if (self._object.$value &&
             angular.equals(local, self._object.$value)) {
           return;
-        } else if (angular.equals(local,  self._parseObject(self._object))) {
+        } else if (angular.equals(local, self._parseObject(self._object))) {
           return;
         }
 
