@@ -118,6 +118,18 @@ casper.then(function() {
   }, "Testing if $add, $set, $save and $remove return a promise");
 });
 
+casper.then(function() {
+  this.test.assertEval(function() {
+    _scope.message = "Testing $id value";
+
+    var id = _scope.messages.$id;
+    var fbRef = new Firebase(_url);
+
+    if(id === fbRef.name()) { return true; }
+    return false;
+  }, "Testing if $id resolves to firebaseRef.name()");
+});
+
 casper.run(function() {
   this.test.done();
 });
