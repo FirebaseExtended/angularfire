@@ -233,7 +233,7 @@
       // data has been successfully saved to the server.
       object.$set = function(newValue) {
         var deferred = self._q.defer();
-        self._fRef.ref().set(newValue, function(err) {
+        self._fRef.ref().set(self._parseObject(newValue), function(err) {
           if (err) {
             deferred.reject(err);
           } else {
