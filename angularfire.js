@@ -616,7 +616,8 @@
         if (self._object.$value &&
             angular.equals(local, self._object.$value)) {
           return;
-        } else if (angular.equals(local, self._pareseObject(self._object))) {
+	} else if (angular.equals(local,  self._parseObject(self._object))) {
+          return;
           return;
         }
 
