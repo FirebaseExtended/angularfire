@@ -803,9 +803,10 @@
 
     // Creates a user for Firebase Simple Login. Function 'cb' receives an
     // error as the first argument and a Simple Login user object as the second
-    // argument. Set the optional 'noLogin' argument to true if you don't want
-    // the newly created user to also be logged in.
-    createUser: function(email, password, noLogin) {
+    // argument. Note that this function only creates the user, if you wish to
+    // log in as the newly created user, call $login() after the promise for
+    // this method has been fulfilled.
+    createUser: function(email, password) {
       var self = this;
       var deferred = this._q.defer();
 
@@ -814,15 +815,7 @@
           self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
           deferred.reject(err);
         } else {
-          if (!noLogin) {
-            // Resolve the promise with a new promise for login.
-            deferred.resolve(self.login("password", {
-              email: email,
-              password: password
-            }));
-          } else {
-            deferred.resolve(user);
-          }
+          deferred.resolve(user);
         }
       });
 
