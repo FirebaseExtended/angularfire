@@ -431,6 +431,12 @@
           }
         }
 
+        // Call handlers for the "loaded" event.
+        if (self._loaded !== true) {
+          self._loaded = true;
+          self._broadcastEvent("loaded", value);
+        }
+
         switch (typeof value) {
         // For primitive values, simply update the object returned.
         case "string":
@@ -440,20 +446,16 @@
           break;
         // For arrays and objects, switch to child methods.
         case "object":
+          self._fRef.off("value", gotInitialValue);
           // Before switching to child methods, save priority for top node.
           if (snapshot.getPriority() !== null) {
             self._updateModel("$priority", snapshot.getPriority());
           }
           self._getChildValues();
-          self._fRef.off("value", gotInitialValue);
           break;
         default:
           throw new Error("Unexpected type from remote data " + typeof value);
         }
-
-        // Call handlers for the "loaded" event.
-        self._loaded = true;
-        self._broadcastEvent("loaded", value);
       };
 
       self._fRef.on("value", gotInitialValue);
@@ -620,7 +622,7 @@
         // If the new local value matches the current remote value, we don't
         // trigger a remote update.
         var local = self._parseObject(self._parse(name)(scope));
-        if (self._object.$value &&
+        if (self._object.$value !== undefined &&
             angular.equals(local, self._object.$value)) {
           return;
         } else if (angular.equals(local, self._parseObject(self._object))) {
