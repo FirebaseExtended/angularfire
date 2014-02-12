@@ -26,6 +26,14 @@ casper.waitFor(function() {
 });
 
 casper.then(function() {
+  this.test.assertEval(function() {
+    if (_scope.messages.$id != "chat") return false;
+    if (_scope.messageCount.$id != "chatMsgs") return false;
+    return true;
+  }, "Testing $id for object");
+});
+
+casper.then(function() {
   var _testName = "TestGuest";
   var _testMessage = "This is a test message";
   var _testCountMessage = 1;
