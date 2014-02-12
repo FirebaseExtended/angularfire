@@ -126,6 +126,14 @@ casper.then(function() {
   }, "Testing if $add, $set, $save and $remove return a promise");
 });
 
+casper.then(function() {
+  this.test.assertEval(function() {
+    var empty = function() {};
+    var obj = _scope.messages.$on('loaded', empty).$on('change', empty);
+    return JSON.stringify(_scope.messages) == JSON.stringify(obj);
+  }, "Testing chaining of $on method");
+});
+
 casper.run(function() {
   this.test.done();
 });

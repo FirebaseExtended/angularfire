@@ -341,13 +341,12 @@
           self._timeout(function() {
             callback();
           });
-          return;
-        }
-        if (self._on.hasOwnProperty(type)) {
+        } else if (self._on.hasOwnProperty(type)) {
           self._on[type].push(callback);
         } else {
           throw new Error("Invalid event type " + type + " specified");
         }
+        return object;
       };
 
       // Detach an event handler from a specified event type. If no callback
