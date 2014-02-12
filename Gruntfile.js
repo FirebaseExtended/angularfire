@@ -62,6 +62,7 @@ module.exports = function(grunt) {
         }
       }
     },
+
     karma: {
       unit: {
         configFile: 'tests/automatic_karma.conf.js'
@@ -70,6 +71,12 @@ module.exports = function(grunt) {
         configFile: 'tests/automatic_karma.conf.js',
         singleRun: true,
         browsers: ['PhantomJS']
+      }
+    },
+
+    changelog: {
+      options: {
+        dest: 'CHANGELOG.md'
       }
     }
   });
