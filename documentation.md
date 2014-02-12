@@ -280,6 +280,9 @@ Note that Firebase also provides a low-level, extremely flexible authentication 
 Simple Login is intended to handle the common use cases that most
 applications encounter with a drop-in, hosted solution.
 
+In order to use the `$firebaseSimpleLogin` service, you must first include the Firebase Simple Login
+JS library (in addition to firebase.js) - more information about this library can be
+[found here](https://www.firebase.com/docs/security/simple-login-overview.html).
 
 ### Login Service Constructor
 
@@ -296,9 +299,9 @@ myapp.controller("MyAuthController", ["$scope", "$firebaseSimpleLogin",
 ]);
 ```
 
-The login object returned by `$firebaseSimpleLogin` contains a single property named `user`.
-This property will be set to `null` if the user is logged out and will change
-to an object containing the user's details once they are logged in.
+The login object returned by `$firebaseSimpleLogin` contains several method and
+a property named `user`. This property will be set to `null` if the user is
+logged out and will change to an object containing the user's details once they are logged in.
 
 The contents of the `user` object vary depending on the authentication
 mechanism used, but will, at a minimum, contain the `id` and `provider`
