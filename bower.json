@@ -5,9 +5,11 @@
   "ignore": ["Gruntfile.js", "package.js", "tests", "README.md", ".travis.yml"],
   "dependencies": {
     "angular": "~1.2.0",
-    "angular-mocks" : "~1.2.0",
     "firebase": "~1.0.2",
-    "firebase-simple-login": "~1.2.3",
+    "firebase-simple-login": "~1.2.3"
+  },
+  "devDependencies": {
+    "angular-mocks" : "~1.2.0",
     "observe-js": "~0.1.4"
   }
 }
