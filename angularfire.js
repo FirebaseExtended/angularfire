@@ -148,7 +148,7 @@
 
       // Establish a 3-way data binding (implicit sync) with the specified
       // Firebase location and a model on $scope. To be used from a controller
-      // to automatically synchronize *all* local changes. It take three
+      // to automatically synchronize *all* local changes. It takes three
       // arguments:
       //
       //    * `$scope`   : The scope with which the bound model is associated.
@@ -156,7 +156,7 @@
       //    * `defaultFn`: A function that provides a default value if the
       //                   remote value is not set. Optional.
       //
-      // This function also returns a promise, which when resolve will be
+      // This function also returns a promise, which, when resolved, will be
       // provided an `unbind` method, a function which you can call to stop
       // watching the local model for changes.
       object.$bind = function(scope, name, defaultFn) {
