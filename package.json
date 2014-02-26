@@ -1,6 +1,6 @@
 {
   "name": "angularfire",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "An officially supported AngularJS binding for Firebase.",
   "main": "angularfire.js",
   "repository": {

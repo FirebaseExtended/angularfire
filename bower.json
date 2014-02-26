@@ -1,12 +1,12 @@
 {
   "name": "angularfire",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "main": ["./angularfire.js"],
   "ignore": ["Gruntfile.js", "package.js", "tests", "README.md", ".travis.yml"],
   "dependencies": {
     "angular": "~1.2.0",
-    "firebase": "~1.0.2",
-    "firebase-simple-login": "~1.2.3"
+    "firebase": "~1.0.5",
+    "firebase-simple-login": "~1.2.5"
   },
   "devDependencies": {
     "angular-mocks" : "~1.2.0",
