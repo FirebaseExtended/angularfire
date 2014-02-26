@@ -89,6 +89,33 @@ casper.then(function() {
 });
 
 casper.then(function() {
+  var _testName = "GuestTest";
+  var _testMessage = "Modified test message";
+
+  this.evaluate(function(params) {
+    window.__flag = false;
+    var idx = _scope.messages.$getIndex();
+    var key = idx[idx.length-1];
+    var obj = {}; obj[key] = {from: params[0], content: params[1]};
+    _scope.messages.$update(obj).then(function() {
+      window.__flag = true;
+    });
+  }, [_testName, _testMessage]);
+
+  this.waitFor(function() {
+    return this.getGlobal("__flag") === true;
+  }, function() {
+    this.test.assertEval(function(params) {
+      var msgs = document.querySelectorAll(".messageBlock");
+      if (msgs.length != 2) {
+        return false;
+      }
+      return testIfInDOM(params[0], params[1], msgs[1]);
+    }, "Testing if $update works", [_testName, _testMessage]);
+  });
+});
+
+casper.then(function() {
   this.test.assertEval(function() {
     _scope.message = "Limit Test";
     _scope.addMessage();

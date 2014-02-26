@@ -241,6 +241,27 @@
         return deferred.promise;
       };
 
+      // Non-destructively update only a subset of keys for the current object.
+      // This is the equivalent of calling `update()` on a Firebase reference.
+      // Takes a single mandatory argument:
+      //
+      //    * `newValue`: The set of keys and values that must be updated for
+      //                  this location.
+      //
+      // This function returns a promise that will be resolved when the data
+      // has been successfully saved to the server.
+      object.$update = function(newValue) {
+        var deferred = self._q.defer();
+        self._fRef.ref().update(self._parseObject(newValue), function(err) {
+          if (err) {
+            deferred.reject(err);
+          } else {
+            deferred.resolve();
+          }
+        });
+        return deferred.promise;
+      };
+
       // Update a value within a transaction. Calling this is the
       // equivalent of calling `transaction()` on a Firebase reference.
       //
