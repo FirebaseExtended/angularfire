@@ -650,8 +650,8 @@
       // Once we receive the initial value, the promise will be resolved.
       self._fRef.once("value", function(snap) {
         self._timeout(function() {
-          // Objects require a second event loop run, since we switch from
-          // value events to child_added.
+          // HACK / FIXME: Objects require a second event loop run, since we
+          // switch from value events to child_added. See #209 on Github.
           if (typeof snap.val() != "object") {
             // If the remote value is not set and defaultFn was provided,
             // initialize the local value with the result of defaultFn().
@@ -674,7 +674,6 @@
 
       return deferred.promise;
     },
-
 
     // Parse a local model, removing all properties beginning with "$" and
     // converting $priority to ".priority".
