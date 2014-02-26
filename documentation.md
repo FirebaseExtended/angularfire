@@ -13,9 +13,42 @@ Firebase and another for AngularFire, in your HTML file. Note that they're both
 served from Firebase's CDN, which you are welcome to use.
 
 ``` html
-<script src="https://cdn.firebase.com/v0/firebase.js"></script>
+<script src="https://cdn.firebase.com/js/client/1.0.2/firebase.js"></script>
 <script src="https://cdn.firebase.com/libs/angularfire/0.6.0/angularfire.js"></script>
 ```
+
+If you want to use any Simple Login related functionality, you'll need to include
+the appropriate version of the Simple Login library as well.
+
+``` html
+<script src="https://cdn.firebase.com/js/simple-login/1.2.3/firebase-simple-login.js"></script>
+```
+
+Certain versions of AngularFire require certain versions of the Firebase and
+Simple Login libraries. The following table documents the version dependencies:
+
+<table>
+  <tr>
+    <th>AngularFire Version</th>
+    <th>Firebase Version</th>
+    <th>Simple Login Version</th>
+  </tr>
+  <tr>
+    <td>0.3.0 - 0.5.0</td>
+    <td>v0</td>
+    <td>v0</td>
+  </tr>
+  <tr>
+    <td>0.6.0</td>
+    <td>1.0.2</td>
+    <td>1.2.3</td>
+  </tr>
+  <tr>
+    <td>0.7.0</td>
+    <td>1.0.5</td>
+    <td>1.2.5</td>
+  </tr>
+</table>
 
 Next, add the Firebase module as a dependency for your Angular app.
 
@@ -70,6 +103,16 @@ equivalent of calling `push(value)` on a Firebase reference.
 $scope.items.$add({foo: "bar"});
 ```
 
+This method returns a promise that will be fulfilled when the data has
+been saved to the server. The promise will be resolved with a Firebase
+reference, from which you can extract the key name of the newly added data.
+
+``` js
+$scope.items.$add({baz: "boo"}).then(function(ref) {
+  ref.name();                // Key name of the added data.
+});
+```
+
 ### $remove([key])
 
 The `$remove` method takes a single optional argument, a key. If a key is
@@ -80,6 +123,9 @@ key is provided, the entire object will be removed remotely.
 $scope.items.$remove("foo"); // Removes child named "foo".
 $scope.items.$remove();      // Removes the entire object.
 ```
+
+This method returns a promise which will be resolved when the data has
+been successfully deleted from the server.
 
 ### $save([key])
 
@@ -93,6 +139,9 @@ used to save any local changes made to the model.
 $scope.items.foo = "baz";
 $scope.items.$save("foo");  // new Firebase(URL + "/foo") now contains "baz".
 ```
+
+This method returns a promise which will be resolved when the data has been
+successfully saved on the server.
 
 ### $child(key)
 
@@ -112,6 +161,23 @@ will also be subsequently updated to this new value.
 $scope.items.$set({bar: "baz"});  // new Firebase(URL + "/foo") is now null.
 ```
 
+This method returns a promise which will be resolved when the data has been
+successfully saved on the server.
+
+### $update(value)
+
+Non-destructively update the Firebase location with the provided keys and values.
+The keys specified in `value` will be updated, but all other values will
+remain untouched. This is the equivalent of calling `update(value)` on a Firebase reference.
+
+``` js
+$scope.items.$set({foo: "bar", baz: "boo"});
+$scope.items.$update({baz: "fizz"});  // The data is now {foo: "bar", baz: "fizz"}.
+```
+
+This method returns a promise which will be resolved when the data has been
+successfully saved on the server.
+
 ### $transaction(updateFn, [applyLocally])
 
 Used to atomically modify data at the Firebase location. $transaction is used to modify the
@@ -129,7 +195,7 @@ multiple times, you may see intermediate states. You can set the `applyLocally` 
 to suppress these intermediate states and instead wait until the transaction has complted before
 events are raised.
 
-$transaction returns a promise which will resolve to null if the transaction is aborted, otherwise
+This method returns a promise which will resolve to null if the transaction is aborted, otherwise
 it resolves with the snapshot of the new data at the location.
 
 ``` js
@@ -155,13 +221,13 @@ $scope.messageCount.$transaction(function(currentCount) {
 
 Returns an ordered list of keys in the data object, sorted by their Firebase priorities.
 If you're looking for a quick way to convert the items to a sorted array for use in tools
- like `ng-repeat`, see the [orderByPriority](#orderbypriority) filter.
+like `ng-repeat`, see the [orderByPriority](#orderbypriority) filter.
 
- ``` js
- var keys = $scope.items.$getIndex();
- keys.forEach(function(key, i) {
-    console.log(i, $scope.items[key]); // prints items in order they appear in Firebase
- });
+``` js
+var keys = $scope.items.$getIndex();
+keys.forEach(function(key, i) {
+  console.log(i, $scope.items[key]); // Prints items in order they appear in Firebase.
+});
  ```
 
 Priorities
