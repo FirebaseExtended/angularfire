@@ -43,18 +43,16 @@
       if (input) {
         if (!input.$getIndex || typeof input.$getIndex != "function") {
           // input is not an angularFire instance
-          if( angular.isArray(input) ) {
-            // if input is an array, copy it
+          if (angular.isArray(input)) {
+            // If input is an array, copy it
             sorted = input.slice(0);
-          }
-          else if( angular.isObject(input) ) {
+          } else if (angular.isObject(input)) {
             // If input is an object, map it to an array
             angular.forEach(input, function(prop) {
               sorted.push(prop);
             });
           }
-        }
-        else {
+        } else {
           // input is an angularFire instance
           var index = input.$getIndex();
           if (index.length > 0) {
@@ -140,7 +138,7 @@
       var self = this;
       var object = {};
 
-      // Set the $id val equal to the firebase reference's name() function.
+      // Set the $id val equal to the Firebase reference's name() function.
       object.$id = self._fRef.ref().name();
 
       // Establish a 3-way data binding (implicit sync) with the specified
@@ -389,6 +387,11 @@
       // ordered by their Firebase priority.
       object.$getIndex = function() {
         return angular.copy(self._index);
+      };
+
+      // Return the reference used by this object.
+      object.$getRef = function() {
+        return self._fRef.ref();
       };
 
       self._object = object;

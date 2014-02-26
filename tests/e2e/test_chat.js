@@ -128,6 +128,14 @@ casper.then(function() {
 
 casper.then(function() {
   this.test.assertEval(function() {
+    if (_scope.messages.$getRef().toString() != _url) return false;
+    if (!(_scope.messages.$getRef() instanceof Firebase)) return false;
+    return true;
+  }, "Testing if $getRef returns valid Firebase reference");
+});
+
+casper.then(function() {
+  this.test.assertEval(function() {
     var empty = function() {};
     var obj = _scope.messages.$on('loaded', empty).$on('change', empty);
     return JSON.stringify(_scope.messages) == JSON.stringify(obj);
