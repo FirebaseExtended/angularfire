@@ -297,6 +297,8 @@
             }
           },
         applyLocally);
+        
+        return deferred.promise;
       };
 
       // Remove this object from the remote data. Calling this is the
