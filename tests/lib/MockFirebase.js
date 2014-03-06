@@ -68,7 +68,7 @@
       this.currentPath = currentPath || 'Mock://';
 
       // do not modify this directly, use set() and flush(true)
-      this.data = arguments.length > 1 || parent? data||null : _.cloneDeep(MockFirebase.DEFAULT_DATA);
+      this.data = _.cloneDeep(arguments.length > 1? data||null : MockFirebase.DEFAULT_DATA);
 
       // see failNext()
       this.errs = {};
@@ -143,8 +143,10 @@
 
       /**
        * Automatically trigger a flush event after each operation. If a numeric delay is specified, this is an
-       * asynchronous event. If value is set to true, it is synchronous (flush is triggered immediately)
-       * @param {int} [delay]
+       * asynchronous event. If value is set to true, it is synchronous (flush is triggered immediately). Setting
+       * this to false disabled autoFlush
+       *
+       * @param {int|boolean} [delay]
        */
       autoFlush: function(delay){
          this.flushDelay = _.isUndefined(delay)? true : delay;
@@ -164,6 +166,14 @@
        */
       failNext: function(methodName, error) {
          this.errs[methodName] = error;
+      },
+
+      /**
+       * Returns a copy of the current data
+       * @returns {*}
+       */
+      getData: function() {
+         return _.cloneDeep(this.data);
       },
 
 
@@ -216,16 +226,18 @@
 
       on: function(event, callback) { //todo cancelCallback?
          this._events[event].push(callback);
-         var data = this.data, self = this;
+         var data = this.getData(), self = this;
          if( event === 'value' ) {
             this._defer(function() {
-               callback(makeSnap(self, data))
+               callback(makeSnap(self, data));
             });
          }
          else if( event === 'child_added' ) {
             this._defer(function() {
+               var prev = null;
                _.each(data, function(v, k) {
-                  callback(makeSnap(self.child(k), v));
+                  callback(makeSnap(self.child(k), v), prev);
+                  prev = k;
                });
             });
          }
@@ -251,7 +263,7 @@
          var finishedSpy = sinon.spy(finishedFn);
          this._defer(function() {
             var err = this._nextErr('transaction');
-            var res = valueSpy(_.isObject(self.data)? _.cloneDeep(self.data) : _.isUndefined(self.data)? null : self.data);
+            var res = valueSpy(self.getData());
             var newData = _.isUndefined(res) || err? this.data : res;
             finishedSpy(err, err === null && !_.isUndefined(res), makeSnap(self, newData));
             this._dataChanged(newData);
@@ -296,7 +308,7 @@
       _childChanged: function(ref, data) {
          if( !_.isObject(this.data) ) { this.data = {}; }
          this.data[ref.name()] = _.cloneDeep(data);
-         this._trigger('child_changed', data);
+         this._trigger('child_changed', data, ref.name());
          this._trigger('value', this.data);
          this.parent && this.parent._childChanged(this, this.data);
       },
@@ -321,11 +333,16 @@
          if( this.flushDelay !== false ) { this.flush(this.flushDelay); }
       },
 
-      _trigger: function(event, data) {
-         var snap = makeSnap(this, data);
+      _trigger: function(event, data, key) {
+         var snap = makeSnap(this, data), self = this;
          _.each(this._events[event], function(fn) {
-            //todo allow scope by changing fn to an array? for use with on() and once() which accept scope?
-            fn(snap);
+            if(_.contains(['child_added', 'child_moved'], event)) {
+               fn(snap, getPrevChild(self.data, key));
+            }
+            else {
+               //todo allow scope by changing fn to an array? for use with on() and once() which accept scope?
+               fn(snap);
+            }
          });
       },
 
@@ -353,6 +370,7 @@
          val: function() { return data; },
          ref: function() { return ref; },
          name: function() { return ref.name() },
+         getPriority: function() { return null; }, //todo
          forEach: function(cb, scope) {
             _.each(data, function(v, k, list) {
                var res = cb.call(scope, v, k, list);
@@ -373,6 +391,14 @@
 
    function extractName(path) {
       return ((path || '').match(/\/([^.$\[\]#\/]+)$/)||[null, null])[1];
+   }
+
+   function getPrevChild(data, key) {
+      var keys = _.keys(data), i = _.indexOf(keys, key);
+      if( keys.length < 2 || i < 1 ) { return null; }
+      else {
+         return keys[i];
+      }
    }
 
    // a polyfill for window.atob to allow JWT token parsing
@@ -435,6 +461,8 @@
          });
 
    }(exports));
+
+   MockFirebase._ = _; // expose for tests
 
    MockFirebase.stub = function(obj, key) {
       obj[key] = MockFirebase;
