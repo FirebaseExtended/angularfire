@@ -258,14 +258,16 @@
       },
 
       transaction: function(valueFn, finishedFn, applyLocally) {
-         var self = this;
          var valueSpy = sinon.spy(valueFn);
          var finishedSpy = sinon.spy(finishedFn);
          this._defer(function() {
             var err = this._nextErr('transaction');
-            var res = valueSpy(self.getData());
-            var newData = _.isUndefined(res) || err? this.data : res;
-            finishedSpy(err, err === null && !_.isUndefined(res), makeSnap(self, newData));
+            // unlike most defer methods, this will use the value as it exists at the time
+            // the transaction is actually invoked, which is the eventual consistent value
+            // it would have in reality
+            var res = valueSpy(this.getData());
+            var newData = _.isUndefined(res) || err? this.getData() : res;
+            finishedSpy(err, err === null && !_.isUndefined(res), makeSnap(this, newData));
             this._dataChanged(newData);
          });
          return [valueSpy, finishedSpy, applyLocally];

@@ -11,7 +11,7 @@ module.exports = function(config) {
       'lib/lodash.js',
       'lib/MockFirebase.js',
       '../angularfire.js',
-      'unit/orderbypriority.spec.js'
+      'unit/**/*.spec.js'
     ],
 
     autoWatch: true,
