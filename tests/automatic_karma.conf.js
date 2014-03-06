@@ -9,7 +9,6 @@ module.exports = function(config) {
       '../bower_components/angular-mocks/angular-mocks.js',
       '../lib/omnibinder-protocol.js',
       'lib/lodash.js',
-      'lib/sinon.js',
       'lib/MockFirebase.js',
       'unit/*.spec.js'
     ],
