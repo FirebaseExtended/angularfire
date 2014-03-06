@@ -10,7 +10,8 @@ module.exports = function(config) {
       '../lib/omnibinder-protocol.js',
       'lib/lodash.js',
       'lib/MockFirebase.js',
-      'unit/*.spec.js'
+      '../angularfire.js',
+      'unit/orderbypriority.spec.js'
     ],
 
     autoWatch: true,
