@@ -26,15 +26,18 @@ describe('OrderByPriority Filter', function () {
 
    it('should return an array from a $firebase instance', function () {
       var loaded = false;
-      var ref = $firebase(new Firebase('Mock//sort').child('data').autoFlush());
-      ref.$on('loaded', function() {
-         loaded = true;
-      });
+      // autoFlush makes all Firebase methods trigger immediately
+      var fb = new Firebase('Mock//sort').child('data').autoFlush();
+      var ref = $firebase(fb);
+      // $timeout is a mock, so we have to tell the mock when to trigger it
+      // and fire all the angularFire events
       $timeout.flush();
-      console.log(ref.$getIndex());
+      // now we can actually trigger our filter and pass in the $firebase ref
       var res = $filter('orderByPriority')(ref);
-      expect(res).toEqual(_.map(Firebase.DEFAULT_DATA.data, function(v, k) {
+      // and finally test the results against the original data in Firebase instance
+      var originalData = _.map(fb.getData(), function(v, k) {
          return _.isObject(v)? _.assign({'$id': k}, v) : v;
-      }));
+      });
+      expect(res).toEqual(originalData);
    });
 });
