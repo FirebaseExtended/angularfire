@@ -1,7 +1,7 @@
 describe('OmniBinder Protocol', function () {
   var firebinder;
 
-  beforeEach(module('omniFire'))
+  beforeEach(module('omniFire'));
 
   describe('objectChange', function () {
     var objectChange;
@@ -49,31 +49,27 @@ describe('OmniBinder Protocol', function () {
       expect(typeof firebinder.subscribe).toBe('function');
     });
 
-
     describe('subscribe', function () {
-      it('should create a new Firebase instance for the given location', function () {
-        var binder = {query: {url: 'foo/bar/'}};
-        var spy = spyOn(window, 'Firebase').andCallThrough()
-
-        firebinder.subscribe(binder);
-        expect(spy).toHaveBeenCalledWith('foo/bar/');
-      });
-
+       it('should create a new Firebase instance for the given location', function () {
+          var binder = {query: {url: 'foo/bar/'}};
+          firebinder.subscribe(binder);
+          // can't use spyOn(Firbase) here; it breaks the prototype of MockFirebase (makes all methods undefined)
+          expect(binder.fbRef.toString()).toEqual('foo/bar/');
+       });
 
       it('should call limit if provided in query', function () {
         var binder = {query: {limit: 10, url: 'foo/bar'}};
         firebinder.subscribe(binder);
-        expect(binder.fbRef._limit).toBe(10);
+        expect(binder.fbRef.limit).toHaveBeenCalledWith(10);
       });
 
 
       it('should call startAt if provided in query', function () {
         var binder = {query: {limit: 20, startAt: 50, url: 'foo/bar'}};
         firebinder.subscribe(binder);
-        expect(binder.fbRef._limit).toBe(20);
-        expect(binder.fbRef._startAt).toBe(50);
+        expect(binder.fbRef.limit).toHaveBeenCalledWith(20);
+        expect(binder.fbRef.startAt).toHaveBeenCalledWith(50);
       });
-
 
       describe('child_added', function () {
         var binder, snapshot,
@@ -99,7 +95,7 @@ describe('OmniBinder Protocol', function () {
         it('should call on child_added on the ref during construction',
           function () {
             firebinder.subscribe(binder);
-            expect(typeof binder.fbRef._events['child_added']).toBeDefined();
+            expect(binder.fbRef.on.callCount).toBe(1);
           });
 
 
@@ -108,7 +104,7 @@ describe('OmniBinder Protocol', function () {
             var spy = spyOn(firebinder, 'onChildAdded');
 
             firebinder.subscribe(binder);
-            binder.fbRef._events['child_added']();
+            binder.fbRef.flush();
 
             expect(spy).toHaveBeenCalled();
           });

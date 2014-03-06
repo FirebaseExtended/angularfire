@@ -1,5 +1,18 @@
 (function() {
 
+   // some hoop jumping for node require() vs browser usage
+   var exports = typeof exports != 'undefined' ? exports : this;
+   var _, sinon;
+   exports.Firebase = MockFirebase; //todo use MockFirebase.stub() instead of forcing overwrite
+   if( typeof module !== "undefined" && module.exports && typeof(require) === 'function' ) {
+      _ = require('lodash');
+      sinon = require('sinon');
+   }
+   else {
+      _ = exports._;
+      sinon = exports.sinon;
+   }
+
    /**
     * A mock that simulates Firebase operations for use in unit tests.
     *
@@ -48,30 +61,59 @@
     * @constructor
     */
    function MockFirebase(currentPath, data, parent, name) {
-      // we use the actual data object here which can have side effects
-      // important to keep in mind if you pass data here and then try to
-      // use it later; we do this so that calling set on child paths
-      // also updates the parent
-      this.data = arguments.length > 1 || parent? data||null : _.cloneDeep(MockFirebase.DEFAULT_DATA);
-      this.errs = {};
+      // these are set whenever startAt(), limit() or endAt() get invoked
+      this._queryProps = { limit: undefined, startAt: undefined, endAt: undefined };
+
+      // represents the fake url
       this.currentPath = currentPath || 'Mock://';
-      this.parent = parent||null;
+
+      // do not modify this directly, use set() and flush(true)
+      this.data = arguments.length > 1 || parent? data||null : _.cloneDeep(MockFirebase.DEFAULT_DATA);
+
+      // see failNext()
+      this.errs = {};
+
+      // null for the root path
       this.myName = parent? name : extractName(currentPath);
+
+      // see autoFlush()
       this.flushDelay = false;
+
+      // stores the listeners for various event types
+      this._events = { value: [], child_added: [], child_removed: [], child_changed: [], child_moved: [] };
+
+      // allows changes to be propagated between child/parent instances
+      this.parent = parent||null;
       this.children = [];
       parent && parent.children.push(this);
-      this._events = { value: [], child_added: [], child_removed: [], child_changed: [], child_moved: [] };
+
+      // stores the operations that have been queued until a flush() event is triggered
       this.ops = [];
 
-      for(var key in this)
-         if( this.hasOwnProperty(key) && typeof(this[key]) === 'function' )
-            sinon.spy(this, key);
+      // turn all our public methods into spies so they can be monitored for calls and return values
+      // see jasmine spies: https://github.com/pivotal/jasmine/wiki/Spies
+      // the Firebase constructor can be spied on using spyOn(window, 'Firebase') from within the test unit
+      if( typeof spyOn === 'function' ) {
+         for(var key in this) {
+            if( !key.match(/^_/) && typeof(this[key]) === 'function' ) {
+               spyOn(this, key).andCallThrough();
+            }
+         }
+      }
    }
 
    MockFirebase.prototype = {
+      /*****************************************************
+       * Test Unit tools (not part of Firebase API)
+       *****************************************************/
+
       /**
        * Invoke all the operations that have been queued thus far. If a numeric delay is specified, this
        * occurs asynchronously. Otherwise, it is a synchronous event.
+       *
+       * This allows Firebase to be used in synchronous tests without waiting for async callbacks. It also
+       * provides a rudimentary mechanism for simulating locally cached data (events are triggered
+       * synchronously when you do on('value') or on('child_added') against locally cached data)
        *
        * If you call this multiple times with different delay values, you could invoke the events out
        * of order; make sure that is your intention.
@@ -99,7 +141,11 @@
          return self;
       },
 
-      /** @param {int} [delay] */
+      /**
+       * Automatically trigger a flush event after each operation. If a numeric delay is specified, this is an
+       * asynchronous event. If value is set to true, it is synchronous (flush is triggered immediately)
+       * @param {int} [delay]
+       */
       autoFlush: function(delay){
          this.flushDelay = _.isUndefined(delay)? true : delay;
          this.children.forEach(function(c) {
@@ -109,9 +155,21 @@
          return this;
       },
 
-      failNext: function(event, error) {
-         this.errs[event] = error;
+      /**
+       * Simulate a failure by specifying that the next invocation of methodName should
+       * fail with the provided error.
+       *
+       * @param {String} methodName currently only supports `set` and `transaction`
+       * @param {String|Error} error
+       */
+      failNext: function(methodName, error) {
+         this.errs[methodName] = error;
       },
+
+
+      /*****************************************************
+       * Firebase API methods
+       *****************************************************/
 
       toString: function() {
          return this.currentPath;
@@ -201,6 +259,40 @@
          return [valueSpy, finishedSpy, applyLocally];
       },
 
+      /**
+       * If token is valid and parses, returns the contents of token as exected. If not, the error is returned.
+       * Does not change behavior in any way (since we don't really auth anywhere)
+       *
+       * @param {String} token
+       * @param {Function} [callback]
+       */
+      auth: function(token, callback) {
+         callback && this._defer(callback);
+      },
+
+      /**
+       * Just a stub at this point.
+       * @param {int} limit
+       */
+      limit: function(limit) {
+         this._queryProps.limit = limit;
+         //todo
+      },
+
+      startAt: function(priority, recordId) {
+         this._queryProps.startAt = [priority, recordId];
+         //todo
+      },
+
+      endAt: function(priority, recordId) {
+         this._queryProps.endAt = [priority, recordId];
+         //todo
+      },
+
+      /*****************************************************
+       * Private/internal methods
+       *****************************************************/
+
       _childChanged: function(ref, data) {
          if( !_.isObject(this.data) ) { this.data = {}; }
          this.data[ref.name()] = _.cloneDeep(data);
@@ -283,17 +375,66 @@
       return ((path || '').match(/\/([^.$\[\]#\/]+)$/)||[null, null])[1];
    }
 
-   var _, sinon;
-   if( typeof module !== "undefined" && module.exports ) {
-      module.exports = MockFirebase;
-      _ = require('lodash');
-      sinon = require('sinon');
-   }
-   else {
-      window.MockFirebase = MockFirebase;
-      _ = window._;
-      sinon = window.sinon;
-   }
+   // a polyfill for window.atob to allow JWT token parsing
+   // credits: https://github.com/davidchambers/Base64.js
+   ;(function (object) {
+      var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+
+      function InvalidCharacterError(message) {
+         this.message = message;
+      }
+      InvalidCharacterError.prototype = new Error;
+      InvalidCharacterError.prototype.name = 'InvalidCharacterError';
+
+      // encoder
+      // [https://gist.github.com/999166] by [https://github.com/nignag]
+      object.btoa || (
+         object.btoa = function (input) {
+            for (
+               // initialize result and counter
+               var block, charCode, idx = 0, map = chars, output = '';
+               // if the next input index does not exist:
+               //   change the mapping table to "="
+               //   check if d has no fractional digits
+               input.charAt(idx | 0) || (map = '=', idx % 1);
+               // "8 - idx % 1 * 8" generates the sequence 2, 4, 6, 8
+               output += map.charAt(63 & block >> 8 - idx % 1 * 8)
+               ) {
+               charCode = input.charCodeAt(idx += 3/4);
+               if (charCode > 0xFF) {
+                  throw new InvalidCharacterError("'btoa' failed: The string to be encoded contains characters outside of the Latin1 range.");
+               }
+               block = block << 8 | charCode;
+            }
+            return output;
+         });
+
+      // decoder
+      // [https://gist.github.com/1020396] by [https://github.com/atk]
+      object.atob || (
+         object.atob = function (input) {
+            input = input.replace(/=+$/, '')
+            if (input.length % 4 == 1) {
+               throw new InvalidCharacterError("'atob' failed: The string to be decoded is not correctly encoded.");
+            }
+            for (
+               // initialize result and counters
+               var bc = 0, bs, buffer, idx = 0, output = '';
+               // get next character
+               buffer = input.charAt(idx++);
+               // character found in table? initialize bit storage and add its ascii value;
+               ~buffer && (bs = bc % 4 ? bs * 64 + buffer : buffer,
+                  // and if not first of each 4 characters,
+                  // convert the first 8 bits to one ascii character
+                  bc++ % 4) ? output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0
+               ) {
+               // try to find character in table (0-63, not found => -1)
+               buffer = chars.indexOf(buffer);
+            }
+            return output;
+         });
+
+   }(exports));
 
    MockFirebase.stub = function(obj, key) {
       obj[key] = MockFirebase;
@@ -314,5 +455,4 @@
          }
       }
    };
-
 })();

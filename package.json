@@ -29,6 +29,7 @@
     "karma-phantomjs-launcher": "~0.1.0",
     "karma": "~0.10.4",
     "karma-chrome-launcher": "~0.1.0",
-    "protractor": "~0.12.1"
+    "protractor": "~0.12.1",
+    "lodash": "~2.4.1"
   }
 }
