@@ -8,8 +8,10 @@ module.exports = function(config) {
       '../bower_components/angular/angular.js',
       '../bower_components/angular-mocks/angular-mocks.js',
       '../lib/omnibinder-protocol.js',
-      'firebase-mock.js',
-      'unit/**/*.spec.js'
+      'lib/lodash.js',
+      'lib/sinon.js',
+      'lib/MockFirebase.js',
+      'unit/*.spec.js'
     ],
 
     autoWatch: true,
