@@ -357,7 +357,7 @@
           self._sendInitEvent(type, callback);
           // One exception if made for the 'loaded' event. If we already loaded
           // data (perhaps because it was synced), simply fire the callback.
-          if (type !== "loaded") {
+          if (type !== "loaded" || !this._loaded) {
             self._on[type].push(callback);
           }
         } else {
@@ -605,6 +605,9 @@
     // If event handlers for a specified event were attached, call them.
     _broadcastEvent: function(evt, param) {
       var cbs = this._on[evt] || [];
+      if( evt === 'loaded' ) {
+        this._on[evt] = []; // release memory
+      }
       var self = this;
 
       function _wrapTimeout(cb, param) {
