@@ -5,7 +5,7 @@
 // as normal, except that the changes are also sent to all other clients
 // instead of just a server.
 //
-//      AngularFire 0.7.1-pre1
+//      AngularFire 0.7.1-pre2
 //      http://angularfire.com
 //      License: MIT
 
@@ -353,14 +353,13 @@
       //              data has been loaded. 'object' will be an empty
       //              object ({}) until this function is called.
       object.$on = function(type, callback) {
-        // One exception if made for the 'loaded' event. If we already loaded
-        // data (perhaps because it was synced), simply fire the callback.
-        if (type == "loaded" && self._loaded) {
-          self._timeout(function() {
-            callback();
-          });
-        } else if (self._on.hasOwnProperty(type)) {
-          self._on[type].push(callback);
+        if( self._on.hasOwnProperty(type) ) {
+          self._sendInitEvent(type, callback);
+          // One exception if made for the 'loaded' event. If we already loaded
+          // data (perhaps because it was synced), simply fire the callback.
+          if (type !== "loaded") {
+            self._on[type].push(callback);
+          }
         } else {
           throw new Error("Invalid event type " + type + " specified");
         }
@@ -457,7 +456,14 @@
         if (self._loaded !== true) {
           self._loaded = true;
           self._broadcastEvent("loaded", value);
+          if( self._on.hasOwnProperty('child_added')) {
+            self._iterateChildren(function(key, val, prevChild) {
+              self._broadcastEvent('child_added', self._makeEventSnapshot(key, val, prevChild));
+            });
+          }
         }
+
+        self._broadcastEvent('value', self._makeEventSnapshot(snapshot.name(), value, null));
 
         switch (typeof value) {
         // For primitive values, simply update the object returned.
@@ -518,13 +524,7 @@
       function _handleAndBroadcastEvent(type, handler) {
         return function(snapshot, prevChild) {
           handler(snapshot, prevChild);
-          self._broadcastEvent(type, {
-            snapshot: {
-              name: snapshot.name(),
-              value: snapshot.val()
-            },
-            prevChild: prevChild
-          });
+          self._broadcastEvent(type, self._makeEventSnapshot(snapshot.name(), snapshot.val(), prevChild));
         };
       }
 
@@ -543,6 +543,9 @@
         // Remove from local model.
         self._updateModel(key, null);
       });
+      self._fRef.on('value', function(snap) {
+        self._broadcastEvent('value', self._makeEventSnapshot(snap.name(), snap.val()));
+      })
     },
 
     // Called whenever there is a remote change. Applies them to the local
@@ -616,6 +619,58 @@
             _wrapTimeout(cbs[i], param);
           }
         }
+      }
+    },
+
+    // triggers an initial event for loaded, value, and child_added events (which get immediate feedback)
+    _sendInitEvent: function(evt, callback) {
+      var self = this;
+      if( self._loaded && ['child_added', 'loaded', 'value'].indexOf(evt) > -1 ) {
+        self._timeout(function() {
+          var parsedValue = angular.isObject(self._object)? self._parseObject(self._object) : self._object;
+          switch(evt) {
+            case 'loaded':
+              callback(parsedValue);
+              break;
+            case 'value':
+              callback(self._makeEventSnapshot(self._fRef.name(), parsedValue, null));
+              break;
+            case 'child_added':
+              self._iterateChildren(parsedValue, function(name, val, prev) {
+                 callback(self._makeEventSnapshot(name, val, prev));
+              });
+              break;
+            default: // not reachable
+          }
+        });
+      }
+    },
+
+    // assuming data is an object, this method will iterate all
+    // child keys and invoke callback with (key, value, prevChild)
+    _iterateChildren: function(data, callback) {
+      if( this._loaded && angular.isObject(data) ) {
+        var prev = null;
+        for(var key in data) {
+          if( data.hasOwnProperty(key) ) {
+            callback(key, data[key], prev);
+            prev = key;
+          }
+        }
+      }
+    },
+
+    // creates a snapshot object compatible with _broadcastEvent notifications
+    _makeEventSnapshot: function(key, value, prevChild) {
+      if( angular.isUndefined(prevChild) ) {
+        prevChild = null;
+      }
+      return {
+        snapshot: {
+          name: key,
+          value: value
+        },
+        prevChild: prevChild
       }
     },
 
