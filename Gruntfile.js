@@ -76,7 +76,23 @@ module.exports = function(grunt) {
          configFile: 'tests/automatic_karma.conf.js',
          autowatch: true,
          browsers: ['PhantomJS']
-      }
+      }/*,
+      "kato": {
+         configFile: 'tests/automatic_karma.conf.js',
+         options: {
+            files: [
+               '../bower_components/angular/angular.js',
+               '../bower_components/angular-mocks/angular-mocks.js',
+               '../lib/omnibinder-protocol.js',
+               'lib/lodash.js',
+               'lib/MockFirebase.js',
+               '../angularfire.js',
+               'unit/AngularFire.spec.js'
+            ]
+         },
+         autowatch: true,
+         browsers: ['PhantomJS']
+      }*/
     },
 
     changelog: {

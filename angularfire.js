@@ -545,7 +545,7 @@
       });
       self._fRef.on('value', function(snap) {
         self._broadcastEvent('value', self._makeEventSnapshot(snap.name(), snap.val()));
-      })
+      });
     },
 
     // Called whenever there is a remote change. Applies them to the local
@@ -632,18 +632,18 @@
         self._timeout(function() {
           var parsedValue = angular.isObject(self._object)? self._parseObject(self._object) : self._object;
           switch(evt) {
-            case 'loaded':
-              callback(parsedValue);
-              break;
-            case 'value':
-              callback(self._makeEventSnapshot(self._fRef.name(), parsedValue, null));
-              break;
-            case 'child_added':
-              self._iterateChildren(parsedValue, function(name, val, prev) {
-                 callback(self._makeEventSnapshot(name, val, prev));
-              });
-              break;
-            default: // not reachable
+          case 'loaded':
+            callback(parsedValue);
+            break;
+          case 'value':
+            callback(self._makeEventSnapshot(self._fRef.name(), parsedValue, null));
+            break;
+          case 'child_added':
+            self._iterateChildren(parsedValue, function(name, val, prev) {
+              callback(self._makeEventSnapshot(name, val, prev));
+            });
+            break;
+          default: // not reachable
           }
         });
       }
@@ -674,7 +674,7 @@
           value: value
         },
         prevChild: prevChild
-      }
+      };
     },
 
     // This function creates a 3-way binding between the provided scope model
