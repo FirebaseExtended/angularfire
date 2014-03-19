@@ -13,15 +13,15 @@ Firebase and another for AngularFire, in your HTML file. Note that they're both
 served from Firebase's CDN, which you are welcome to use.
 
 ``` html
-<script src="https://cdn.firebase.com/js/client/1.0.5/firebase.js"></script>
-<script src="https://cdn.firebase.com/libs/angularfire/0.7.0/angularfire.js"></script>
+<script src="https://cdn.firebase.com/js/client/1.0.6/firebase.js"></script>
+<script src="https://cdn.firebase.com/libs/angularfire/0.7.1/angularfire.js"></script>
 ```
 
 If you want to use any Simple Login related functionality, you'll need to include
 the appropriate version of the Simple Login library as well.
 
 ``` html
-<script src="https://cdn.firebase.com/js/simple-login/1.2.5/firebase-simple-login.js"></script>
+<script src="https://cdn.firebase.com/js/simple-login/1.3.0/firebase-simple-login.js"></script>
 ```
 
 Certain versions of AngularFire require certain versions of the Firebase and
@@ -47,6 +47,11 @@ Simple Login libraries. The following table documents the version dependencies:
     <td>0.7.0</td>
     <td>1.0.5</td>
     <td>1.2.5</td>
+  </tr>
+  <tr>
+    <td>0.7.1</td>
+    <td>1.0.6</td>
+    <td>1.3.0</td>  
   </tr>
 </table>
 
