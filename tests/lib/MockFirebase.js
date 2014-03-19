@@ -3,7 +3,7 @@
    // some hoop jumping for node require() vs browser usage
    var exports = typeof exports != 'undefined' ? exports : this;
    var _, sinon;
-   exports.Firebase = MockFirebase; //todo use MockFirebase.stub() instead of forcing overwrite
+   exports.Firebase = MockFirebase; //todo use MockFirebase.stub() instead of forcing overwrite of window.Firebase
    if( typeof module !== "undefined" && module.exports && typeof(require) === 'function' ) {
       _ = require('lodash');
       sinon = require('sinon');
@@ -19,7 +19,9 @@
     * ## Setup
     *
     *     // in windows
-    *     MockFirebase.stub(window, 'Firebase'); // replace window.Firebase
+    *     <script src="lib/lodash.js"></script> <!-- dependency -->
+    *     <script src="lib/MockFirebase.js"></script> <!-- the lib -->
+    *     <!-- not working yet: MockFirebase.stub(window, 'Firebase'); // replace window.Firebase -->
     *
     *     // in node.js
     *     var Firebase = require('../lib/MockFirebase');
@@ -42,8 +44,8 @@
     * ## Trigger events automagically instead of calling flush()
     *
     *     var fb = new MockFirebase('Mock://hello/world');
-    *     fb.autoFlush(1000); // triggers events after 1 second
-    *     fb.autoFlush(); // triggers events immediately
+    *     fb.autoFlush(1000); // triggers events after 1 second (asynchronous)
+    *     fb.autoFlush(); // triggers events immediately (synchronous)
     *
     * ## Simulating Errors
     *
@@ -281,6 +283,7 @@
        * @param {Function} [callback]
        */
       auth: function(token, callback) {
+        //todo invoke callback with the parsed token contents
          callback && this._defer(callback);
       },
 
@@ -375,7 +378,7 @@
          getPriority: function() { return null; }, //todo
          forEach: function(cb, scope) {
             _.each(data, function(v, k, list) {
-               var res = cb.call(scope, v, k, list);
+               var res = cb.call(scope, makeSnap(ref.child(k), v));
                return !(res === true);
             });
          }
