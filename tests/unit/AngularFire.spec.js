@@ -26,14 +26,14 @@ describe('AngularFire', function () {
         });
 
         it('$getIndex() should work inside loaded function (#262)', function() {
-          var fb = new Firebase('Mock://').child('data').autoFlush();
+          var fb = new Firebase('Mock://').child('data');
           var called = false;
           var ref = $firebase(fb).$on('loaded', function(data) {
             called = true;
             // this assertion must be inside the callback
             expect(ref.$getIndex()).toEqual(Firebase._.keys(data));
           });
-          flush();
+          flush(fb);
           expect(called).toBe(true);
         });
 
