@@ -504,17 +504,17 @@
         if (self._bound && value === null) {
           var local = self._parseObject(self._parse(self._name)(self._scope));
           switch (typeof local) {
-            // Primitive defaults.
-            case "string":
-            case "undefined":
-              value = "";
-              break;
-            case "number":
-              value = 0;
-              break;
-            case "boolean":
-              value = false;
-              break;
+          // Primitive defaults.
+          case "string":
+          case "undefined":
+            value = "";
+            break;
+          case "number":
+            value = 0;
+            break;
+          case "boolean":
+            value = false;
+            break;
           }
         }
 
