@@ -5,7 +5,7 @@
 // as normal, except that the changes are also sent to all other clients
 // instead of just a server.
 //
-//      AngularFire 0.7.1
+//      AngularFire 0.7.2-pre
 //      http://angularfire.com
 //      License: MIT
 
@@ -645,7 +645,8 @@
       var self = this;
       if( self._loaded && ['child_added', 'loaded', 'value'].indexOf(evt) > -1 ) {
         self._timeout(function() {
-          var parsedValue = angular.isObject(self._object)? self._parseObject(self._object) : self._object;
+          var parsedValue = self._object.hasOwnProperty('$value')?
+            self._object.$value : self._parseObject(self._object);
           switch(evt) {
           case 'loaded':
             callback(parsedValue);
@@ -711,6 +712,24 @@
         self._fRef.ref().update(self._parseObject(local));
       }
 
+      // When the scope is destroyed, unbind automatically.
+      scope.$on("$destroy", function() {
+        unbind();
+      });
+
+      // Once we receive the initial value, the promise will be resolved.
+      self._object.$on('loaded', function(value) {
+        self._timeout(function() {
+          if(value === null && typeof defaultFn === 'function') {
+            scope[name] = defaultFn();
+          }
+          else {
+            scope[name] = value;
+          }
+          deferred.resolve(unbind);
+        });
+      });
+
       // We're responsible for setting up scope.$watch to reflect local changes
       // on the Firebase data.
       var unbind = scope.$watch(name, function() {
@@ -737,36 +756,6 @@
           self._fRef.ref().update(local);
         }
       }, true);
-
-      // When the scope is destroyed, unbind automatically.
-      scope.$on("$destroy", function() {
-        unbind();
-      });
-
-      // Once we receive the initial value, the promise will be resolved.
-      self._fRef.once("value", function(snap) {
-        self._timeout(function() {
-          // HACK / FIXME: Objects require a second event loop run, since we
-          // switch from value events to child_added. See #209 on Github.
-          if (typeof snap.val() != "object") {
-            // If the remote value is not set and defaultFn was provided,
-            // initialize the local value with the result of defaultFn().
-            if (snap.val() == null && typeof defaultFn === 'function') {
-              scope[name] = defaultFn();
-            }
-            deferred.resolve(unbind);
-          } else {
-            self._timeout(function() {
-              // If the remote value is not set and defaultFn was provided,
-              // initialize the local value with the result of defaultFn().
-              if (snap.val() == null && typeof defaultFn === 'function') {
-                scope[name] = defaultFn();
-              }
-              deferred.resolve(unbind);
-            });
-          }
-        });
-      });
 
       return deferred.promise;
     },

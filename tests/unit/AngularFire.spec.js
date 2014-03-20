@@ -60,7 +60,7 @@ describe('AngularFire', function () {
 
         it('should allow $bind within the loaded callback (#260)', inject(function($rootScope) {
           var $scope = $rootScope.$new();
-          var fb = new Firebase('Mock://').child('data').autoFlush();
+          var fb = new Firebase('Mock://').child('data');
           var called = false;
           var ref = $firebase(fb).$on('loaded', function(data) {
             called = true;
@@ -69,7 +69,7 @@ describe('AngularFire', function () {
             expect(ref.$getIndex().length).toBeGreaterThan(0);
             expect(ref.$getIndex()).toEqual($scope.test.$getIndex());
           });
-          flush();
+          flush(fb);
           expect(called).toBe(true);
         }));
       });
