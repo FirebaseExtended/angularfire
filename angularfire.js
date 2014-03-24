@@ -552,7 +552,12 @@
       if (value == null) {
         delete this._object[key];
       } else {
-        this._object[key] = value;
+        if (typeof this._object[key] != "object") {
+          this._object[key] = value;
+        }
+        else {
+          angular.extend(this._object[key], value);
+        }
       }
 
       // Call change handlers.
