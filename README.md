@@ -46,6 +46,16 @@ grunt test
 grunt build
 ```
 
+In addition to the automated test suite, there is an additional manual test suite that ensures that the
+$firebaseSimpleLogin service is working properly with auth providers. These tests are run using karma with the following command:
+
+```bash
+karma start tests/manual_karma.conf.js
+```
+
+Note that you must click "Close this window", login to Twitter, etc. when
+prompted in order for these tests to complete successfully.
+
 License
 -------
 [MIT](http://firebase.mit-license.org).

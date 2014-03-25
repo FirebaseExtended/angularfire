@@ -39,7 +39,7 @@ describe("AngularFireAuth Test Suite", function() {
           $timeout.flush();
         } catch(err) {}
         return eventsToComplete == 0;
-      }, message, timeout ? timeout : 100);
+      }, message, timeout ? timeout : 2000);
     }
   }
 
@@ -87,7 +87,7 @@ describe("AngularFireAuth Test Suite", function() {
       off();
     });
 
-    waiter.wait("email login failure", 1000);
+    waiter.wait("email login failure");
   });
 
   //Ensure that getUserInfo gives us a null if we're logged out.
@@ -179,7 +179,7 @@ describe("AngularFireAuth Test Suite", function() {
       });
     });
 
-    waiter.wait("email login success", 1000);
+    waiter.wait("email login success");
   });
 
   it("getCurrentUser for logged-in state", function() {
@@ -213,7 +213,7 @@ describe("AngularFireAuth Test Suite", function() {
       off();
     });
 
-    waiter.wait("get user info after logout", 1000);
+    waiter.wait("get user info after logout");
   });
 
   //Ensure we properly handle errors on account creation.
@@ -234,7 +234,7 @@ describe("AngularFireAuth Test Suite", function() {
       off();
     });
 
-    waiter.wait("failed account creation", 1000);
+    waiter.wait("failed account creation");
   });
 
   //Test account creation.
@@ -257,7 +257,7 @@ describe("AngularFireAuth Test Suite", function() {
       waiter.done("getuser");
     });
 
-    waiter.wait("account creation with noLogin", 2000);
+    waiter.wait("account creation with noLogin", 1600);
   });
 
   //Test logging into newly created user.
@@ -348,7 +348,7 @@ describe("AngularFireAuth Test Suite", function() {
       expect(true).toBe(false); //die
     });
 
-    waiter.wait("removeuser fail and success", 1000);
+    waiter.wait("removeuser fail and success");
   });
 
   it("Email: reset password", function() {
@@ -367,6 +367,6 @@ describe("AngularFireAuth Test Suite", function() {
       expect(true).toBe(false);
     });
 
-    waiter.wait("resetpassword fail and success", 1000);
+    waiter.wait("resetpassword fail and success");
   });
 });
