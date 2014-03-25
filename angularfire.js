@@ -424,6 +424,17 @@
         return self._fRef.ref();
       };
 
+      // Act like a then-able
+      object.then = function(success) {
+        var deferred = self._q.defer();
+        var onLoad = function () {
+          deferred.resolve(object);
+          object.$off("loaded", load);
+        };
+        object.$on("loaded", onLoad);
+        return deferred.promise.then(success);
+      };
+
       self._object = object;
       self._getInitialValue();
 

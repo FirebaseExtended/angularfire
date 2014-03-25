@@ -1,10 +1,11 @@
 describe('AngularFire', function () {
    var $firebase, $filter, $timeout;
    beforeEach(module('firebase'));
-   beforeEach(inject(function (_$firebase_, _$filter_, _$timeout_) {
+   beforeEach(inject(function (_$firebase_, _$filter_, _$timeout_, _$rootScope_) {
       $firebase = _$firebase_;
       $filter = _$filter_;
       $timeout = _$timeout_;
+      $rootScope = _$rootScope_;
    }));
 
    describe('$on', function() {
@@ -128,6 +129,17 @@ describe('AngularFire', function () {
       //todo child_added
       //todo child_removed
       //todo child_moved
+   });
+
+   describe('then', function () {
+
+    it('calls the handler on data load', function () {
+      var fb = new Firebase('Mock://').child('data').autoFlush(), spy = jasmine.createSpy();
+      $firebase(fb).then(spy);
+      flush();
+      expect(spy.callCount).toBe(1);
+    });
+
    });
 
   // flush blows up if you call it and no items are queued, however, we often need to make sure
