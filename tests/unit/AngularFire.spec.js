@@ -1,11 +1,10 @@
 describe('AngularFire', function () {
    var $firebase, $filter, $timeout;
    beforeEach(module('firebase'));
-   beforeEach(inject(function (_$firebase_, _$filter_, _$timeout_, _$rootScope_) {
+   beforeEach(inject(function (_$firebase_, _$filter_, _$timeout_) {
       $firebase = _$firebase_;
       $filter = _$filter_;
       $timeout = _$timeout_;
-      $rootScope = _$rootScope_;
    }));
 
    describe('$on', function() {
@@ -134,10 +133,12 @@ describe('AngularFire', function () {
    describe('then', function () {
 
     it('calls the handler on data load', function () {
-      var fb = new Firebase('Mock://').child('data').autoFlush(), spy = jasmine.createSpy();
-      $firebase(fb).then(spy);
-      flush();
+      var fb = new Firebase('Mock://').child('data'), spy = jasmine.createSpy();
+      var $fb = $firebase(fb);
+      $fb.then(spy);
+      flush(fb);
       expect(spy.callCount).toBe(1);
+      expect(spy).toHaveBeenCalledWith($fb);
     });
 
    });

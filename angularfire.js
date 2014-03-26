@@ -427,9 +427,10 @@
       // Act like a then-able
       object.then = function(success) {
         var deferred = self._q.defer();
-        var onLoad = function () {
+        var onLoad = function() {
+          object.then = null;
+          object.$off("loaded", onLoad);
           deferred.resolve(object);
-          object.$off("loaded", load);
         };
         object.$on("loaded", onLoad);
         return deferred.promise.then(success);
