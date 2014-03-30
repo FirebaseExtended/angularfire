@@ -59,7 +59,9 @@
             for (var i = 0; i < index.length; i++) {
               var val = input[index[i]];
               if (val) {
-                if (angular.isObject(val)) val.$id = index[i];
+                if (angular.isObject(val)) {
+                  val.$id = index[i];
+                }
                 sorted.push(val);
               }
             }
