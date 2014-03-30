@@ -30,6 +30,7 @@
     "karma": "~0.10.4",
     "karma-chrome-launcher": "~0.1.0",
     "protractor": "~0.12.1",
-    "lodash": "~2.4.1"
+    "lodash": "~2.4.1",
+    "karma-safari-launcher": "~0.1.1"
   }
 }
