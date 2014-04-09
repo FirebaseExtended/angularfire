@@ -17,10 +17,10 @@
 
   // Define the `firebase` module under which all AngularFire
   // services will live.
-  angular.module("firebase", []).value("Firebase", Firebase);
+  angular.module("firebase", []).value("Firebase", Firebase).
 
   // Define the `$firebase` service that provides synchronization methods.
-  angular.module("firebase").factory("$firebase", ["$q", "$parse", "$timeout",
+  factory("$firebase", ["$q", "$parse", "$timeout",
     function($q, $parse, $timeout) {
       // The factory returns an object containing the value of the data at
       // the Firebase location provided, as well as several methods. It
@@ -32,12 +32,12 @@
         return af.construct();
       };
     }
-  ]);
+  ]).
 
   // Define the `orderByPriority` filter that sorts objects returned by
   // $firebase in the order of priority. Priority is defined by Firebase,
   // for more info see: https://www.firebase.com/docs/ordered-data.html
-  angular.module("firebase").filter("orderByPriority", function() {
+  filter("orderByPriority", function() {
     return function(input) {
       var sorted = [];
       if (input) {
@@ -70,7 +70,34 @@
       }
       return sorted;
     };
-  });
+  }).
+
+  // Defines the `$firebaseSimpleLogin` service that provides simple
+  // user authentication support for AngularFire.
+  factory("$firebaseSimpleLogin", [
+    "$q", "$timeout", "$rootScope", function($q, $t, $rs) {
+      // The factory returns an object containing the authentication state
+      // of the current user. This service takes one argument:
+      //
+      //   * `ref`     : A Firebase reference.
+      //
+      // The returned object has the following properties:
+      //
+      //  * `user`: Set to "null" if the user is currently logged out. This
+      //    value will be changed to an object when the user successfully logs
+      //    in. This object will contain details of the logged in user. The
+      //    exact properties will vary based on the method used to login, but
+      //    will at a minimum contain the `id` and `provider` properties.
+      //
+      // The returned object will also have the following methods available:
+      // $login(), $logout(), $createUser(), $changePassword(), $removeUser(),
+      // and $getCurrentUser().
+      return function(ref) {
+        var auth = new AngularFireAuth($q, $t, $rs, ref);
+        return auth.construct();
+      };
+    }
+  ]);
 
   // Shim Array.indexOf for IE compatibility.
   if (!Array.prototype.indexOf) {
@@ -786,34 +813,7 @@
     }
   };
 
-
-  // Defines the `$firebaseSimpleLogin` service that provides simple
-  // user authentication support for AngularFire.
-  angular.module("firebase").factory("$firebaseSimpleLogin", [
-    "$q", "$timeout", "$rootScope", function($q, $t, $rs) {
-      // The factory returns an object containing the authentication state
-      // of the current user. This service takes one argument:
-      //
-      //   * `ref`     : A Firebase reference.
-      //
-      // The returned object has the following properties:
-      //
-      //  * `user`: Set to "null" if the user is currently logged out. This
-      //    value will be changed to an object when the user successfully logs
-      //    in. This object will contain details of the logged in user. The
-      //    exact properties will vary based on the method used to login, but
-      //    will at a minimum contain the `id` and `provider` properties.
-      //
-      // The returned object will also have the following methods available:
-      // $login(), $logout(), $createUser(), $changePassword(), $removeUser(),
-      // and $getCurrentUser().
-      return function(ref) {
-        var auth = new AngularFireAuth($q, $t, $rs, ref);
-        return auth.construct();
-      };
-    }
-  ]);
-
+  // The `AngularFireAuth` object that implements simple authentication.
   AngularFireAuth = function($q, $t, $rs, ref) {
     this._q = $q;
     this._timeout = $t;
