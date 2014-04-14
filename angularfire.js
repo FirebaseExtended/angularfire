@@ -22,7 +22,7 @@
   // Define the `$firebase` service that provides synchronization methods.
   angular.module("firebase").provider("$firebase", function() {
     var self = this,
-        identityFn = function(input) {return input};
+        identityFn = function(input) {return input;};
 
     this.transform = {
       onSave: identityFn,
@@ -567,7 +567,7 @@
 
       Obj[key] = value;
       newObj = self._transform.onLoad(Obj);
-      for (var newKey in newObj) break;
+      for (var newKey in newObj) {break;}
 
       if (newObj[newKey] == null) {
         delete this._object[newKey];
