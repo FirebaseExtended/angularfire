@@ -20,19 +20,21 @@
   angular.module("firebase", []).value("Firebase", Firebase);
 
   // Define the `$firebase` service that provides synchronization methods.
-  angular.module("firebase").factory("$firebase", ["$q", "$parse", "$timeout",
-    function($q, $parse, $timeout) {
+  angular.module("firebase").provider("$firebase", function() {
+    var self = this;
+
+    self.$get = ["$q", "$parse", "$timeout", function($q, $parse, $timeout) {
       // The factory returns an object containing the value of the data at
       // the Firebase location provided, as well as several methods. It
       // takes a single argument:
       //
       //   * `ref`: A Firebase reference. Queries or limits may be applied.
       return function(ref) {
-        var af = new AngularFire($q, $parse, $timeout, ref);
+        var af = new AngularFire($q, $parse, $timeout, self.extend, ref);
         return af.construct();
       };
-    }
-  ]);
+    }];
+  });
 
   // Define the `orderByPriority` filter that sorts objects returned by
   // $firebase in the order of priority. Priority is defined by Firebase,
@@ -106,7 +108,7 @@
   }
 
   // The `AngularFire` object that implements synchronization.
-  AngularFire = function($q, $parse, $timeout, ref) {
+  AngularFire = function($q, $parse, $timeout, fns, ref) {
     this._q = $q;
     this._parse = $parse;
     this._timeout = $timeout;
@@ -139,6 +141,8 @@
         "of a URL, eg: new Firebase(url)");
     }
     this._fRef = ref;
+
+    this._fns = fns;
   };
 
   AngularFire.prototype = {
@@ -347,7 +351,7 @@
       //             returned.
       object.$child = function(key) {
         var af = new AngularFire(
-          self._q, self._parse, self._timeout, self._fRef.ref().child(key)
+          self._q, self._parse, self._timeout, self._fns, self._fRef.ref().child(key)
         );
         return af.construct();
       };
@@ -425,6 +429,10 @@
       object.$getRef = function() {
         return self._fRef.ref();
       };
+
+      self._fns && angular.forEach(self._fns, function(fn, name) {
+        object[name] = fn;
+      });
 
       self._object = object;
       self._getInitialValue();
