@@ -20,19 +20,27 @@
   angular.module("firebase", []).value("Firebase", Firebase);
 
   // Define the `$firebase` service that provides synchronization methods.
-  angular.module("firebase").factory("$firebase", ["$q", "$parse", "$timeout",
-    function($q, $parse, $timeout) {
+  angular.module("firebase").provider("$firebase", function() {
+    var self = this,
+        identityFn = function(input) {return input;};
+
+    this.transform = {
+      onSave: identityFn,
+      onLoad: identityFn
+    };
+
+    this.$get = ["$q", "$parse", "$timeout", function($q, $parse, $timeout) {
       // The factory returns an object containing the value of the data at
       // the Firebase location provided, as well as several methods. It
       // takes a single argument:
       //
       //   * `ref`: A Firebase reference. Queries or limits may be applied.
       return function(ref) {
-        var af = new AngularFire($q, $parse, $timeout, ref);
+        var af = new AngularFire($q, $parse, $timeout, self.transform, ref);
         return af.construct();
       };
-    }
-  ]);
+    }];
+  });
 
   // Define the `orderByPriority` filter that sorts objects returned by
   // $firebase in the order of priority. Priority is defined by Firebase,
@@ -106,7 +114,7 @@
   }
 
   // The `AngularFire` object that implements synchronization.
-  AngularFire = function($q, $parse, $timeout, ref) {
+  AngularFire = function($q, $parse, $timeout, transform, ref) {
     this._q = $q;
     this._parse = $parse;
     this._timeout = $timeout;
@@ -139,6 +147,8 @@
         "of a URL, eg: new Firebase(url)");
     }
     this._fRef = ref;
+
+    this._transform = transform;
   };
 
   AngularFire.prototype = {
@@ -347,7 +357,7 @@
       //             returned.
       object.$child = function(key) {
         var af = new AngularFire(
-          self._q, self._parse, self._timeout, self._fRef.ref().child(key)
+          self._q, self._parse, self._timeout, self._transform, self._fRef.ref().child(key)
         );
         return af.construct();
       };
@@ -551,14 +561,22 @@
     // Called whenever there is a remote change. Applies them to the local
     // model for both explicit and implicit sync modes.
     _updateModel: function(key, value) {
-      if (value == null) {
-        delete this._object[key];
+      var self = this,
+          Obj = {},
+          newObj;
+
+      Obj[key] = value;
+      newObj = self._transform.onLoad(Obj);
+      for (var newKey in newObj) {break;}
+
+      if (newObj[newKey] == null) {
+        delete this._object[newKey];
       } else {
-        this._object[key] = value;
+        this._object[newKey] = newObj[newKey];
       }
 
       // Call change handlers.
-      this._broadcastEvent("change", key);
+      this._broadcastEvent("change", newKey);
 
       // update Angular by forcing a compile event
       this._triggerModelUpdate();
@@ -765,6 +783,8 @@
     // Parse a local model, removing all properties beginning with "$" and
     // converting $priority to ".priority".
     _parseObject: function(obj) {
+      var self = this;
+
       function _findReplacePriority(item) {
         for (var prop in item) {
           if (item.hasOwnProperty(prop)) {
@@ -782,7 +802,7 @@
       // We use toJson/fromJson to remove $$hashKey and others. Can be replaced
       // by angular.copy, but only for later versions of AngularJS.
       var newObj = _findReplacePriority(angular.copy(obj));
-      return angular.fromJson(angular.toJson(newObj));
+      return self._transform.onSave(angular.fromJson(angular.toJson(newObj)));
     }
   };
 
