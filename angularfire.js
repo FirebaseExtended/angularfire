@@ -430,9 +430,11 @@
         return self._fRef.ref();
       };
 
-      self._fns && angular.forEach(self._fns, function(fn, name) {
-        object[name] = fn;
-      });
+      if (self._fns) {
+        angular.forEach(self._fns, function(fn, name) {
+          object[name] = fn;
+        });
+      }
 
       self._object = object;
       self._getInitialValue();
