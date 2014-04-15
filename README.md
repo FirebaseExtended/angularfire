@@ -22,7 +22,13 @@ Development
 
 If you'd like to hack on AngularFire itself, you'll need
 [node.js](http://nodejs.org/download/), [Bower](http://bower.io), and
-[CasperJS](https://github.com/n1k0/casperjs):
+[CasperJS](https://github.com/n1k0/casperjs).
+
+You can also start hacking on AngularFire in a matter of seconds on
+[Nitrous.IO](https://www.nitrous.io/?utm_source=github.com&utm_campaign=angularFire&utm_medium=hackonnitrous)
+
+[![Hack firebase/angularFire on
+Nitrous.IO](https://d3o0mnbgv6k92a.cloudfront.net/assets/hack-l-v1-3cc067e71372f6045e1949af9d96095b.png)](https://www.nitrous.io/hack_button?source=embed&runtime=nodejs&repo=firebase%2FangularFire&file_to_open=README.md)
 
 ```bash
 npm install -g phantomjs casperjs
