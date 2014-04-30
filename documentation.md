@@ -625,15 +625,16 @@ and the `user` property on the object will be set to `null`.
 </span>
 ```
 
-### $createUser(email, password, [noLogin])
+### $createUser(email, password)
 
 The `$createUser` method is useful if you are using the "password" provider from Firebase Simple Login
 that allows you to manage your own set of user accounts where users authenticate with an email address and password.
-This function creates a new user account with the specified email address and password. Set the optional
-`noLogin` parameter to true to tell AngularFire not to automatically
-log into the new user account after it has been created.
+This function creates a new user account with the specified email address and password. 
 
 This function returns a promise that is resolved when the user account has been successfully created.
+
+Note that this function only creates the user, if you wish to log in as the newly created user, call $login() 
+after the promise for this method has been fulfilled.
 
 
 ### $changePassword(email, oldPassword, newPassword)
