@@ -3,6 +3,10 @@
   "version": "0.7.1",
   "description": "An officially supported AngularJS binding for Firebase.",
   "main": "angularfire.js",
+  "scripts": {
+    "test": "grunt test",
+    "build": "grunt build"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/firebase/angularFire.git"
@@ -31,6 +35,7 @@
     "karma-chrome-launcher": "~0.1.0",
     "protractor": "~0.12.1",
     "lodash": "~2.4.1",
-    "karma-safari-launcher": "~0.1.1"
+    "karma-safari-launcher": "~0.1.1",
+    "grunt-cli": "~0.1.13"
   }
 }

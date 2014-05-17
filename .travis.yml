@@ -7,7 +7,6 @@ branches:
 install:
   - git clone git://github.com/n1k0/casperjs.git ~/casperjs
   - export PATH=$PATH:~/casperjs/bin
-  - npm install -g grunt-cli
   - npm install -g bower
   - npm install
   - bower install
@@ -15,4 +14,5 @@ before_script:
   - phantomjs --version
   - casperjs --version
 script:
-  - grunt
+  - npm test
+  - npm run-script build
