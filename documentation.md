@@ -32,26 +32,31 @@ Simple Login libraries. The following table documents the version dependencies:
     <th>AngularFire Version</th>
     <th>Firebase Version</th>
     <th>Simple Login Version</th>
+    <th>Angular Version</th>
   </tr>
   <tr>
     <td>0.3.0 - 0.5.0</td>
     <td>v0</td>
     <td>v0</td>
+    <td>1.1.2+</td>
   </tr>
   <tr>
     <td>0.6.0</td>
     <td>1.0.2</td>
     <td>1.2.3</td>
+    <td>1.1.2+</td>
   </tr>
   <tr>
     <td>0.7.0</td>
     <td>1.0.5</td>
     <td>1.2.5</td>
+    <td>1.2+</td>
   </tr>
   <tr>
     <td>0.7.1</td>
     <td>1.0.6</td>
-    <td>1.3.0</td>  
+    <td>1.3.0</td>
+    <td>1.2+</td>
   </tr>
 </table>
 
