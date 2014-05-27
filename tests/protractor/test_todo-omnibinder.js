@@ -6,12 +6,11 @@ describe('OmniBinder Todo', function () {
   describe('child_added', function () {
     beforeEach(function () {
 
-      tractor.get('http://localhost:8080/tests/e2e/test_todo-omnibinder.html');
+      tractor.get('test_todo-omnibinder.html');
 
       if (!cleared) {
         //Clear all firebase data
-        tractor.findElement(protractor.By.css('#clearRef')).
-          click();
+        tractor.findElement(protractor.By.css('#clearRef')).click();
         cleared = true;
       }
 
