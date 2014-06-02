@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html ng-app="chat">
+  <head>
+    <title>AngularFire Chat e2e Test</title>
+
+    <!-- Angular -->
+    <script src="../../../bower_components/angular/angular.min.js"></script>
+
+    <!-- Firebase -->
+    <script src="../../../bower_components/firebase/firebase.js"></script>
+
+    <!-- AngularFire -->
+    <script src="../../../angularfire.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="chat.css">
+  </head>
+
+  <body ng-controller="Chat">
+    <!-- Clear Firebase button -->
+    <button id="clearRef" ng-click="clearRef()">Clear Ref</button>
+
+    <!-- Messages list -->
+    <div id="messagesList">
+      <div class="message" ng-cloak ng-repeat="message in messages">
+        <em>{{ message.from }}: </em>
+        <span class="content">{{ message.content }}</span>
+      </div>
+      <div ng-cloak ng-if="messages" class="messageCountBlock">
+        Message Count: <span id="messageCount">{{ messageCount.$value ? messageCount.$value : 0 }}</span>
+      </div>
+    </div>
+
+    <!-- Add message form -->
+    <form ng-submit="addMessage()">
+      <input id="message" type="text" ng-model="message" placeholder="Message...">
+      <input id="submit" type="submit" value="Submit">
+    </form>
+
+    <!-- Custom JS -->
+    <script src="chat.js" defer></script>
+  </body>
+</html>

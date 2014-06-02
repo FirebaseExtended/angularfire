@@ -4,12 +4,6 @@ module.exports = function(grunt) {
   'use strict';
 
   grunt.initConfig({
-    exec: {
-      casperjs : {
-        command : 'casperjs test tests/e2e/'
-      }
-    },
-
     uglify : {
       app : {
         files : {
@@ -113,34 +107,7 @@ module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
 
   grunt.registerTask('build', ['jshint', 'uglify']);
-  grunt.registerTask('test', ['exec:casperjs', 'karma:continuous']);
-
-  grunt.registerTask('protractor2', 'e2e tests for omnibinder', function () {
-    var done = this.async();
-
-    if (!grunt.file.isDir('selenium')) {
-      grunt.log.writeln('Installing selenium and chromedriver dependency');
-      grunt.util.spawn({
-        cmd: './node_modules/protractor/bin/install_selenium_standalone'
-      }, function (err) {
-        if (err) grunt.log.error(err);
-        runProtractor();
-      });
-    } else {
-      runProtractor();
-    }
-
-    function runProtractor() {
-      grunt.log.writeln('Running protractor tests');
-      grunt.util.spawn({
-        cmd: './node_modules/protractor/bin/protractor',
-        args: ['tests/protractorConf.js']
-      }, function (err, result, code) {
-        if (err) grunt.log.error(err);
-        done(err);
-      });
-    }
-  });
+  grunt.registerTask('test', ['karma:continuous', 'protractor']);
 
   grunt.registerTask('default', ['build', 'test']);
 };
