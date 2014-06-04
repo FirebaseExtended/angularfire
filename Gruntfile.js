@@ -4,6 +4,29 @@ module.exports = function(grunt) {
   'use strict';
 
   grunt.initConfig({
+    // Run shell commands
+    shell: {
+      options: {
+        stdout: true
+      },
+      protractor_install: {
+        command: 'node ./node_modules/protractor/bin/webdriver-manager update'
+      },
+      npm_install: {
+        command: 'npm install'
+      }
+    },
+
+    // Create local server
+    connect: {
+      testserver: {
+        options: {
+          port: 3030
+        }
+      }
+    },
+
+    // Minify JavaScript
     uglify : {
       app : {
         files : {
@@ -12,6 +35,7 @@ module.exports = function(grunt) {
       }
     },
 
+    // Lint JavaScript
     jshint : {
       options : {
         'bitwise' : true,
@@ -38,16 +62,49 @@ module.exports = function(grunt) {
       all : ['angularfire.js']
     },
 
+    // Auto-run tasks on file changes
     watch : {
       scripts : {
         files : 'angularfire.js',
-        tasks : ['default', 'notify:watch'],
+        tasks : ['build', 'test:unit', 'notify:watch'],
         options : {
           interrupt : true
         }
       }
     },
 
+    // Unit tests
+    karma: {
+      options: {
+        configFile: 'tests/automatic_karma.conf.js',
+      },
+      singlerun: {
+        autowatch: false,
+        singleRun: true
+      },
+      watch: {
+         autowatch: true,
+         singleRun: false,
+      }
+    },
+
+    // End to end (e2e) tests
+    protractor: {
+      options: {
+        keepAlive: true,
+        configFile: "tests/protractor.conf.js"
+      },
+      singlerun: {},
+      watch: {
+        options: {
+          args: {
+            seleniumPort: 4444
+          }
+        }
+      }
+    },
+
+    // Desktop notificaitons
     notify: {
       watch: {
         options: {
@@ -57,46 +114,7 @@ module.exports = function(grunt) {
       }
     },
 
-    karma: {
-      unit: {
-        configFile: 'tests/automatic_karma.conf.js'
-      },
-      continuous: {
-        configFile: 'tests/automatic_karma.conf.js',
-        singleRun: true,
-        browsers: ['PhantomJS']
-      },
-      auto: {
-         configFile: 'tests/automatic_karma.conf.js',
-         autowatch: true,
-         browsers: ['PhantomJS']
-      }/*,
-      "kato": {
-         configFile: 'tests/automatic_karma.conf.js',
-         options: {
-            files: [
-               '../bower_components/angular/angular.js',
-               '../bower_components/angular-mocks/angular-mocks.js',
-               '../lib/omnibinder-protocol.js',
-               'lib/lodash.js',
-               'lib/MockFirebase.js',
-               '../angularfire.js',
-               'unit/AngularFire.spec.js'
-            ]
-         },
-         autowatch: true,
-         browsers: ['PhantomJS']
-      }*/
-    },
-
-    protractor: {
-      options: {
-        keepAlive: true,
-        configFile: "tests/protractorConf.js"
-      },
-      run: {}
-    },
-
+    // Auto-populating changelog
     changelog: {
       options: {
         dest: 'CHANGELOG.md'
@@ -106,8 +124,22 @@ module.exports = function(grunt) {
 
   require('load-grunt-tasks')(grunt);
 
-  grunt.registerTask('build', ['jshint', 'uglify']);
-  grunt.registerTask('test', ['karma:continuous', 'protractor']);
+  // Single run tests
+  grunt.registerTask('test', ['test:unit', 'test:e2e']);
+  grunt.registerTask('test:unit', ['karma:singlerun']);
+  grunt.registerTask('test:e2e', ['connect:testserver', 'protractor:singlerun']);
 
+  // Watch tests
+  grunt.registerTask('test:watch', ['karma:watch']);
+  grunt.registerTask('test:watch:unit', ['karma:watch']);
+
+  // Installation
+  grunt.registerTask('install', ['update', 'shell:protractor_install']);
+  grunt.registerTask('update', ['shell:npm_install']);
+
+  // Build tasks
+  grunt.registerTask('build', ['jshint', 'uglify']);
+
+  // Default task
   grunt.registerTask('default', ['build', 'test']);
 };
