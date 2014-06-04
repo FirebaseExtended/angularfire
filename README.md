@@ -32,9 +32,7 @@ Nitrous.IO](https://d3o0mnbgv6k92a.cloudfront.net/assets/hack-l-v1-3cc067e71372f
 
 ```bash
 npm install -g phantomjs casperjs grunt
-npm install
-bower install
-grunt install
+grunt install  # runs npm install, bower install, and installs selenium server for e2e tests
 ```
 
 Use grunt to build and test the code:

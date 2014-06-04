@@ -14,6 +14,9 @@ module.exports = function(grunt) {
       },
       npm_install: {
         command: 'npm install'
+      },
+      bower_install: {
+        command: 'bower install'
       }
     },
 
@@ -135,7 +138,7 @@ module.exports = function(grunt) {
 
   // Installation
   grunt.registerTask('install', ['update', 'shell:protractor_install']);
-  grunt.registerTask('update', ['shell:npm_install']);
+  grunt.registerTask('update', ['shell:npm_install', 'shell:bower_install']);
 
   // Build tasks
   grunt.registerTask('build', ['jshint', 'uglify']);
