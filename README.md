@@ -31,18 +31,19 @@ You can also start hacking on AngularFire in a matter of seconds on
 Nitrous.IO](https://d3o0mnbgv6k92a.cloudfront.net/assets/hack-l-v1-3cc067e71372f6045e1949af9d96095b.png)](https://www.nitrous.io/hack_button?source=embed&runtime=nodejs&repo=firebase%2FangularFire&file_to_open=README.md)
 
 ```bash
-npm install -g phantomjs casperjs
+npm install -g phantomjs casperjs grunt
 npm install
 bower install
+grunt install
 ```
 
 Use grunt to build and test the code:
 
 ```bash
-# Default task - validates with jshint, minifies source and then runs unit tests
+# Default task - validates with jshint, minifies source and then runs unit and e2e tests
 grunt
 
-# Watch for changes and run unit test after each change
+# Watch for changes and runs only unit tests after each change
 grunt watch
 
 # Run tests
