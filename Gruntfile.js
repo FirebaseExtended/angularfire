@@ -25,7 +25,7 @@ module.exports = function(grunt) {
       testserver: {
         options: {
           hostname: 'localhost',
-          port: 3030
+          port: 8000
         }
       }
     },
@@ -146,7 +146,7 @@ module.exports = function(grunt) {
   grunt.registerTask('test:watch:unit', ['karma:watch']);
 
   // Travis CI testing
-  grunt.registerTask('travis', ['build', 'test:unit', 'protractor:saucelabs']);
+  grunt.registerTask('travis', ['build', 'test:unit', 'connect:testserver', 'protractor:saucelabs']);
 
   // Build tasks
   grunt.registerTask('build', ['jshint', 'uglify']);
