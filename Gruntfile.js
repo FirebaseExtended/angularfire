@@ -1,5 +1,4 @@
 /* global module */
-
 module.exports = function(grunt) {
   'use strict';
 
@@ -100,7 +99,6 @@ module.exports = function(grunt) {
       singlerun: {},
       saucelabs: {
         options: {
-          configFile: "tests/protractor.conf.js",
           args: {
             sauceUser: process.env.SAUCE_USERNAME,
             sauceKey: process.env.SAUCE_ACCESS_KEY
