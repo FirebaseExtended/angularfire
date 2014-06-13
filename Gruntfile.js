@@ -24,6 +24,7 @@ module.exports = function(grunt) {
     connect: {
       testserver: {
         options: {
+          hostname: 'localhost',
           port: 3030
         }
       }
@@ -98,10 +99,14 @@ module.exports = function(grunt) {
         configFile: "tests/protractor.conf.js"
       },
       singlerun: {},
-      watch: {
+      saucelabs: {
         options: {
+          configFile: "tests/protractor.conf.js",
           args: {
-            seleniumPort: 4444
+            //sauceUser: process.env.SAUCE_USERNAME,
+            //sauceKey: process.env.SAUCE_ACCESS_KEY
+            sauceUser: "firebase",
+            sauceKey: "fe4386d9-4ab2-477b-a0d9-24dbecd98e04"
           }
         }
       }
@@ -127,6 +132,10 @@ module.exports = function(grunt) {
 
   require('load-grunt-tasks')(grunt);
 
+  // Installation
+  grunt.registerTask('install', ['update', 'shell:protractor_install']);
+  grunt.registerTask('update', ['shell:npm_install', 'shell:bower_install']);
+
   // Single run tests
   grunt.registerTask('test', ['test:unit', 'test:e2e']);
   grunt.registerTask('test:unit', ['karma:singlerun']);
@@ -136,9 +145,8 @@ module.exports = function(grunt) {
   grunt.registerTask('test:watch', ['karma:watch']);
   grunt.registerTask('test:watch:unit', ['karma:watch']);
 
-  // Installation
-  grunt.registerTask('install', ['update', 'shell:protractor_install']);
-  grunt.registerTask('update', ['shell:npm_install', 'shell:bower_install']);
+  // Travis CI testing
+  grunt.registerTask('travis', ['build', 'test:unit', 'protractor:saucelabs']);
 
   // Build tasks
   grunt.registerTask('build', ['jshint', 'uglify']);
