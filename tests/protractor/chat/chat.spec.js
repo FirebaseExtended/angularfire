@@ -5,14 +5,14 @@ var ptor = protractor.getInstance();
 var cleared = false;
 
 describe('Chat App', function () {
-  beforeEach(function () {
+  beforeEach(function (done) {
     // Navigate to the chat app
     ptor.get('chat/chat.html');
 
     // Clear the Firebase before the first test and sleep until it's finished
     if (!cleared) {
       element(by.id('clearRef')).click();
-      ptor.sleep(5000);
+      ptor.sleep(1000);
       cleared = true;
     }
 
@@ -20,7 +20,9 @@ describe('Chat App', function () {
     expect(ptor.getTitle()).toBe('AngularFire Chat e2e Test');
 
     // Wait for items to be populated
-    ptor.sleep(5000);
+    ptor.sleep(1000);
+
+    done();
   });
 
   it('loads', function () {

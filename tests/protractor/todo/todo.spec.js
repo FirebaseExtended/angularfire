@@ -5,7 +5,7 @@ var ptor = protractor.getInstance();
 var cleared = false;
 
 describe('Todo App', function () {
-  beforeEach(function() {
+  beforeEach(function (done) {
     // Navigate to the todo app
     ptor.get('todo/todo.html');
 
@@ -21,6 +21,8 @@ describe('Todo App', function () {
 
     // Wait for items to be populated
     ptor.sleep(5000);
+
+    done();
   });
 
   it('loads', function() {

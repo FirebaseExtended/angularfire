@@ -95,7 +95,7 @@ module.exports = function(grunt) {
     // End to end (e2e) tests
     protractor: {
       options: {
-        keepAlive: true,
+        //keepAlive: true,
         configFile: "tests/protractor.conf.js"
       },
       singlerun: {},
@@ -103,10 +103,8 @@ module.exports = function(grunt) {
         options: {
           configFile: "tests/protractor.conf.js",
           args: {
-            //sauceUser: process.env.SAUCE_USERNAME,
-            //sauceKey: process.env.SAUCE_ACCESS_KEY
-            sauceUser: "firebase",
-            sauceKey: "fe4386d9-4ab2-477b-a0d9-24dbecd98e04"
+            sauceUser: process.env.SAUCE_USERNAME,
+            sauceKey: process.env.SAUCE_ACCESS_KEY
           }
         }
       }
