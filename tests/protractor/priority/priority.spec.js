@@ -9,20 +9,21 @@ describe('Priority App', function () {
     // Navigate to the priority app
     ptor.get('priority/priority.html');
 
-    // Clear the Firebase before the first test and sleep until it's finished
-    if (!cleared) {
-      element(by.id('clearRef')).click();
-      ptor.sleep(1000);
-      cleared = true;
-    }
-
     // Verify the title
     expect(ptor.getTitle()).toBe('AngularFire Priority e2e Test');
 
-    // Wait for items to be populated
-    ptor.sleep(1000);
-
-    done();
+    // Clear the Firebase before the first test and sleep until it's finished
+    if (!cleared) {
+      var firebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/');
+      firebaseRef.remove(function() {
+        cleared = true;
+        done();
+      });
+    }
+    else {
+      ptor.sleep(1000);
+      done();
+    }
   });
 
   it('loads', function () {

@@ -9,20 +9,21 @@ describe('Todo App', function () {
     // Navigate to the todo app
     ptor.get('todo/todo.html');
 
-    // Clear the Firebase before the first test and sleep until it's finished
-    if (!cleared) {
-      element(by.id('clearRef')).click();
-      ptor.sleep(5000);
-      cleared = true;
-    }
-
     // Verify the title
     expect(ptor.getTitle()).toBe('AngularFire Todo e2e Test');
 
-    // Wait for items to be populated
-    ptor.sleep(5000);
-
-    done();
+    // Clear the Firebase before the first test and sleep until it's finished
+    if (!cleared) {
+      var firebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/');
+      firebaseRef.remove(function() {
+        cleared = true;
+        done();
+      });
+    }
+    else {
+      ptor.sleep(1000);
+      done();
+    }
   });
 
   it('loads', function() {

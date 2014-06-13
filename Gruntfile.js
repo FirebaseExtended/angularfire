@@ -95,7 +95,6 @@ module.exports = function(grunt) {
     // End to end (e2e) tests
     protractor: {
       options: {
-        //keepAlive: true,
         configFile: "tests/protractor.conf.js"
       },
       singlerun: {},
