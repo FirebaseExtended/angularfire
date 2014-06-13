@@ -21,8 +21,7 @@ describe('Chat App', function () {
       });
     }
     else {
-      ptor.sleep(1000);
-
+      ptor.sleep(500);
       done();
     }
   });
