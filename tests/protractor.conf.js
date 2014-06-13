@@ -52,7 +52,7 @@ exports.config = {
   // with relative paths will be prepended with this.
   //baseUrl: 'http://localhost:' + (process.env.HTTP_PORT || '3030') + '/tests/protractor/',
   //baseUrl: 'http://0.0.0.0:3030/tests/protractor/',
-  baseUrl: 'http://localhost:8000/tests/protractor/',
+  baseUrl: 'http://localhost:3030/tests/protractor/',
 
   // Selector for the element housing the angular app - this defaults to
   // body, but is necessary if ng-app is on a descendant of <body>
@@ -69,6 +69,6 @@ exports.config = {
     // If true, include stack traces in failures.
     includeStackTrace: true,
     // Default time to wait in ms before a test fails.
-    defaultTimeoutInterval: 3000
+    defaultTimeoutInterval: 10000
   }
 };
