@@ -12,7 +12,7 @@ describe('Priority App', function () {
     // Clear the Firebase before the first test and sleep until it's finished
     if (!cleared) {
       element(by.id('clearRef')).click();
-      ptor.sleep(1000);
+      ptor.sleep(5000);
       cleared = true;
     }
 
@@ -20,7 +20,7 @@ describe('Priority App', function () {
     expect(ptor.getTitle()).toBe('AngularFire Priority e2e Test');
 
     // Wait for items to be populated
-    ptor.sleep(1000);
+    ptor.sleep(5000);
   });
 
   it('loads', function () {
