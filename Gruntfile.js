@@ -128,7 +128,7 @@ module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
 
   // Installation
-  grunt.registerTask('install', ['update', 'shell:protractor_install']);
+  grunt.registerTask('install', ['shell:protractor_install']);
   grunt.registerTask('update', ['shell:npm_install', 'shell:bower_install']);
 
   // Single run tests
