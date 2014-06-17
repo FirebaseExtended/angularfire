@@ -765,23 +765,24 @@
     // Parse a local model, removing all properties beginning with "$" and
     // converting $priority to ".priority".
     _parseObject: function(obj) {
-      function _findReplacePriority(item) {
+      function _handleSpecialKeys(item) {
         for (var prop in item) {
           if (item.hasOwnProperty(prop)) {
             if (prop == "$priority") {
               item[".priority"] = item.$priority;
               delete item.$priority;
+            } else if (prop[0] == "$") {
+              delete item[prop];
             } else if (typeof item[prop] == "object") {
-              _findReplacePriority(item[prop]);
+              _handleSpecialKeys(item[prop]);
             }
           }
         }
         return item;
       }
 
-      // We use toJson/fromJson to remove $$hashKey and others. Can be replaced
-      // by angular.copy, but only for later versions of AngularJS.
-      var newObj = _findReplacePriority(angular.copy(obj));
+      // We use toJson/fromJson to handle special cases, such as Date
+      var newObj = _handleSpecialKeys(angular.copy(obj));
       return angular.fromJson(angular.toJson(newObj));
     }
   };
