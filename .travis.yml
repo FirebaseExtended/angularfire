@@ -22,3 +22,11 @@ env:
   global:
   - secure: mGHp1rQI11OvbBQn3PnBT5kuyo26gFl8U+nNq0Ot4opgSBX9JaHqS8Dx63uALWWU9qjy08/Mn68t/sKhayH1+XrPDIenOy/XEkkSAG60qAAowD9dRo3WaIMSOcWWYDeqdZOAWZ3LiXvjLO4Swagz5ejz7UtY/ws4CcTi2n/fp7c=
   - secure: Eao+hPFWKrHb7qUGEzLg7zdTCE//gb3arf5UmI9Z3i+DydSu/AwExXuywJYUj4/JNm/z8zyJ3j1/mdTyyt9VVyrnQNnyGH1b2oCUHkrs1NLwh5Oe4YcqUYROzoEKdDInvmjVJnIfUEM07htGMGvsLsX4MW2tqVHvD2rOwkn8C9s=
+deploy:
+  provider: npm
+  email: katowulf@gmail.com
+  api_key:
+    secure: E9HfiXQdcK/pUeZyabrNof/vkM7V8lLYNuvEI9sgpDOhME8H1vwH87RGiV+50ulw0cRcYLfPC5mTFyeJ5dL244PbRMEKlvoheJyTKSNK6SnwRiGMNz4Ce4c6g5qJkwv9rYlB4jVZJPjfXGYE5Xp+MpYOkPBrTP02FbyhA/Ykr1A=
+  on:
+    tags: true
+    repo: firebase/angularFire
