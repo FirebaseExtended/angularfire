@@ -1,18 +1,24 @@
 language: node_js
 node_js:
-  - "0.10"
+- '0.10'
 branches:
   only:
-    - master
+  - master
+addons:
+  sauce_connect: true
 install:
-  - git clone git://github.com/n1k0/casperjs.git ~/casperjs
-  - export PATH=$PATH:~/casperjs/bin
-  - npm install -g grunt-cli
-  - npm install -g bower
-  - npm install
-  - bower install
+- git clone git://github.com/n1k0/casperjs.git ~/casperjs
+- export PATH=$PATH:~/casperjs/bin
+- npm install -g grunt-cli
+- npm install -g bower
+- npm install
+- bower install
 before_script:
-  - phantomjs --version
-  - casperjs --version
+- phantomjs --version
+- casperjs --version
 script:
-  - grunt
+- grunt travis
+env:
+  global:
+  - secure: mGHp1rQI11OvbBQn3PnBT5kuyo26gFl8U+nNq0Ot4opgSBX9JaHqS8Dx63uALWWU9qjy08/Mn68t/sKhayH1+XrPDIenOy/XEkkSAG60qAAowD9dRo3WaIMSOcWWYDeqdZOAWZ3LiXvjLO4Swagz5ejz7UtY/ws4CcTi2n/fp7c=
+  - secure: Eao+hPFWKrHb7qUGEzLg7zdTCE//gb3arf5UmI9Z3i+DydSu/AwExXuywJYUj4/JNm/z8zyJ3j1/mdTyyt9VVyrnQNnyGH1b2oCUHkrs1NLwh5Oe4YcqUYROzoEKdDInvmjVJnIfUEM07htGMGvsLsX4MW2tqVHvD2rOwkn8C9s=

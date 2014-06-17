@@ -30,25 +30,28 @@ You can also start hacking on AngularFire in a matter of seconds on
 [![Hack firebase/angularFire on
 Nitrous.IO](https://d3o0mnbgv6k92a.cloudfront.net/assets/hack-l-v1-3cc067e71372f6045e1949af9d96095b.png)](https://www.nitrous.io/hack_button?source=embed&runtime=nodejs&repo=firebase%2FangularFire&file_to_open=README.md)
 
+To get your dev environment set up, run the following commands:
+
 ```bash
-npm install -g phantomjs casperjs
-npm install
-bower install
+git clone https://github.com/firebase/angularfire.git  # clones this repository
+npm install    # installs node dependencies
+bower install  # installs JavaScript dependencies
+grunt install  # installs selenium server for e2e tests
 ```
 
 Use grunt to build and test the code:
 
 ```bash
-# Default task - validates with jshint, minifies source and then runs unit tests
+# Validates source with jshint, minifies source, and then runs unit and e2e tests
 grunt
 
-# Watch for changes and run unit test after each change
+# Watches for changes and runs only unit tests after each change
 grunt watch
 
-# Run tests
+# Runs all tests
 grunt test
 
-# Minify source
+# Minifies source
 grunt build
 ```
 

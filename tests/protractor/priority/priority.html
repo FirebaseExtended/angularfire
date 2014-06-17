@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html ng-app="priority">
+  <head>
+    <title>AngularFire Priority e2e Test</title>
+
+    <!-- Angular -->
+    <script src="../../../bower_components/angular/angular.min.js"></script>
+
+    <!-- Firebase -->
+    <script src="../../../bower_components/firebase/firebase.js"></script>
+
+    <!-- AngularFire -->
+    <script src="../../../angularfire.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="priority.css">
+  </head>
+
+  <body ng-controller="Priority">
+    <!-- Clear Firebase button -->
+    <button id="clearRef" ng-click="clearRef()">Clear Ref</button>
+
+    <!-- Name input -->
+    <div>
+      <label for="name">Your name: </label>
+      <input id="name" type="text" ng-model="username">
+    </div>
+
+    <!-- Messages list -->
+    <div id="messagesList">
+      <div class="message" ng-repeat="message in messages | orderByPriority" ng-cloak >
+        <em>{{ message.from }}: </em>
+        <span class="content">{{ message.content }}</span>
+        <span>Priority: <span class="priority">{{ message.$priority }}</span></span>
+      </div>
+    </div>
+
+    <!-- Add message form -->
+    <form ng-submit="addMessage()">
+      <input id="message" type="text" ng-model="message" placeholder="Message...">
+      <input id="submit" type="submit" value="Submit">
+    </form>
+
+    <!-- Custom JS -->
+    <script src="priority.js" defer></script>
+  </body>
+</html>

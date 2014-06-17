@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html ng-app="todo">
+  <head>
+    <title>AngularFire Todo e2e Test</title>
+
+    <!-- Angular -->
+    <script src="../../../bower_components/angular/angular.min.js"></script>
+
+    <!-- Firebase -->
+    <script src="../../../bower_components/firebase/firebase.js"></script>
+
+    <!-- AngularFire -->
+    <script src="../../../angularfire.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="todo.css">
+  </head>
+
+  <body ng-controller="Todo">
+    <!-- Clear Firebase button -->
+    <button id="clearRef" ng-click="clearRef()">Clear Ref</button>
+
+    <!-- Add a random todo button -->
+    <button id="addRandomTodo" ng-click="addRandomTodo()">Add a Random Todo</button>
+
+    <!-- Add todo input -->
+    <form ng-submit="addTodo()">
+      <input id="newTodoButton" placeholder="What needs to be done?" ng-model="newTodo" autofocus>
+    </form>
+
+    <!-- Todo list -->
+    <div id="todos">
+      <div class="todo" ng-cloak ng-repeat="(id, todo) in todos">
+        <input class="toggle" type="checkbox" ng-model="todo.completed"/>
+        <input class="edit" ng-model="todo.title"/>
+        <button class="removeTodoButton" ng-click="removeTodo(id)">Remove</button>
+      </div>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="todo.js" defer></script>
+  </body>
+</html>
