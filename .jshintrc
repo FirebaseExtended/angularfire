@@ -1,22 +1,21 @@
 {
-  "bitwise" : true,
-  "boss"    : true,
-  "browser" : true,
-  "curly"   : true,
-  "devel"   : true,
-  "eqnull"  : true,
-  "globals" : {
-    "angular"             : false,
-    "Firebase"            : false,
-    "FirebaseSimpleLogin" : false
-  },
-  "globalstrict" : true,
-  "indent"       : 2,
-  "latedef"      : true,
-  "maxlen"       : 115,
-  "noempty"      : true,
-  "nonstandard"  : true,
-  "undef"        : true,
-  "unused"       : true,
-  "trailing"     : true
+  "predef": [
+    "angular",
+    "Firebase",
+    "FirebaseSimpleLogin"
+  ],
+  "bitwise": true,
+  "browser": true,
+  "curly": true,
+  "forin": true,
+  "indent": 2,
+  "latedef": true,
+  "maxlen": 115,
+  "noempty": true,
+  "nonbsp": true,
+  "quotmark": "double",
+  "strict": true,
+  "trailing": true,
+  "undef": true,
+  "unused": true
 }

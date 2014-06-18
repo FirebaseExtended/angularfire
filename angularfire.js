@@ -9,9 +9,8 @@
 //      http://angularfire.com
 //      License: MIT
 
-"use strict";
-
 (function() {
+  "use strict";
 
   var AngularFire, AngularFireAuth;
 
@@ -41,7 +40,7 @@
     return function(input) {
       var sorted = [];
       if (input) {
-        if (!input.$getIndex || typeof input.$getIndex != "function") {
+        if (!input.$getIndex || typeof input.$getIndex !== "function") {
           // input is not an angularFire instance
           if (angular.isArray(input)) {
             // If input is an array, copy it
@@ -134,7 +133,7 @@
       child_removed: []
     };
 
-    if (typeof ref == "string") {
+    if (typeof ref === "string") {
       throw new Error("Please provide a Firebase reference instead " +
         "of a URL, eg: new Firebase(url)");
     }
@@ -191,7 +190,7 @@
           }
         }
 
-        if (typeof item == "object") {
+        if (typeof item === "object") {
           ref = self._fRef.ref().push(self._parseObject(item), _addCb);
         } else {
           ref = self._fRef.ref().push(item, _addCb);
@@ -307,7 +306,7 @@
             }
           },
         applyLocally);
-        
+
         return deferred.promise;
       };
 
@@ -490,7 +489,7 @@
       });
 
       function _isPrimitive(v) {
-        return v === null || typeof(v) !== 'object';
+        return v === null || typeof(v) !== "object";
       }
 
       function _initialLoad(value) {
@@ -527,7 +526,7 @@
       // child_* listeners attached; if the data suddenly changes between an object
       // and a primitive, the child_added/removed events will fire, and our data here
       // will get updated accordingly so we should be able to transition without issue
-      self._fRef.on('value', function(snap) {
+      self._fRef.on("value", function(snap) {
         // primitive handling
         var value = snap.val();
         if( _isPrimitive(value) ) {
@@ -539,7 +538,7 @@
         }
 
         // broadcast the value event
-        self._broadcastEvent('value', self._makeEventSnapshot(snap.name(), value));
+        self._broadcastEvent("value", self._makeEventSnapshot(snap.name(), value));
 
         // broadcast initial loaded event once data and indices are set up appropriately
         if( !self._loaded ) {
@@ -551,7 +550,7 @@
     // Called whenever there is a remote change. Applies them to the local
     // model for both explicit and implicit sync modes.
     _updateModel: function(key, value) {
-      if (value == null) {
+      if (value === null) {
         delete this._object[key];
       } else {
         this._object[key] = value;
@@ -622,7 +621,7 @@
     // If event handlers for a specified event were attached, call them.
     _broadcastEvent: function(evt, param) {
       var cbs = this._on[evt] || [];
-      if( evt === 'loaded' ) {
+      if( evt === "loaded" ) {
         this._on[evt] = []; // release memory
       }
       var self = this;
@@ -635,7 +634,7 @@
 
       if (cbs.length > 0) {
         for (var i = 0; i < cbs.length; i++) {
-          if (typeof cbs[i] == "function") {
+          if (typeof cbs[i] === "function") {
             _wrapTimeout(cbs[i], param);
           }
         }
@@ -645,18 +644,18 @@
     // triggers an initial event for loaded, value, and child_added events (which get immediate feedback)
     _sendInitEvent: function(evt, callback) {
       var self = this;
-      if( self._loaded && ['child_added', 'loaded', 'value'].indexOf(evt) > -1 ) {
+      if( self._loaded && ["child_added", "loaded", "value"].indexOf(evt) > -1 ) {
         self._timeout(function() {
-          var parsedValue = self._object.hasOwnProperty('$value')?
+          var parsedValue = self._object.hasOwnProperty("$value")?
             self._object.$value : self._parseObject(self._object);
           switch(evt) {
-          case 'loaded':
+          case "loaded":
             callback(parsedValue);
             break;
-          case 'value':
+          case "value":
             callback(self._makeEventSnapshot(self._fRef.name(), parsedValue, null));
             break;
-          case 'child_added':
+          case "child_added":
             self._iterateChildren(parsedValue, function(name, val, prev) {
               callback(self._makeEventSnapshot(name, val, prev));
             });
@@ -710,7 +709,7 @@
 
       // If the local model is an object, call an update to set local values.
       var local = self._parse(name)(scope);
-      if (local !== undefined && typeof local == "object") {
+      if (local !== undefined && typeof local === "object") {
         self._fRef.ref().update(self._parseObject(local));
       }
 
@@ -720,9 +719,9 @@
       });
 
       // Once we receive the initial value, the promise will be resolved.
-      self._object.$on('loaded', function(value) {
+      self._object.$on("loaded", function(value) {
         self._timeout(function() {
-          if(value === null && typeof defaultFn === 'function') {
+          if(value === null && typeof defaultFn === "function") {
             scope[name] = defaultFn();
           }
           else {
@@ -768,10 +767,10 @@
       function _findReplacePriority(item) {
         for (var prop in item) {
           if (item.hasOwnProperty(prop)) {
-            if (prop == "$priority") {
+            if (prop === "$priority") {
               item[".priority"] = item.$priority;
               delete item.$priority;
-            } else if (typeof item[prop] == "object") {
+            } else if (typeof item[prop] === "object") {
               _findReplacePriority(item[prop]);
             }
           }
@@ -822,7 +821,7 @@
     this._getCurrentUserDeferred = [];
     this._currentUserData = undefined;
 
-    if (typeof ref == "string") {
+    if (typeof ref === "string") {
       throw new Error("Please provide a Firebase reference instead " +
         "of a URL, eg: new Firebase(url)");
     }
