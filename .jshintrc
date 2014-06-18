@@ -13,7 +13,6 @@
   "maxlen": 115,
   "noempty": true,
   "nonbsp": true,
-  "quotmark": "double",
   "strict": true,
   "trailing": true,
   "undef": true,
