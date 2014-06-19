@@ -7,10 +7,10 @@ module.exports = function(config) {
     files: [
       '../bower_components/angular/angular.js',
       '../bower_components/angular-mocks/angular-mocks.js',
-      '../lib/omnibinder-protocol.js',
       'lib/lodash.js',
       'lib/MockFirebase.js',
       '../angularfire.js',
+      'mocks/**/*.js',
       'unit/**/*.spec.js'
     ],
 

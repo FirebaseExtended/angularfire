@@ -1,791 +1,501 @@
+/*!
+ angularfire v0.8.0-pre1 2014-06-19
+* https://github.com/firebase/angularFire
+* Copyright (c) 2014 Firebase, Inc.
+* MIT LICENSE: http://firebase.mit-license.org/
+*/
+
 // AngularFire is an officially supported AngularJS binding for Firebase.
 // The bindings let you associate a Firebase URL with a model (or set of
 // models), and they will be transparently kept in sync across all clients
 // currently using your app. The 2-way data binding offered by AngularJS works
 // as normal, except that the changes are also sent to all other clients
 // instead of just a server.
-//
-//      AngularFire 0.7.2-pre
-//      http://angularfire.com
-//      License: MIT
+(function(exports) {
+  "use strict";
 
-"use strict";
+// Define the `firebase` module under which all AngularFire
+// services will live.
+  angular.module("firebase", [])
+    .value("Firebase", exports.Firebase)
 
+    // used in conjunction with firebaseUtils.debounce function, this is the
+    // amount of time we will wait for additional records before triggering
+    // Angular's digest scope to dirty check and re-render DOM elements. A
+    // larger number here significantly improves performance when working with
+    // big data sets that are frequently changing in the DOM, but delays the
+    // speed at which each record is rendered in real-time. A number less than
+    // 100ms will usually be optimal.
+    .value('firebaseBatchDelay', 50 /* milliseconds */);
+
+})(window);
 (function() {
+  'use strict';
+  angular.module('firebase').factory('$FirebaseArray', ["$q", "$log", "$firebaseUtils",
+    function($q, $log, $firebaseUtils) {
+      function FirebaseArray($firebase, recordFactory) {
+        $firebaseUtils.assertValidRecordFactory(recordFactory);
+        this._list = [];
+        this._factory = recordFactory;
+        this._inst = $firebase;
+        this._promise = this._init();
+        return this._list;
+      }
 
-  var AngularFire, AngularFireAuth;
+      /**
+       * Array.isArray will not work on object which extend the Array class.
+       * So instead of extending the Array class, we just return an actual array.
+       * However, it's still possible to extend FirebaseArray and have the public methods
+       * appear on the array object. We do this by iterating the prototype and binding
+       * any method that is not prefixed with an underscore onto the final array we return.
+       */
+      FirebaseArray.prototype = {
+        add: function(data) {
+          return this.inst().add(data);
+        },
 
-  // Define the `firebase` module under which all AngularFire
-  // services will live.
-  angular.module("firebase", []).value("Firebase", Firebase);
+        save: function(indexOrItem) {
+          var item = this._resolveItem(indexOrItem);
+          var key = this._factory.getKey(item);
+          return this.inst().set(key, this._factory.toJSON(item), this._compile);
+        },
 
-  // Define the `$firebase` service that provides synchronization methods.
-  angular.module("firebase").factory("$firebase", ["$q", "$parse", "$timeout",
-    function($q, $parse, $timeout) {
-      // The factory returns an object containing the value of the data at
-      // the Firebase location provided, as well as several methods. It
-      // takes a single argument:
-      //
-      //   * `ref`: A Firebase reference. Queries or limits may be applied.
-      return function(ref) {
-        var af = new AngularFire($q, $parse, $timeout, ref);
-        return af.construct();
+        remove: function(indexOrItem) {
+          return this.inst().remove(this.keyAt(indexOrItem));
+        },
+
+        keyAt: function(indexOrItem) {
+          return this._factory.getKey(this._resolveItem(indexOrItem));
+        },
+
+        indexFor: function(key) {
+          var factory = this._factory;
+          return this._list.findIndex(function(rec) { return factory.getKey(rec) === key; });
+        },
+
+        loaded: function() { return this._promise; },
+
+        inst: function() { return this._inst; },
+
+        destroy: function(err) {
+          if( err ) { $log.error(err); }
+          if( this._list ) {
+            $log.debug('destroy called for FirebaseArray: '+this.ref.toString());
+            var ref = this.inst().ref();
+            ref.on('child_added', this._serverAdd, this);
+            ref.on('child_moved', this._serverMove, this);
+            ref.on('child_changed', this._serverUpdate, this);
+            ref.on('child_removed', this._serverRemove, this);
+            this._list.length = 0;
+            this._list = null;
+          }
+        },
+
+        _serverAdd: function() {},
+
+        _serverRemove: function() {},
+
+        _serverUpdate: function() {},
+
+        _serverMove: function() {},
+
+        _compile: function() {},
+
+        _resolveItem: function(indexOrItem) {
+          return angular.isNumber(indexOrItem)? this[indexOrItem] : indexOrItem;
+        },
+
+        _init: function() {
+          var self = this;
+          var list = self._list;
+          var def = $q.defer();
+          var ref = self.inst().ref();
+
+          // we return _list, but apply our public prototype to it first
+          // see FirebaseArray.prototype's assignment comments
+          var methods = $firebaseUtils.getPublicMethods(self);
+          angular.forEach(methods, function(fn, key) {
+            list[key] = fn.bind(self);
+          });
+
+          // we debounce the compile function so that angular's digest only needs to do
+          // dirty checking once for each "batch" of updates that come in close proximity
+          self._compile = $firebaseUtils.debounce(self._compile.bind(self), $firebaseUtils.batchDelay);
+
+          // listen for changes at the Firebase instance
+          ref.once('value', function() { def.resolve(list); }, def.reject.bind(def));
+          ref.on('child_added', self._serverAdd, self.destroy, self);
+          ref.on('child_moved', self._serverMove, self.destroy, self);
+          ref.on('child_changed', self._serverUpdate, self.destroy, self);
+          ref.on('child_removed', self._serverRemove, self.destroy, self);
+
+          return def.promise;
+        }
       };
+
+      return FirebaseArray;
     }
   ]);
 
-  // Define the `orderByPriority` filter that sorts objects returned by
-  // $firebase in the order of priority. Priority is defined by Firebase,
-  // for more info see: https://www.firebase.com/docs/ordered-data.html
-  angular.module("firebase").filter("orderByPriority", function() {
-    return function(input) {
-      var sorted = [];
-      if (input) {
-        if (!input.$getIndex || typeof input.$getIndex != "function") {
-          // input is not an angularFire instance
-          if (angular.isArray(input)) {
-            // If input is an array, copy it
-            sorted = input.slice(0);
-          } else if (angular.isObject(input)) {
-            // If input is an object, map it to an array
-            angular.forEach(input, function(prop) {
-              sorted.push(prop);
-            });
-          }
-        } else {
-          // input is an angularFire instance
-          var index = input.$getIndex();
-          if (index.length > 0) {
-            for (var i = 0; i < index.length; i++) {
-              var val = input[index[i]];
-              if (val) {
-                if (angular.isObject(val)) {
-                  val.$id = index[i];
-                }
-                sorted.push(val);
-              }
-            }
-          }
-        }
-      }
-      return sorted;
-    };
-  });
 
-  // Shim Array.indexOf for IE compatibility.
-  if (!Array.prototype.indexOf) {
-    Array.prototype.indexOf = function (searchElement, fromIndex) {
-      if (this === undefined || this === null) {
-        throw new TypeError("'this' is null or not defined");
-      }
-      // Hack to convert object.length to a UInt32
-      // jshint -W016
-      var length = this.length >>> 0;
-      fromIndex = +fromIndex || 0;
-      // jshint +W016
 
-      if (Math.abs(fromIndex) === Infinity) {
-        fromIndex = 0;
-      }
 
-      if (fromIndex < 0) {
-        fromIndex += length;
-        if (fromIndex < 0) {
-          fromIndex = 0;
-        }
-      }
-
-      for (;fromIndex < length; fromIndex++) {
-        if (this[fromIndex] === searchElement) {
-          return fromIndex;
-        }
-      }
-
-      return -1;
-    };
+//  // Return a synchronized array
+//  object.$asArray = function($scope) {
+//    var sync = new ReadOnlySynchronizedArray(object);
+//    if( $scope ) {
+//      $scope.$on('$destroy', sync.dispose.bind(sync));
+//    }
+//    var arr = sync.getList();
+//    arr.$firebase = object;
+//    return arr;
+//  };
+  /****** OLD STUFF *********/
+  function ReadOnlySynchronizedArray($obj, eventCallback) {
+    this.subs = []; // used to track event listeners for dispose()
+    this.ref = $obj.$getRef();
+    this.eventCallback = eventCallback||function() {};
+    this.list = this._initList();
+    this._initListeners();
   }
 
-  // The `AngularFire` object that implements synchronization.
-  AngularFire = function($q, $parse, $timeout, ref) {
-    this._q = $q;
-    this._parse = $parse;
-    this._timeout = $timeout;
-
-    // set to true when $bind is called, this tells us whether we need
-    // to synchronize a $scope variable during data change events
-    // and also whether we will need to $watch the variable for changes
-    // we can only $bind to a single instance at a time
-    this._bound = false;
-
-    // true after the initial loading event completes, see _getInitialValue()
-    this._loaded = false;
-
-    // stores the list of keys if our data is an object, see $getIndex()
-    this._index = [];
-
-    // An object storing handlers used for different events.
-    this._on = {
-      value: [],
-      change: [],
-      loaded: [],
-      child_added: [],
-      child_moved: [],
-      child_changed: [],
-      child_removed: []
-    };
-
-    if (typeof ref == "string") {
-      throw new Error("Please provide a Firebase reference instead " +
-        "of a URL, eg: new Firebase(url)");
-    }
-    this._fRef = ref;
-  };
-
-  AngularFire.prototype = {
-    // This function is called by the factory to create a new explicit sync
-    // point between a particular model and a Firebase location.
-    construct: function() {
-      var self = this;
-      var object = {};
-
-      // Set the $id val equal to the Firebase reference's name() function.
-      object.$id = self._fRef.ref().name();
-
-      // Establish a 3-way data binding (implicit sync) with the specified
-      // Firebase location and a model on $scope. To be used from a controller
-      // to automatically synchronize *all* local changes. It takes three
-      // arguments:
-      //
-      //    * `$scope`   : The scope with which the bound model is associated.
-      //    * `name`     : The name of the model.
-      //    * `defaultFn`: A function that provides a default value if the
-      //                   remote value is not set. Optional.
-      //
-      // This function also returns a promise, which, when resolved, will be
-      // provided an `unbind` method, a function which you can call to stop
-      // watching the local model for changes.
-      object.$bind = function(scope, name, defaultFn) {
-        return self._bind(scope, name, defaultFn);
-      };
-
-      // Add an object to the remote data. Adding an object is the
-      // equivalent of calling `push()` on a Firebase reference. It takes
-      // one argument:
-      //
-      //    * `item`: The object or primitive to add.
-      //
-      // This function returns a promise that will be resolved when the data
-      // has been successfully written to the server. If the promise is
-      // resolved, it will be provided with a reference to the newly added
-      // object or primitive. The key name can be extracted using `ref.name()`.
-      // If the promise fails, it will resolve to an error.
-      object.$add = function(item) {
-        var ref;
-        var deferred = self._q.defer();
-
-        function _addCb(err) {
-          if (err) {
-            deferred.reject(err);
-          } else {
-            deferred.resolve(ref);
-          }
-        }
-
-        if (typeof item == "object") {
-          ref = self._fRef.ref().push(self._parseObject(item), _addCb);
-        } else {
-          ref = self._fRef.ref().push(item, _addCb);
-        }
-
-        return deferred.promise;
-      };
-
-      // Save the current state of the object (or a child) to the remote.
-      // Takes a single optional argument:
-      //
-      //    * `key`: Specify a child key to save the data for. If no key is
-      //             specified, the entire object's current state will
-      //             be saved.
-      //
-      // This function returns a promise that will be resolved when the
-      // data has been successfully saved to the server.
-      object.$save = function(key) {
-        var deferred = self._q.defer();
-
-        function _saveCb(err) {
-          if (err) {
-            deferred.reject(err);
-          } else {
-            deferred.resolve();
-          }
-        }
-
-        if (key) {
-          var obj = self._parseObject(self._object[key]);
-          self._fRef.ref().child(key).set(obj, _saveCb);
-        } else {
-          self._fRef.ref().set(self._parseObject(self._object), _saveCb);
-        }
-
-        return deferred.promise;
-      };
-
-      // Set the current state of the object to the specified value. Calling
-      // this is the equivalent of calling `set()` on a Firebase reference.
-      // Takes a single mandatory argument:
-      //
-      //    * `newValue`: The value which should overwrite data stored at
-      //                  this location.
-      //
-      // This function returns a promise that will be resolved when the
-      // data has been successfully saved to the server.
-      object.$set = function(newValue) {
-        var deferred = self._q.defer();
-        self._fRef.ref().set(self._parseObject(newValue), function(err) {
-          if (err) {
-            deferred.reject(err);
-          } else {
-            deferred.resolve();
-          }
-        });
-        return deferred.promise;
-      };
-
-      // Non-destructively update only a subset of keys for the current object.
-      // This is the equivalent of calling `update()` on a Firebase reference.
-      // Takes a single mandatory argument:
-      //
-      //    * `newValue`: The set of keys and values that must be updated for
-      //                  this location.
-      //
-      // This function returns a promise that will be resolved when the data
-      // has been successfully saved to the server.
-      object.$update = function(newValue) {
-        var deferred = self._q.defer();
-        self._fRef.ref().update(self._parseObject(newValue), function(err) {
-          if (err) {
-            deferred.reject(err);
-          } else {
-            deferred.resolve();
-          }
-        });
-        return deferred.promise;
-      };
-
-      // Update a value within a transaction. Calling this is the
-      // equivalent of calling `transaction()` on a Firebase reference.
-      //
-      //  * `updateFn`:     A developer-supplied function which will be passed
-      //                    the current data stored at this location (as a
-      //                    Javascript object). The function should return the
-      //                    new value it would like written (as a Javascript
-      //                    object). If "undefined" is returned (i.e. you
-      //                    "return;" with no arguments) the transaction will
-      //                    be aborted and the data at this location will not
-      //                    be modified.
-      //  * `applyLocally`: By default, events are raised each time the
-      //                    transaction update function runs. So if it is run
-      //                    multiple times, you may see intermediate states.
-      //                    You can set this to false to suppress these
-      //                    intermediate states and instead wait until the
-      //                    transaction has completed before events are raised.
-      //
-      //  This function returns a promise that will be resolved when the
-      //  transaction function has completed. A successful transaction is
-      //  resolved with the snapshot. If the transaction is aborted,
-      //  the promise will be resolved with null.
-      object.$transaction = function(updateFn, applyLocally) {
-        var deferred = self._q.defer();
-        self._fRef.ref().transaction(updateFn,
-          function(err, committed, snapshot) {
-            if (err) {
-              deferred.reject(err);
-            } else if (!committed) {
-              deferred.resolve(null);
-            } else {
-              deferred.resolve(snapshot);
-            }
-          },
-        applyLocally);
-        
-        return deferred.promise;
-      };
-
-      // Remove this object from the remote data. Calling this is the
-      // equivalent of calling `remove()` on a Firebase reference. This
-      // function takes a single optional argument:
-      //
-      //    * `key`: Specify a child key to remove. If no key is specified, the
-      //             entire object will be removed from the remote data store.
-      //
-      // This function returns a promise that will be resolved when the
-      // object has been successfully removed from the server.
-      object.$remove = function(key) {
-        var deferred = self._q.defer();
-
-        function _removeCb(err) {
-          if (err) {
-            deferred.reject(err);
-          } else {
-            deferred.resolve();
-          }
-        }
-
-        if (key) {
-          self._fRef.ref().child(key).remove(_removeCb);
-        } else {
-          self._fRef.ref().remove(_removeCb);
-        }
-
-        return deferred.promise;
-      };
-
-      // Get an AngularFire wrapper for a named child. This function takes
-      // one mandatory argument:
-      //
-      //    * `key`: The key name that will point to the child reference to be
-      //             returned.
-      object.$child = function(key) {
-        var af = new AngularFire(
-          self._q, self._parse, self._timeout, self._fRef.ref().child(key)
-        );
-        return af.construct();
-      };
-
-      // Attach an event handler for when the object is changed. You can attach
-      // handlers for all Firebase events like "child_added", "value", and
-      // "child_removed". Additionally, the following events, specific to
-      // AngularFire, can be listened to.
-      //
-      //  - "change": The provided function will be called whenever the local
-      //              object is modified because the remote data was updated.
-      //  - "loaded": This function will be called *once*, when the initial
-      //              data has been loaded. 'object' will be an empty
-      //              object ({}) until this function is called.
-      object.$on = function(type, callback) {
-        if( self._on.hasOwnProperty(type) ) {
-          self._sendInitEvent(type, callback);
-          // One exception if made for the 'loaded' event. If we already loaded
-          // data (perhaps because it was synced), simply fire the callback.
-          if (type !== "loaded" || !this._loaded) {
-            self._on[type].push(callback);
-          }
-        } else {
-          throw new Error("Invalid event type " + type + " specified");
-        }
-        return object;
-      };
-
-      // Detach an event handler from a specified event type. If no callback
-      // is specified, all event handlers for the specified event type will
-      // be detached.
-      //
-      // If no type if provided, synchronization for this instance of $firebase
-      // will be turned off complete.
-      object.$off = function(type, callback) {
-        if (self._on.hasOwnProperty(type)) {
-          if (callback) {
-            var index = self._on[type].indexOf(callback);
-            if (index !== -1) {
-              self._on[type].splice(index, 1);
-            }
-          } else {
-            self._on[type] = [];
-          }
-        } else {
-          self._fRef.off();
-        }
-      };
-
-      // Authenticate this Firebase reference with a custom auth token.
-      // Refer to the Firebase documentation on "Custom Login" for details.
-      // Returns a promise that will be resolved when authentication is
-      // successfully completed.
-      object.$auth = function(token) {
-        var deferred = self._q.defer();
-        self._fRef.auth(token, function(err, obj) {
-          if (err !== null) {
-            deferred.reject(err);
-          } else {
-            deferred.resolve(obj);
-          }
-        }, function(rej) {
-          deferred.reject(rej);
-        });
-        return deferred.promise;
-      };
-
-      // Return the current index, which is a list of key names in an array,
-      // ordered by their Firebase priority.
-      object.$getIndex = function() {
-        return angular.copy(self._index);
-      };
-
-      // Return the reference used by this object.
-      object.$getRef = function() {
-        return self._fRef.ref();
-      };
-
-      self._object = object;
-      self._getInitialValue();
-
-      return self._object;
+  ReadOnlySynchronizedArray.prototype = {
+    getList: function() {
+      return this.list;
     },
 
-    // This function is responsible for fetching the initial data for the
-    // given reference and attaching appropriate child event handlers.
-    _getInitialValue: function() {
-      var self = this;
+    add: function(data) {
+      var key = this.ref.push().name();
+      var ref = this.ref.child(key);
+      if( arguments.length > 0 ) { ref.set(parseForJson(data), this._handleErrors.bind(this, key)); }
+      return ref;
+    },
 
-      // store changes to children and update the index of keys appropriately
-      function _processSnapshot(snapshot, prevChild) {
-        var key = snapshot.name();
-        var val = snapshot.val();
+    set: function(key, newValue) {
+      this.ref.child(key).set(parseForJson(newValue), this._handleErrors.bind(this, key));
+    },
 
-        // If the item already exists in the index, remove it first.
-        var curIdx = self._index.indexOf(key);
-        if (curIdx !== -1) {
-          self._index.splice(curIdx, 1);
-        }
+    update: function(key, newValue) {
+      this.ref.child(key).update(parseForJson(newValue), this._handleErrors.bind(this, key));
+    },
 
-        // Update index. This is used by $getIndex and orderByPriority.
-        if (prevChild) {
-          var prevIdx = self._index.indexOf(prevChild);
-          self._index.splice(prevIdx + 1, 0, key);
-        } else {
-          self._index.unshift(key);
-        }
+    setPriority: function(key, newPriority) {
+      this.ref.child(key).setPriority(newPriority);
+    },
 
-        // Store the priority of the current property as "$priority". Changing
-        // the value of this property will also update the priority of the
-        // object (see _parseObject).
-        if (!_isPrimitive(val) && snapshot.getPriority() !== null) {
-          val.$priority = snapshot.getPriority();
-        }
-        self._updateModel(key, val);
+    remove: function(key) {
+      this.ref.child(key).remove(this._handleErrors.bind(null, key));
+    },
+
+    posByKey: function(key) {
+      return findKeyPos(this.list, key);
+    },
+
+    placeRecord: function(key, prevId) {
+      if( prevId === null ) {
+        return 0;
       }
-
-      // Helper function to attach and broadcast events.
-      function _handleAndBroadcastEvent(type, handler) {
-        return function(snapshot, prevChild) {
-          handler(snapshot, prevChild);
-          self._broadcastEvent(type, self._makeEventSnapshot(snapshot.name(), snapshot.val(), prevChild));
-        };
-      }
-
-      function _handleFirebaseEvent(type, handler) {
-        self._fRef.on(type, _handleAndBroadcastEvent(type, handler));
-      }
-      _handleFirebaseEvent("child_added", _processSnapshot);
-      _handleFirebaseEvent("child_moved", _processSnapshot);
-      _handleFirebaseEvent("child_changed", _processSnapshot);
-      _handleFirebaseEvent("child_removed", function(snapshot) {
-        // Remove from index.
-        var key = snapshot.name();
-        var idx = self._index.indexOf(key);
-        self._index.splice(idx, 1);
-
-        // Remove from local model.
-        self._updateModel(key, null);
-      });
-
-      function _isPrimitive(v) {
-        return v === null || typeof(v) !== 'object';
-      }
-
-      function _initialLoad(value) {
-        // Call handlers for the "loaded" event.
-        self._loaded = true;
-        self._broadcastEvent("loaded", value);
-      }
-
-      function handleNullValues(value) {
-        // NULLs are handled specially. If there's a 3-way data binding
-        // on a local primitive, then update that, otherwise switch to object
-        // binding using child events.
-        if (self._bound && value === null) {
-          var local = self._parseObject(self._parse(self._name)(self._scope));
-          switch (typeof local) {
-          // Primitive defaults.
-          case "string":
-          case "undefined":
-            value = "";
-            break;
-          case "number":
-            value = 0;
-            break;
-          case "boolean":
-            value = false;
-            break;
-          }
-        }
-
-        return value;
-      }
-
-      // We handle primitives and objects here together. There is no harm in having
-      // child_* listeners attached; if the data suddenly changes between an object
-      // and a primitive, the child_added/removed events will fire, and our data here
-      // will get updated accordingly so we should be able to transition without issue
-      self._fRef.on('value', function(snap) {
-        // primitive handling
-        var value = snap.val();
-        if( _isPrimitive(value) ) {
-          value = handleNullValues(value);
-          self._updatePrimitive(value);
+      else {
+        var i = this.posByKey(prevId);
+        if( i === -1 ) {
+          return this.list.length;
         }
         else {
-          delete self._object.$value;
+          return i+1;
         }
+      }
+    },
 
-        // broadcast the value event
-        self._broadcastEvent('value', self._makeEventSnapshot(snap.name(), value));
+    getRecord: function(key) {
+      var i = this.posByKey(key);
+      if( i === -1 ) { return null; }
+      return this.list[i];
+    },
 
-        // broadcast initial loaded event once data and indices are set up appropriately
-        if( !self._loaded ) {
-          _initialLoad(value);
-        }
+    dispose: function() {
+      var ref = this.ref;
+      this.subs.forEach(function(s) {
+        ref.off(s[0], s[1]);
       });
+      this.subs = [];
     },
 
-    // Called whenever there is a remote change. Applies them to the local
-    // model for both explicit and implicit sync modes.
-    _updateModel: function(key, value) {
-      if (value == null) {
-        delete this._object[key];
-      } else {
-        this._object[key] = value;
-      }
-
-      // Call change handlers.
-      this._broadcastEvent("change", key);
-
-      // update Angular by forcing a compile event
-      this._triggerModelUpdate();
+    _serverAdd: function(snap, prevId) {
+      var data = parseVal(snap.name(), snap.val());
+      this._moveTo(snap.name(), data, prevId);
+      this._handleEvent('child_added', snap.name(), data);
     },
 
-    // this method triggers a self._timeout event, which forces Angular to run $apply()
-    // and compile the DOM content
-    _triggerModelUpdate: function() {
-      // since the timeout runs asynchronously, multiple updates could invoke this method
-      // before it is actually executed (this occurs when Firebase sends it's initial deluge of data
-      // back to our _getInitialValue() method, or when there are locally cached changes)
-      // We don't want to trigger it multiple times if we can help, creating multiple dirty checks
-      // and $apply operations, which are costly, so if one is already queued, we just wait for
-      // it to do its work.
-      if( !this._runningTimer ) {
-        var self = this;
-        this._runningTimer = self._timeout(function() {
-          self._runningTimer = null;
-
-          // If there is an implicit binding, also update the local model.
-          if (!self._bound) {
-            return;
-          }
-
-          var current = self._object;
-          var local = self._parse(self._name)(self._scope);
-          // If remote value matches local value, don't do anything, otherwise
-          // apply the change.
-          if (!angular.equals(current, local)) {
-            self._parse(self._name).assign(self._scope, angular.copy(current));
-          }
-        });
+    _serverRemove: function(snap) {
+      var pos = this.posByKey(snap.name());
+      if( pos !== -1 ) {
+        this.list.splice(pos, 1);
+        this._handleEvent('child_removed', snap.name(), this.list[pos]);
       }
     },
 
-    // Called whenever there is a remote change for a primitive value.
-    _updatePrimitive: function(value) {
-      var self = this;
-      self._timeout(function() {
-        // Primitive values are represented as a special object
-        // {$value: value}. Only update if the remote value is different from
-        // the local value.
-        if (!self._object.$value ||
-            !angular.equals(self._object.$value, value)) {
-          self._object.$value = value;
-        }
-
-        // Call change handlers.
-        self._broadcastEvent("change");
-
-        // If there's an implicit binding, simply update the local scope model.
-        if (self._bound) {
-          var local = self._parseObject(self._parse(self._name)(self._scope));
-          if (!angular.equals(local, value)) {
-            self._parse(self._name).assign(self._scope, value);
-          }
-        }
-      });
-    },
-
-    // If event handlers for a specified event were attached, call them.
-    _broadcastEvent: function(evt, param) {
-      var cbs = this._on[evt] || [];
-      if( evt === 'loaded' ) {
-        this._on[evt] = []; // release memory
-      }
-      var self = this;
-
-      function _wrapTimeout(cb, param) {
-        self._timeout(function() {
-          cb(param);
-        });
-      }
-
-      if (cbs.length > 0) {
-        for (var i = 0; i < cbs.length; i++) {
-          if (typeof cbs[i] == "function") {
-            _wrapTimeout(cbs[i], param);
-          }
-        }
+    _serverChange: function(snap) {
+      var pos = this.posByKey(snap.name());
+      if( pos !== -1 ) {
+        this.list[pos] = applyToBase(this.list[pos], parseVal(snap.name(), snap.val()));
+        this._handleEvent('child_changed', snap.name(), this.list[pos]);
       }
     },
 
-    // triggers an initial event for loaded, value, and child_added events (which get immediate feedback)
-    _sendInitEvent: function(evt, callback) {
-      var self = this;
-      if( self._loaded && ['child_added', 'loaded', 'value'].indexOf(evt) > -1 ) {
-        self._timeout(function() {
-          var parsedValue = self._object.hasOwnProperty('$value')?
-            self._object.$value : self._parseObject(self._object);
-          switch(evt) {
-          case 'loaded':
-            callback(parsedValue);
-            break;
-          case 'value':
-            callback(self._makeEventSnapshot(self._fRef.name(), parsedValue, null));
-            break;
-          case 'child_added':
-            self._iterateChildren(parsedValue, function(name, val, prev) {
-              callback(self._makeEventSnapshot(name, val, prev));
-            });
-            break;
-          default: // not reachable
-          }
-        });
+    _serverMove: function(snap, prevId) {
+      var id = snap.name();
+      var oldPos = this.posByKey(id);
+      if( oldPos !== -1 ) {
+        var data = this.list[oldPos];
+        this.list.splice(oldPos, 1);
+        this._moveTo(id, data, prevId);
+        this._handleEvent('child_moved', snap.name(), data);
       }
     },
 
-    // assuming data is an object, this method will iterate all
-    // child keys and invoke callback with (key, value, prevChild)
-    _iterateChildren: function(data, callback) {
-      if( this._loaded && angular.isObject(data) ) {
-        var prev = null;
-        for(var key in data) {
-          if( data.hasOwnProperty(key) ) {
-            callback(key, data[key], prev);
-            prev = key;
-          }
-        }
+    _moveTo: function(id, data, prevId) {
+      var pos = this.placeRecord(id, prevId);
+      this.list.splice(pos, 0, data);
+    },
+
+    _handleErrors: function(key, err) {
+      if( err ) {
+        this._handleEvent('error', null, key);
+        console.error(err);
       }
     },
 
-    // creates a snapshot object compatible with _broadcastEvent notifications
-    _makeEventSnapshot: function(key, value, prevChild) {
-      if( angular.isUndefined(prevChild) ) {
-        prevChild = null;
-      }
-      return {
-        snapshot: {
-          name: key,
-          value: value
-        },
-        prevChild: prevChild
-      };
+    _handleEvent: function(eventType, recordId, data) {
+      // console.log(eventType, recordId);
+      this.eventCallback(eventType, recordId, data);
     },
 
-    // This function creates a 3-way binding between the provided scope model
-    // and Firebase. All changes made to the local model are saved to Firebase
-    // and changes to the remote data automatically appear on the local model.
-    _bind: function(scope, name, defaultFn) {
-      var self = this;
-      var deferred = self._q.defer();
-
-      // _updateModel or _updatePrimitive will take care of updating the local
-      // model if _bound is set to true.
-      self._name = name;
-      self._bound = true;
-      self._scope = scope;
-
-      // If the local model is an object, call an update to set local values.
-      var local = self._parse(name)(scope);
-      if (local !== undefined && typeof local == "object") {
-        self._fRef.ref().update(self._parseObject(local));
-      }
-
-      // When the scope is destroyed, unbind automatically.
-      scope.$on("$destroy", function() {
-        unbind();
-      });
-
-      // Once we receive the initial value, the promise will be resolved.
-      self._object.$on('loaded', function(value) {
-        self._timeout(function() {
-          if(value === null && typeof defaultFn === 'function') {
-            scope[name] = defaultFn();
-          }
-          else {
-            scope[name] = value;
-          }
-          deferred.resolve(unbind);
-        });
-      });
-
-      // We're responsible for setting up scope.$watch to reflect local changes
-      // on the Firebase data.
-      var unbind = scope.$watch(name, function() {
-        // If the new local value matches the current remote value, we don't
-        // trigger a remote update.
-        var local = self._parseObject(self._parse(name)(scope));
-        if (self._object.$value !== undefined &&
-            angular.equals(local, self._object.$value)) {
-          return;
-        } else if (angular.equals(local, self._parseObject(self._object))) {
-          return;
-        }
-
-        // If the local model is undefined or the remote data hasn't been
-        // loaded yet, don't update.
-        if (local === undefined || !self._loaded) {
-          return;
-        }
-
-        // Use update if limits are in effect, set if not.
-        if (self._fRef.set) {
-          self._fRef.set(local);
-        } else {
-          self._fRef.ref().update(local);
-        }
-      }, true);
-
-      return deferred.promise;
+    _initList: function() {
+      var list = [];
+      list.$indexOf = this.posByKey.bind(this);
+      list.$add = this.add.bind(this);
+      list.$remove = this.remove.bind(this);
+      list.$set = this.set.bind(this);
+      list.$update = this.update.bind(this);
+      list.$move = this.setPriority.bind(this);
+      list.$rawData = function(key) { return parseForJson(this.getRecord(key)); }.bind(this);
+      list.$off = this.dispose.bind(this);
+      return list;
     },
 
-    // Parse a local model, removing all properties beginning with "$" and
-    // converting $priority to ".priority".
-    _parseObject: function(obj) {
-      function _findReplacePriority(item) {
-        for (var prop in item) {
-          if (item.hasOwnProperty(prop)) {
-            if (prop == "$priority") {
-              item[".priority"] = item.$priority;
-              delete item.$priority;
-            } else if (typeof item[prop] == "object") {
-              _findReplacePriority(item[prop]);
-            }
-          }
-        }
-        return item;
-      }
+    _initListeners: function() {
+      this._monit('child_added', this._serverAdd);
+      this._monit('child_removed', this._serverRemove);
+      this._monit('child_changed', this._serverChange);
+      this._monit('child_moved', this._serverMove);
+    },
 
-      // We use toJson/fromJson to remove $$hashKey and others. Can be replaced
-      // by angular.copy, but only for later versions of AngularJS.
-      var newObj = _findReplacePriority(angular.copy(obj));
-      return angular.fromJson(angular.toJson(newObj));
+    _monit: function(event, method) {
+      this.subs.push([event, this.ref.on(event, method.bind(this))]);
     }
   };
 
+  function applyToBase(base, data) {
+    // do not replace the reference to objects contained in the data
+    // instead, just update their child values
+    if( isObject(base) && isObject(data) ) {
+      var key;
+      for(key in base) {
+        if( key !== '$id' && base.hasOwnProperty(key) && !data.hasOwnProperty(key) ) {
+          delete base[key];
+        }
+      }
+      for(key in data) {
+        if( data.hasOwnProperty(key) ) {
+          base[key] = data[key];
+        }
+      }
+      return base;
+    }
+    else {
+      return data;
+    }
+  }
+
+  function isObject(x) {
+    return typeof(x) === 'object' && x !== null;
+  }
+
+  function findKeyPos(list, key) {
+    for(var i = 0, len = list.length; i < len; i++) {
+      if( list[i].$id === key ) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  function parseForJson(data) {
+    if( data && typeof(data) === 'object' ) {
+      delete data.$id;
+      if( data.hasOwnProperty('.value') ) {
+        data = data['.value'];
+      }
+    }
+    if( data === undefined ) {
+      data = null;
+    }
+    return data;
+  }
+
+  function parseVal(id, data) {
+    if( typeof(data) !== 'object' || !data ) {
+      data = { '.value': data };
+    }
+    data.$id = id;
+    return data;
+  }
+})();
+(function() {
+  'use strict';
+  angular.module('firebase').factory('$FirebaseObject', function() {
+    return function() {};
+  });
+})();
+'use strict';
+
+angular.module("firebase")
+
+  // The factory returns an object containing the value of the data at
+  // the Firebase location provided, as well as several methods. It
+  // takes one or two arguments:
+  //
+  //   * `ref`: A Firebase reference. Queries or limits may be applied.
+  //   * `config`: An object containing any of the advanced config options explained in API docs
+  .factory("$firebase", [ "$q", "$firebaseUtils", "$firebaseConfig",
+    function($q, $firebaseUtils, $firebaseConfig) {
+      function AngularFire(ref, config) {
+        // make the new keyword optional
+        if( !(this instanceof AngularFire) ) {
+          return new AngularFire(ref, config);
+        }
+        this._config = $firebaseConfig(config);
+        this._ref = ref;
+        this._array = null;
+        this._object = null;
+        this._assertValidConfig(ref, this._config);
+      }
+
+      AngularFire.prototype = {
+        ref: function() { return this._ref; },
+
+        add: function(data) {
+          var def = $q.defer();
+          var ref = this._ref.push();
+          var done = this._handle(def, ref);
+          if( arguments.length > 0 ) {
+            ref.set(data, done);
+          }
+          else {
+            done();
+          }
+          return def.promise;
+        },
+
+        set: function(key, data) {
+          var ref = this._ref;
+          var def = $q.defer();
+          if( arguments.length > 1 ) {
+            ref = ref.child(key);
+          }
+          else {
+            data = key;
+          }
+          ref.set(data, this._handle(def));
+          return def.promise;
+        },
+
+        remove: function(key) {
+          var ref = this._ref;
+          var def = $q.defer();
+          if( arguments.length > 0 ) {
+            ref = ref.child(key);
+          }
+          ref.remove(this._handle(def));
+          return def.promise;
+        },
+
+        update: function(key, data) {
+          var ref = this._ref;
+          var def = $q.defer();
+          if( arguments.length > 1 ) {
+            ref = ref.child(key);
+          }
+          else {
+            data = key;
+          }
+          ref.update(data, this._handle(def));
+          return def.promise;
+        },
+
+        transaction: function() {}, //todo
+
+        asObject: function() {
+          if( !this._object ) {
+            this._object = new this._config.objectFactory(this);
+          }
+          return this._object;
+        },
+
+        asArray: function() {
+          if( !this._array ) {
+            this._array = new this._config.arrayFactory(this, this._config.recordFactory);
+          }
+          return this._array;
+        },
+
+        _handle: function(def) {
+          var args = Array.prototype.slice.call(arguments, 1);
+          return function(err) {
+            if( err ) { def.reject(err); }
+            else { def.resolve.apply(def, args); }
+          };
+        },
+
+        _assertValidConfig: function(ref, cnf) {
+          $firebaseUtils.assertValidRef(ref, 'Must pass a valid Firebase reference ' +
+            'to $firebase (not a string or URL)');
+          $firebaseUtils.assertValidRecordFactory(cnf.recordFactory);
+          if( typeof(cnf.arrayFactory) !== 'function' ) {
+            throw new Error('config.arrayFactory must be a valid function');
+          }
+          if( typeof(cnf.objectFactory) !== 'function' ) {
+            throw new Error('config.arrayFactory must be a valid function');
+          }
+        }
+      };
+
+      return AngularFire;
+    }
+  ]);
+
+(function() {
+  'use strict';
+  angular.module('firebase').factory('$firebaseRecordFactory', function() {
+    return {
+      create: function () {
+      },
+      update: function () {
+      },
+      toJSON: function () {
+      },
+      destroy: function () {
+      },
+      getKey: function () {
+      },
+      getPriority: function () {
+      }
+    };
+  });
+})();
+(function() {
+  'use strict';
+  var AngularFireAuth;
 
   // Defines the `$firebaseSimpleLogin` service that provides simple
   // user authentication support for AngularFire.
@@ -852,7 +562,7 @@
       }
 
       var client = new FirebaseSimpleLogin(this._fRef,
-                                           this._onLoginEvent.bind(this));
+        this._onLoginEvent.bind(this));
       this._authClient = client;
       return this._object;
     },
@@ -1015,4 +725,236 @@
       }
     }
   };
+})();
+'use strict';
+
+// Shim Array.indexOf for IE compatibility.
+if (!Array.prototype.indexOf) {
+  Array.prototype.indexOf = function (searchElement, fromIndex) {
+    if (this === undefined || this === null) {
+      throw new TypeError("'this' is null or not defined");
+    }
+    // Hack to convert object.length to a UInt32
+    // jshint -W016
+    var length = this.length >>> 0;
+    fromIndex = +fromIndex || 0;
+    // jshint +W016
+
+    if (Math.abs(fromIndex) === Infinity) {
+      fromIndex = 0;
+    }
+
+    if (fromIndex < 0) {
+      fromIndex += length;
+      if (fromIndex < 0) {
+        fromIndex = 0;
+      }
+    }
+
+    for (;fromIndex < length; fromIndex++) {
+      if (this[fromIndex] === searchElement) {
+        return fromIndex;
+      }
+    }
+
+    return -1;
+  };
+}
+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind
+if (!Function.prototype.bind) {
+  Function.prototype.bind = function (oThis) {
+    if (typeof this !== "function") {
+      // closest thing possible to the ECMAScript 5
+      // internal IsCallable function
+      throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
+    }
+
+    var aArgs = Array.prototype.slice.call(arguments, 1),
+      fToBind = this,
+      fNOP = function () {},
+      fBound = function () {
+        return fToBind.apply(this instanceof fNOP && oThis
+            ? this
+            : oThis,
+          aArgs.concat(Array.prototype.slice.call(arguments)));
+      };
+
+    fNOP.prototype = this.prototype;
+    fBound.prototype = new fNOP();
+
+    return fBound;
+  };
+}
+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex
+
+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find
+//if (!Array.prototype.find) {
+//  Object.defineProperty(Array.prototype, 'find', {
+//    enumerable: false,
+//    configurable: true,
+//    writable: true,
+//    value: function(predicate) {
+//      if (this == null) {
+//        throw new TypeError('Array.prototype.find called on null or undefined');
+//      }
+//      if (typeof predicate !== 'function') {
+//        throw new TypeError('predicate must be a function');
+//      }
+//      var list = Object(this);
+//      var length = list.length >>> 0;
+//      var thisArg = arguments[1];
+//      var value;
+//
+//      for (var i = 0; i < length; i++) {
+//        if (i in list) {
+//          value = list[i];
+//          if (predicate.call(thisArg, value, i, list)) {
+//            return value;
+//          }
+//        }
+//      }
+//      return undefined;
+//    }
+//  });
+//}
+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
+if (typeof Object.create != 'function') {
+  (function () {
+    var F = function () {};
+    Object.create = function (o) {
+      if (arguments.length > 1) {
+        throw Error('Second argument not supported');
+      }
+      if (o === null) {
+        throw Error('Cannot set a null [[Prototype]]');
+      }
+      if (typeof o != 'object') {
+        throw TypeError('Argument must be an object');
+      }
+      F.prototype = o;
+      return new F();
+    };
+  })();
+}
+(function() {
+  'use strict';
+
+  angular.module('firebase')
+    .factory('$firebaseConfig', ["$firebaseRecordFactory", "$FirebaseArray", "$FirebaseObject",
+      function($firebaseRecordFactory, $FirebaseArray, $FirebaseObject) {
+        return function(configOpts) {
+          return angular.extend({}, {
+            recordFactory: $firebaseRecordFactory,
+            arrayFactory: $FirebaseArray,
+            objectFactory: $FirebaseObject
+          }, configOpts);
+        };
+      }
+    ])
+
+    .factory('$firebaseUtils', ["$timeout", "firebaseBatchDelay", '$firebaseRecordFactory',
+      function($timeout, firebaseBatchDelay, $firebaseRecordFactory) {
+        function debounce(fn, wait, options) {
+          if( !wait ) { wait = 0; }
+          var opts = angular.extend({maxWait: wait*25||250}, options);
+          var to, startTime = null, maxWait = opts.maxWait;
+          function cancelTimer() {
+            if( to ) { clearTimeout(to); }
+          }
+
+          function init() {
+            if( !startTime ) {
+              startTime = Date.now();
+            }
+          }
+
+          function delayLaunch() {
+            init();
+            cancelTimer();
+            if( Date.now() - startTime > maxWait ) {
+              launch();
+            }
+            else {
+              to = timeout(launch, wait);
+            }
+          }
+
+          function timeout() {
+            if( opts.scope ) {
+              to = setTimeout(function() {
+                opts.scope.$apply(launch);
+                try {
+                }
+                catch(e) {
+                  console.error(e);
+                }
+              }, wait);
+            }
+            else {
+              to = $timeout(launch, wait);
+            }
+          }
+
+          function launch() {
+            startTime = null;
+            fn();
+          }
+
+          return delayLaunch;
+        }
+
+        function assertValidRef(ref, msg) {
+          if( !angular.isObject(ref) ||
+            typeof(ref.ref) !== 'function' ||
+            typeof(ref.transaction) !== 'function' ) {
+            throw new Error(msg || 'Invalid Firebase reference');
+          }
+        }
+
+        function assertValidRecordFactory(factory) {
+          if( !angular.isObject(factory) ) {
+            throw new Error('Invalid argument passed for $firebaseRecordFactory');
+          }
+          for (var key in $firebaseRecordFactory) {
+            if ($firebaseRecordFactory.hasOwnProperty(key) &&
+              typeof($firebaseRecordFactory[key]) === 'function' && key !== 'isValidFactory') {
+              if( !factory.hasOwnProperty(key) || typeof(factory[key]) !== 'function' ) {
+                throw new Error('Record factory does not have '+key+' method');
+              }
+            }
+          }
+        }
+
+        // http://stackoverflow.com/questions/7509831/alternative-for-the-deprecated-proto
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
+        function inherit(childClass,parentClass) {
+          childClass.prototype = Object.create(parentClass.prototype);
+          childClass.prototype.constructor = childClass; // restoring proper constructor for child class
+        }
+
+        function getPublicMethods(inst) {
+          var methods = {};
+          for (var key in inst) {
+            //noinspection JSUnfilteredForInLoop
+            if (typeof(inst[key]) === 'function' && !/^_/.test(key)) {
+              methods[key] = inst[key];
+            }
+          }
+          return methods;
+        }
+
+        return {
+          debounce: debounce,
+          assertValidRef: assertValidRef,
+          assertValidRecordFactory: assertValidRecordFactory,
+          batchDelay: firebaseBatchDelay,
+          inherit: inherit,
+          getPublicMethods: getPublicMethods
+        };
+      }]);
+
 })();
