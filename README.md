@@ -21,8 +21,7 @@ Development
 [![Built with Grunt](https://cdn.gruntjs.com/builtwith.png)](http://gruntjs.com/)
 
 If you'd like to hack on AngularFire itself, you'll need
-[node.js](http://nodejs.org/download/), [Bower](http://bower.io), and
-[CasperJS](https://github.com/n1k0/casperjs).
+[node.js](http://nodejs.org/download/) and [Bower](http://bower.io).
 
 You can also start hacking on AngularFire in a matter of seconds on
 [Nitrous.IO](https://www.nitrous.io/?utm_source=github.com&utm_campaign=angularFire&utm_medium=hackonnitrous)

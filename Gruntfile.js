@@ -41,26 +41,7 @@ module.exports = function(grunt) {
     // Lint JavaScript
     jshint : {
       options : {
-        'bitwise' : true,
-        'boss'    : true,
-        'browser' : true,
-        'curly'   : true,
-        'devel'   : true,
-        'eqnull'  : true,
-        'globals' : {
-          'angular'             : false,
-          'Firebase'            : false,
-          'FirebaseSimpleLogin' : false
-        },
-        'globalstrict' : true,
-        'indent'       : 2,
-        'latedef'      : true,
-        'maxlen'       : 115,
-        'noempty'      : true,
-        'nonstandard'  : true,
-        'undef'        : true,
-        'unused'       : true,
-        'trailing'     : true
+        jshintrc: '.jshintrc'
       },
       all : ['angularfire.js']
     },
@@ -114,13 +95,6 @@ module.exports = function(grunt) {
           title: 'Grunt Watch',
           message: 'Build Finished'
         }
-      }
-    },
-
-    // Auto-populating changelog
-    changelog: {
-      options: {
-        dest: 'CHANGELOG.md'
       }
     }
   });
