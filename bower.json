@@ -16,11 +16,11 @@
     ".gitignore"
   ],
   "dependencies": {
-    "angular": "~1.2.0",
+    "angular": "~1.2.18",
     "firebase": "1.0.x",
     "firebase-simple-login": "1.6.x"
   },
   "devDependencies": {
-    "angular-mocks" : "~1.2.0"
+    "angular-mocks" : "~1.2.18"
   }
 }

@@ -1,7 +1,7 @@
 /**
  * MockFirebase: A Firebase stub/spy library for writing unit tests
  * https://github.com/katowulf/mockfirebase
- * @version 0.0.13
+ * @version 0.1.1
  */
 (function(exports) {
   var DEBUG = false; // enable lots of console logging (best used while isolating one test case)
@@ -155,6 +155,7 @@
      * this to false disables autoFlush
      *
      * @param {int|boolean} [delay]
+     * @returns {MockFirebase}
      */
     autoFlush: function(delay){
       if(_.isUndefined(delay)) { delay = true; }
@@ -197,9 +198,39 @@
     },
 
     /**
-     * @param {string} [key] if omitted, returns my priority, otherwise, child's priority
-     * @returns {string|string|*}
+     * Generates a fake event that does not affect or derive from the actual data in this
+     * mock. Great for quick event handling tests that won't rely on longer-term consistency
+     * or for creating out-of-order networking conditions that are hard to produce
+     * using set/remove/setPriority
+     *
+     * @param {string} event
+     * @param {string} key
+     * @param data
+     * @param {string} [prevChild]
+     * @param [pri]
+     * @returns {MockFirebase}
      */
+    fakeEvent: function(event, key, data, prevChild, pri) {
+      DEBUG && console.log('fakeEvent', event, this.toString(), key);
+      if( arguments.length < 5 ) { pri = null; }
+      if( arguments.length < 4 ) { prevChild = null; }
+      if( arguments.length < 3 ) { data = null; }
+      var self = this;
+      var ref = event==='value'? self : self.child(key);
+      var snap = makeSnap(ref, data, pri);
+      self._defer(function() {
+        _.each(self._events[event], function (parts) {
+          var fn = parts[0], context = parts[1];
+          if (_.contains(['child_added', 'child_moved'], event)) {
+            fn.call(context, snap, prevChild);
+          }
+          else {
+            fn.call(context, snap);
+          }
+        });
+      });
+      return this;
+    },
 
     /*****************************************************
      * Firebase API methods
@@ -236,7 +267,6 @@
         }
         callback && callback(err);
       });
-      return this;
     },
 
     update: function(changes, callback) {
@@ -312,7 +342,6 @@
         cancel = function() {};
         context = null;
       }
-
       var err = this._nextErr('once');
       if( err ) {
         this._defer(function() {
