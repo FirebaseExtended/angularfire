@@ -1,7 +1,7 @@
 /**
  * MockFirebase: A Firebase stub/spy library for writing unit tests
  * https://github.com/katowulf/mockfirebase
- * @version 0.0.9
+ * @version 0.0.13
  */
 (function(exports) {
   var DEBUG = false; // enable lots of console logging (best used while isolating one test case)
@@ -302,36 +302,87 @@
       return child;
     },
 
-    once: function(event, callback) {
+    once: function(event, callback, cancel, context) {
       var self = this;
-      function fn(snap) {
-        self.off(event, fn);
-        callback(snap);
+      if( arguments.length === 3 && !angular.isFunction(cancel) ) {
+        context = cancel;
+        cancel = function() {};
       }
-      this.on(event, fn);
-    },
+      else if( arguments.length < 3 ) {
+        cancel = function() {};
+        context = null;
+      }
 
-    remove: function() {
-      this._dataChanged(null);
-    },
-
-    on: function(event, callback, context) { //todo cancelCallback?
-      this._events[event].push([callback, context]);
-      var self = this;
-      if( event === 'value' ) {
+      var err = this._nextErr('once');
+      if( err ) {
         this._defer(function() {
-          callback(makeSnap(self, self.getData(), self.priority));
+          cancel.call(context, err);
         });
       }
-      else if( event === 'child_added' ) {
+      else {
+        function fn(snap) {
+          self.off(event, fn);
+          callback.call(context, snap);
+        }
+
+        this.on(event, fn);
+      }
+    },
+
+    remove: function(callback) {
+      var self = this;
+      var err = this._nextErr('set');
+      DEBUG && console.log('remove called', this.toString());
+      this._defer(function() {
+        DEBUG && console.log('remove completed',self.toString());
+        if( err === null ) {
+          self._dataChanged(null);
+        }
+        callback && callback(err);
+      });
+      return this;
+    },
+
+    on: function(event, callback, cancel, context) {
+      if( arguments.length === 3 && !angular.isFunction(cancel) ) {
+        context = cancel;
+        cancel = function() {};
+      }
+      else if( arguments.length < 3 ) {
+        cancel = function() {};
+        context = null;
+      }
+
+      var err = this._nextErr('on');
+      if( err ) {
         this._defer(function() {
-          var prev = null;
-          _.each(self.sortedDataKeys, function(k) {
-            var child = self.child(k);
-            callback(makeSnap(child, child.getData(), child.priority), prev);
-            prev = k;
+          cancel.call(context, err);
+        });
+      }
+      else {
+        var eventArr = [callback, context];
+        this._events[event].push(eventArr);
+        var self = this;
+        if( event === 'value' ) {
+          self._defer(function() {
+            // make sure off() wasn't called in the interim
+            if( self._events[event].indexOf(eventArr) > -1) {
+              callback.call(context, makeSnap(self, self.getData(), self.priority));
+            }
           });
-        });
+        }
+        else if( event === 'child_added' ) {
+          self._defer(function() {
+            if( self._events[event].indexOf(eventArr) > -1) {
+              var prev = null;
+              _.each(self.sortedDataKeys, function (k) {
+                var child = self.child(k);
+                callback.call(context, makeSnap(child, child.getData(), child.priority), prev);
+                prev = k;
+              });
+            }
+          });
+        }
       }
     },
 

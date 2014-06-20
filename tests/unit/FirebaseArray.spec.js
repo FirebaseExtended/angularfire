@@ -5,11 +5,11 @@ describe('$FirebaseArray', function () {
   beforeEach(function() {
     module('mock.firebase');
     module('firebase');
-    inject(function (_$firebase_, _$FirebaseArray_, _$timeout_, $firebaseRecordFactory, $firebaseUtils, _$rootScope_) {
+    inject(function (_$firebase_, _$FirebaseArray_, _$timeout_, $FirebaseRecordFactory, $firebaseUtils, _$rootScope_) {
       $firebase = _$firebase_;
       $FirebaseArray = _$FirebaseArray_;
       $timeout = _$timeout_;
-      $factory = $firebaseRecordFactory;
+      $factory = $FirebaseRecordFactory;
       $fbUtil = $firebaseUtils;
       $fb = $firebase(new Firebase('Mock://').child('data'));
       $rootScope = _$rootScope_;
@@ -59,9 +59,7 @@ describe('$FirebaseArray', function () {
     });
 
     it('should return a promise', function() {
-      var arr = new $FirebaseArray($fb, $factory);
-      var res = arr.add({foo: 'bar'});
-      flushAll();
+      var res = new $FirebaseArray($fb, $factory).add({foo: 'bar'});
       expect(typeof(res)).toBe('object');
       expect(typeof(res.then)).toBe('function');
     });
@@ -104,31 +102,279 @@ describe('$FirebaseArray', function () {
   });
 
   describe('#save', function() {
-    xit('should have tests'); //todo-test
+    it('should accept an array index', function() {
+      var spy = spyOn($fb, 'set').and.callThrough();
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      var key = arr.keyAt(2);
+      arr[2].number = 99;
+      arr.save(2);
+      flushAll();
+      expect(spy).toHaveBeenCalledWith(key, jasmine.any(Object), jasmine.any(Function));
+    });
+
+    it('should accept an item from the array', function() {
+      var spy = spyOn($fb, 'set').and.callThrough();
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      var key = arr.keyAt(2);
+      arr[2].number = 99;
+      arr.save(arr[2]);
+      flushAll();
+      expect(spy).toHaveBeenCalledWith(key, jasmine.any(Object), jasmine.any(Function));
+    });
+
+    it('should save correct data into Firebase', function() {
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      arr[1].number = 99;
+      var key = arr.keyAt(1);
+      var expData = new $factory().toJSON(arr[1]);
+      arr.save(1);
+      flushAll();
+      expect($fb.ref().child(key).set).toHaveBeenCalledWith(expData, jasmine.any(Function));
+    });
+
+    it('should return a promise', function() {
+      var res = new $FirebaseArray($fb, $factory).save(1);
+      expect(typeof res).toBe('object');
+      expect(typeof res.then).toBe('function');
+    });
+
+    it('should resolve promise on sync', function() {
+      var spy = jasmine.createSpy();
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      arr.save(1).then(spy);
+      expect(spy).not.toHaveBeenCalled();
+      flushAll();
+      expect(spy.calls.count()).toBe(1);
+    });
+
+    it('should reject promise on failure', function() {
+      var whiteSpy = jasmine.createSpy('resolve');
+      var blackSpy = jasmine.createSpy('reject');
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      var key = arr.keyAt(1);
+      $fb.ref().child(key).failNext('set', 'no way jose');
+      arr.save(1).then(whiteSpy, blackSpy);
+      flushAll();
+      expect(whiteSpy).not.toHaveBeenCalled();
+      expect(blackSpy).toHaveBeenCalledWith('no way jose');
+    });
+
+    it('should reject promise on bad index', function() {
+      var whiteSpy = jasmine.createSpy('resolve');
+      var blackSpy = jasmine.createSpy('reject');
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      arr.save(99).then(whiteSpy, blackSpy);
+      flushAll();
+      expect(whiteSpy).not.toHaveBeenCalled();
+      expect(blackSpy.calls.argsFor(0)[0]).toMatch(/invalid/i);
+    });
+
+    it('should reject promise on bad object', function() {
+      var whiteSpy = jasmine.createSpy('resolve');
+      var blackSpy = jasmine.createSpy('reject');
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      arr.save({foo: 'baz'}).then(whiteSpy, blackSpy);
+      flushAll();
+      expect(whiteSpy).not.toHaveBeenCalled();
+      expect(blackSpy.calls.argsFor(0)[0]).toMatch(/invalid/i);
+    });
+
+    it('should accept a primitive', function() {
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      var key = arr.keyAt(1);
+      arr[1] = {'.value': 'happy', $id: key};
+      var expData = new $factory().toJSON(arr[1]);
+      arr.save(1);
+      flushAll();
+      expect($fb.ref().child(key).set).toHaveBeenCalledWith(expData, jasmine.any(Function));
+    });
   });
 
   describe('#remove', function() {
-    xit('should have tests'); //todo-test
+    it('should remove data from Firebase', function() {
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      var key = arr.keyAt(1);
+      arr.remove(1);
+      expect($fb.ref().child(key).remove).toHaveBeenCalled();
+    });
+
+    it('should return a promise', function() {
+      var res = new $FirebaseArray($fb, $factory).remove(1);
+      expect(typeof res).toBe('object');
+      expect(typeof res.then).toBe('function');
+    });
+
+    it('should resolve promise on success', function() {
+      var whiteSpy = jasmine.createSpy('resolve');
+      var blackSpy = jasmine.createSpy('reject');
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      arr.remove(1).then(whiteSpy, blackSpy);
+      flushAll();
+      expect(whiteSpy).toHaveBeenCalled();
+      expect(blackSpy).not.toHaveBeenCalled();
+    });
+
+    it('should reject promise on failure', function() {
+      var whiteSpy = jasmine.createSpy('resolve');
+      var blackSpy = jasmine.createSpy('reject');
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      $fb.ref().child(arr.keyAt(1)).failNext('set', 'oops');
+      arr[1].number = 99;
+      arr.remove(1).then(whiteSpy, blackSpy);
+      flushAll();
+      expect(whiteSpy).not.toHaveBeenCalled();
+      expect(blackSpy).toHaveBeenCalledWith('oops');
+    });
+
+    it('should reject promise if bad int', function() {
+      var whiteSpy = jasmine.createSpy('resolve');
+      var blackSpy = jasmine.createSpy('reject');
+      var arr = new $FirebaseArray($fb, $factory);
+      arr.remove(-99).then(whiteSpy, blackSpy);
+      flushAll();
+      expect(whiteSpy).not.toHaveBeenCalled();
+      expect(blackSpy.calls.argsFor(0)[0]).toMatch(/invalid/i);
+    });
+
+    it('should reject promise if bad object', function() {
+      var whiteSpy = jasmine.createSpy('resolve');
+      var blackSpy = jasmine.createSpy('reject');
+      var arr = new $FirebaseArray($fb, $factory);
+      arr.remove({foo: false}).then(whiteSpy, blackSpy);
+      flushAll();
+      expect(whiteSpy).not.toHaveBeenCalled();
+      expect(blackSpy.calls.argsFor(0)[0]).toMatch(/invalid/i);
+    });
   });
 
   describe('#keyAt', function() {
-    xit('should have tests'); //todo-test
+    it('should return key for an integer', function() {
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      expect(arr.keyAt(2)).toBe('c');
+    });
+
+    it('should return key for an object', function() {
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      expect(arr.keyAt(arr[2])).toBe('c');
+    });
+
+    it('should return null if invalid object', function() {
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      expect(arr.keyAt({foo: false})).toBe(null);
+    });
+
+    it('should return null if invalid integer', function() {
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      expect(arr.keyAt(-99)).toBe(null);
+    });
   });
 
   describe('#indexFor', function() {
-    xit('should have tests'); //todo-test
+    it('should return integer for valid key', function() {
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      expect(arr.indexFor('c')).toBe(2);
+    });
+
+    it('should return -1 for invalid key', function() {
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      expect(arr.indexFor('notarealkey')).toBe(-1);
+    });
   });
 
   describe('#loaded', function() {
-    xit('should have tests'); //todo-test
+    it('should return a promise', function() {
+      var res = new $FirebaseArray($fb, $factory).loaded();
+      expect(typeof res).toBe('object');
+      expect(typeof res.then).toBe('function');
+    });
+
+    it('should resolve when values are received', function() {
+      var whiteSpy = jasmine.createSpy('resolve');
+      var blackSpy = jasmine.createSpy('reject');
+      new $FirebaseArray($fb, $factory).loaded().then(whiteSpy, blackSpy);
+      flushAll();
+      expect(whiteSpy).toHaveBeenCalled();
+      expect(blackSpy).not.toHaveBeenCalled();
+    });
+
+    it('should resolve to the array', function() {
+      var spy = jasmine.createSpy('resolve');
+      var arr = new $FirebaseArray($fb, $factory);
+      arr.loaded().then(spy);
+      flushAll();
+      expect(spy).toHaveBeenCalledWith(arr);
+    });
+
+    it('should resolve after array has all current data in Firebase', function() {
+      var arr = new $FirebaseArray($fb, $factory);
+      var spy = jasmine.createSpy('resolve').and.callFake(function() {
+        expect(arr.length).toBeGreaterThan(0);
+        expect(arr.length).toBe(Object.keys($fb.ref().getData()).length);
+      });
+      arr.loaded().then(spy);
+      flushAll();
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('should reject when error fetching records', function() {
+      var whiteSpy = jasmine.createSpy('resolve');
+      var blackSpy = jasmine.createSpy('reject');
+      $fb.ref().failNext('once', 'oops');
+      new $FirebaseArray($fb, $factory).loaded().then(whiteSpy, blackSpy);
+      flushAll();
+      expect(whiteSpy).not.toHaveBeenCalled();
+      expect(blackSpy).toHaveBeenCalledWith('oops');
+    });
   });
 
   describe('#inst', function() {
-    xit('should return $firebase instance it was created with'); //todo-test
+    it('should return $firebase instance it was created with', function() {
+      var res = new $FirebaseArray($fb, $factory).inst();
+      expect(res).toBe($fb);
+    });
   });
 
   describe('#destroy', function() {
-    xit('should have tests'); //todo-test
+    it('should cancel listeners', function() {
+      new $FirebaseArray($fb, $factory).destroy();
+      expect($fb.ref().off.calls.count()).toBe(4);
+    });
+
+    it('should empty the array', function() {
+      var arr = new $FirebaseArray($fb, $factory);
+      flushAll();
+      expect(arr.length).toBeGreaterThan(0);
+      arr.destroy();
+      expect(arr.length).toBe(0);
+    });
+
+    it('should reject loaded() if not completed yet', function() {
+      var whiteSpy = jasmine.createSpy('resolve');
+      var blackSpy = jasmine.createSpy('reject');
+      var arr = new $FirebaseArray($fb, $factory);
+      arr.loaded().then(whiteSpy, blackSpy);
+      arr.destroy();
+      flushAll();
+      expect(whiteSpy).not.toHaveBeenCalled();
+      expect(blackSpy.calls.argsFor(0)[0]).toMatch(/destroyed/i);
+    });
   });
 
   function flushAll() {

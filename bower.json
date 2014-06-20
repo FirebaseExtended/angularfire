@@ -2,7 +2,7 @@
   "name": "angularfire",
   "description": "An officially supported AngularJS binding for Firebase.",
   "version": "0.7.1",
-  "main": "angularfire.js",
+  "main": "dist/angularfire.js",
   "ignore": [
     "Gruntfile.js",
     "bower_components",

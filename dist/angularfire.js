@@ -56,7 +56,10 @@
 
         save: function(indexOrItem) {
           var item = this._resolveItem(indexOrItem);
-          var key = this._factory.getKey(item);
+          if( !angular.isDefined(item) ) {
+            throw new Error('Invalid item or index', indexOrItem);
+          }
+          var key = angular.isDefined(item)? this._factory.getKey(item) : null;
           return this.inst().set(key, this._factory.toJSON(item), this._compile);
         },
 
@@ -110,7 +113,7 @@
         },
 
         _resolveItem: function(indexOrItem) {
-          return angular.isNumber(indexOrItem)? this[indexOrItem] : indexOrItem;
+          return angular.isNumber(indexOrItem)? this._list[indexOrItem] : indexOrItem;
         },
 
         _init: function() {
@@ -391,9 +394,10 @@
         },
 
         getKey: function (rec) {
+          console.log('getKey', rec);
           if( rec.hasOwnProperty('$id') ) {
             return rec.$id;
-          } 
+          }
           else if( angular.isFunction(rec.getId) ) {
             return rec.getId();
           }
@@ -410,7 +414,7 @@
             return rec.getPriority();
           }
           else {
-            return null;
+            return null; 
           }
         },
 
@@ -430,10 +434,12 @@
     if( arguments.length > 1 ) {
       data.$id = id;
     }
+    console.log('objectinfy', data);//debug
     return data;
   }
 
   function applyToBase(base, data) {
+    console.log('applyToBase', base, data); //debug
     // do not replace the reference to objects contained in the data
     // instead, just update their child values
     var key;

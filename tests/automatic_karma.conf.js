@@ -9,10 +9,12 @@ module.exports = function(config) {
       '../bower_components/angular-mocks/angular-mocks.js',
       'lib/lodash.js',
       'lib/MockFirebase.js',
-      '../angularfire.js',
+      '../src/module.js',
+      '../src/**/*.js',
       'mocks/**/*.js',
       'unit/**/*.spec.js'
     ],
+    notify: true,
 
     autoWatch: true,
     //Recommend starting Chrome manually with experimental javascript flag enabled, and open localhost:9876.

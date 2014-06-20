@@ -27,7 +27,7 @@ describe('$firebase', function () {
     });
   });
 
-  describe('#add', function() {
+  describe('#push', function() {
     xit('should have tests');
   });
 

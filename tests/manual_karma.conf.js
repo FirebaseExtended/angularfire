@@ -9,7 +9,8 @@ module.exports = function(config) {
       '../bower_components/angular-mocks/angular-mocks.js',
       '../bower_components/firebase/firebase.js',
       '../bower_components/firebase-simple-login/firebase-simple-login.js',
-      '../angularfire.js',
+      '../src/module.js',
+      '../src/**/*.js',
       'manual/**/*.spec.js'
     ],
     autoWatch: true,

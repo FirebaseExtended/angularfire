@@ -2,11 +2,11 @@
   'use strict';
 
   angular.module('firebase')
-    .factory('$firebaseConfig', ["$firebaseRecordFactory", "$FirebaseArray", "$FirebaseObject",
-      function($firebaseRecordFactory, $FirebaseArray, $FirebaseObject) {
+    .factory('$firebaseConfig', ["$FirebaseRecordFactory", "$FirebaseArray", "$FirebaseObject",
+      function($FirebaseRecordFactory, $FirebaseArray, $FirebaseObject) {
         return function(configOpts) {
-          return angular.extend({}, {
-            recordFactory: $firebaseRecordFactory,
+          return angular.extend({
+            recordFactory: $FirebaseRecordFactory,
             arrayFactory: $FirebaseArray,
             objectFactory: $FirebaseObject
           }, configOpts);
@@ -14,8 +14,8 @@
       }
     ])
 
-    .factory('$firebaseUtils', ["$timeout", "firebaseBatchDelay", '$firebaseRecordFactory',
-      function($timeout, firebaseBatchDelay, $firebaseRecordFactory) {
+    .factory('$firebaseUtils', ["$q", "$timeout", "firebaseBatchDelay", '$FirebaseRecordFactory',
+      function($q, $timeout, firebaseBatchDelay, $FirebaseRecordFactory) {
         function debounce(fn, wait, options) {
           if( !wait ) { wait = 0; }
           var opts = angular.extend({maxWait: wait*25||250}, options);
@@ -44,8 +44,9 @@
           function timeout() {
             if( opts.scope ) {
               to = setTimeout(function() {
-                opts.scope.$apply(launch);
                 try {
+                  //todo should this be $digest?
+                  opts.scope.$apply(launch);
                 }
                 catch(e) {
                   console.error(e);
@@ -74,13 +75,13 @@
         }
 
         function assertValidRecordFactory(factory) {
-          if( !angular.isObject(factory) ) {
-            throw new Error('Invalid argument passed for $firebaseRecordFactory');
+          if( !angular.isFunction(factory) || !angular.isObject(factory.prototype) ) {
+            throw new Error('Invalid argument passed for $FirebaseRecordFactory; must be a valid Class function');
           }
-          for (var key in $firebaseRecordFactory) {
-            if ($firebaseRecordFactory.hasOwnProperty(key) &&
-              typeof($firebaseRecordFactory[key]) === 'function' && key !== 'isValidFactory') {
-              if( !factory.hasOwnProperty(key) || typeof(factory[key]) !== 'function' ) {
+          var proto = $FirebaseRecordFactory.prototype;
+          for (var key in proto) {
+            if (proto.hasOwnProperty(key) && angular.isFunction(proto[key]) && key !== 'isValidFactory') {
+              if( angular.isFunction(factory.prototype[key]) ) {
                 throw new Error('Record factory does not have '+key+' method');
               }
             }
@@ -105,13 +106,25 @@
           return methods;
         }
 
+        function defer() {
+          return $q.defer();
+        }
+
+        function reject(msg) {
+          var def = defer();
+          def.reject(msg);
+          return def.promise;
+        }
+
         return {
           debounce: debounce,
           assertValidRef: assertValidRef,
           assertValidRecordFactory: assertValidRecordFactory,
           batchDelay: firebaseBatchDelay,
           inherit: inherit,
-          getPublicMethods: getPublicMethods
+          getPublicMethods: getPublicMethods,
+          reject: reject,
+          defer: defer
         };
       }]);
 
