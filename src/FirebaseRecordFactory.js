@@ -3,11 +3,11 @@
   angular.module('firebase').factory('$firebaseRecordFactory', ['$log', function($log) {
     return {
       create: function (snap) {
-        return objectify(snap.val(), snap.name());
+        return objectify(snap.val(), snap.name(), snap.getPriority());
       },
 
       update: function (rec, snap) {
-        return applyToBase(rec, objectify(snap.val(), snap.name()));
+        return applyToBase(rec, objectify(snap.val(), snap.name(), snap.getPriority()));
       },
 
       toJSON: function (rec) {
@@ -20,10 +20,15 @@
           if( angular.isObject(dat) ) {
             delete dat.$id;
             for(var key in dat) {
-              if(dat.hasOwnProperty(key) && key.match(/[.$\[\]#]/)) {
+              if(dat.hasOwnProperty(key) && key !== '.value' && key !== '.priority' && key.match(/[.$\[\]#]/)) {
                 $log.error('Invalid key in record (skipped):' + key);
+                delete dat[key];
               }
             }
+          }
+          var pri = this.getPriority(rec);
+          if( pri !== null ) {
+            dat['.priority'] = pri;
           }
         }
         return dat;
@@ -49,8 +54,8 @@
       },
 
       getPriority: function (rec) {
-        if( rec.hasOwnProperty('$priority') ) {
-          return rec.$priority;
+        if( rec.hasOwnProperty('.priority') ) {
+          return rec['.priority'];
         }
         else if( angular.isFunction(rec.getPriority) ) {
           return rec.getPriority();
@@ -63,12 +68,15 @@
   }]);
 
 
-  function objectify(data, id) {
+  function objectify(data, id, pri) {
     if( !angular.isObject(data) ) {
       data = { ".value": data };
     }
     if( arguments.length > 1 ) {
       data.$id = id;
+    }
+    if( angular.isDefined(pri) && pri !== null ) {
+      data['.priority'] = pri;
     }
     return data;
   }

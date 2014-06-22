@@ -46,6 +46,10 @@ describe('$FirebaseArray', function () {
     });
 
     it('should load primitives'); //todo-test
+
+    it('should save priorities on records'); //todo-test
+
+    it('should be ordered by priorities'); //todo-test
   });
 
   describe('#add', function() {

@@ -101,19 +101,19 @@
     });
 
     describe('#bindTo', function() {
-      it('should return a promise');
+      it('should return a promise'); //todo-test
 
-      it('should have data when it resolves');
+      it('should have data when it resolves'); //todo-test
 
-      it('should extend and not destroy an object if already exists in scope');
+      it('should extend and not destroy an object if already exists in scope'); //todo-test
 
-      it('should allow defaults to be set inside promise callback');
+      it('should allow defaults to be set inside promise callback'); //todo-test
 
-      it('should send local changes to the server');
+      it('should send local changes to the server'); //todo-test
 
-      it('should apply server changes to scope variable');
+      it('should apply server changes to scope variable'); //todo-test
 
-      it('should only send keys in toJSON');
+      it('should only send keys in toJSON'); //todo-test
     });
 
     describe('#destroy', function() {
