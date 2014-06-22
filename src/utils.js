@@ -2,20 +2,21 @@
   'use strict';
 
   angular.module('firebase')
-    .factory('$firebaseConfig', ["$FirebaseRecordFactory", "$FirebaseArray", "$FirebaseObject",
-      function($FirebaseRecordFactory, $FirebaseArray, $FirebaseObject) {
+    .factory('$firebaseConfig', ["$firebaseRecordFactory", "$FirebaseArray", "$FirebaseObject",
+      function($firebaseRecordFactory, $FirebaseArray, $FirebaseObject) {
         return function(configOpts) {
-          return angular.extend({
-            recordFactory: $FirebaseRecordFactory,
+          var out = angular.extend({
+            recordFactory: $firebaseRecordFactory,
             arrayFactory: $FirebaseArray,
             objectFactory: $FirebaseObject
           }, configOpts);
+          return out;
         };
       }
     ])
 
-    .factory('$firebaseUtils', ["$q", "$timeout", "firebaseBatchDelay", '$FirebaseRecordFactory',
-      function($q, $timeout, firebaseBatchDelay, $FirebaseRecordFactory) {
+    .factory('$firebaseUtils', ["$q", "$timeout", "firebaseBatchDelay", '$firebaseRecordFactory',
+      function($q, $timeout, firebaseBatchDelay, $firebaseRecordFactory) {
         function debounce(fn, wait, options) {
           if( !wait ) { wait = 0; }
           var opts = angular.extend({maxWait: wait*25||250}, options);
@@ -74,20 +75,6 @@
           }
         }
 
-        function assertValidRecordFactory(factory) {
-          if( !angular.isFunction(factory) || !angular.isObject(factory.prototype) ) {
-            throw new Error('Invalid argument passed for $FirebaseRecordFactory; must be a valid Class function');
-          }
-          var proto = $FirebaseRecordFactory.prototype;
-          for (var key in proto) {
-            if (proto.hasOwnProperty(key) && angular.isFunction(proto[key]) && key !== 'isValidFactory') {
-              if( angular.isFunction(factory.prototype[key]) ) {
-                throw new Error('Record factory does not have '+key+' method');
-              }
-            }
-          }
-        }
-
         // http://stackoverflow.com/questions/7509831/alternative-for-the-deprecated-proto
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
         function inherit(childClass,parentClass) {
@@ -95,15 +82,29 @@
           childClass.prototype.constructor = childClass; // restoring proper constructor for child class
         }
 
-        function getPublicMethods(inst) {
+        function getPrototypeMethods(inst, iterator, context) {
           var methods = {};
-          for (var key in inst) {
-            //noinspection JSUnfilteredForInLoop
-            if (typeof(inst[key]) === 'function' && !/^_/.test(key)) {
-              methods[key] = inst[key];
+          var objProto = Object.getPrototypeOf({});
+          var proto = angular.isFunction(inst) && angular.isObject(inst.prototype)?
+            inst.prototype : Object.getPrototypeOf(inst);
+          while(proto && proto !== objProto) {
+            for (var key in proto) {
+              // we only invoke each key once; if a super is overridden it's skipped here
+              if (proto.hasOwnProperty(key) && !methods.hasOwnProperty(key)) {
+                methods[key] = true;
+                iterator.call(context, proto[key], key, proto);
+              }
             }
+            proto = Object.getPrototypeOf(proto);
           }
-          return methods;
+        }
+
+        function getPublicMethods(inst, iterator, context) {
+          getPrototypeMethods(inst, function(m, k) {
+            if( typeof(m) === 'function' && !/^_/.test(k) ) {
+              iterator.call(context, m, k)
+            }
+          });
         }
 
         function defer() {
@@ -119,13 +120,14 @@
         return {
           debounce: debounce,
           assertValidRef: assertValidRef,
-          assertValidRecordFactory: assertValidRecordFactory,
           batchDelay: firebaseBatchDelay,
           inherit: inherit,
+          getPrototypeMethods: getPrototypeMethods,
           getPublicMethods: getPublicMethods,
           reject: reject,
           defer: defer
         };
-      }]);
+      }
+    ]);
 
 })();

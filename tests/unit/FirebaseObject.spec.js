@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   describe('$FirebaseObject', function() {
-    var $firebase, $FirebaseObject, $timeout, $fb, $factory, $fbUtil, $rootScope;
+    var $firebase, $FirebaseObject, $timeout, $fb, obj, $fbUtil, $rootScope;
     beforeEach(function() {
       module('mock.firebase');
       module('firebase');
@@ -10,24 +10,227 @@
         $FirebaseObject = _$FirebaseObject_;
         $timeout = _$timeout_;
         $fbUtil = $firebaseUtils;
-        $fb = $firebase(new Firebase('Mock://').child('data/a'));
         $rootScope = _$rootScope_;
+        $fb = $firebase(new Firebase('Mock://').child('data/a'));
+        obj = new $FirebaseObject($fb);
+        flushAll();
       })
     });
 
-    it('should have tests', function() {
-      pending();
-      var o = new $FirebaseObject($fb);
-      flushAll();
-      console.log(typeof o);
-      console.log(o);
-      console.log(o.toJSON());
-      console.log(Object.keys(o));
-      console.log(o.$id);
-      angular.forEach(o, function(v,k) {
-        console.log(k,v);
+    describe('#save', function() {
+      it('should push changes to Firebase', function() {
+        var calls = $fb.ref().set.calls;
+        expect(calls.count()).toBe(0);
+        obj.newkey = true;
+        obj.save();
+        flushAll();
+        expect(calls.count()).toBe(1);
       });
-      expect(false).toBe(true);
+
+      it('should return a promise', function() {
+        var res = obj.save();
+        expect(angular.isObject(res)).toBe(true);
+        expect(typeof res.then).toBe('function');
+      });
+
+      it('should resolve promise to the ref for this object', function() {
+        var whiteSpy = jasmine.createSpy('resolve');
+        var blackSpy = jasmine.createSpy('reject');
+        obj.save().then(whiteSpy, blackSpy);
+        expect(whiteSpy).not.toHaveBeenCalled();
+        flushAll();
+        expect(whiteSpy).toHaveBeenCalled();
+        expect(blackSpy).not.toHaveBeenCalled();
+      });
+
+      it('should reject promise on failure', function(){
+        var whiteSpy = jasmine.createSpy('resolve');
+        var blackSpy = jasmine.createSpy('reject');
+        $fb.ref().failNext('set', 'oops');
+        obj.save().then(whiteSpy, blackSpy);
+        expect(blackSpy).not.toHaveBeenCalled();
+        flushAll();
+        expect(whiteSpy).not.toHaveBeenCalled();
+        expect(blackSpy).toHaveBeenCalledWith('oops');
+      });
+    });
+
+    describe('#loaded', function() {
+      it('should return a promise', function() {
+        var res = obj.loaded();
+        expect(angular.isObject(res)).toBe(true);
+        expect(angular.isFunction(res.then)).toBe(true);
+      });
+
+      it('should resolve when all server data is downloaded', function() {
+        var whiteSpy = jasmine.createSpy('resolve');
+        var blackSpy = jasmine.createSpy('reject');
+        var obj = new $FirebaseObject($fb);
+        obj.loaded().then(whiteSpy, blackSpy);
+        expect(whiteSpy).not.toHaveBeenCalled();
+        flushAll();
+        expect(whiteSpy).toHaveBeenCalled();
+        expect(blackSpy).not.toHaveBeenCalled();
+      });
+
+      it('should reject if the server data cannot be accessed', function() {
+        var whiteSpy = jasmine.createSpy('resolve');
+        var blackSpy = jasmine.createSpy('reject');
+        $fb.ref().failNext('once', 'doh');
+        var obj = new $FirebaseObject($fb);
+        obj.loaded().then(whiteSpy, blackSpy);
+        expect(blackSpy).not.toHaveBeenCalled();
+        flushAll();
+        expect(whiteSpy).not.toHaveBeenCalled();
+        expect(blackSpy).toHaveBeenCalledWith('doh');
+      });
+
+      it('should resolve to the FirebaseObject instance', function() {
+        var spy = jasmine.createSpy('loaded');
+        obj.loaded().then(spy);
+        flushAll();
+        expect(spy).toHaveBeenCalled();
+        expect(spy.calls.argsFor(0)[0]).toBe(obj);
+      });
+    });
+
+    describe('#inst', function(){
+      it('should return the $firebase instance that created it', function() {
+        expect(obj.inst()).toBe($fb);
+      });
+    });
+
+    describe('#bindTo', function() {
+      it('should return a promise');
+
+      it('should have data when it resolves');
+
+      it('should extend and not destroy an object if already exists in scope');
+
+      it('should allow defaults to be set inside promise callback');
+
+      it('should send local changes to the server');
+
+      it('should apply server changes to scope variable');
+
+      it('should only send keys in toJSON');
+    });
+
+    describe('#destroy', function() {
+      it('should remove the value listener', function() {
+        var old = $fb.ref().off.calls.count();
+        obj.destroy();
+        expect($fb.ref().off.calls.count()).toBe(old+1);
+      });
+
+      it('should dispose of any bound instance', function() {
+        var $scope = $rootScope.$new();
+
+        // spy on $scope.$watch and the off method it returns
+        // this is a bit of hoop jumping to get access to both methods
+        var _watch  = $scope.$watch;
+        var offSpy;
+
+        spyOn($scope, '$watch').and.callFake(function(varName, callback) {
+          var _off = _watch.call($scope, varName, callback);
+          offSpy = jasmine.createSpy('off method for $watch').and.callFake(function() {
+            _off();
+          });
+          return offSpy;
+        });
+
+        // now bind to scope and destroy to see what happens
+        obj.bindTo($scope, 'foo');
+        expect($scope.$watch).toHaveBeenCalled();
+        obj.destroy();
+        flushAll();
+        expect(offSpy).toHaveBeenCalled();
+      });
+
+      it('should unbind if scope is destroyed', function() {
+        var $scope = $rootScope.$new();
+
+        // spy on $scope.$watch and the off method it returns
+        // this is a bit of hoop jumping to get access to both methods
+        var _watch  = $scope.$watch;
+        var offSpy;
+
+        spyOn($scope, '$watch').and.callFake(function(varName, callback) {
+          var _off = _watch.call($scope, varName, callback);
+          offSpy = jasmine.createSpy('off method for $watch').and.callFake(function() {
+            _off();
+          });
+          return offSpy;
+        });
+
+        obj.bindTo($scope, 'foo');
+        expect($scope.$watch).toHaveBeenCalled();
+        $scope.$emit('$destroy');
+        flushAll();
+        expect(offSpy).toHaveBeenCalled();
+      });
+    });
+
+    describe('#toJSON', function() {
+      it('should strip prototype functions', function() {
+        var dat = obj.toJSON();
+        for (var key in $FirebaseObject.prototype) {
+          if (obj.hasOwnProperty(key)) {
+            expect(dat.hasOwnProperty(key)).toBeFalsy();
+          }
+        }
+      });
+
+      it('should strip $ keys', function() {
+        obj.$test = true;
+        var dat = obj.toJSON();
+        for(var key in dat) {
+          expect(/\$/.test(key)).toBeFalsy();
+        }
+      });
+
+      it('should return a primitive if the value is a primitive', function() {
+        $fb.ref().set(true);
+        flushAll();
+        var dat = obj.toJSON();
+        expect(dat['.value']).toBe(true);
+        expect(Object.keys(dat).length).toBe(1);
+      });
+    });
+
+    describe('#forEach', function() {
+      it('should not include $ keys', function() {
+        var len = Object.keys(obj).length;
+        obj.$test = true;
+        var spy = jasmine.createSpy('iterator').and.callFake(function(v,k) {
+          expect(/^\$/.test(k)).toBeFalsy();
+        });
+        obj.forEach(spy);
+        expect(len).toBeGreaterThan(0);
+        expect(spy.calls.count()).toEqual(len);
+      });
+
+      it('should not include prototype functions', function() {
+        var spy = jasmine.createSpy('iterator').and.callFake(function(v,k) {
+          expect(typeof v === 'function').toBeFalsy();
+        });
+        obj.forEach(spy);
+        expect(spy.calls.count()).toBeGreaterThan(0);
+      });
+
+      it('should not include inherited functions', function() {
+        var F = function() { $FirebaseObject.apply(this, arguments); };
+        $fbUtil.inherit(F, $FirebaseObject);
+        F.prototype.hello = 'world';
+        F.prototype.foo = function() { return 'bar'; };
+        var obj = new F($fb);
+        flushAll();
+        var spy = jasmine.createSpy('iterator').and.callFake(function(v,k) {
+          expect(typeof v === 'function').toBeFalsy();
+        });
+        obj.forEach(spy);
+        expect(spy).toHaveBeenCalled();
+      });
     });
 
     function flushAll() {

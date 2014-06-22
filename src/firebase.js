@@ -9,8 +9,8 @@
     //
     //   * `ref`: A Firebase reference. Queries or limits may be applied.
     //   * `config`: An object containing any of the advanced config options explained in API docs
-    .factory("$firebase", [ "$q", "$firebaseUtils", "$firebaseConfig",
-      function ($q, $firebaseUtils, $firebaseConfig) {
+    .factory("$firebase", [ "$firebaseUtils", "$firebaseConfig",
+      function ($firebaseUtils, $firebaseConfig) {
         function AngularFire(ref, config) {
           // make the new keyword optional
           if (!(this instanceof AngularFire)) {
@@ -29,7 +29,7 @@
           },
 
           push: function (data) {
-            var def = $q.defer();
+            var def = $firebaseUtils.defer();
             var ref = this._ref.push();
             var done = this._handle(def, ref);
             if (arguments.length > 0) {
@@ -43,7 +43,7 @@
 
           set: function (key, data) {
             var ref = this._ref;
-            var def = $q.defer();
+            var def = $firebaseUtils.defer();
             if (arguments.length > 1) {
               ref = ref.child(key);
             }
@@ -56,7 +56,7 @@
 
           remove: function (key) {
             var ref = this._ref;
-            var def = $q.defer();
+            var def = $firebaseUtils.defer();
             if (arguments.length > 0) {
               ref = ref.child(key);
             }
@@ -66,7 +66,7 @@
 
           update: function (key, data) {
             var ref = this._ref;
-            var def = $q.defer();
+            var def = $firebaseUtils.defer();
             if (arguments.length > 1) {
               ref = ref.child(key);
             }
@@ -77,12 +77,30 @@
             return def.promise;
           },
 
-          transaction: function () {
-          }, //todo
+          transaction: function (key, valueFn) {
+            var ref = this._ref;
+            if( arguments.length === 1 ) {
+              valueFn = key;
+            }
+            else {
+              ref = ref.child(key);
+            }
+
+            var def = $firebaseUtils.defer();
+            ref.transaction(valueFn, function(err, committed, snap) {
+               if( err ) {
+                 def.reject(err);
+               }
+               else {
+                 def.resolve(committed, snap);
+               }
+            });
+            return def.promise;
+          },
 
           asObject: function () {
             if (!this._object) {
-              this._object = new this._config.objectFactory(this);
+              this._object = new this._config.objectFactory(this, this._config.recordFactory);
             }
             return this._object;
           },
@@ -92,6 +110,10 @@
               this._array = new this._config.arrayFactory(this, this._config.recordFactory);
             }
             return this._array;
+          },
+
+          getRecordFactory: function() {
+            return this._config.recordFactory;
           },
 
           _handle: function (def) {
@@ -109,12 +131,14 @@
           _assertValidConfig: function (ref, cnf) {
             $firebaseUtils.assertValidRef(ref, 'Must pass a valid Firebase reference ' +
               'to $firebase (not a string or URL)');
-            $firebaseUtils.assertValidRecordFactory(cnf.recordFactory);
-            if (typeof(cnf.arrayFactory) !== 'function') {
+            if (!angular.isFunction(cnf.arrayFactory)) {
               throw new Error('config.arrayFactory must be a valid function');
             }
-            if (typeof(cnf.objectFactory) !== 'function') {
+            if (!angular.isFunction(cnf.objectFactory)) {
               throw new Error('config.arrayFactory must be a valid function');
+            }
+            if (!angular.isObject(cnf.recordFactory)) {
+              throw new Error('config.recordFactory must be a valid object with same methods as $FirebaseRecordFactory');
             }
           }
         };

@@ -4,91 +4,114 @@
     '$parse', '$firebaseUtils',
     function($parse, $firebaseUtils) {
       function FirebaseObject($firebase) {
-        var self = this;
-        self.$promise = $firebaseUtils.defer();
-        self.$inst = $firebase;
+        var self = this, def = $firebaseUtils.defer();
+        var factory = $firebase.getRecordFactory();
+        self.$conf = {
+          def: def,
+          inst: $firebase,
+          bound: null,
+          factory: factory,
+          serverUpdate: function(snap) {
+            factory.update(self, snap);
+            compile();
+          }
+        };
         self.$id = $firebase.ref().name();
-        self.$bound = null;
 
         var compile = $firebaseUtils.debounce(function() {
-          if( self.$bound ) {
-            self.$bound.assign(self.$bound.scope, self.toJSON());
+          if( self.$conf.bound ) {
+            self.$conf.bound.set(self.toJSON());
           }
         });
 
-        self.serverUpdate = function(snap) {
-          var existingKeys = Object.keys(self);
-          var newData = snap.val();
-          if( !angular.isObject(newData) ) { newData = {}; }
-          angular.forEach(existingKeys, function(k) {
-            if( !newData.hasOwnProperty(k) ) {
-              delete self[k];
-            }
-          });
-          angular.forEach(newData, function(v,k) {
-            self[k] = v;
-          });
-          compile();
-        };
-
         // prevent iteration and accidental overwrite of props
-        readOnlyProp(self, '$inst');
-        readOnlyProp(self, '$id');
-        readOnlyProp(self, '$bound', true);
-        readOnlyProp(self, '$promise');
-        angular.forEach(FirebaseObject.prototype, function(v,k) {
-          readOnlyProp(self, k);
+        var methods = ['$id', '$conf']
+          .concat(Object.keys(FirebaseObject.prototype));
+        angular.forEach(methods, function(key) {
+          readOnlyProp(self, key, key === '$bound');
         });
 
-        // get this show on the road
-        self.$inst.ref().on('value', self.serverUpdate);
-        self.$inst.ref().once('value',
-          self.$promise.resolve.bind(self.$promise, self),
-          self.$promise.reject.bind(self.$promise)
+        // listen for updates to the data
+        self.$conf.inst.ref().on('value', self.$conf.serverUpdate);
+        // resolve the loaded promise once data is downloaded
+        self.$conf.inst.ref().once('value',
+          def.resolve.bind(def, self),
+          def.reject.bind(def)
         );
       }
 
       FirebaseObject.prototype = {
         save: function() {
-          return self.$inst.set(self.$id, self.toJSON());
+          return this.$conf.inst.set(this.$conf.factory.toJSON(this));
         },
 
         loaded: function() {
-          return self.$promise;
+          return this.$conf.def.promise;
         },
 
         inst: function() {
-          return this.$inst;
+          return this.$conf.inst;
         },
 
         bindTo: function(scope, varName) {
           var self = this;
-          if( self.$bound ) {
+          if( self.$conf.bound ) {
             throw new Error('Can only bind to one scope variable at a time');
           }
-          self.$bound = $parse(varName);
-          self.$bound.scope = scope;
+
+          var parsed = $parse(varName);
+
+          // monitor scope for any changes
           var off = scope.$watch(varName, function() {
-            var data = parseJSON(self.$bound(scope));
-            self.$inst.set(self.$id, data);
+            var data = self.$conf.factory.toJSON(parsed(scope));
+            self.$conf.inst.set(self.$id, data);
           });
 
-          return function() {
-            off();
-            self.$bound = null;
+          var unbind = function() {
+            if( self.$conf.bound ) {
+              off();
+              self.$conf.bound = null;
+            }
+          };
+
+          // expose a few useful methods to other methods
+          var $bound = self.$conf.bound = {
+            set: function(data) {
+              parsed.assign(scope, data);
+            },
+            get: function() {
+              return parsed(scope);
+            },
+            unbind: unbind
+          };
+
+          scope.$on('$destroy', $bound.unbind);
+
+          var def = $firebaseUtils.defer();
+          self.loaded().then(function() {
+            def.resolve(unbind);
+          }, def.reject.bind(def));
+
+          return def.promise;
+        },
+
+        destroy: function() {
+          this.$conf.inst.ref().off('value', this.$conf.serverUpdate);
+          if( this.$conf.bound ) {
+            this.$conf.bound.unbind();
           }
         },
 
-        destroy: function() {},
-
         toJSON: function() {
-          return parseJSON(this);
+          return angular.extend({}, this);
         },
 
         forEach: function(iterator, context) {
           var self = this;
           angular.forEach(Object.keys(self), function(k) {
-            iterator.call(context, self[k], k, self);
+            if( !k.match(/^\$/) ) {
+              iterator.call(context, self[k], k, self);
+            }
           });
         }
       };
@@ -96,16 +119,6 @@
       return FirebaseObject;
     }
   ]);
-
-  function parseJSON(self) {
-    var out = {};
-    angular.forEach(Object.keys(self), function(k) {
-      if( !k.match(/^$/) ) {
-        out[k] = self[k];
-      }
-    });
-    return out;
-  }
 
   function readOnlyProp(obj, key, writable) {
     if( Object.defineProperty ) {

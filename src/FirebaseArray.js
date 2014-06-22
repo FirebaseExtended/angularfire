@@ -2,10 +2,11 @@
   'use strict';
   angular.module('firebase').factory('$FirebaseArray', ["$log", "$firebaseUtils",
     function($log, $firebaseUtils) {
-      function FirebaseArray($firebase, RecordFactory) {
-        $firebaseUtils.assertValidRecordFactory(RecordFactory);
+      function FirebaseArray($firebase) {
+        this._observers = [];
+        this._events = [];
         this._list = [];
-        this._factory = new RecordFactory();
+        this._factory = $firebase.getRecordFactory();
         this._inst = $firebase;
         this._promise = this._init();
         return this._list;
@@ -16,7 +17,7 @@
        * So instead of extending the Array class, we just return an actual array.
        * However, it's still possible to extend FirebaseArray and have the public methods
        * appear on the array object. We do this by iterating the prototype and binding
-       * any method that is not prefixed with an underscore onto the final array we return.
+       * any method that is not prefixed with an underscore onto the final array.
        */
       FirebaseArray.prototype = {
         add: function(data) {
@@ -27,7 +28,7 @@
           var item = this._resolveItem(indexOrItem);
           var key = this.keyAt(item);
           if( key !== null ) {
-            return this.inst().set(key, this._factory.toJSON(item), this._compile);
+            return this.inst().set(key, this._factory.toJSON(item));
           }
           else {
             return $firebaseUtils.reject('Invalid record; could determine its key: '+indexOrItem);
@@ -61,6 +62,20 @@
 
         inst: function() { return this._inst; },
 
+        watch: function(cb, context) {
+          var list = this._observers;
+          list.push([cb, context]);
+          // an off function for cancelling the listener
+          return function() {
+            var i = list.findIndex(function(parts) {
+              return parts[0] === cb && parts[1] === context;
+            });
+            if( i > -1 ) {
+              list.splice(i, 1);
+            }
+          };
+        },
+
         destroy: function(err) {
           this._isDestroyed = true;
           if( err ) { $log.error(err); }
@@ -80,11 +95,14 @@
           var i = this.indexFor(snap.name());
           if( i > -1 ) {
             this._serverUpdate(snap);
-            this._serverMove(snap, prevChild);
+            if( prevChild !== null && i !== this.indexFor(prevChild)+1 ) {
+              this._serverMove(snap, prevChild);
+            }
           }
           else {
             var dat = this._factory.create(snap);
             this._addAfter(dat, prevChild);
+            this._addEvent('child_added', snap.name(), prevChild);
             this._compile();
           }
         },
@@ -92,6 +110,7 @@
         _serverRemove: function(snap) {
           var dat = this._spliceOut(snap.name());
           if( angular.isDefined(dat) ) {
+            this._addEvent('child_removed', snap.name());
             this._compile();
           }
         },
@@ -99,8 +118,12 @@
         _serverUpdate: function(snap) {
           var i = this.indexFor(snap.name());
           if( i >= 0 ) {
-            this[i] = this._factory.update(this._list[i], snap);
-            this._compile();
+            var oldData = this._factory.toJSON(this._list[i]);
+            this._list[i] = this._factory.update(this._list[i], snap);
+            if( !angular.equals(oldData, this._list[i]) ) {
+              this._addEvent('child_changed', snap.name());
+              this._compile();
+            }
           }
         },
 
@@ -108,8 +131,15 @@
           var dat = this._spliceOut(snap.name());
           if( angular.isDefined(dat) ) {
             this._addAfter(dat, prevChild);
+            this._addEvent('child_moved', snap.name(), prevChild);
             this._compile();
           }
+        },
+
+        _addEvent: function(event, key, prevChild) {
+          var dat = {event: event, key: key};
+          if( arguments.length > 2 ) { dat.prevChild = prevChild; }
+          this._events.push(dat);
         },
 
         _addAfter: function(dat, prevChild) {
@@ -131,9 +161,15 @@
           }
         },
 
-        _compile: function() {
-          // does nothing for now, the debounce invokes $timeout and this method
-          // is run internally; could be decorated by apps, but no default behavior
+        _notify: function() {
+          var self = this;
+          var events = self._events;
+          self._events = [];
+          if( events.length ) {
+            self._observers.forEach(function(parts) {
+              parts[0].call(parts[1], events);
+            });
+          }
         },
 
         _resolveItem: function(indexOrItem) {
@@ -148,14 +184,15 @@
 
           // we return _list, but apply our public prototype to it first
           // see FirebaseArray.prototype's assignment comments
-          var methods = $firebaseUtils.getPublicMethods(self);
-          angular.forEach(methods, function(fn, key) {
+          $firebaseUtils.getPublicMethods(self, function(fn, key) {
             list[key] = fn.bind(self);
           });
 
           // we debounce the compile function so that angular's digest only needs to do
           // dirty checking once for each "batch" of updates that come in close proximity
-          self._compile = $firebaseUtils.debounce(self._compile.bind(self), $firebaseUtils.batchDelay);
+          // we fire the notifications within the debounce result so they happen in the digest
+          // and don't need to bother with $digest/$apply calls.
+          self._compile = $firebaseUtils.debounce(self._notify.bind(self), $firebaseUtils.batchDelay);
 
           // listen for changes at the Firebase instance
           ref.on('child_added', self._serverAdd, self.destroy, self);

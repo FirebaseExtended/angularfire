@@ -5,13 +5,13 @@ describe('$FirebaseArray', function () {
   beforeEach(function() {
     module('mock.firebase');
     module('firebase');
-    inject(function ($firebase, _$FirebaseArray_, $FirebaseRecordFactory, _$rootScope_, _$timeout_) {
+    inject(function ($firebase, _$FirebaseArray_, $firebaseRecordFactory, _$rootScope_, _$timeout_) {
       $rootScope = _$rootScope_;
       $timeout = _$timeout_;
-      $factory = $FirebaseRecordFactory;
+      $factory = $firebaseRecordFactory;
       $FirebaseArray = _$FirebaseArray_;
       $fb = $firebase(new Firebase('Mock://').child('data'));
-      arr = new $FirebaseArray($fb, $factory);
+      arr = new $FirebaseArray($fb);
       flushAll();
     });
   });
@@ -28,25 +28,20 @@ describe('$FirebaseArray', function () {
       expect(Array.isArray(arr)).toBe(true);
     });
 
-    it('should throw error if invalid record factory', function() {
-      expect(function() {
-        new $FirebaseArray($fb, 'foo');
-      }).toThrowError(/invalid/i);
-    });
-
     it('should have API methods', function() {
-      var keys = Object.keys(this.$utils.getPublicMethods(arr));
-      expect(keys.length).toBeGreaterThan(0);
-      keys.forEach(function(key) {
-        expect(typeof(arr[key])).toBe('function');
+      var i = 0;
+      this.$utils.getPublicMethods($FirebaseArray, function(v,k) {
+        expect(typeof arr[k]).toBe('function');
+        i++;
       });
+      expect(i).toBeGreaterThan(0);
     });
 
     it('should work with inheriting child classes', function() {
       function Extend() { $FirebaseArray.apply(this, arguments); }
       this.$utils.inherit(Extend, $FirebaseArray);
       Extend.prototype.foo = function() {};
-      var arr = new Extend($fb, $factory);
+      var arr = new Extend($fb);
       expect(typeof(arr.foo)).toBe('function');
     });
 
@@ -109,8 +104,12 @@ describe('$FirebaseArray', function () {
       var key = arr.keyAt(2);
       arr[2].number = 99;
       arr.save(2);
+      var expResult = $factory.toJSON(arr[2]);
       flushAll();
-      expect(spy).toHaveBeenCalledWith(key, jasmine.any(Object), jasmine.any(Function));
+      expect(spy).toHaveBeenCalled();
+      var args = spy.calls.argsFor(0);
+      expect(args[0]).toBe(key);
+      expect(args[1]).toEqual(expResult);
     });
 
     it('should accept an item from the array', function() {
@@ -118,17 +117,24 @@ describe('$FirebaseArray', function () {
       var key = arr.keyAt(2);
       arr[2].number = 99;
       arr.save(arr[2]);
+      var expResult = $factory.toJSON(arr[2]);
       flushAll();
-      expect(spy).toHaveBeenCalledWith(key, jasmine.any(Object), jasmine.any(Function));
+      expect(spy).toHaveBeenCalled();
+      var args = spy.calls.argsFor(0);
+      expect(args[0]).toBe(key);
+      expect(args[1]).toEqual(expResult);
     });
 
     it('should save correct data into Firebase', function() {
       arr[1].number = 99;
       var key = arr.keyAt(1);
-      var expData = new $factory().toJSON(arr[1]);
+      var expData = $factory.toJSON(arr[1]);
       arr.save(1);
       flushAll();
-      expect($fb.ref().child(key).set).toHaveBeenCalledWith(expData, jasmine.any(Function));
+      var m = $fb.ref().child(key).set;
+      expect(m).toHaveBeenCalled();
+      var args = m.calls.argsFor(0);
+      expect(args[0]).toEqual(expData);
     });
 
     it('should return a promise', function() {
@@ -177,7 +183,7 @@ describe('$FirebaseArray', function () {
     it('should accept a primitive', function() {
       var key = arr.keyAt(1);
       arr[1] = {'.value': 'happy', $id: key};
-      var expData = new $factory().toJSON(arr[1]);
+      var expData = $factory.toJSON(arr[1]);
       arr.save(1);
       flushAll();
       expect($fb.ref().child(key).set).toHaveBeenCalledWith(expData, jasmine.any(Function));
@@ -301,7 +307,7 @@ describe('$FirebaseArray', function () {
       var whiteSpy = jasmine.createSpy('resolve');
       var blackSpy = jasmine.createSpy('reject');
       $fb.ref().failNext('once', 'oops');
-      var arr = new $FirebaseArray($fb, $factory);
+      var arr = new $FirebaseArray($fb);
       arr.loaded().then(whiteSpy, blackSpy);
       flushAll();
       expect(whiteSpy).not.toHaveBeenCalled();
@@ -314,6 +320,54 @@ describe('$FirebaseArray', function () {
       var res = arr.inst();
       expect(res).toBe($fb);
     });
+  });
+
+  describe('#watch', function() {
+    it('should get notified on an add', function() {
+      var spy = jasmine.createSpy();
+      arr.watch(spy);
+      $fb.ref().fakeEvent('child_added', 'new', 'foo');
+      flushAll();
+      expect(spy).toHaveBeenCalled();
+      var args = spy.calls.argsFor(0);
+      expect(args[0]).toEqual([{event: 'child_added', key: 'new', prevChild: null}]);
+    });
+
+    it('should get notified on a delete', function() {
+      var spy = jasmine.createSpy();
+      arr.watch(spy);
+      $fb.ref().fakeEvent('child_removed', 'c');
+      flushAll();
+      expect(spy).toHaveBeenCalled();
+      var args = spy.calls.argsFor(0);
+      expect(args[0]).toEqual([{event: 'child_removed', key: 'c'}]);
+    });
+
+    it('should get notified on a change', function() {
+      var spy = jasmine.createSpy();
+      arr.watch(spy);
+      $fb.ref().fakeEvent('child_changed', 'c');
+      flushAll();
+      expect(spy).toHaveBeenCalled();
+      var args = spy.calls.argsFor(0);
+      expect(args[0]).toEqual([{event: 'child_changed', key: 'c'}]);
+    });
+
+    it('should get notified on a move', function() {
+      var spy = jasmine.createSpy();
+      arr.watch(spy);
+      $fb.ref().fakeEvent('child_moved', 'c', null, 'a');
+      flushAll();
+      expect(spy).toHaveBeenCalled();
+      var args = spy.calls.argsFor(0);
+      expect(args[0]).toEqual([{event: 'child_moved', key: 'c', prevChild: 'a'}]);
+    });
+
+    it('should get notified on a destroy'); //todo-test
+
+    it('should batch events'); //todo-test
+
+    it('should not get notified if off callback is invoked'); //todo-test
   });
 
   describe('#destroy', function() {
@@ -332,7 +386,7 @@ describe('$FirebaseArray', function () {
     it('should reject loaded() if not completed yet', function() {
       var whiteSpy = jasmine.createSpy('resolve');
       var blackSpy = jasmine.createSpy('reject');
-      var arr = new $FirebaseArray($fb, $factory);
+      var arr = new $FirebaseArray($fb);
       arr.loaded().then(whiteSpy, blackSpy);
       arr.destroy();
       flushAll();
@@ -412,7 +466,7 @@ describe('$FirebaseArray', function () {
       var c = arr.indexFor('c');
       expect(b).toBeLessThan(c);
       expect(b).toBeGreaterThan(-1);
-      $fb.ref().fakeEvent('child_moved', 'b', new $factory().toJSON(arr[b]), 'c').flush();
+      $fb.ref().fakeEvent('child_moved', 'b', $factory.toJSON(arr[b]), 'c').flush();
       expect(arr.indexFor('c')).toBe(b);
       expect(arr.indexFor('b')).toBe(c);
     });
@@ -420,7 +474,7 @@ describe('$FirebaseArray', function () {
     it('should position at 0 if prevChild is null', function() {
       var b = arr.indexFor('b');
       expect(b).toBeGreaterThan(0);
-      $fb.ref().fakeEvent('child_moved', 'b', new $factory().toJSON(arr[b]), null).flush();
+      $fb.ref().fakeEvent('child_moved', 'b', $factory.toJSON(arr[b]), null).flush();
       expect(arr.indexFor('b')).toBe(0);
     });
 
@@ -428,7 +482,7 @@ describe('$FirebaseArray', function () {
       var b = arr.indexFor('b');
       expect(b).toBeLessThan(arr.length-1);
       expect(b).toBeGreaterThan(0);
-      $fb.ref().fakeEvent('child_moved', 'b', new $factory().toJSON(arr[b]), 'notarealkey').flush();
+      $fb.ref().fakeEvent('child_moved', 'b', $factory.toJSON(arr[b]), 'notarealkey').flush();
       expect(arr.indexFor('b')).toBe(arr.length-1);
     });
 

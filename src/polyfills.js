@@ -90,50 +90,19 @@ if (!Array.prototype.findIndex) {
   });
 }
 
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find
-//if (!Array.prototype.find) {
-//  Object.defineProperty(Array.prototype, 'find', {
-//    enumerable: false,
-//    configurable: true,
-//    writable: true,
-//    value: function(predicate) {
-//      if (this == null) {
-//        throw new TypeError('Array.prototype.find called on null or undefined');
-//      }
-//      if (typeof predicate !== 'function') {
-//        throw new TypeError('predicate must be a function');
-//      }
-//      var list = Object(this);
-//      var length = list.length >>> 0;
-//      var thisArg = arguments[1];
-//      var value;
-//
-//      for (var i = 0; i < length; i++) {
-//        if (i in list) {
-//          value = list[i];
-//          if (predicate.call(thisArg, value, i, list)) {
-//            return value;
-//          }
-//        }
-//      }
-//      return undefined;
-//    }
-//  });
-//}
-
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
 if (typeof Object.create != 'function') {
   (function () {
     var F = function () {};
     Object.create = function (o) {
       if (arguments.length > 1) {
-        throw Error('Second argument not supported');
+        throw new Error('Second argument not supported');
       }
       if (o === null) {
-        throw Error('Cannot set a null [[Prototype]]');
+        throw new Error('Cannot set a null [[Prototype]]');
       }
       if (typeof o != 'object') {
-        throw TypeError('Argument must be an object');
+        throw new TypeError('Argument must be an object');
       }
       F.prototype = o;
       return new F();
@@ -181,4 +150,18 @@ if (!Object.keys) {
       return result;
     };
   }());
+}
+
+// http://ejohn.org/blog/objectgetprototypeof/
+if ( typeof Object.getPrototypeOf !== "function" ) {
+  if ( typeof "test".__proto__ === "object" ) {
+    Object.getPrototypeOf = function(object){
+      return object.__proto__;
+    };
+  } else {
+    Object.getPrototypeOf = function(object){
+      // May break if the constructor has been tampered with
+      return object.constructor.prototype;
+    };
+  }
 }
