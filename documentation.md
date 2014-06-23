@@ -256,6 +256,12 @@ $scope.messageCount.$transaction(function(currentCount) {
 });
 ```
 
+### $getRef()
+
+Returns the Firebase reference used internally by this object. This can be useful to perform more
+advanced/specialized operations that the `$firebase` object isn't suited for, and to access API methods
+which are not available on `$firebase`.
+
 ### $keys()
 
 Returns an ordered list of keys in the data object, sorted by their Firebase priorities.
