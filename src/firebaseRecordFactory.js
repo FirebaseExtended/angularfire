@@ -21,8 +21,7 @@
             delete dat.$id;
             for(var key in dat) {
               if(dat.hasOwnProperty(key) && key !== '.value' && key !== '.priority' && key.match(/[.$\[\]#]/)) {
-                $log.error('Invalid key in record (skipped):' + key);
-                delete dat[key];
+                throw new Error('Invalid key '+key+' (cannot contain .$[]#)');
               }
             }
           }
