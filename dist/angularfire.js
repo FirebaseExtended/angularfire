@@ -250,8 +250,8 @@
 (function() {
   'use strict';
   angular.module('firebase').factory('$FirebaseObject', [
-    '$parse', '$firebaseUtils', '$log',
-    function($parse, $firebaseUtils, $log) {
+    '$parse', '$firebaseUtils',
+    function($parse, $firebaseUtils) {
       function FirebaseObject($firebase) {
         var self = this, def = $firebaseUtils.defer();
         var factory = $firebase.getRecordFactory();
@@ -313,12 +313,10 @@
           // monitor scope for any changes
           var off = scope.$watchCollection(varName, function() {
             var data = self.$conf.factory.toJSON(parsed(scope));
-            $log.info('watch called', varName, loaded, data); //debug
             if( loaded ) { self.$conf.inst.set(data); }
           });
 
           var unbind = function() {
-            $log.info('unbind', varName);//debug
             if( self.$conf.bound ) {
               off();
               self.$conf.bound = null;
