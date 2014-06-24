@@ -96,9 +96,17 @@
         },
 
         destroy: function() {
-          this.$conf.inst.ref().off('value', this.$conf.serverUpdate);
-          if( this.$conf.bound ) {
-            this.$conf.bound.unbind();
+          var self = this;
+          if( !self.$isDestroyed ) {
+            self.$isDestroyed = true;
+            self.$conf.inst.ref().off('value', self.$conf.serverUpdate);
+            if( self.$conf.bound ) {
+              self.$conf.bound.unbind();
+            }
+            self.forEach(function(v,k) {
+              delete self[k];
+            });
+            self.$isDestroyed = true;
           }
         },
 

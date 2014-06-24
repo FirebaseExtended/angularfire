@@ -15,8 +15,8 @@
       }
     ])
 
-    .factory('$firebaseUtils', ["$q", "$timeout", "firebaseBatchDelay", '$firebaseRecordFactory',
-      function($q, $timeout, firebaseBatchDelay, $firebaseRecordFactory) {
+    .factory('$firebaseUtils', ["$q", "$log", "$timeout", "firebaseBatchDelay", "$log",
+      function($q, $timeout, firebaseBatchDelay, $log) {
         function debounce(fn, wait, options) {
           if( !wait ) { wait = 0; }
           var opts = angular.extend({maxWait: wait*25||250}, options);
@@ -50,7 +50,7 @@
                   opts.scope.$apply(launch);
                 }
                 catch(e) {
-                  console.error(e);
+                  $log.error(e);
                 }
               }, wait);
             }
@@ -102,7 +102,7 @@
         function getPublicMethods(inst, iterator, context) {
           getPrototypeMethods(inst, function(m, k) {
             if( typeof(m) === 'function' && !/^_/.test(k) ) {
-              iterator.call(context, m, k)
+              iterator.call(context, m, k);
             }
           });
         }

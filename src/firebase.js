@@ -50,7 +50,7 @@
             else {
               data = key;
             }
-            ref.set(data, this._handle(def));
+            ref.set(data, this._handle(def, ref));
             return def.promise;
           },
 
@@ -60,7 +60,7 @@
             if (arguments.length > 0) {
               ref = ref.child(key);
             }
-            ref.remove(this._handle(def));
+            ref.remove(this._handle(def, ref));
             return def.promise;
           },
 
@@ -73,17 +73,21 @@
             else {
               data = key;
             }
-            ref.update(data, this._handle(def));
+            ref.update(data, this._handle(def, ref));
             return def.promise;
           },
 
-          transaction: function (key, valueFn) {
+          transaction: function (key, valueFn, applyLocally) {
             var ref = this._ref;
-            if( arguments.length === 1 ) {
+            if( angular.isFunction(key) ) {
+              applyLocally = valueFn;
               valueFn = key;
             }
             else {
               ref = ref.child(key);
+            }
+            if( angular.isUndefined(applyLocally) ) {
+              applyLocally = false;
             }
 
             var def = $firebaseUtils.defer();
@@ -92,21 +96,21 @@
                  def.reject(err);
                }
                else {
-                 def.resolve(committed, snap);
+                 def.resolve(committed? snap : null);
                }
-            });
+            }, applyLocally);
             return def.promise;
           },
 
           asObject: function () {
-            if (!this._object) {
+            if (!this._object || this._object.$isDestroyed) {
               this._object = new this._config.objectFactory(this, this._config.recordFactory);
             }
             return this._object;
           },
 
           asArray: function () {
-            if (!this._array) {
+            if (!this._array || this._array._isDestroyed) {
               this._array = new this._config.arrayFactory(this, this._config.recordFactory);
             }
             return this._array;
@@ -138,7 +142,8 @@
               throw new Error('config.arrayFactory must be a valid function');
             }
             if (!angular.isObject(cnf.recordFactory)) {
-              throw new Error('config.recordFactory must be a valid object with same methods as $FirebaseRecordFactory');
+              throw new Error('config.recordFactory must be a valid object with ' +
+                'same methods as $FirebaseRecordFactory');
             }
           }
         };

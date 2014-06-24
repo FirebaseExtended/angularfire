@@ -1,7 +1,7 @@
 /**
  * MockFirebase: A Firebase stub/spy library for writing unit tests
  * https://github.com/katowulf/mockfirebase
- * @version 0.1.1
+ * @version 0.1.2
  */
 (function(exports) {
   var DEBUG = false; // enable lots of console logging (best used while isolating one test case)
@@ -1233,12 +1233,12 @@
   MockFirebase.DEFAULT_DATA  = {
     'data': {
       'a': {
-        foo: 'alpha',
+        aString: 'alpha',
         aNumber: 1,
         aBoolean: false
       },
       'b': {
-        foo: 'bravo',
+        aString: 'bravo',
         aNumber: 2,
         aBoolean: true
       },
@@ -1248,12 +1248,12 @@
         aBoolean: true
       },
       'd': {
-        foo: 'delta',
+        aString: 'delta',
         aNumber: 4,
         aBoolean: true
       },
       'e': {
-        foo: 'echo',
+        aString: 'echo',
         aNumber: 5
       }
     },

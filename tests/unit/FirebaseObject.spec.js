@@ -233,6 +233,39 @@
       });
     });
 
+    describe('server update', function() {
+      it('should add keys to local data', function() {
+        $fb.ref().set({'key1': true, 'key2': 5});
+        $fb.ref().flush();
+        expect(obj.key1).toBe(true);
+        expect(obj.key2).toBe(5);
+      });
+
+      it('should remove old keys', function() {
+        var keys = Object.keys($fb.ref());
+        expect(keys.length).toBeGreaterThan(0);
+        $fb.ref().set(null);
+        $fb.ref().flush();
+        keys.forEach(function(k) {
+          expect(obj.hasOwnProperty(k)).toBe(false);
+        });
+      });
+
+      it('should assign primitive value', function() {
+        $fb.ref().set(true);
+        $fb.ref().flush();
+        expect(obj['.value']).toBe(true);
+      });
+
+      it('should trigger an angular compile', function() {
+        var spy = spyOn($rootScope, '$apply').and.callThrough();
+        var x = spy.calls.count();
+        $fb.ref().fakeEvent('value', {foo: 'bar'}).flush();
+        flushAll();
+        expect(spy.calls.count()).toBeGreaterThan(x);
+      });
+    });
+
     function flushAll() {
       // the order of these flush events is significant
       $fb.ref().flush();

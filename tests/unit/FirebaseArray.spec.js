@@ -367,8 +367,6 @@ describe('$FirebaseArray', function () {
       expect(args[0]).toEqual([{event: 'child_moved', key: 'c', prevChild: 'a'}]);
     });
 
-    it('should get notified on a destroy'); //todo-test
-
     it('should batch events'); //todo-test
 
     it('should not get notified if off callback is invoked'); //todo-test
@@ -444,6 +442,15 @@ describe('$FirebaseArray', function () {
       expect(i).toBeGreaterThan(-1);
       expect(arr[i]).toEqual(jasmine.objectContaining({'.value': 'foo'}));
     });
+
+
+    it('should trigger an angular compile', function() {
+      var spy = spyOn($rootScope, '$apply').and.callThrough();
+      var x = spy.calls.count();
+      $fb.ref().fakeEvent('child_added', 'b').flush();
+      flushAll();
+      expect(spy.calls.count()).toBeGreaterThan(x);
+    });
   });
 
   describe('child_changed', function() {
@@ -461,6 +468,14 @@ describe('$FirebaseArray', function () {
       expect(len).toBeGreaterThan(0);
       expect(arr.length).toBe(len);
       expect(arr).toEqual(copy);
+    });
+
+    it('should trigger an angular compile', function() {
+      var spy = spyOn($rootScope, '$apply').and.callThrough();
+      var x = spy.calls.count();
+      $fb.ref().fakeEvent('child_changed', 'b').flush();
+      flushAll();
+      expect(spy.calls.count()).toBeGreaterThan(x);
     });
   });
 
@@ -495,6 +510,14 @@ describe('$FirebaseArray', function () {
       $fb.ref().fakeEvent('child_moved', 'notarealkey', true, 'c').flush();
       expect(arr).toEqual(copy);
     });
+
+    it('should trigger an angular compile', function() {
+      var spy = spyOn($rootScope, '$apply').and.callThrough();
+      var x = spy.calls.count();
+      $fb.ref().fakeEvent('child_moved', 'b').flush();
+      flushAll();
+      expect(spy.calls.count()).toBeGreaterThan(x);
+    });
   });
 
   describe('child_removed', function() {
@@ -509,8 +532,16 @@ describe('$FirebaseArray', function () {
 
     it('should do nothing if record not found', function() {
       var copy = deepCopy(arr);
-      $fb.ref().fakeEvent('child_remove', 'notakey').flush();
+      $fb.ref().fakeEvent('child_removed', 'notakey').flush();
       expect(arr).toEqual(copy);
+    });
+
+    it('should trigger an angular compile', function() {
+      var spy = spyOn($rootScope, '$apply').and.callThrough();
+      var x = spy.calls.count();
+      $fb.ref().fakeEvent('child_removed', 'b').flush();
+      flushAll();
+      expect(spy.calls.count()).toBeGreaterThan(x);
     });
   });
 

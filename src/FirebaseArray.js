@@ -77,9 +77,9 @@
         },
 
         destroy: function(err) {
-          this._isDestroyed = true;
           if( err ) { $log.error(err); }
-          if( this._list ) {
+          if( !this._isDestroyed ) {
+            this._isDestroyed = true;
             $log.debug('destroy called for FirebaseArray: '+this._inst.ref().toString());
             var ref = this.inst().ref();
             ref.off('child_added', this._serverAdd, this);
