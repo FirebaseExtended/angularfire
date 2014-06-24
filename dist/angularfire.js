@@ -1055,7 +1055,7 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
       }
     ])
 
-    .factory('$firebaseUtils', ["$q", "$log", "$timeout", "firebaseBatchDelay", "$log",
+    .factory('$firebaseUtils', ["$q", "$timeout", "firebaseBatchDelay", "$log",
       function($q, $timeout, firebaseBatchDelay, $log) {
         function debounce(fn, wait, options) {
           if( !wait ) { wait = 0; }
