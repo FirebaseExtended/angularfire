@@ -7,7 +7,7 @@
       },
 
       update: function (rec, snap) {
-        return applyToBase(rec, objectify(snap.val(), snap.name(), snap.getPriority()));
+        return applyToBase(rec, objectify(snap.val(), null, snap.getPriority()));
       },
 
       toJSON: function (rec) {
@@ -72,7 +72,7 @@
     if( !angular.isObject(data) ) {
       data = { ".value": data };
     }
-    if( arguments.length > 1 ) {
+    if( angular.isDefined(id) && id !== null ) {
       data.$id = id;
     }
     if( angular.isDefined(pri) && pri !== null ) {

@@ -250,8 +250,8 @@
 (function() {
   'use strict';
   angular.module('firebase').factory('$FirebaseObject', [
-    '$parse', '$firebaseUtils',
-    function($parse, $firebaseUtils) {
+    '$parse', '$firebaseUtils', '$log',
+    function($parse, $firebaseUtils, $log) {
       function FirebaseObject($firebase) {
         var self = this, def = $firebaseUtils.defer();
         var factory = $firebase.getRecordFactory();
@@ -303,7 +303,7 @@
         },
 
         bindTo: function(scope, varName) {
-          var self = this;
+          var self = this, loaded = false;
           if( self.$conf.bound ) {
             throw new Error('Can only bind to one scope variable at a time');
           }
@@ -311,12 +311,14 @@
           var parsed = $parse(varName);
 
           // monitor scope for any changes
-          var off = scope.$watch(varName, function() {
+          var off = scope.$watchCollection(varName, function() {
             var data = self.$conf.factory.toJSON(parsed(scope));
-            self.$conf.inst.set(self.$id, data);
+            $log.info('watch called', varName, loaded, data); //debug
+            if( loaded ) { self.$conf.inst.set(data); }
           });
 
           var unbind = function() {
+            $log.info('unbind', varName);//debug
             if( self.$conf.bound ) {
               off();
               self.$conf.bound = null;
@@ -338,6 +340,7 @@
 
           var def = $firebaseUtils.defer();
           self.loaded().then(function() {
+            loaded = true;
             def.resolve(unbind);
           }, def.reject.bind(def));
 
@@ -360,7 +363,11 @@
         },
 
         toJSON: function() {
-          return angular.extend({}, this);
+          var out = {};
+          this.forEach(function(v,k) {
+            out[k] = v;
+          });
+          return out;
         },
 
         forEach: function(iterator, context) {
@@ -550,7 +557,7 @@
       },
 
       update: function (rec, snap) {
-        return applyToBase(rec, objectify(snap.val(), snap.name(), snap.getPriority()));
+        return applyToBase(rec, objectify(snap.val(), null, snap.getPriority()));
       },
 
       toJSON: function (rec) {
@@ -615,7 +622,7 @@
     if( !angular.isObject(data) ) {
       data = { ".value": data };
     }
-    if( arguments.length > 1 ) {
+    if( angular.isDefined(id) && id !== null ) {
       data.$id = id;
     }
     if( angular.isDefined(pri) && pri !== null ) {
