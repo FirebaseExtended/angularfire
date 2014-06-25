@@ -1,6 +1,6 @@
 (function() {
   'use strict';
-  angular.module('firebase').factory('$firebaseRecordFactory', ['$log', function($log) {
+  angular.module('firebase').factory('$firebaseRecordFactory', [/*'$log',*/ function(/*$log*/) {
     return {
       create: function (snap) {
         return objectify(snap.val(), snap.name(), snap.getPriority());

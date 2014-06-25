@@ -166,7 +166,7 @@
           var events = self._events;
           self._events = [];
           if( events.length ) {
-            self._observers.forEach(function(parts) {
+            angular.forEach(self._observers, function(parts) {
               parts[0].call(parts[1], events);
             });
           }

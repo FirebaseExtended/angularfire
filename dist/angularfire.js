@@ -1,5 +1,5 @@
 /*!
- angularfire v0.8.0-pre1 2014-06-24
+ angularfire v0.8.0-pre1 2014-06-25
 * https://github.com/firebase/angularFire
 * Copyright (c) 2014 Firebase, Inc.
 * MIT LICENSE: http://firebase.mit-license.org/
@@ -197,7 +197,7 @@
           var events = self._events;
           self._events = [];
           if( events.length ) {
-            self._observers.forEach(function(parts) {
+            angular.forEach(self._observers, function(parts) {
               parts[0].call(parts[1], events);
             });
           }
@@ -261,23 +261,20 @@
           bound: null,
           factory: factory,
           serverUpdate: function(snap) {
-            factory.update(self, snap);
+            factory.update(self.$data, snap);
+            self.$priority = snap.getPriority();
             compile();
           }
         };
+
         self.$id = $firebase.ref().name();
+        self.$data = {};
+        self.$priority = null;
 
         var compile = $firebaseUtils.debounce(function() {
           if( self.$conf.bound ) {
             self.$conf.bound.set(self.toJSON());
           }
-        });
-
-        // prevent iteration and accidental overwrite of props
-        var methods = ['$id', '$conf']
-          .concat(Object.keys(FirebaseObject.prototype));
-        angular.forEach(methods, function(key) {
-          readOnlyProp(self, key, key === '$bound');
         });
 
         // listen for updates to the data
@@ -308,11 +305,10 @@
             throw new Error('Can only bind to one scope variable at a time');
           }
 
-          var parsed = $parse(varName);
 
           // monitor scope for any changes
           var off = scope.$watchCollection(varName, function() {
-            var data = self.$conf.factory.toJSON(parsed(scope));
+            var data = self.$conf.factory.toJSON($bound.get());
             if( loaded ) { self.$conf.inst.set(data); }
           });
 
@@ -324,6 +320,7 @@
           };
 
           // expose a few useful methods to other methods
+          var parsed = $parse(varName);
           var $bound = self.$conf.bound = {
             set: function(data) {
               parsed.assign(scope, data);
@@ -354,7 +351,7 @@
               self.$conf.bound.unbind();
             }
             self.forEach(function(v,k) {
-              delete self[k];
+              delete self.$data[k];
             });
             self.$isDestroyed = true;
           }
@@ -370,10 +367,8 @@
 
         forEach: function(iterator, context) {
           var self = this;
-          angular.forEach(Object.keys(self), function(k) {
-            if( !k.match(/^\$/) ) {
-              iterator.call(context, self[k], k, self);
-            }
+          angular.forEach(self.$data, function(v,k) {
+            iterator.call(context, v, k, self);
           });
         }
       };
@@ -381,16 +376,6 @@
       return FirebaseObject;
     }
   ]);
-
-  function readOnlyProp(obj, key, writable) {
-    if( Object.defineProperty ) {
-      Object.defineProperty(obj, key, {
-        writable: writable||false,
-        enumerable: false,
-        value: obj[key]
-      });
-    }
-  }
 })();
 (function() {
   'use strict';
@@ -548,7 +533,7 @@
 })();
 (function() {
   'use strict';
-  angular.module('firebase').factory('$firebaseRecordFactory', ['$log', function($log) {
+  angular.module('firebase').factory('$firebaseRecordFactory', [/*'$log',*/ function(/*$log*/) {
     return {
       create: function (snap) {
         return objectify(snap.val(), snap.name(), snap.getPriority());
@@ -569,8 +554,7 @@
             delete dat.$id;
             for(var key in dat) {
               if(dat.hasOwnProperty(key) && key !== '.value' && key !== '.priority' && key.match(/[.$\[\]#]/)) {
-                $log.error('Invalid key in record (skipped):' + key);
-                delete dat[key];
+                throw new Error('Invalid key '+key+' (cannot contain .$[]#)');
               }
             }
           }
@@ -1050,12 +1034,11 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
     .factory('$firebaseConfig', ["$firebaseRecordFactory", "$FirebaseArray", "$FirebaseObject",
       function($firebaseRecordFactory, $FirebaseArray, $FirebaseObject) {
         return function(configOpts) {
-          var out = angular.extend({
+          return angular.extend({
             recordFactory: $firebaseRecordFactory,
             arrayFactory: $FirebaseArray,
             objectFactory: $FirebaseObject
           }, configOpts);
-          return out;
         };
       }
     ])

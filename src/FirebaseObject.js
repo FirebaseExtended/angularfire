@@ -12,23 +12,20 @@
           bound: null,
           factory: factory,
           serverUpdate: function(snap) {
-            factory.update(self, snap);
+            factory.update(self.$data, snap);
+            self.$priority = snap.getPriority();
             compile();
           }
         };
+
         self.$id = $firebase.ref().name();
+        self.$data = {};
+        self.$priority = null;
 
         var compile = $firebaseUtils.debounce(function() {
           if( self.$conf.bound ) {
             self.$conf.bound.set(self.toJSON());
           }
-        });
-
-        // prevent iteration and accidental overwrite of props
-        var methods = ['$id', '$conf']
-          .concat(Object.keys(FirebaseObject.prototype));
-        angular.forEach(methods, function(key) {
-          readOnlyProp(self, key, key === '$bound');
         });
 
         // listen for updates to the data
@@ -59,11 +56,10 @@
             throw new Error('Can only bind to one scope variable at a time');
           }
 
-          var parsed = $parse(varName);
 
           // monitor scope for any changes
           var off = scope.$watchCollection(varName, function() {
-            var data = self.$conf.factory.toJSON(parsed(scope));
+            var data = self.$conf.factory.toJSON($bound.get());
             if( loaded ) { self.$conf.inst.set(data); }
           });
 
@@ -75,6 +71,7 @@
           };
 
           // expose a few useful methods to other methods
+          var parsed = $parse(varName);
           var $bound = self.$conf.bound = {
             set: function(data) {
               parsed.assign(scope, data);
@@ -105,7 +102,7 @@
               self.$conf.bound.unbind();
             }
             self.forEach(function(v,k) {
-              delete self[k];
+              delete self.$data[k];
             });
             self.$isDestroyed = true;
           }
@@ -121,10 +118,8 @@
 
         forEach: function(iterator, context) {
           var self = this;
-          angular.forEach(Object.keys(self), function(k) {
-            if( !k.match(/^\$/) ) {
-              iterator.call(context, self[k], k, self);
-            }
+          angular.forEach(self.$data, function(v,k) {
+            iterator.call(context, v, k, self);
           });
         }
       };
@@ -132,14 +127,4 @@
       return FirebaseObject;
     }
   ]);
-
-  function readOnlyProp(obj, key, writable) {
-    if( Object.defineProperty ) {
-      Object.defineProperty(obj, key, {
-        writable: writable||false,
-        enumerable: false,
-        value: obj[key]
-      });
-    }
-  }
 })();

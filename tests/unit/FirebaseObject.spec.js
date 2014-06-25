@@ -200,7 +200,7 @@
 
     describe('#forEach', function() {
       it('should not include $ keys', function() {
-        var len = Object.keys(obj).length;
+        var len = Object.keys(obj.$data).length;
         obj.$test = true;
         var spy = jasmine.createSpy('iterator').and.callFake(function(v,k) {
           expect(/^\$/.test(k)).toBeFalsy();
@@ -237,8 +237,8 @@
       it('should add keys to local data', function() {
         $fb.ref().set({'key1': true, 'key2': 5});
         $fb.ref().flush();
-        expect(obj.key1).toBe(true);
-        expect(obj.key2).toBe(5);
+        expect(obj.$data.key1).toBe(true);
+        expect(obj.$data.key2).toBe(5);
       });
 
       it('should remove old keys', function() {
@@ -254,7 +254,7 @@
       it('should assign primitive value', function() {
         $fb.ref().set(true);
         $fb.ref().flush();
-        expect(obj['.value']).toBe(true);
+        expect(obj.$data['.value']).toBe(true);
       });
 
       it('should trigger an angular compile', function() {

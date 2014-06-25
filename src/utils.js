@@ -5,12 +5,11 @@
     .factory('$firebaseConfig', ["$firebaseRecordFactory", "$FirebaseArray", "$FirebaseObject",
       function($firebaseRecordFactory, $FirebaseArray, $FirebaseObject) {
         return function(configOpts) {
-          var out = angular.extend({
+          return angular.extend({
             recordFactory: $firebaseRecordFactory,
             arrayFactory: $FirebaseArray,
             objectFactory: $FirebaseObject
           }, configOpts);
-          return out;
         };
       }
     ])
