@@ -13,15 +13,15 @@ Firebase and another for AngularFire, in your HTML file. Note that they're both
 served from Firebase's CDN, which you are welcome to use.
 
 ``` html
-<script src="https://cdn.firebase.com/js/client/1.0.6/firebase.js"></script>
-<script src="https://cdn.firebase.com/libs/angularfire/0.7.1/angularfire.js"></script>
+<script src="https://cdn.firebase.com/js/client/1.0.17/firebase.js"></script>
+<script src="https://cdn.firebase.com/libs/angularfire/0.8.0/angularfire.js"></script>
 ```
 
 If you want to use any Simple Login related functionality, you'll need to include
 the appropriate version of the Simple Login library as well.
 
 ``` html
-<script src="https://cdn.firebase.com/js/simple-login/1.3.0/firebase-simple-login.js"></script>
+<script src="https://cdn.firebase.com/js/simple-login/1.6.1/firebase-simple-login.js"></script>
 ```
 
 Certain versions of AngularFire require certain versions of the Firebase and
@@ -58,6 +58,12 @@ Simple Login libraries. The following table documents the version dependencies:
     <td>1.3.0</td>
     <td>1.2+</td>
   </tr>
+  <tr>
+    <td>0.8.0</td>
+    <td>1.0.15+</td>
+    <td>1.3.0+</td>
+    <td>1.3+</td>
+  </tr>
 </table>
 
 Next, add the Firebase module as a dependency for your Angular app.
@@ -78,146 +84,174 @@ myapp.controller("MyController", ["$firebase",
 $firebase
 ---------
 
-The `$firebase` object is a special collection. It contains all the child records as keys and also
-some helper methods that begin with `$`. For example:
+The `$firebase` wrapper is used for synchronizing Firebase data with Angular
+apps. It contains some helper methods for writing data to Firebase, as well as tools for
+reading data into synchronized collections or objects.
 
 ```js
-// assuming data: { "a": {foo: "bar", counter: 1}, "b": {hello: "world", counter: 2} }
 myapp.controller("MyController", function($firebase) {
    var ref = new Firebase(URL);
-   var data = $firebase(ref);
+   var sync = $firebase(ref);
 
+   // if ref points to a data collection
+   $scope.list = sync.asArray();
+
+   // if ref points to a single record
+   $scope.rec = sync.asObject();
 });
+```
 
+```html
+<li ng-repeat="item in list">{{item|json}}</li>
 ```
 
 ### Constructor
 
-The `$firebase` service takes a single argument: a Firebase reference. Note that you
-may apply queries and limits on it if you want to only sync a subset of your data.
+The `$firebase` service takes a single argument: a Firebase reference. You
+may apply queries and limits to sync a subset of your data.
 
-The object returned by `$firebase` will automatically be kept in sync with
-the remote Firebase data. **Note that any changes to that object will *not*
-automatically result in any changes to the remote data**. All such changes will
-have to performed via one of the methods prefixed with "$" available on this
-object.
+```js
+var ref = new Firebase(URL);
+var sync = $firebase(ref);
 
-The service **always** returns an object (it will never be an array or primitive).
-If the Firebase reference points to a primitive value, it will be wrapped in
-an object with a key named `$value` containing the primitive value.
-
-``` js
-myapp.controller("MyController", ["$firebase",
-  function($firebase) {
-     items = $firebase(new Firebase(URL));
-
-     items.$on('loaded', function() {
-        console.log('retrieved data from server!');
-     });
-  }
-]);
+// you can apply startAt/endAt/limit to your references
+var limited = $firebase(ref.limit(10));
 ```
 
-To access the data from the DOM or in directives like `ng-repeat`, place it in `scope` and
-use the [$asArray](#asArray) method to convert it to an array for filtering and sorting:
+### asArray()
 
-``` js
-myapp.controller("MyController", ["$firebase",
-  function($firebase) {
-     var ref = $firebase(new Firebase(URL));
-     $scope.items = ref.$asArray($scope);
-  }
-]);
+Returns a synchronized array. **This collection is READ-ONLY**. Clients should not use
+push(), splice(), et al to modify the structure of the array. Multiple calls return the same
+array instance, not unique copies. See [$FirebaseArray](#firebasearray)
+
+```js
+// use in a controller
+var sync = $firebase(ref);
+var list = sync.asArray();
+list.loaded().then(function() {
+   console.log('list has ' + list.length + ' items');
+});
+
+<!-- use in directive: $scope.sync = $firebase(ref)  -->
+<li ng-repeat="item in sync.asArray()">{{item|json}}</li>
 ```
 
-``` html
-<li ng-repeat="item in items | filter:name">{{item|json}}</li>
+### asObject()
+
+Returns a synchronized object. When data is updated on the server, the local copy will be altered
+(but not replaced) to match. See [$FirebaseObject](#firebaseobject)
+
+### ref()
+
+Returns the Firebase ref used to create this instance.
+
+```js
+var ref = new Firebase(URL);
+var sync = $firebase(ref);
+sync.ref() === ref; // true
 ```
 
-Instead of converting data to an array, you can also iterate objects directly
-using ng-repeat:
+### push(data)
 
-``` html
-<li ng-repeat="(key,value) in object">{{key}}: {{value}}</li>
-```
-
-### $add(value)
-
-The `$add` method takes a single argument of any type. It will append this
+The `push` method takes a single argument of any type. It will append this
 value as a member of a list (ordered in chronological order). This is the
 equivalent of calling `push(value)` on a Firebase reference.
 
 ``` js
-items.$add({foo: "bar"});
+sync.push({foo: "bar"});
+```
+
+This method returns a promise that will be fulfilled when the data has
+been added to the server. The promise will be resolved with a Firebase
+reference, from which you can extract the key name of the newly added data.
+
+``` js
+sync.push({baz: "boo"}).then(function(ref) {
+  ref.name();   // Key name of the added data.
+}/*, error handler */);
+```
+
+### set([key, ]data)
+
+The `set` method takes one or two arguments. If a key is provided, it sets the value of a
+child record to `data`. Otherwise, it replaces the entire $firebase path with the data provided.
+ This is the equivalent of calling `set(value)` on a Firebase reference.
+
+``` js
+// set child foo to 'bar'
+sync.set('foo', "bar");
+
+// replace all child keys with {foo: 'bar'}
+sync.set({foo: 'bar'});
 ```
 
 This method returns a promise that will be fulfilled when the data has
 been saved to the server. The promise will be resolved with a Firebase
-reference, from which you can extract the key name of the newly added data.
+reference for the saved record.
 
 ``` js
-items.$add({baz: "boo"}).then(function(ref) {
-  ref.name();                // Key name of the added data.
-});
+sync.save('foo', "bar").then(function(ref) {
+  ref.name();   // foo
+}/*, error handler */);
 ```
 
-### $remove([key])
+### remove([key])
 
-The `$remove` method takes a single optional argument, a key. If a key is
-provided, this method will remove the child referenced by that key. If no
-key is provided, the entire object will be removed remotely.
-
-```js
-items.$remove("foo"); // Removes child named "foo".
-items.$remove();      // Removes the entire object.
-```
-
-This method returns a promise which will be resolved when the data has
-been successfully deleted from the server.
-
-### $save([key])
-
-The `$save` method takes a single optional argument, a key. If a key is
-provided, this method will save all changes made to the child element
-referenced by that key to Firebase. If no key is provided, all local changes
-made to this object will be persisted to Firebase. This operation is commonly
-used to save any local changes made to the model.
-
-```js
-items.foo = "baz";
-items.$save("foo");  // new Firebase(URL + "/foo") now contains "baz".
-```
-
-This method returns a promise which will be resolved when the data has been
-successfully saved on the server.
-
-### $set(value)
-
-Overwrites the remote value for this object to `newValue`. The local object
-will also be subsequently updated to this new value.
+The `remove` method takes one or zero arguments. If a key is provided, it removes a
+child record. Otherwise, it removes the entire $firebase path.
+ This is the equivalent of calling `remove()` on a Firebase reference.
 
 ``` js
-items.$set({bar: "baz"});  // new Firebase(URL + "/foo") is now null.
+// remove child 'bar'
+sync.remove('bar');
+
+// remove all children at this path
+sync.remove();
 ```
 
-This method returns a promise which will be resolved when the data has been
-successfully saved on the server.
-
-### $update(value)
-
-Non-destructively update the Firebase location with the provided keys and values.
-The keys specified in `value` will be updated, but all other values will
-remain untouched. This is the equivalent of calling `update(value)` on a Firebase reference.
+This method returns a promise that will be fulfilled when the data has
+been removed from the server. The promise will be resolved with a Firebase
+reference for the exterminated record.
 
 ``` js
-items.$set({foo: "bar", baz: "boo"});
-items.$update({baz: "fizz"});  // The data is now {foo: "bar", baz: "fizz"}.
+sync.remove('foo').then(function(ref) {
+  ref.name();   // foo
+}/*, error handler */);
 ```
 
-This method returns a promise which will be resolved when the data has been
-successfully saved on the server.
+### update([key, ]data)
 
-### $transaction(updateFn, [applyLocally])
+The `update` method takes one or two arguments. If a key is provided, it updates the value of a
+child record to `data`. Otherwise, it updates the entire $firebase path with the data provided.
+
+This is the equivalent of calling `update(value)` on a Firebase reference. Any child keys specified
+in `data` are completely replaced by the values provided (update only works one level deep into
+child records, not recursively), and any keys not in data are left alone.
+
+``` js
+// assume we have this data in Firebase: {foo: 1, bar: 2, baz: 3}
+sync.update({foo: 10, baz: 20});
+// new data: {foo: 10, bar: 2, baz: 20}
+
+// assume we have this data: {foo: 10, bar: {hello: 'world'}}
+sync.update('bar', {count: 20});
+// new data in bar: {hello: 'world', count: 20}
+
+sync.update({ bar: {count: 21} }); // only 1 level deep!
+// new data: {foo: 10, bar: {count: 21}} // hello key was deleted
+```
+
+This method returns a promise that will be fulfilled when the data has
+been saved to the server. The promise will be resolved with a Firebase
+reference for the updated record.
+
+``` js
+sync.update('bar', {count: 20}).then(function(ref) {
+  ref.name();   // bar
+}/*, error handler */);
+```
+
+### transaction(updateFn[, applyLocally])
 
 Used to atomically modify data at the Firebase location. $transaction is used to modify the
 existing value to a new value, ensuring there are no conflicts with other clients writing
@@ -227,12 +261,13 @@ for more details.
 $transaction takes an `updateFn` argument which is a developer-supplied function
 that will be passed the current data stored at the location (as a JS object). The function should
 return the new value it would like written (as a JS object). If `undefined` is returned, the transaction
-will be aborted and the data at the location will not be modified.
+will be aborted and the data at the location will not be modified. Keep in mind that this method
+may be called multiple times until the client and server agree on a final value.
 
-By default, events are raised each time the transaction update function runs. So if it is run
-multiple times, you may see intermediate states. You can set the `applyLocally` argument to false
-to suppress these intermediate states and instead wait until the transaction has complted before
-events are raised.
+By default, events are immediately raised when the update function runs. So if the client and server
+disagree on the final state, you may see intermediate values at the client. You can set the
+`applyLocally` argument to false to suppress these intermediate states, which makes the UI less
+ responsive but avoids any temporary blinking of an intermediate value.
 
 This method returns a promise which will resolve to null if the transaction is aborted, otherwise
 it resolves with the snapshot of the new data at the location.
@@ -241,7 +276,7 @@ it resolves with the snapshot of the new data at the location.
 $scope.messageCount = $firebase(new Firebase(URL + "/messageCount"));
 
 // Increment the message count by 1
-$scope.messageCount.$transaction(function(currentCount) {
+$scope.messageCount.transaction(function(currentCount) {
 	if (!currentCount) return 1;   // Initial value for counter.
 	if (currentCount < 0) return;  // Return undefined to abort transaction.
 	return currentCount + 1;			 // Increment the count by 1.
@@ -256,288 +291,399 @@ $scope.messageCount.$transaction(function(currentCount) {
 });
 ```
 
-### $getRef()
+$FirebaseObject
+---------------
 
-Returns the Firebase reference used internally by this object. This can be useful to perform more
-advanced/specialized operations that the `$firebase` object isn't suited for, and to access API methods
-which are not available on `$firebase`.
-
-### $keys()
-
-Returns an ordered list of keys in the data object, sorted by their Firebase priorities.
-If you're looking for a quick way to convert the items to a sorted array for use in tools
-like `ng-repeat`, see [$asArray](#asArray).
+The object returned by `$firebase.asObject()` will automatically be kept in sync with
+the remote Firebase data. **Note that any changes to that object will *not*
+automatically result in any changes to the remote data**. All such changes will
+have to performed via one of the save/set/remove methods on this object, or by
+utilizing bindTo (see more below).
 
 ``` js
-var keys = items.$keys();
-keys.forEach(function(key, i) {
-  console.log(i, items[key]); // Prints items in order they appear in Firebase.
-});
+myapp.controller("MyController", ["$scope"', "$firebase",
+  function($scope, $firebase) {
+     var obj = $firebase(new Firebase(URL)).asObject();
+
+     // to take an action after the data loads, use loaded() promise
+     obj.loaded().then(function() {
+        console.log('loaded record ' + obj.$id);
+     });
+
+     // To iterate the key/value pairs of the object, use `angular.forEach` or `obj.forEach`
+     obj.forEach(function(value, key) {
+        console.log(key, value);
+     });
+
+     // To make the data available in the DOM, add it to $scope
+     $scope.data = obj.$data;
+
+     // For 3-way data bindings, bind it to the scope instead
+     obj.bindTo($scope, 'data');
+  }
+]);
 ```
+
+### $data
+
+Stores the data downloaded from Firebase. When future updates arrive from the server, they will
+update this variable and trigger a compile operation in angular (triggering it to update the DOM
+elements). This $data object will exactly match server data; it could be an object or primitive value.
 
 ### $id
 
-Returns the firebase path name (i.e. key) for the reference. This will also exist
- on each child record assuming it is not a primitive.
-
-``` js
-var ref = new Firebase('https://INSTANCE.firebaseio.com/widgets');
-var items = $firebase(ref);
-
-console.log(items.$id); // widgets
-angular.forEach(items, function(obj, key) {
-   console.log(obj.$id === key); // true!
-});
-```
+The Firebase key where this record is stored. The same as obj.inst().ref().name().
 
 ### $priority
 
-The Firebase priority of an object is provided (if available) as the
-`$priority` field. Changing its value, and calling `$save` will also result
-in the priority value being persisted in Firebase.
+The priority for this record according to the last update we received. Modifying this value
+and then calling save() will also update the server's priority.
 
-``` js
-items.foo.$priority = 20;
-items.$save("foo");  // new Firebase(URL + "foo")'s priority is now 20.
+### save()
+
+If changes are made to $data, then calling save() will push those changes to the server. This
+method returns a promise that will resolve when the save op is completed.
+
+```js
+var obj = $firebase(ref).asObject();
+obj.$data = {foo: 'bar'};
+obj.save().then(function(ref) {
+   ref.name() === obj.$id; // true
+}/*, optional error callback */);
 ```
 
-### $child(key)
+### loaded()
 
-Creates a new `$firebase` object for a child referenced by the provided key.
-This is only useful for some special cases and creates some overhead.
-Generally, you should simply modify the child data directly on the parent
-reference since that is already synchronized to the server.
+Returns a promise which will resolve after initial value is retrieved from Firebase.
 
-``` js
-var child = items.$child("foo");
-// Same as calling items.$remove("foo"); use that instead
-child.$remove();
+```js
+var obj = $firebase(ref).asObject();
+obj.loaded().then(function(data) {
+   console.log(data === obj); // true
+}/*, optional error handler */);
 ```
 
-Array Functions
----------------
+### inst()
 
-### $asArray([$scope])
+Returns the $firebase instance used to create this object.
 
-Returns a **READ ONLY ARRAY** which can be sorted, iterated,
-and will be updated whenever the master data is changed. The contents are
-controlled by $firebase, so changes should be made using `$`
-methods (`$set`, `$add`, `$remove`) etc.
+```js
+var sync = $firebase(ref);
+var obj = sync.asObject();
+obj.inst() === sync; // true
+```
 
-``` js
-var items = $firebase(ref);
+### bindTo(scope, varName)
 
-var list = items.$asArray();
-angular.forEach(list, function(nextItem) {
-    /* process items in order */
+Creates a three-way binding between a scope variable and Firebase data. When the $scope data is
+updated, changes are pushed to Firebase, and when changes occur in Firebase, they are pushed
+instantly into $scope.
+
+The bind method returns a promise that resolves after the initial value is pulled from Firebase
+and set in the $scope variable.
+
+```js
+var ref = new Firebase(URL); // assume value here is {foo: 'bar'}
+var obj = $firebase(ref).asObject();
+obj.bindTo($scope, 'data').then(function() {
+   console.log($scope.data); // {foo: 'bar'}
+   ref.set({foo: 'baz'}); // $scope.data will soon be updated to {foo: 'baz'}
 });
 ```
 
-To add/remove/update items, call the `$add`/`$remove`/`$update` methods on
-the `firebase` instance.
-
-``` js
-var list = items.$asArray();
-
-var newData = {foo: 'bar'};
-list.indexOf(newData); // -1
-
-items.$add(newData);
-list.indexOf(newData); // >= 0
+```html
+<!-- changes here automagically pushed to foo -->
+<input type="text" ng-model="data.foo" />
 ```
 
-Each call to $asArray() creates a new synchronized instance. For this reason, it should not be used
- directly from angular expressions (i.e. in the HTML), because this would create a new instance each
- time the Angular content is compiled (possibly hundreds of times per page).
+If `$destroy` is emitted by $scope (this happens when a controller is destroyed), then the scope
+variable is automatically unbound from this object. It can also be manually unbound using the
+off method provided in the promise callback.
 
-This can be put directly into `$scope` for working with filters and directives. If `$scope`
-is passed as an argument, then `$off()` is called automatically.
+```js
+var obj = $firebase(ref).asObject();
+obj.bindTo($scope, 'data').then(function(off) {
+   // unbind this later by calling off()
+});
+
+### destroy()
+
+Calling this method cancels event listeners and frees memory used by data in this object.
+
+### toJSON()
+
+Returns a JSON formatted object suitable for pushing data into Firebase.
+
+### forEach(iterator[, context])
+
+Iterates the key/value pairs of `$data`, assuming it is an object, and invokes iterator
+for each entry, passing key, value, object. If context is provided, it will be set to `this`
+scope inside iterator callbacks.
+
+$FirebaseArray
+--------------
+
+Calling `$firebase.asArray()` will generate a **READ-ONLY ARRAY** suitable for use in directives
+like `ng-repeat` and with filters (which expect an array). The array will automatically be kept
+in sync with remote changes.
+
+This array should not be directly manipulated. Methods like splice(), push(), pop(), and unshift()
+will cause the data to become out of sync with server. Instead, utilize the methods provided to
+make changes to the data records in the array.
 
 ``` js
-$scope.list = items.$asArray($scope);
+myapp.controller("MyController", ["$firebase",
+  function($firebase) {
+     var sync = $firebase(new Firebase(URL));
+     $scope.list = sync.asArray();
+
+     // add an item
+     $scope.list.add({foo: 'bar'}).then(...);
+
+     // remove an item
+     $scope.list.remove(2);
+  }
+]);
 ```
 
 ``` html
-<a ng-repeat="item in list | orderBy:sortField | filter:filterText"
-   ng-click="list.$remove(item.$id)">
-      {{item.name}}
-</a>
+<li ng-repeat="item in list | filter:name">{{item|json}}</li>
 ```
 
-### array.$indexOf(key)
+### add(newData)
 
-    @param {string|number} key
-    @returns {int} the index or -1 if not found
+Creates a new record in Firebase and adds the record to our synchronized array.
 
-Returns the numeric array position of an item with the matching `$id` property.
-
-``` js
-// assume data [ "a": {foo: 'bar'}, "b": {hello: 'world'} ]
-var list = items.$asArray();
-list.$indexOf('b')   // returns 1
-list.$indexOf('baz') // returns -1
-```
-
-### array.$add(data)
-
-A convenience wrapper for [array.$firebase.$add](#add).
-
-### array.$remove(key)
-
-A convenience wrapper for [array.$firebase.$remove](#remove).
-
-### array.$set(key, newValue)
-
-A convenience wrapper for [array.$firebase.$set](#set).
-
-### array.$update(key, updateHash)
-
-A convenience wrapper for [array.$firebase.$update](#update).
-
-### array.$move(key, newPriority)
-
-A convenience wrapper for setting [$priority](#priority) on the child record.
+This method returns a promise which is resolved after data has been saved to the server.
+The promise resolves to the ref for the newly added record, providing easy access to its key.
 
 ```js
-var list = $firebase(ref).$asArray();
-
-list.$move('a', 100);
-
-// same thing as...
-list.$firebase['a'].$priority = 100;
-list.$firebase.$save('a');
-```
-
-### array.$off()
-
-Stop synchronizing to the server; turn of event listeners. Useful to call
-this when the scope is destroyed (i.e. route changes in Angular) to reclaim
-memory and cpu cycles.
-
-This is automagically called if `$scope` is passed into the $asArray() constructor.
-
-``` js
-var list = $firebase(ref).$asArray();
-
-// call this when the list is no longer useful
-list.$off();
-```
-
-### array.$firebase
-
-Convenience property to access the writable `$firebase` instance used to create this array.
-
-``` js
-var items = $firebase(ref);
-var list = items.$asArray();
-
-list.$firebase === items; // true!
-```
-
-### using array.sort()
-
-By default, the array elements will be ordered to match the order of the
-remote data (i.e. by `$priority` if it exists, and then by `$id`).
-The `sort()` method works as expected, allowing us to override how our
-local data will be ordered.
-
-However, just like any other sorted array, elements added or updated
-after sort may not appear in sorted order. So when changes arrive
-from Firebase, sort would need to be called again:
-
-``` js
-// assume data [ "a": {count: 200}, "b": {count: 100}, "c": {count: 150} ]
-var list = items.$asArray();
-list.$indexOf('a'); // 0
-
-function countComparator(a,b) {
-   // sort by the count property
-   return a.count === b.count? 0 : (a.count > b.count? 1 : -1);
-}
-
-list.sort(countComparator);
-list.$indexOf('a'); // 2
-
-// watch for server updates and maintain sorted ordering
-list.$firebase.$on('change', function() {
-   list.sort(countComparator);
-});
-
-// places record 'c' after 'b' on the server
-list.$firebase.$child('c').$set({ 'count': 350 });
-// but the $on('change') event resorts, so it is not incorrectly at position 2
-list.$indexOf('c'); // 3
-```
-
-Events
-------
-You can call the `$on` method on the object returned by `$firebase` to attach
-event handlers.
-
-### $on(eventName, handler)
-
-Adds an event handler for the specified event. You can attach events for
-regular Firebase events (such as `child_added` and `value`, see the
-[Firebase docs](https://www.firebase.com/docs/javascript/query/on.html) for a
-full list), and two additional ones:
-
-``` js
-items.$on("loaded", function() {
-  console.log("Initial data received!");
-});
-items.$on("change", function() {
-  console.log("A remote change was applied locally!");
+var list = $firebase(ref).asArray();
+list.add({foo: 'bar'}).then(function(ref) {
+   console.log('added ' + ref.name());
 });
 ```
 
-* `loaded`: The event is triggered exactly once, when the initial data
-is received from Firebase.
-* `change`: This event is triggered every time there is a remote change
-in the data which was applied to the local object.
+### save(recordOrIndex)
 
-### $off([eventName], [handler])
-
-Detaches a parituclar event handler. If no handler is specified, all callbacks
-for the specified event type will be detached. If no event type is specified,
-synchronization will be turned off for this entire `$firebase` instance.
+The array itself cannot be modified, but records in the array can be updated and saved back
+to Firebase individually. This method saves a modified local record back to Firebase. It
+accepts either an array index or a reference to an item that exists in the array.
 
 ```js
-// Detaches all `loaded` event handlers.
-items.$off('loaded');
-// Stops synchronization on `items` completely.
-function stopSync() {
-  items.$off();
+   $scope.list = $firebase(ref).asArray();
+```
+```html
+<li ng-repeat="item in list">
+   <input type="text" ng-model="item.title" ng-change="list.save(item)" />
+</li>
+```
+
+This method returns a promise which is resolved after data has been saved to the server.
+The promise resolves to the ref for the saved record, providing easy access to its key.
+
+```js
+var list = $firebase(ref).asArray();
+list[2].foo = 'bar';
+list.save(2).then(function(ref) {
+   ref.name() === list[2].$id; //true
+});
+```
+
+### remove(recordOrIndex)
+
+Remove a record from Firebase and from the local data. This method returns a promise that
+resolves after the record is deleted at the server. It will contain a Firebase ref to
+the deleted record. It accepts either an array index or a reference to an item that
+exists in the array.
+
+```js
+var list = $firebase(ref).asArray();
+var item = list[2];
+list.remove(item).then(function(ref) {
+   ref.name() === item.$id; // true
+});
+```
+
+### keyAt(recordOrIndex)
+
+Returns the Firebase key for a record in the array. It accepts either an array index or
+a reference to an item that exists in the array.
+
+```js
+// assume records 'alpha', 'bravo', and 'charlie'
+var list = $firebase(ref).asArray();
+list.keyAt(1); // bravo
+list.keyAt( list[1] ); // bravo
+```
+
+### indexFor(key)
+
+The inverse of keyAt, this method takes a key and finds the associated record in the array.
+If the record does not exist, -1 is returned.
+
+```js
+// assume records 'alpha', 'bravo', and 'charlie'
+var list = $firebase(ref).asArray();
+list.indexFor('alpha'); // 0
+list.indexFor('bravo'); // 1
+list.indexFor('zulu'); // -1
+```
+
+### loaded()
+
+Returns a promise which is resolved when the initial array data has been downloaded from Firebase.
+The promise resolves to the array itself.
+
+```js
+var list = $firebase(ref).asArray();
+list.loaded().then(function(x) {
+   x === list; // true
+}/*, fail method */);
+```
+
+### inst()
+
+Returns the $firebase instance used to create this array.
+
+```js
+var sync = $firebase(ref);
+var list = sync.asArray();
+sync === list.inst(); // true
+```
+
+### watch(cb[, context])
+
+Any callback passed into the watch method will be invoked each time data in the array is updated
+by the server. Events can be batched, so each time the callback is invoked, it receives an array.
+Each element of the array is an object with the following keys:
+ * event: child_added, child_moved, child_removed, or child_changed
+ * key: Firebase key of the record that triggered event
+ * prevChild: If event is child_added or child_moved, this contains the prev record key or null (first record)
+
+```js
+var ref = new Firebase(URL);
+var list = $firebase(ref).asArray();
+list.watch(function(events) {
+   angular.forEach(events, function(event) {
+      console.log(event);
+   });
+});
+
+// logs {event: 'child_removed', key: 'foo'}
+ref.remove('foo');
+// logs {event: 'child_added', key: 'newrecord', prevId: 'foo'}
+ref.child('newrecord').set({hello: 'world'});
+```
+
+A common use case for this would be to customize the sorting for a synchronized array. Since
+each time an add or update arrives from the server, the data could become out of order, we
+can resort on each update event. We don't have to worry about excessive resorts here since
+events are already batched nicely.
+
+```js
+var list = $firebase(ref).asArray();
+// sort our list
+list.sort(compare);
+// each time the server sends records, resort
+list.watch(function() { list.sort(compare); });
+
+// custom sorting routine (sort by last name)
+function compare(a, b) {
+   return a.lastName.localeCompare(b.lastName);
 }
 ```
 
-3-Way Data Binding
-------------------
-You can call the `$bind` method on the object returned by `$firebase` to
-establish an automatic 3-way data binding.
+### destroy
+Stop listening for events, free memory, and empty this array.
 
-### $bind($scope, model)
+$FirebaseRecordFactory
+----------------------
 
-Creates an implicit, 3-way data binding between the Firebase data, an
-ng-model and the DOM. Calling this method will automatically synchronize *all*
-changes made to the local model with Firebase. Once a 3-way binding has been
-established, you no longer need to explicitely save data to Firebase (for
-example, by using `$add` or `$save`).
+This static class provides transform functions for converting server data to local objects
+and vice versa. Normally, it's not necessary to access this object. It's
+used internally by $firebase to create and manipulate the records stored in the asArray()'s
+collection.
 
-``` js
-items.$bind($scope, "remoteItems");
-$scope.remoteItems.bar = "foo";  // new Firebase(URL + "/bar") is now "foo".
-```
+However, this class can easily be decorated, or a custom factory can be specified to create
+ services and handle more complex use cases.
 
-This method returns a promise, which will be resolved when the initial data
-from the server has been received. The promise will be resolved with an
-`unbind` function, which, when called, will disassociate the 3-way binding.
+### Decorating the record factory to transform data
 
-``` js
-items.$bind($scope, "remote").then(function(unbind) {
-  unbind();
-  $scope.remote.bar = "foo";    // No changes have been made to the remote data.
+You can decorate $firebaseRecordFactory like any other service:
+
+```js
+app.config(function($provide) {
+   $provide.decorator('$firebaseRecordFactory', function($delegate) {
+      // override the toJSON method to add a last_update timestamp to each record
+      var _tojson = $delegate.toJSON;
+      $delegate.toJSON = function(record) {
+         var data = _tojson(record);
+         data.last_update = Firebase.ServerValue.TIMESTAMP;
+         return data;
+      };
+      return $delegate;
+   });
 });
 ```
+
+### Creating your own record factories
+
+It's also possible to specify another factory to use, as long as the service implements the
+required methods. For example, it would be possible for asArray() to return a list of Person
+objects, instead of simple json objects.
+
+We could implement this by writing our own factory as follows:
+
+```js
+angular.factory('myRecordFactory', function(Person) {
+   return {
+      create: function(snap) { return new Person(snap); },
+      update: function(person, snap) { return person.update(snap); },
+      toJSON: function(person) { return person.toJSON(); },
+      getKey: function(person) { return person.getKey(); },
+      destroy: function(person) { return person.destroy(); },
+      getPriority: function(person) { return person.getPriority(); }
+   };
+});
+
+// then later we can sync our collection like this
+var list = $firebase(ref, {recordFactory: "myRecordFactory"}).asArray();
+
+list.loaded().then(function() {
+   console.log(list[0] instanceof Person); // true!
+});
+```
+
+### create(snapshot)
+Called whenever a new `child_added` event is received from the server, receives the snapshot
+of the child record and must return an object that should be added into the collection.
+
+### update(record, snapshot)
+Called whenever a new `child_updated` event is received from the server. This should update
+key/value pairs in the existing record and then return the updated object. If this returns
+a new object, it will replace the existing data.
+
+$firebaseRecordFactory simply deletes old keys and adds new keys to the data. If the value is
+a primitive, it's stored in `.value`
+
+### toJSON(record)
+Called before returning a record to the server, this method should transform the local record
+into a suitable JSON object that can be saved to Firebase.
+
+### getKey(record)
+Must return the Firebase key that is used to store a record. $firebaseRecordFactory stores
+ the key in in `$id` on each record in the collection.
+
+### destroy(record)
+Called when a record is removed at the server (child_removed) or when destroy() is called
+on $FirebaseArray instance. The default implementation doesn't do anything, but this allows
+proprietary services a chance to clean up listeners and free memory before being disposed.
+
+### getPriority(record)
+Must return the Firebase priority for each record. If the value is non-null, $firebaseRecordFactory
+stores this value in `.priority` on each record. If a collection does not use priorities, this
+method could simply return null.
 
 $firebaseSimpleLogin
 -------------
@@ -721,9 +867,5 @@ Browser Compatability
   </tr>
 </table>
 
-To support IE8 and below, simply include polyfills for
-[Array.prototype.forEach](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach#Polyfill),
-[Array.prototype.indexOf](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf#Polyfill),
- and [Function.prototype.bind](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind#Compatibility) in your code base.
-
- Examine `test/lib/polyfills.js` for an example.
+Polyfills are automatically included to support older browsers. See src/polyfills.js for links
+and details.
