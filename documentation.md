@@ -102,7 +102,11 @@ myapp.controller("MyController", function($firebase) {
 ```
 
 ```html
+<!-- iterate asArray data -->
 <li ng-repeat="item in list">{{item|json}}</li>
+
+<!-- debug asObject data -->
+{{rec.$data|json}}
 ```
 
 ### Constructor
@@ -139,7 +143,7 @@ list.loaded().then(function() {
 ### asObject()
 
 Returns a synchronized object. When data is updated on the server, the local copy will be altered
-(but not replaced) to match. See [$FirebaseObject](#firebaseobject)
+(but not replaced) to match. See [$FirebaseObject](#firebaseobject).
 
 ### ref()
 
@@ -300,6 +304,8 @@ automatically result in any changes to the remote data**. All such changes will
 have to performed via one of the save/set/remove methods on this object, or by
 utilizing bindTo (see more below).
 
+The actual server data is synced into the `$data` key.
+
 ``` js
 myapp.controller("MyController", ["$scope"', "$firebase",
   function($scope, $firebase) {
@@ -328,7 +334,9 @@ myapp.controller("MyController", ["$scope"', "$firebase",
 
 Stores the data downloaded from Firebase. When future updates arrive from the server, they will
 update this variable and trigger a compile operation in angular (triggering it to update the DOM
-elements). This $data object will exactly match server data; it could be an object or primitive value.
+elements). This $data object will always be an object. If the server value is a primitive, it
+will be stored in $data['.value']. If the server value is null, the `$data` key will contain an
+empty object with no keys.
 
 ### $id
 
@@ -405,6 +413,7 @@ var obj = $firebase(ref).asObject();
 obj.bindTo($scope, 'data').then(function(off) {
    // unbind this later by calling off()
 });
+```
 
 ### destroy()
 
