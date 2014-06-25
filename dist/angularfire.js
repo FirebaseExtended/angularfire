@@ -409,7 +409,7 @@
 
           push: function (data) {
             var def = $firebaseUtils.defer();
-            var ref = this._ref.push();
+            var ref = this._ref.ref().push();
             var done = this._handle(def, ref);
             if (arguments.length > 0) {
               ref.set(data, done);
@@ -421,7 +421,7 @@
           },
 
           set: function (key, data) {
-            var ref = this._ref;
+            var ref = this._ref.ref();
             var def = $firebaseUtils.defer();
             if (arguments.length > 1) {
               ref = ref.child(key);
@@ -434,7 +434,12 @@
           },
 
           remove: function (key) {
-            var ref = this._ref;
+            //todo is this the best option? should remove blow away entire
+            //todo data set if we are operating on a query result? probably
+            //todo not; instead, we should probably forEach the results and
+            //todo remove them individually
+            //todo https://github.com/firebase/angularFire/issues/325
+            var ref = this._ref.ref();
             var def = $firebaseUtils.defer();
             if (arguments.length > 0) {
               ref = ref.child(key);
@@ -444,7 +449,7 @@
           },
 
           update: function (key, data) {
-            var ref = this._ref;
+            var ref = this._ref.ref();
             var def = $firebaseUtils.defer();
             if (arguments.length > 1) {
               ref = ref.child(key);
@@ -457,7 +462,7 @@
           },
 
           transaction: function (key, valueFn, applyLocally) {
-            var ref = this._ref;
+            var ref = this._ref.ref();
             if( angular.isFunction(key) ) {
               applyLocally = valueFn;
               valueFn = key;

@@ -173,43 +173,55 @@ describe('$firebase', function () {
       expect($fb.ref().getData()).toBe(null);
     });
 
-    it('should reject if fails');
+    it('should reject if fails'); //todo-test
 
-    it('should remove data in Firebase');
+    it('should remove data in Firebase'); //todo-test
   });
 
   describe('#transaction', function() {
-    it('should return a promise');
+    it('should return a promise'); //todo-test
 
-    it('should resolve to snapshot on success');
+    it('should resolve to snapshot on success'); //todo-test
 
-    it('should resolve to undefined on abort');
+    it('should resolve to undefined on abort'); //todo-test
 
-    it('should reject if failed');
+    it('should reject if failed'); //todo-test
 
-    it('should modify data in firebase');
+    it('should modify data in firebase'); //todo-test
   });
 
   describe('#toArray', function() {
-    it('should return an array');
+    it('should return an array'); //todo-test
 
-    it('should contain data in ref() after load');
+    it('should contain data in ref() after load'); //todo-test
 
-    it('should return same instance if called multiple times');
+    it('should return same instance if called multiple times'); //todo-test
 
-    it('should use arrayFactory');
+    it('should use arrayFactory'); //todo-test
 
-    it('should use recordFactory');
+    it('should use recordFactory'); //todo-test
   });
 
   describe('#toObject', function() {
-    it('should return an object');
+    it('should return an object'); //todo-test
 
-    it('should contain data in ref() after load');
+    it('should contain data in ref() after load'); //todo-test
 
-    it('should return same instance if called multiple times');
+    it('should return same instance if called multiple times'); //todo-test
 
-    it('should use recordFactory');
+    it('should use recordFactory'); //todo-test
+  });
+
+  describe('query support', function() {
+    it('should allow set() with a query'); //todo-test
+
+    it('should allow push() with a query'); //todo-test
+
+    it('should allow remove() with a query'); //todo-test
+
+    it('should create array of correct length with limit'); //todo-test
+
+    it('should return the query object in ref'); //todo-test
   });
 
   function deepCopy(arr) {
