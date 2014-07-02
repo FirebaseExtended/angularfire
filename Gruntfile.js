@@ -67,8 +67,13 @@ module.exports = function(grunt) {
         singleRun: true
       },
       watch: {
-         autowatch: true,
-         singleRun: false,
+        autowatch: true,
+        singleRun: false,
+      },
+      manual: {
+        configFile: 'tests/manual_karma.conf.js',
+        autowatch: true,
+        singleRun: true
       }
     },
 
@@ -109,6 +114,7 @@ module.exports = function(grunt) {
   grunt.registerTask('test', ['test:unit', 'test:e2e']);
   grunt.registerTask('test:unit', ['karma:singlerun']);
   grunt.registerTask('test:e2e', ['connect:testserver', 'protractor:singlerun']);
+  grunt.registerTask('test:manual', ['karma:manual']);
 
   // Watch tests
   grunt.registerTask('test:watch', ['karma:watch']);

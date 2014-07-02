@@ -33,6 +33,7 @@ To get your dev environment set up, run the following commands:
 
 ```bash
 git clone https://github.com/firebase/angularfire.git  # clones this repository
+npm install -g grunt-cli  # install grunt globally
 npm install    # installs node dependencies
 bower install  # installs JavaScript dependencies
 grunt install  # installs selenium server for e2e tests
