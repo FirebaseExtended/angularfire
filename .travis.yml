@@ -15,8 +15,8 @@ install:
 - npm install
 - bower install
 before_script:
+- grunt install
 - phantomjs --version
-- casperjs --version
 script:
 - sh ./tests/travis.sh
 env:
