@@ -34,7 +34,7 @@ module.exports = function(config) {
     sauceLabs: {
       testName: 'angularFire Unit Tests',
       startConnect: false,
-      tunnelIdentifier: process.env.TRAVIS && process.env.TRAVIS_JOB_NUMBER
+      tunnelIdentifier: process.env.TRAVIS_JOB_NUMBER
     },
 
     captureTimeout: 0,
