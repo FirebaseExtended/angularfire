@@ -2,48 +2,17 @@
 // http://karma-runner.github.io/0.10/config/configuration-file.html
 
 module.exports = function(config) {
-  var customLaunchers = {
-    sl_chrome: {
-      base: 'SauceLabs',
-      browserName: 'chrome',
-      version: '35'
-    },
-    sl_firefox: {
-      base: 'SauceLabs',
-      browserName: 'firefox', 
-      version: '30'
-    },
-    sl_safari: {
-      base: 'SauceLabs',
-      browserName: 'safari',
-      platform: 'OS X 10.9',
-      version: '7'
-    },
-    sl_ios_safari: {
-      base: 'SauceLabs',
-      browserName: 'iphone',
-      platform: 'OS X 10.9',
-      version: '7.1'
-    },
-    sl_android: {
-      base: 'SauceLabs',
-      browserName: 'android',
-      platform: 'Linux',
-      version: '4.3'
-    },
-    sl_ie_11: {
-      base: 'SauceLabs',
-      browserName: 'internet explorer',
-      platform: 'Windows 8.1',
-      version: '11'
-    },
-    sl_ie_9: {
-      base: 'SauceLabs',
-      browserName: 'internet explorer',
-      platform: 'Windows 7',
-      version: '9'
-    }
-  };
+  var customLaunchers = require('./browsers.json')
+    .reduce(function (browsers, browser) {
+      browsers[(browser.name + '_v' + browser.version).replace(/(\.|\s)/g, '_')] = {
+        base: 'SauceLabs',
+        browserName: browser.name,
+        platform: browser.platform,
+        version: browser.version
+      };
+      return browsers;
+    }, {});
+  var browsers = Object.keys(customLaunchers);
 
   config.set({
     basePath: '',
@@ -73,7 +42,7 @@ module.exports = function(config) {
 
     //Recommend starting Chrome manually with experimental javascript flag enabled, and open localhost:9876.
     customLaunchers: customLaunchers,
-    browsers: Object.keys(customLaunchers),
+    browsers: browsers,
     reporters: ['dots', 'saucelabs'],
     singleRun: true
 
