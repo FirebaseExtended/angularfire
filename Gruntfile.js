@@ -78,11 +78,12 @@ module.exports = function(grunt) {
     // End to end (e2e) tests
     protractor: {
       options: {
-        configFile: "tests/protractor.conf.js"
+        configFile: "tests/local_protractor.conf.js"
       },
       singlerun: {},
       saucelabs: {
         options: {
+          configFile: "tests/sauce_protractor.conf.js",
           args: {
             sauceUser: process.env.SAUCE_USERNAME,
             sauceKey: process.env.SAUCE_ACCESS_KEY
@@ -109,17 +110,17 @@ module.exports = function(grunt) {
   grunt.registerTask('update', ['shell:npm_install', 'shell:bower_install']);
 
   // Single run tests
-  grunt.registerTask('test', ['test:unit', 'test:unit:sauce', 'test:e2e']);
+  grunt.registerTask('test', ['test:unit', 'test:e2e']);
   grunt.registerTask('test:unit', ['karma:singlerun']);
-  grunt.registerTask('test:unit:sauce', ['karma:saucelabs']);
   grunt.registerTask('test:e2e', ['connect:testserver', 'protractor:singlerun']);
+
+  // Sauce tasks
+  grunt.registerTask('sauce:unit', ['karma:saucelabs']);
+  grunt.registerTask('sauce:e2e', ['connect:testserver', 'protractor:saucelabs']);
 
   // Watch tests
   grunt.registerTask('test:watch', ['karma:watch']);
   grunt.registerTask('test:watch:unit', ['karma:watch']);
-
-  // Travis CI testing
-  grunt.registerTask('travis', ['build', 'test:unit', 'connect:testserver', 'protractor:saucelabs']);
 
   // Build tasks
   grunt.registerTask('build', ['jshint', 'uglify']);
