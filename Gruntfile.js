@@ -69,6 +69,9 @@ module.exports = function(grunt) {
       watch: {
          autowatch: true,
          singleRun: false,
+      },
+      saucelabs: {
+        configFile: 'tests/sauce_karma.conf.js'
       }
     },
 
@@ -106,8 +109,9 @@ module.exports = function(grunt) {
   grunt.registerTask('update', ['shell:npm_install', 'shell:bower_install']);
 
   // Single run tests
-  grunt.registerTask('test', ['test:unit', 'test:e2e']);
+  grunt.registerTask('test', ['test:unit', 'test:unit:sauce', 'test:e2e']);
   grunt.registerTask('test:unit', ['karma:singlerun']);
+  grunt.registerTask('test:unit:sauce', ['karma:saucelabs']);
   grunt.registerTask('test:e2e', ['connect:testserver', 'protractor:singlerun']);
 
   // Watch tests
