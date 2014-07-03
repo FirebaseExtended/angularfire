@@ -10,8 +10,6 @@ before_install:
 - export DISPLAY=:99.0
 - sh -e /etc/init.d/xvfb start
 install:
-- git clone git://github.com/n1k0/casperjs.git ~/casperjs
-- export PATH=$PATH:~/casperjs/bin
 - npm install -g grunt-cli
 - npm install -g bower
 - npm install
