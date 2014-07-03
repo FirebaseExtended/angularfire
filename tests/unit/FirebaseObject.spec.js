@@ -264,6 +264,10 @@
         flushAll();
         expect(spy.calls.count()).toBeGreaterThan(x);
       });
+
+      it('should preserve the id'); //todo-test
+
+      it('should preserve the priority'); //todo-test
     });
 
     function flushAll() {

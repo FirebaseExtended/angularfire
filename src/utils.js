@@ -69,7 +69,7 @@
         function assertValidRef(ref, msg) {
           if( !angular.isObject(ref) ||
             typeof(ref.ref) !== 'function' ||
-            typeof(ref.transaction) !== 'function' ) {
+            typeof(ref.ref().transaction) !== 'function' ) {
             throw new Error(msg || 'Invalid Firebase reference');
           }
         }

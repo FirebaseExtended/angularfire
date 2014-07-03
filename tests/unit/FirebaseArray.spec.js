@@ -477,6 +477,10 @@ describe('$FirebaseArray', function () {
       flushAll();
       expect(spy.calls.count()).toBeGreaterThan(x);
     });
+
+    it('should preserve ids'); //todo-test
+
+    it('should preserve priorities'); //todo-test
   });
 
   describe('child_moved', function() {
