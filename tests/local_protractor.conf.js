@@ -1,8 +1,6 @@
 exports.config = {
   // Locally, we should just use the default standalone Selenium server
   // In Travis, we set up the Selenium serving via Sauce Labs
-  sauceUser: process.env.SAUCE_USERNAME,
-  sauceKey: process.env.SAUCE_ACCESS_KEY,
 
   // Tests to run
   specs: [
