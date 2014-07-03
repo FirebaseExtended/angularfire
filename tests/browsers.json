@@ -1,7 +1,8 @@
 [
   {
     "name": "chrome",
-    "version": "35"
+    "version": "35",
+    "platform": "OS X 10.9"
   },
   {
     "name": "firefox", 
@@ -10,14 +11,16 @@
   {
     "name": "safari",
     "platform": "OS X 10.9",
-    "version": "30"
+    "version": "7"
   },
   {
+    "device": "iPhone",
     "name": "iphone", 
     "platform": "OS X 10.9",
     "version": "7.1"
   },
   {
+    "device": "Android",
     "name": "android",
     "platform": "linux",
     "version": "4.3"
