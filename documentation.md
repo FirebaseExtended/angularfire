@@ -307,7 +307,7 @@ utilizing bindTo (see more below).
 The actual server data is synced into the `$data` key.
 
 ``` js
-myapp.controller("MyController", ["$scope"', "$firebase",
+myapp.controller("MyController", ["$scope", "$firebase",
   function($scope, $firebase) {
      var obj = $firebase(new Firebase(URL)).asObject();
 
