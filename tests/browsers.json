@@ -1,0 +1,38 @@
+[
+  {
+    "name": "chrome",
+    "version": "35",
+    "platform": "OS X 10.9"
+  },
+  {
+    "name": "firefox", 
+    "version": "30"
+  },
+  {
+    "name": "safari",
+    "platform": "OS X 10.9",
+    "version": "7"
+  },
+  {
+    "device": "iPhone",
+    "name": "iphone", 
+    "platform": "OS X 10.9",
+    "version": "7.1"
+  },
+  {
+    "device": "Android",
+    "name": "android",
+    "platform": "linux",
+    "version": "4.3"
+  },
+  {
+    "name": "internet explorer",
+    "platform": "Windows 8.1",
+    "version": "11"
+  },
+  {
+    "name": "internet explorer",
+    "platform": "Windows 7",
+    "version": "9"
+  }
+]
