@@ -130,6 +130,19 @@ describe('AngularFire', function () {
       //todo child_moved
    });
 
+   describe('then', function () {
+
+    it('calls the handler on data load', function () {
+      var fb = new Firebase('Mock://').child('data'), spy = jasmine.createSpy();
+      var $fb = $firebase(fb);
+      $fb.then(spy);
+      flush(fb);
+      expect(spy.callCount).toBe(1);
+      expect(spy).toHaveBeenCalledWith($fb);
+    });
+
+   });
+
   // flush blows up if you call it and no items are queued, however, we often need to make sure
   // $timeout hasn't been called so this is simpler than guessing how many times the internal
   // code may call $timeout and trying to make sure we account for them; just call it and ignore
