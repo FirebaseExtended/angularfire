@@ -1,5 +1,5 @@
 /*!
- angularfire v0.8.0-pre1 2014-06-25
+ angularfire v0.8.0-pre1 2014-07-08
 * https://github.com/firebase/angularFire
 * Copyright (c) 2014 Firebase, Inc.
 * MIT LICENSE: http://firebase.mit-license.org/
@@ -1103,7 +1103,7 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
         function assertValidRef(ref, msg) {
           if( !angular.isObject(ref) ||
             typeof(ref.ref) !== 'function' ||
-            typeof(ref.transaction) !== 'function' ) {
+            typeof(ref.ref().transaction) !== 'function' ) {
             throw new Error(msg || 'Invalid Firebase reference');
           }
         }
