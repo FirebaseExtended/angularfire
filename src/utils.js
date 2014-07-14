@@ -70,10 +70,9 @@
           var childMethods = ChildClass.prototype;
           ChildClass.prototype = Object.create(ParentClass.prototype);
           ChildClass.prototype.constructor = ChildClass; // restoring proper constructor for child class
-          for(var k in childMethods) {
-            //noinspection JSUnfilteredForInLoop
+          angular.forEach(Object.keys(childMethods), function(k) {
             ChildClass.prototype[k] = childMethods[k];
-          }
+          });
           if( angular.isObject(methods) ) {
             angular.extend(ChildClass.prototype, methods);
           }

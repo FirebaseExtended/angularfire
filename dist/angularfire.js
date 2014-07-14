@@ -78,7 +78,7 @@
 
         keyAt: function(indexOrItem) {
           var item = this._resolveItem(indexOrItem);
-          return angular.isUndefined(item)? null : item.$id;
+          return angular.isUndefined(item) || angular.isUndefined(item.$id)? null : item.$id;
         },
 
         indexFor: function(key) {
@@ -86,7 +86,13 @@
           return this._list.findIndex(function(rec) { return rec.$id === key; });
         },
 
-        loaded: function() { return this._promise; },
+        loaded: function() {
+          var promise = this._promise;
+          if( arguments.length ) {
+            promise = promise.then.apply(promise, arguments);
+          }
+          return promise;
+        },
 
         inst: function() { return this._inst; },
 
@@ -116,6 +122,7 @@
         $created: function(snap, prevChild) {
           var i = this.indexFor(snap.name());
           if( i > -1 ) {
+            this.$moved(snap, prevChild);
             this.$updated(snap, prevChild);
           }
           else {
@@ -132,7 +139,7 @@
           }
         },
 
-        $updated: function(snap, prevChild) {
+        $updated: function(snap) {
           var i = this.indexFor(snap.name());
           if( i >= 0 ) {
             var oldData = this.$toJSON(this._list[i]);
@@ -141,12 +148,13 @@
               this.$notify('child_changed', snap.name());
             }
           }
-          if( angular.isDefined(prevChild) ) {
-            var dat = this._spliceOut(snap.name());
-            if( angular.isDefined(dat) ) {
-              this._addAfter(dat, prevChild);
-              this.$notify('child_moved', snap.name(), prevChild);
-            }
+        },
+
+        $moved: function(snap, prevChild) {
+          var dat = this._spliceOut(snap.name());
+          if( angular.isDefined(dat) ) {
+            this._addAfter(dat, prevChild);
+            this.$notify('child_moved', snap.name(), prevChild);
           }
         },
 
@@ -159,6 +167,9 @@
           var dat;
           if (angular.isFunction(rec.toJSON)) {
             dat = rec.toJSON();
+          }
+          else if(angular.isDefined(rec.$value)) {
+            dat = {'.value': rec.$value};
           }
           else {
             dat = {};
@@ -187,9 +198,13 @@
           return data;
         },
 
-        $notify: function(/*event, key, prevChild*/) {
+        $notify: function(event, key, prevChild) {
+          var eventData = {event: event, key: key};
+          if( arguments.length === 3 ) {
+            eventData.prevChild = prevChild;
+          }
           angular.forEach(this._observers, function(parts) {
-            parts[0].apply(parts[1], arguments);
+            parts[0].call(parts[1], eventData);
           });
         },
 
@@ -296,11 +311,15 @@
         },
 
         $save: function() {
-          return this.$conf.inst.set(this.$conf.factory.toJSON(this));
+          return this.$conf.inst.set(this.$toJSON(this));
         },
 
         $loaded: function() {
-          return this.$conf.def.promise;
+          var promise = this.$conf.promise;
+          if( arguments.length ) {
+            promise = promise.then.apply(promise, arguments);
+          }
+          return promise;
         },
 
         $inst: function() {
@@ -309,7 +328,7 @@
 
         $bindTo: function(scope, varName) {
           var self = this;
-          return self.loaded().then(function() {
+          return self.$loaded().then(function() {
             if( self.$conf.bound ) {
               throw new Error('Can only bind to one scope variable at a time');
             }
@@ -317,7 +336,7 @@
 
             // monitor scope for any changes
             var off = scope.$watch(varName, function() {
-              var data = self.$conf.factory.toJSON($bound.get());
+              var data = self.$toJSON($bound.get());
               if( !angular.equals(data, self.$data)) {
                 self.$conf.inst.set(data);
               }
@@ -378,9 +397,17 @@
 
         $toJSON: function() {
           var out = {};
-          $firebaseUtils.each(this, function(v,k) {
-            out[k] = v;
-          });
+          if( angular.isDefined(this.$value) ) {
+            out['.value'] = this.$value;
+          }
+          else {
+            $firebaseUtils.each(this, function(v,k) {
+              out[k] = v;
+            });
+          }
+          if( angular.isDefined(this.$priority) && this.$priority !== null ) {
+            out['.priority'] = this.$priority;
+          }
           return out;
         }
       };
@@ -553,7 +580,7 @@
             self.$isDestroyed = true;
             var ref = $inst.ref();
             ref.off('child_added', created);
-            ref.off('child_moved', updated);
+            ref.off('child_moved', moved);
             ref.off('child_changed', updated);
             ref.off('child_removed', removed);
             array = null;
@@ -564,7 +591,7 @@
 
             // listen for changes at the Firebase instance
             ref.on('child_added', created, error);
-            ref.on('child_moved', updated, error);
+            ref.on('child_moved', moved, error);
             ref.on('child_changed', updated, error);
             ref.on('child_removed', removed, error);
           }
@@ -573,6 +600,7 @@
           var batch = $firebaseUtils.batch();
           var created = batch(array.$created, array);
           var updated = batch(array.$updated, array);
+          var moved = batch(array.$moved, array);
           var removed = batch(array.$removed, array);
           var error = batch(array.$error, array);
 
@@ -1047,11 +1075,11 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
               clearTimeout(timer);
             }
             if( start && Date.now() - start > maxWait ) {
-              runNow();
+              compile(runNow);
             }
             else {
               if( !start ) { start = Date.now(); }
-              timer = setTimeout(runNow, wait);
+              timer = compile(runNow, wait);
             }
           }
 
@@ -1060,10 +1088,8 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
             start = null;
             var copyList = list.slice(0);
             list = [];
-            compile(function() {
-              angular.forEach(copyList, function(parts) {
-                parts[0].apply(parts[1], parts[2]);
-              });
+            angular.forEach(copyList, function(parts) {
+              parts[0].apply(parts[1], parts[2]);
             });
           }
 
@@ -1080,14 +1106,17 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
 
         // http://stackoverflow.com/questions/7509831/alternative-for-the-deprecated-proto
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
-        function inherit(childClass, parentClass, methods) {
-          var childMethods = childClass.prototype;
-          childClass.prototype = Object.create(parentClass.prototype);
-          childClass.prototype.constructor = childClass; // restoring proper constructor for child class
-          angular.extend(childClass.prototype, childMethods);
+        function inherit(ChildClass, ParentClass, methods) {
+          var childMethods = ChildClass.prototype;
+          ChildClass.prototype = Object.create(ParentClass.prototype);
+          ChildClass.prototype.constructor = ChildClass; // restoring proper constructor for child class
+          angular.forEach(Object.keys(childMethods), function(k) {
+            ChildClass.prototype[k] = childMethods[k];
+          });
           if( angular.isObject(methods) ) {
-            angular.extend(childClass.prototype, methods);
+            angular.extend(ChildClass.prototype, methods);
           }
+          return ChildClass;
         }
 
         function getPrototypeMethods(inst, iterator, context) {
@@ -1109,7 +1138,7 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
 
         function getPublicMethods(inst, iterator, context) {
           getPrototypeMethods(inst, function(m, k) {
-            if( typeof(m) === 'function' && !/^[_$]/.test(k) ) {
+            if( typeof(m) === 'function' && !/^(_|\$\$)/.test(k) ) {
               iterator.call(context, m, k);
             }
           });
