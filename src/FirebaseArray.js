@@ -2,13 +2,13 @@
   'use strict';
   angular.module('firebase').factory('$FirebaseArray', ["$log", "$firebaseUtils",
     function($log, $firebaseUtils) {
-      function FirebaseArray($firebase) {
+      function FirebaseArray($firebase, destroyFn) {
         this._observers = [];
         this._events = [];
         this._list = [];
-        this._factory = $firebase.getRecordFactory();
         this._inst = $firebase;
         this._promise = this._init();
+        this._destroyFn = destroyFn;
         return this._list;
       }
 
@@ -28,7 +28,7 @@
           var item = this._resolveItem(indexOrItem);
           var key = this.keyAt(item);
           if( key !== null ) {
-            return this.inst().set(key, this._factory.toJSON(item));
+            return this.inst().set(key, this.$toJSON(item));
           }
           else {
             return $firebaseUtils.reject('Invalid record; could determine its key: '+indexOrItem);
@@ -47,18 +47,21 @@
 
         keyAt: function(indexOrItem) {
           var item = this._resolveItem(indexOrItem);
-          return angular.isUndefined(item)? null : this._factory.getKey(item);
+          return angular.isUndefined(item) || angular.isUndefined(item.$id)? null : item.$id;
         },
 
         indexFor: function(key) {
           // todo optimize and/or cache these? they wouldn't need to be perfect
-          // todo since we can call getKey() on the cache to ensure records have
-          // todo not been altered
-          var factory = this._factory;
-          return this._list.findIndex(function(rec) { return factory.getKey(rec) === key; });
+          return this._list.findIndex(function(rec) { return rec.$id === key; });
         },
 
-        loaded: function() { return this._promise; },
+        loaded: function() {
+          var promise = this._promise;
+          if( arguments.length ) {
+            promise = promise.then.apply(promise, arguments);
+          }
+          return promise;
+        },
 
         inst: function() { return this._inst; },
 
@@ -76,70 +79,102 @@
           };
         },
 
-        destroy: function(err) {
-          if( err ) { $log.error(err); }
+        destroy: function() {
           if( !this._isDestroyed ) {
             this._isDestroyed = true;
-            $log.debug('destroy called for FirebaseArray: '+this._inst.ref().toString());
-            var ref = this.inst().ref();
-            ref.off('child_added', this._serverAdd, this);
-            ref.off('child_moved', this._serverMove, this);
-            ref.off('child_changed', this._serverUpdate, this);
-            ref.off('child_removed', this._serverRemove, this);
             this._list.length = 0;
-            this._list = null;
+            $log.debug('destroy called for FirebaseArray: '+this._inst.ref().toString());
+            this._destroyFn();
           }
         },
 
-        _serverAdd: function(snap, prevChild) {
+        $created: function(snap, prevChild) {
           var i = this.indexFor(snap.name());
           if( i > -1 ) {
-            this._serverUpdate(snap);
-            if( prevChild !== null && i !== this.indexFor(prevChild)+1 ) {
-              this._serverMove(snap, prevChild);
-            }
+            this.$moved(snap, prevChild);
+            this.$updated(snap, prevChild);
           }
           else {
-            var dat = this._factory.create(snap);
+            var dat = this.$createObject(snap);
             this._addAfter(dat, prevChild);
-            this._addEvent('child_added', snap.name(), prevChild);
-            this._compile();
+            this.$notify('child_added', snap.name(), prevChild);
           }
         },
 
-        _serverRemove: function(snap) {
+        $removed: function(snap) {
           var dat = this._spliceOut(snap.name());
           if( angular.isDefined(dat) ) {
-            this._addEvent('child_removed', snap.name());
-            this._compile();
+            this.$notify('child_removed', snap.name());
           }
         },
 
-        _serverUpdate: function(snap) {
+        $updated: function(snap) {
           var i = this.indexFor(snap.name());
           if( i >= 0 ) {
-            var oldData = this._factory.toJSON(this._list[i]);
-            this._list[i] = this._factory.update(this._list[i], snap);
-            if( !angular.equals(oldData, this._list[i]) ) {
-              this._addEvent('child_changed', snap.name());
-              this._compile();
+            var oldData = this.$toJSON(this._list[i]);
+            $firebaseUtils.updateRec(this._list[i], snap);
+            if( !angular.equals(oldData, this.$toJSON(this._list[i])) ) {
+              this.$notify('child_changed', snap.name());
             }
           }
         },
 
-        _serverMove: function(snap, prevChild) {
+        $moved: function(snap, prevChild) {
           var dat = this._spliceOut(snap.name());
           if( angular.isDefined(dat) ) {
             this._addAfter(dat, prevChild);
-            this._addEvent('child_moved', snap.name(), prevChild);
-            this._compile();
+            this.$notify('child_moved', snap.name(), prevChild);
           }
         },
 
-        _addEvent: function(event, key, prevChild) {
-          var dat = {event: event, key: key};
-          if( arguments.length > 2 ) { dat.prevChild = prevChild; }
-          this._events.push(dat);
+        $error: function(err) {
+          $log.error(err);
+          this.destroy(err);
+        },
+
+        $toJSON: function(rec) {
+          var dat;
+          if (angular.isFunction(rec.toJSON)) {
+            dat = rec.toJSON();
+          }
+          else if(angular.isDefined(rec.$value)) {
+            dat = {'.value': rec.$value};
+          }
+          else {
+            dat = {};
+            $firebaseUtils.each(rec, function (v, k) {
+              if (k.match(/[.$\[\]#]/)) {
+                throw new Error('Invalid key ' + k + ' (cannot contain .$[]#)');
+              }
+              else {
+                dat[k] = v;
+              }
+            });
+          }
+          if( rec.$priority !== null && angular.isDefined(rec.$priority) ) {
+            dat['.priority'] = rec.$priority;
+          }
+          return dat;
+        },
+
+        $createObject: function(snap) {
+          var data = snap.val();
+          if( !angular.isObject(data) ) {
+            data = { $value: data };
+          }
+          data.$id = snap.name();
+          data.$priority = snap.getPriority();
+          return data;
+        },
+
+        $notify: function(event, key, prevChild) {
+          var eventData = {event: event, key: key};
+          if( arguments.length === 3 ) {
+            eventData.prevChild = prevChild;
+          }
+          angular.forEach(this._observers, function(parts) {
+            parts[0].call(parts[1], eventData);
+          });
         },
 
         _addAfter: function(dat, prevChild) {
@@ -161,17 +196,6 @@
           }
         },
 
-        _notify: function() {
-          var self = this;
-          var events = self._events;
-          self._events = [];
-          if( events.length ) {
-            angular.forEach(self._observers, function(parts) {
-              parts[0].call(parts[1], events);
-            });
-          }
-        },
-
         _resolveItem: function(indexOrItem) {
           return angular.isNumber(indexOrItem)? this._list[indexOrItem] : indexOrItem;
         },
@@ -188,28 +212,28 @@
             list[key] = fn.bind(self);
           });
 
-          // we debounce the compile function so that angular's digest only needs to do
-          // dirty checking once for each "batch" of updates that come in close proximity
-          // we fire the notifications within the debounce result so they happen in the digest
-          // and don't need to bother with $digest/$apply calls.
-          self._compile = $firebaseUtils.debounce(self._notify.bind(self), $firebaseUtils.batchDelay);
-
-          // listen for changes at the Firebase instance
-          ref.on('child_added', self._serverAdd, self.destroy, self);
-          ref.on('child_moved', self._serverMove, self.destroy, self);
-          ref.on('child_changed', self._serverUpdate, self.destroy, self);
-          ref.on('child_removed', self._serverRemove, self.destroy, self);
+          // for our loaded() function
           ref.once('value', function() {
-            if( self._isDestroyed ) {
-              def.reject('instance was destroyed before load completed');
-            }
-            else {
-              def.resolve(list);
-            }
+            $firebaseUtils.compile(function() {
+              if( self._isDestroyed ) {
+                def.reject('instance was destroyed before load completed');
+              }
+              else {
+                def.resolve(list);
+              }
+            });
           }, def.reject.bind(def));
 
           return def.promise;
         }
+      };
+
+      FirebaseArray.extendFactory = function(ChildClass, methods) {
+        if( arguments.length === 1 && angular.isObject(ChildClass) ) {
+          methods = ChildClass;
+          ChildClass = function() { FirebaseArray.apply(this, arguments); };
+        }
+        return $firebaseUtils.inherit(ChildClass, FirebaseArray, methods);
       };
 
       return FirebaseArray;

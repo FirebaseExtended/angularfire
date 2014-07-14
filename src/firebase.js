@@ -18,8 +18,8 @@
           }
           this._config = $firebaseConfig(config);
           this._ref = ref;
-          this._array = null;
-          this._object = null;
+          this._arraySync = null;
+          this._objectSync = null;
           this._assertValidConfig(ref, this._config);
         }
 
@@ -108,17 +108,17 @@
           },
 
           asObject: function () {
-            if (!this._object || this._object.$isDestroyed) {
-              this._object = new this._config.objectFactory(this, this._config.recordFactory);
+            if (!this._objectSync || this._objectSync.$isDestroyed) {
+              this._objectSync = new SyncObject(this, this._config.objectFactory);
             }
-            return this._object;
+            return this._objectSync.getObject();
           },
 
           asArray: function () {
-            if (!this._array || this._array._isDestroyed) {
-              this._array = new this._config.arrayFactory(this, this._config.recordFactory);
+            if (!this._arraySync || this._arraySync._isDestroyed) {
+              this._arraySync = new SyncArray(this, this._config.arrayFactory);
             }
-            return this._array;
+            return this._arraySync.getArray();
           },
 
           getRecordFactory: function() {
@@ -146,12 +146,66 @@
             if (!angular.isFunction(cnf.objectFactory)) {
               throw new Error('config.arrayFactory must be a valid function');
             }
-            if (!angular.isObject(cnf.recordFactory)) {
-              throw new Error('config.recordFactory must be a valid object with ' +
-                'same methods as $FirebaseRecordFactory');
-            }
           }
         };
+
+        function SyncArray($inst, ArrayFactory) {
+          function destroy() {
+            self.$isDestroyed = true;
+            var ref = $inst.ref();
+            ref.off('child_added', created);
+            ref.off('child_moved', moved);
+            ref.off('child_changed', updated);
+            ref.off('child_removed', removed);
+            array = null;
+          }
+
+          function init() {
+            var ref = $inst.ref();
+
+            // listen for changes at the Firebase instance
+            ref.on('child_added', created, error);
+            ref.on('child_moved', moved, error);
+            ref.on('child_changed', updated, error);
+            ref.on('child_removed', removed, error);
+          }
+
+          var array = new ArrayFactory($inst, destroy);
+          var batch = $firebaseUtils.batch();
+          var created = batch(array.$created, array);
+          var updated = batch(array.$updated, array);
+          var moved = batch(array.$moved, array);
+          var removed = batch(array.$removed, array);
+          var error = batch(array.$error, array);
+
+          var self = this;
+          self.$isDestroyed = false;
+          self.getArray = function() { return array; };
+          init();
+        }
+
+        function SyncObject($inst, ObjectFactory) {
+          function destroy() {
+            self.$isDestroyed = true;
+            ref.off('value', applyUpdate);
+            obj = null;
+          }
+
+          function init() {
+            ref.on('value', applyUpdate, error);
+          }
+
+          var obj = new ObjectFactory($inst, destroy);
+          var ref = $inst.ref();
+          var batch = $firebaseUtils.batch();
+          var applyUpdate = batch(obj.$updated, obj);
+          var error = batch(obj.$error, obj);
+
+          var self = this;
+          self.$isDestroyed = false;
+          self.getObject = function() { return obj; };
+          init();
+        }
 
         return AngularFire;
       }

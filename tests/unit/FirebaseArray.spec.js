@@ -1,17 +1,18 @@
 'use strict';
 describe('$FirebaseArray', function () {
 
-  var $firebase, $fb, $factory, arr, $FirebaseArray, $rootScope, $timeout;
+  var $firebase, $fb, arr, $FirebaseArray, $rootScope, $timeout, destroySpy;
   beforeEach(function() {
     module('mock.firebase');
     module('firebase');
-    inject(function ($firebase, _$FirebaseArray_, $firebaseRecordFactory, _$rootScope_, _$timeout_) {
+    inject(function ($firebase, _$FirebaseArray_, _$rootScope_, _$timeout_) {
+      destroySpy = jasmine.createSpy('destroy spy');
       $rootScope = _$rootScope_;
       $timeout = _$timeout_;
-      $factory = $firebaseRecordFactory;
       $FirebaseArray = _$FirebaseArray_;
       $fb = $firebase(new Firebase('Mock://').child('data'));
-      arr = new $FirebaseArray($fb);
+      // must create with asArray() in order to test the sync functionality
+      arr = $fb.asArray();
       flushAll();
     });
   });
@@ -35,14 +36,6 @@ describe('$FirebaseArray', function () {
         i++;
       });
       expect(i).toBeGreaterThan(0);
-    });
-
-    it('should work with inheriting child classes', function() {
-      function Extend() { $FirebaseArray.apply(this, arguments); }
-      this.$utils.inherit(Extend, $FirebaseArray);
-      Extend.prototype.foo = function() {};
-      var arr = new Extend($fb);
-      expect(typeof(arr.foo)).toBe('function');
     });
 
     it('should load primitives'); //todo-test
@@ -108,7 +101,7 @@ describe('$FirebaseArray', function () {
       var key = arr.keyAt(2);
       arr[2].number = 99;
       arr.save(2);
-      var expResult = $factory.toJSON(arr[2]);
+      var expResult = arr.$toJSON(arr[2]);
       flushAll();
       expect(spy).toHaveBeenCalled();
       var args = spy.calls.argsFor(0);
@@ -121,7 +114,7 @@ describe('$FirebaseArray', function () {
       var key = arr.keyAt(2);
       arr[2].number = 99;
       arr.save(arr[2]);
-      var expResult = $factory.toJSON(arr[2]);
+      var expResult = arr.$toJSON(arr[2]);
       flushAll();
       expect(spy).toHaveBeenCalled();
       var args = spy.calls.argsFor(0);
@@ -132,7 +125,7 @@ describe('$FirebaseArray', function () {
     it('should save correct data into Firebase', function() {
       arr[1].number = 99;
       var key = arr.keyAt(1);
-      var expData = $factory.toJSON(arr[1]);
+      var expData = arr.$toJSON(arr[1]);
       arr.save(1);
       flushAll();
       var m = $fb.ref().child(key).set;
@@ -186,8 +179,8 @@ describe('$FirebaseArray', function () {
 
     it('should accept a primitive', function() {
       var key = arr.keyAt(1);
-      arr[1] = {'.value': 'happy', $id: key};
-      var expData = $factory.toJSON(arr[1]);
+      arr[1] = {$value: 'happy', $id: key};
+      var expData = arr.$toJSON(arr[1]);
       arr.save(1);
       flushAll();
       expect($fb.ref().child(key).set).toHaveBeenCalledWith(expData, jasmine.any(Function));
@@ -334,7 +327,7 @@ describe('$FirebaseArray', function () {
       flushAll();
       expect(spy).toHaveBeenCalled();
       var args = spy.calls.argsFor(0);
-      expect(args[0]).toEqual([{event: 'child_added', key: 'new', prevChild: null}]);
+      expect(args[0]).toEqual({event: 'child_added', key: 'new', prevChild: null});
     });
 
     it('should get notified on a delete', function() {
@@ -344,7 +337,7 @@ describe('$FirebaseArray', function () {
       flushAll();
       expect(spy).toHaveBeenCalled();
       var args = spy.calls.argsFor(0);
-      expect(args[0]).toEqual([{event: 'child_removed', key: 'c'}]);
+      expect(args[0]).toEqual({event: 'child_removed', key: 'c'});
     });
 
     it('should get notified on a change', function() {
@@ -354,7 +347,7 @@ describe('$FirebaseArray', function () {
       flushAll();
       expect(spy).toHaveBeenCalled();
       var args = spy.calls.argsFor(0);
-      expect(args[0]).toEqual([{event: 'child_changed', key: 'c'}]);
+      expect(args[0]).toEqual({event: 'child_changed', key: 'c'});
     });
 
     it('should get notified on a move', function() {
@@ -364,7 +357,7 @@ describe('$FirebaseArray', function () {
       flushAll();
       expect(spy).toHaveBeenCalled();
       var args = spy.calls.argsFor(0);
-      expect(args[0]).toEqual([{event: 'child_moved', key: 'c', prevChild: 'a'}]);
+      expect(args[0]).toEqual({event: 'child_moved', key: 'c', prevChild: 'a'});
     });
 
     it('should batch events'); //todo-test
@@ -388,10 +381,12 @@ describe('$FirebaseArray', function () {
     it('should reject loaded() if not completed yet', function() {
       var whiteSpy = jasmine.createSpy('resolve');
       var blackSpy = jasmine.createSpy('reject');
-      var arr = new $FirebaseArray($fb);
+      var destroySpy = jasmine.createSpy('destroy');
+      var arr = new $FirebaseArray($fb, destroySpy);
       arr.loaded().then(whiteSpy, blackSpy);
       arr.destroy();
       flushAll();
+      expect(destroySpy).toHaveBeenCalled();
       expect(whiteSpy).not.toHaveBeenCalled();
       expect(blackSpy.calls.argsFor(0)[0]).toMatch(/destroyed/i);
     });
@@ -402,6 +397,7 @@ describe('$FirebaseArray', function () {
     it('should add to local array', function() {
       var len = arr.length;
       $fb.ref().fakeEvent('child_added', 'fakeadd', {fake: 'add'}).flush();
+      flushAll();
       expect(arr.length).toBe(len+1);
       expect(arr[0].$id).toBe('fakeadd');
       expect(arr[0]).toEqual(jasmine.objectContaining({fake: 'add'}));
@@ -410,17 +406,20 @@ describe('$FirebaseArray', function () {
     it('should position after prev child', function() {
       var pos = arr.indexFor('b')+1;
       $fb.ref().fakeEvent('child_added', 'fakeadd', {fake: 'add'}, 'b').flush();
+      flushAll();
       expect(arr[pos].$id).toBe('fakeadd');
       expect(arr[pos]).toEqual(jasmine.objectContaining({fake: 'add'}));
     });
 
     it('should position first if prevChild is null', function() {
       $fb.ref().fakeEvent('child_added', 'fakeadd', {fake: 'add'}, null).flush();
+      flushAll();
       expect(arr.indexFor('fakeadd')).toBe(0);
     });
 
     it('should position last if prevChild not found', function() {
       $fb.ref().fakeEvent('child_added', 'fakeadd', {fake: 'add'}, 'notarealid').flush();
+      flushAll();
       expect(arr.indexFor('fakeadd')).toBe(arr.length-1);
     });
 
@@ -433,14 +432,16 @@ describe('$FirebaseArray', function () {
     it('should move record if already exists', function() {
       var newIdx = arr.indexFor('a')+1;
       $fb.ref().fakeEvent('child_added', 'c', {fake: 'add'}, 'a').flush();
+      flushAll();
       expect(arr.indexFor('c')).toBe(newIdx);
     });
 
     it('should accept a primitive', function() {
       $fb.ref().fakeEvent('child_added', 'new', 'foo').flush();
+      flushAll();
       var i = arr.indexFor('new');
       expect(i).toBeGreaterThan(-1);
-      expect(arr[i]).toEqual(jasmine.objectContaining({'.value': 'foo'}));
+      expect(arr[i]).toEqual(jasmine.objectContaining({'$value': 'foo'}));
     });
 
 
@@ -458,13 +459,15 @@ describe('$FirebaseArray', function () {
       var i = arr.indexFor('b');
       expect(i).toBeGreaterThan(-1);
       $fb.ref().fakeEvent('child_changed', 'b', 'foo').flush();
-      expect(arr[i]).toEqual(jasmine.objectContaining({'.value': 'foo'}));
+      flushAll();
+      expect(arr[i]).toEqual(jasmine.objectContaining({'$value': 'foo'}));
     });
 
     it('should ignore if not found', function() {
       var len = arr.length;
       var copy = deepCopy(arr);
       $fb.ref().fakeEvent('child_changed', 'notarealkey', 'foo').flush();
+      flushAll();
       expect(len).toBeGreaterThan(0);
       expect(arr.length).toBe(len);
       expect(arr).toEqual(copy);
@@ -489,7 +492,8 @@ describe('$FirebaseArray', function () {
       var c = arr.indexFor('c');
       expect(b).toBeLessThan(c);
       expect(b).toBeGreaterThan(-1);
-      $fb.ref().fakeEvent('child_moved', 'b', $factory.toJSON(arr[b]), 'c').flush();
+      $fb.ref().fakeEvent('child_moved', 'b', arr.$toJSON(arr[b]), 'c').flush();
+      flushAll();
       expect(arr.indexFor('c')).toBe(b);
       expect(arr.indexFor('b')).toBe(c);
     });
@@ -497,7 +501,8 @@ describe('$FirebaseArray', function () {
     it('should position at 0 if prevChild is null', function() {
       var b = arr.indexFor('b');
       expect(b).toBeGreaterThan(0);
-      $fb.ref().fakeEvent('child_moved', 'b', $factory.toJSON(arr[b]), null).flush();
+      $fb.ref().fakeEvent('child_moved', 'b', arr.$toJSON(arr[b]), null).flush();
+      flushAll();
       expect(arr.indexFor('b')).toBe(0);
     });
 
@@ -505,7 +510,8 @@ describe('$FirebaseArray', function () {
       var b = arr.indexFor('b');
       expect(b).toBeLessThan(arr.length-1);
       expect(b).toBeGreaterThan(0);
-      $fb.ref().fakeEvent('child_moved', 'b', $factory.toJSON(arr[b]), 'notarealkey').flush();
+      $fb.ref().fakeEvent('child_moved', 'b', arr.$toJSON(arr[b]), 'notarealkey').flush();
+      flushAll();
       expect(arr.indexFor('b')).toBe(arr.length-1);
     });
 
@@ -530,6 +536,7 @@ describe('$FirebaseArray', function () {
       var i = arr.indexFor('b');
       expect(i).toBeGreaterThan(0);
       $fb.ref().fakeEvent('child_removed', 'b').flush();
+      flushAll();
       expect(arr.length).toBe(len-1);
       expect(arr.indexFor('b')).toBe(-1);
     });
@@ -546,6 +553,36 @@ describe('$FirebaseArray', function () {
       $fb.ref().fakeEvent('child_removed', 'b').flush();
       flushAll();
       expect(spy.calls.count()).toBeGreaterThan(x);
+    });
+  });
+
+  describe('#extendFactory', function() {
+    it('should preserve child prototype', function() {
+      function Extend() { $FirebaseArray.apply(this, arguments); }
+      Extend.prototype.foo = function() {};
+      $FirebaseArray.extendFactory(Extend);
+      var arr = new Extend($fb, jasmine.createSpy);
+      expect(typeof(arr.foo)).toBe('function');
+    });
+
+    it('should return child class', function() {
+      function A() {}
+      var res = $FirebaseArray.extendFactory(A);
+      expect(res).toBe(A);
+    });
+
+    it('should be instanceof $FirebaseArray', function() {
+      function A() {}
+      $FirebaseArray.extendFactory(A);
+      expect(new A($fb, noop) instanceof $FirebaseArray).toBe(true);
+    });
+
+    it('should add on methods passed into function', function() {
+      function foo() {}
+      var F = $FirebaseArray.extendFactory({foo: foo});
+      var res = new F($fb, noop);
+      expect(typeof res.$updated).toBe('function');
+      expect(res.foo).toBe(foo);
     });
   });
 
@@ -570,5 +607,7 @@ describe('$FirebaseArray', function () {
       catch(e) {}
     }
   })();
+
+  function noop() {}
 
 });

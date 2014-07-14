@@ -12,7 +12,8 @@
         $fbUtil = $firebaseUtils;
         $rootScope = _$rootScope_;
         $fb = $firebase(new Firebase('Mock://').child('data/a'));
-        obj = new $FirebaseObject($fb);
+        // must use asObject() to create our instance in order to test sync proxy
+        obj = $fb.asObject();
         flushAll();
       })
     });
@@ -22,13 +23,13 @@
         var calls = $fb.ref().set.calls;
         expect(calls.count()).toBe(0);
         obj.newkey = true;
-        obj.save();
+        obj.$save();
         flushAll();
         expect(calls.count()).toBe(1);
       });
 
       it('should return a promise', function() {
-        var res = obj.save();
+        var res = obj.$save();
         expect(angular.isObject(res)).toBe(true);
         expect(typeof res.then).toBe('function');
       });
@@ -36,7 +37,7 @@
       it('should resolve promise to the ref for this object', function() {
         var whiteSpy = jasmine.createSpy('resolve');
         var blackSpy = jasmine.createSpy('reject');
-        obj.save().then(whiteSpy, blackSpy);
+        obj.$save().then(whiteSpy, blackSpy);
         expect(whiteSpy).not.toHaveBeenCalled();
         flushAll();
         expect(whiteSpy).toHaveBeenCalled();
@@ -47,7 +48,7 @@
         var whiteSpy = jasmine.createSpy('resolve');
         var blackSpy = jasmine.createSpy('reject');
         $fb.ref().failNext('set', 'oops');
-        obj.save().then(whiteSpy, blackSpy);
+        obj.$save().then(whiteSpy, blackSpy);
         expect(blackSpy).not.toHaveBeenCalled();
         flushAll();
         expect(whiteSpy).not.toHaveBeenCalled();
@@ -57,7 +58,7 @@
 
     describe('#loaded', function() {
       it('should return a promise', function() {
-        var res = obj.loaded();
+        var res = obj.$loaded();
         expect(angular.isObject(res)).toBe(true);
         expect(angular.isFunction(res.then)).toBe(true);
       });
@@ -66,7 +67,7 @@
         var whiteSpy = jasmine.createSpy('resolve');
         var blackSpy = jasmine.createSpy('reject');
         var obj = new $FirebaseObject($fb);
-        obj.loaded().then(whiteSpy, blackSpy);
+        obj.$loaded().then(whiteSpy, blackSpy);
         expect(whiteSpy).not.toHaveBeenCalled();
         flushAll();
         expect(whiteSpy).toHaveBeenCalled();
@@ -78,7 +79,7 @@
         var blackSpy = jasmine.createSpy('reject');
         $fb.ref().failNext('once', 'doh');
         var obj = new $FirebaseObject($fb);
-        obj.loaded().then(whiteSpy, blackSpy);
+        obj.$loaded().then(whiteSpy, blackSpy);
         expect(blackSpy).not.toHaveBeenCalled();
         flushAll();
         expect(whiteSpy).not.toHaveBeenCalled();
@@ -87,7 +88,7 @@
 
       it('should resolve to the FirebaseObject instance', function() {
         var spy = jasmine.createSpy('loaded');
-        obj.loaded().then(spy);
+        obj.$loaded().then(spy);
         flushAll();
         expect(spy).toHaveBeenCalled();
         expect(spy.calls.argsFor(0)[0]).toBe(obj);
@@ -96,7 +97,7 @@
 
     describe('#inst', function(){
       it('should return the $firebase instance that created it', function() {
-        expect(obj.inst()).toBe($fb);
+        expect(obj.$inst()).toBe($fb);
       });
     });
 
@@ -119,7 +120,7 @@
     describe('#destroy', function() {
       it('should remove the value listener', function() {
         var old = $fb.ref().off.calls.count();
-        obj.destroy();
+        obj.$destroy();
         expect($fb.ref().off.calls.count()).toBe(old+1);
       });
 
@@ -140,9 +141,10 @@
         });
 
         // now bind to scope and destroy to see what happens
-        obj.bindTo($scope, 'foo');
+        obj.$bindTo($scope, 'foo');
+        flushAll();
         expect($scope.$watch).toHaveBeenCalled();
-        obj.destroy();
+        obj.$destroy();
         flushAll();
         expect(offSpy).toHaveBeenCalled();
       });
@@ -163,7 +165,8 @@
           return offSpy;
         });
 
-        obj.bindTo($scope, 'foo');
+        obj.$bindTo($scope, 'foo');
+        flushAll();
         expect($scope.$watch).toHaveBeenCalled();
         $scope.$emit('$destroy');
         flushAll();
@@ -173,7 +176,7 @@
 
     describe('#toJSON', function() {
       it('should strip prototype functions', function() {
-        var dat = obj.toJSON();
+        var dat = obj.$toJSON();
         for (var key in $FirebaseObject.prototype) {
           if (obj.hasOwnProperty(key)) {
             expect(dat.hasOwnProperty(key)).toBeFalsy();
@@ -183,7 +186,7 @@
 
       it('should strip $ keys', function() {
         obj.$test = true;
-        var dat = obj.toJSON();
+        var dat = obj.$toJSON();
         for(var key in dat) {
           expect(/\$/.test(key)).toBeFalsy();
         }
@@ -192,69 +195,34 @@
       it('should return a primitive if the value is a primitive', function() {
         $fb.ref().set(true);
         flushAll();
-        var dat = obj.toJSON();
+        var dat = obj.$toJSON();
         expect(dat['.value']).toBe(true);
         expect(Object.keys(dat).length).toBe(1);
-      });
-    });
-
-    describe('#forEach', function() {
-      it('should not include $ keys', function() {
-        var len = Object.keys(obj.$data).length;
-        obj.$test = true;
-        var spy = jasmine.createSpy('iterator').and.callFake(function(v,k) {
-          expect(/^\$/.test(k)).toBeFalsy();
-        });
-        obj.forEach(spy);
-        expect(len).toBeGreaterThan(0);
-        expect(spy.calls.count()).toEqual(len);
-      });
-
-      it('should not include prototype functions', function() {
-        var spy = jasmine.createSpy('iterator').and.callFake(function(v,k) {
-          expect(typeof v === 'function').toBeFalsy();
-        });
-        obj.forEach(spy);
-        expect(spy.calls.count()).toBeGreaterThan(0);
-      });
-
-      it('should not include inherited functions', function() {
-        var F = function() { $FirebaseObject.apply(this, arguments); };
-        $fbUtil.inherit(F, $FirebaseObject);
-        F.prototype.hello = 'world';
-        F.prototype.foo = function() { return 'bar'; };
-        var obj = new F($fb);
-        flushAll();
-        var spy = jasmine.createSpy('iterator').and.callFake(function(v,k) {
-          expect(typeof v === 'function').toBeFalsy();
-        });
-        obj.forEach(spy);
-        expect(spy).toHaveBeenCalled();
       });
     });
 
     describe('server update', function() {
       it('should add keys to local data', function() {
         $fb.ref().set({'key1': true, 'key2': 5});
-        $fb.ref().flush();
-        expect(obj.$data.key1).toBe(true);
-        expect(obj.$data.key2).toBe(5);
+        flushAll();
+        expect(obj.key1).toBe(true);
+        expect(obj.key2).toBe(5);
       });
 
       it('should remove old keys', function() {
         var keys = Object.keys($fb.ref());
         expect(keys.length).toBeGreaterThan(0);
         $fb.ref().set(null);
-        $fb.ref().flush();
+        flushAll();
         keys.forEach(function(k) {
           expect(obj.hasOwnProperty(k)).toBe(false);
         });
       });
 
-      it('should assign primitive value', function() {
+      it('should assign primitive value to $value', function() {
         $fb.ref().set(true);
-        $fb.ref().flush();
-        expect(obj.$data['.value']).toBe(true);
+        flushAll();
+        expect(obj.$value).toBe(true);
       });
 
       it('should trigger an angular compile', function() {
