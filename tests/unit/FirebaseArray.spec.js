@@ -1,15 +1,16 @@
 'use strict';
 describe('$FirebaseArray', function () {
 
-  var $firebase, $fb, arr, $FirebaseArray, $rootScope, $timeout, destroySpy;
+  var $firebase, $fb, arr, $FirebaseArray, $utils, $rootScope, $timeout, destroySpy;
   beforeEach(function() {
     module('mock.firebase');
     module('firebase');
-    inject(function ($firebase, _$FirebaseArray_, _$rootScope_, _$timeout_) {
+    inject(function ($firebase, _$FirebaseArray_, $firebaseUtils, _$rootScope_, _$timeout_) {
       destroySpy = jasmine.createSpy('destroy spy');
       $rootScope = _$rootScope_;
       $timeout = _$timeout_;
       $FirebaseArray = _$FirebaseArray_;
+      $utils = $firebaseUtils;
       $fb = $firebase(new Firebase('Mock://').child('data'));
       //todo-test right now we use $asArray() in order to test the sync functionality
       //todo-test we should mock SyncArray instead and isolate this after $asArray is
@@ -47,7 +48,7 @@ describe('$FirebaseArray', function () {
     it('should be ordered by priorities'); //todo-test
   });
 
-  describe('#add', function() {
+  describe('$add', function() {
     it('should create data in Firebase', function() {
       var data = {foo: 'bar'};
       arr.$add(data);
@@ -96,14 +97,14 @@ describe('$FirebaseArray', function () {
     });
   });
 
-  describe('#save', function() {
+  describe('$save', function() {
     it('should accept an array index', function() {
       var spy = spyOn($fb, '$set').and.callThrough();
       flushAll();
       var key = arr.$keyAt(2);
       arr[2].number = 99;
       arr.$save(2);
-      var expResult = arr.$$toJSON(arr[2]);
+      var expResult = $utils.toJSON(arr[2]);
       flushAll();
       expect(spy).toHaveBeenCalled();
       var args = spy.calls.argsFor(0);
@@ -116,7 +117,7 @@ describe('$FirebaseArray', function () {
       var key = arr.$keyAt(2);
       arr[2].number = 99;
       arr.$save(arr[2]);
-      var expResult = arr.$$toJSON(arr[2]);
+      var expResult = $utils.toJSON(arr[2]);
       flushAll();
       expect(spy).toHaveBeenCalled();
       var args = spy.calls.argsFor(0);
@@ -127,7 +128,7 @@ describe('$FirebaseArray', function () {
     it('should save correct data into Firebase', function() {
       arr[1].number = 99;
       var key = arr.$keyAt(1);
-      var expData = arr.$$toJSON(arr[1]);
+      var expData = $utils.toJSON(arr[1]);
       arr.$save(1);
       flushAll();
       var m = $fb.$ref().child(key).set;
@@ -182,14 +183,14 @@ describe('$FirebaseArray', function () {
     it('should accept a primitive', function() {
       var key = arr.$keyAt(1);
       arr[1] = {$value: 'happy', $id: key};
-      var expData = arr.$$toJSON(arr[1]);
+      var expData = $utils.toJSON(arr[1]);
       arr.$save(1);
       flushAll();
       expect($fb.$ref().child(key).set).toHaveBeenCalledWith(expData, jasmine.any(Function));
     });
   });
 
-  describe('#remove', function() {
+  describe('$remove', function() {
     it('should remove data from Firebase', function() {
       var key = arr.$keyAt(1);
       arr.$remove(1);
@@ -241,7 +242,7 @@ describe('$FirebaseArray', function () {
     });
   });
 
-  describe('#keyAt', function() {
+  describe('$keyAt', function() {
     it('should return key for an integer', function() {
       expect(arr.$keyAt(2)).toBe('c');
     });
@@ -259,7 +260,7 @@ describe('$FirebaseArray', function () {
     });
   });
 
-  describe('#indexFor', function() {
+  describe('$indexFor', function() {
     it('should return integer for valid key', function() {
       expect(arr.$indexFor('c')).toBe(2);
     });
@@ -269,7 +270,7 @@ describe('$FirebaseArray', function () {
     });
   });
 
-  describe('#loaded', function() {
+  describe('$loaded', function() {
     it('should return a promise', function() {
       var res = arr.$loaded();
       expect(typeof res).toBe('object');
@@ -314,14 +315,14 @@ describe('$FirebaseArray', function () {
     });
   });
 
-  describe('#inst', function() {
+  describe('$inst', function() {
     it('should return $firebase instance it was created with', function() {
       var res = arr.$inst();
       expect(res).toBe($fb);
     });
   });
 
-  describe('#watch', function() {
+  describe('$watch', function() {
     it('should get notified on an add', function() {
       var spy = jasmine.createSpy();
       arr.$watch(spy);
@@ -367,7 +368,7 @@ describe('$FirebaseArray', function () {
     it('should not get notified if destroy is invoked?'); //todo-test
   });
 
-  describe('#destroy', function() { //todo should test these against the destroyFn instead of off()
+  describe('$destroy', function() { //todo should test these against the destroyFn instead of off()
     it('should cancel listeners', function() {
       var prev= $fb.$ref().off.calls.count();
       arr.$destroy();
@@ -497,7 +498,7 @@ describe('$FirebaseArray', function () {
       var c = arr.$indexFor('c');
       expect(b).toBeLessThan(c);
       expect(b).toBeGreaterThan(-1);
-      $fb.$ref().fakeEvent('child_moved', 'b', arr.$$toJSON(arr[b]), 'c').flush();
+      $fb.$ref().fakeEvent('child_moved', 'b', $utils.toJSON(arr[b]), 'c').flush();
       flushAll();
       expect(arr.$indexFor('c')).toBe(b);
       expect(arr.$indexFor('b')).toBe(c);
@@ -506,7 +507,7 @@ describe('$FirebaseArray', function () {
     it('should position at 0 if prevChild is null', function() {
       var b = arr.$indexFor('b');
       expect(b).toBeGreaterThan(0);
-      $fb.$ref().fakeEvent('child_moved', 'b', arr.$$toJSON(arr[b]), null).flush();
+      $fb.$ref().fakeEvent('child_moved', 'b', $utils.toJSON(arr[b]), null).flush();
       flushAll();
       expect(arr.$indexFor('b')).toBe(0);
     });
@@ -515,7 +516,7 @@ describe('$FirebaseArray', function () {
       var b = arr.$indexFor('b');
       expect(b).toBeLessThan(arr.length-1);
       expect(b).toBeGreaterThan(0);
-      $fb.$ref().fakeEvent('child_moved', 'b', arr.$$toJSON(arr[b]), 'notarealkey').flush();
+      $fb.$ref().fakeEvent('child_moved', 'b', $utils.toJSON(arr[b]), 'notarealkey').flush();
       flushAll();
       expect(arr.$indexFor('b')).toBe(arr.length-1);
     });

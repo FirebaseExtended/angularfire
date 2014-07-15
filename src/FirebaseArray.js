@@ -28,7 +28,7 @@
           var item = this._resolveItem(indexOrItem);
           var key = this.$keyAt(item);
           if( key !== null ) {
-            return this.$inst().$set(key, this.$$toJSON(item));
+            return this.$inst().$set(key, $firebaseUtils.toJSON(item));
           }
           else {
             return $firebaseUtils.reject('Invalid record; could determine its key: '+indexOrItem);
@@ -111,9 +111,9 @@
         $$updated: function(snap) {
           var i = this.$indexFor(snap.name());
           if( i >= 0 ) {
-            var oldData = this.$$toJSON(this._list[i]);
+            var oldData = $firebaseUtils.toJSON(this._list[i]);
             $firebaseUtils.updateRec(this._list[i], snap);
-            if( !angular.equals(oldData, this.$$toJSON(this._list[i])) ) {
+            if( !angular.equals(oldData, $firebaseUtils.toJSON(this._list[i])) ) {
               this.$notify('child_changed', snap.name());
             }
           }
@@ -130,31 +130,6 @@
         $$error: function(err) {
           $log.error(err);
           this.$destroy(err);
-        },
-
-        $$toJSON: function(rec) {
-          var dat;
-          if (angular.isFunction(rec.toJSON)) {
-            dat = rec.toJSON();
-          }
-          else if(angular.isDefined(rec.$value)) {
-            dat = {'.value': rec.$value};
-          }
-          else {
-            dat = {};
-            $firebaseUtils.each(rec, function (v, k) {
-              if (k.match(/[.$\[\]#]/)) {
-                throw new Error('Invalid key ' + k + ' (cannot contain .$[]#)');
-              }
-              else {
-                dat[k] = v;
-              }
-            });
-          }
-          if( rec.$priority !== null && angular.isDefined(rec.$priority) ) {
-            dat['.priority'] = rec.$priority;
-          }
-          return dat;
         },
 
         $createObject: function(snap) {

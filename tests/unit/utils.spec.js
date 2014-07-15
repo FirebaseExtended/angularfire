@@ -49,4 +49,65 @@ describe('$firebaseUtils', function () {
     });
   });
 
+  describe('#toJSON', function() {
+    it('should use toJSON if it exists', function() {
+      var json = {json: true};
+      var spy = jasmine.createSpy('toJSON').and.callFake(function() {
+        return json;
+      });
+      var F = function() {};
+      F.prototype.toJSON = spy;
+      expect($utils.toJSON(new F())).toEqual(json);
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('should use $value if found', function() {
+      var json = {$value: 'foo'};
+      expect($utils.toJSON(json)).toEqual({'.value': json.$value});
+    });
+
+    it('should set $priority if exists', function() {
+      var json = {$value: 'foo', $priority: null};
+      expect($utils.toJSON(json)).toEqual({'.value': json.$value, '.priority': json.$priority});
+    });
+
+    it('should not set $priority if it is the only key', function() {
+      var json = {$priority: true};
+      expect($utils.toJSON(json)).toEqual({});
+    });
+
+    it('should remove any variables prefixed with $', function() {
+      var json = {foo: 'bar', $foo: '$bar'};
+      expect($utils.toJSON(json)).toEqual({foo: json.foo});
+    });
+
+    it('should throw error if an invalid character in key', function() {
+      expect(function() {
+        $utils.toJSON({'foo.bar': 'foo.bar'});
+      }).toThrowError(Error);
+      expect(function() {
+        $utils.toJSON({'foo$bar': 'foo.bar'});
+      }).toThrowError(Error);
+      expect(function() {
+        $utils.toJSON({'foo#bar': 'foo.bar'});
+      }).toThrowError(Error);
+      expect(function() {
+        $utils.toJSON({'foo[bar': 'foo.bar'});
+      }).toThrowError(Error);
+      expect(function() {
+        $utils.toJSON({'foo]bar': 'foo.bar'});
+      }).toThrowError(Error);
+      expect(function() {
+        $utils.toJSON({'foo/bar': 'foo.bar'});
+      }).toThrowError(Error);
+    });
+
+    it('should throw error if undefined value', function() {
+      expect(function() {
+        var undef;
+        $utils.toJSON({foo: 'bar', baz: undef});
+      }).toThrowError(Error);
+    });
+  });
+
 });

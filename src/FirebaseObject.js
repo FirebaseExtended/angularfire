@@ -5,18 +5,26 @@
     function($parse, $firebaseUtils, $log) {
       function FirebaseObject($firebase, destroyFn) {
         var self = this, def = $firebaseUtils.defer();
-        self.$conf = {
+        self.$$conf = {
           promise: def.promise,
           inst: $firebase,
           bound: null,
           destroyFn: destroyFn,
-          listeners: []
+          listeners: [],
+          updated: function() {
+            if( self.$$conf.bound ) {
+              self.$$conf.bound.update();
+            }
+            angular.forEach(self.$$conf.listeners, function (parts) {
+              parts[0].call(parts[1], {event: 'updated', key: self.$id});
+            });
+          }
         };
 
         self.$id = $firebase.$ref().name();
         self.$data = {};
         self.$priority = null;
-        self.$conf.inst.$ref().once('value',
+        self.$$conf.inst.$ref().once('value',
           function() {
             $firebaseUtils.compile(def.resolve.bind(def, self));
           },
@@ -27,115 +35,114 @@
       }
 
       FirebaseObject.prototype = {
-        $save: function() {
-          return this.$conf.inst.$set(this.$$toJSON(this));
+        $save: function () {
+          return this.$inst().$set($firebaseUtils.toJSON(this));
         },
 
-        $loaded: function() {
-          var promise = this.$conf.promise;
-          if( arguments.length ) {
+        $loaded: function () {
+          var promise = this.$$conf.promise;
+          if (arguments.length) {
             promise = promise.then.apply(promise, arguments);
           }
           return promise;
         },
 
-        $inst: function() {
-          return this.$conf.inst;
+        $inst: function () {
+          return this.$$conf.inst;
         },
 
-        $bindTo: function(scope, varName) {
+        $bindTo: function (scope, varName) {
           var self = this;
-          return self.$loaded().then(function() {
-            if( self.$conf.bound ) {
+          return self.$loaded().then(function () {
+            if (self.$$conf.bound) {
               throw new Error('Can only bind to one scope variable at a time');
             }
 
-
-            // monitor scope for any changes
-            var off = scope.$watch(varName, function() {
-              var data = self.$$toJSON($bound.get());
-              if( !angular.equals(data, self.$data)) {
-                self.$conf.inst.$set(data);
-              }
-            }, true);
-
-            var unbind = function() {
-              if( self.$conf.bound ) {
+            var unbind = function () {
+              if (self.$$conf.bound) {
+                self.$$conf.bound = null;
                 off();
-                self.$conf.bound = null;
               }
             };
 
             // expose a few useful methods to other methods
             var parsed = $parse(varName);
-            var $bound = self.$conf.bound = {
-              set: function(data) {
-                parsed.assign(scope, data);
+            var $bound = self.$$conf.bound = {
+              update: function() {
+                var curr = $bound.get();
+                if( angular.isObject(curr) ) {
+                  $firebaseUtils.updateRec(curr, self);
+                }
+                else {
+                  curr = {};
+                  $firebaseUtils.each(self, function(v,k) {
+                    curr[k] = v;
+                  });
+                }
+                parsed.assign(scope, curr);
               },
-              get: function() {
+              get: function () {
                 return parsed(scope);
               },
               unbind: unbind
             };
 
+            $bound.update();
             scope.$on('$destroy', $bound.unbind);
+
+            // monitor scope for any changes
+            var off = scope.$watch(varName, function () {
+              var newData = $firebaseUtils.toJSON($bound.get());
+              var oldData = $firebaseUtils.toJSON(this);
+              if (!angular.equals(newData, oldData)) {
+                self.$$conf.inst.$set(newData);
+              }
+            }, true);
 
             return unbind;
           });
         },
 
-        $watch: function(cb, context) {
-          var list = this.$conf.listeners;
+        $watch: function (cb, context) {
+          var list = this.$$conf.listeners;
           list.push([cb, context]);
           // an off function for cancelling the listener
-          return function() {
-            var i = list.findIndex(function(parts) {
+          return function () {
+            var i = list.findIndex(function (parts) {
               return parts[0] === cb && parts[1] === context;
             });
-            if( i > -1 ) {
+            if (i > -1) {
               list.splice(i, 1);
             }
           };
         },
 
-        $destroy: function() {
+        $destroy: function () {
           var self = this;
-          if( !self.$isDestroyed ) {
+          if (!self.$isDestroyed) {
             self.$isDestroyed = true;
-            self.$conf.destroyFn();
-            if( self.$conf.bound ) {
-              self.$conf.bound.unbind();
+            self.$$conf.destroyFn();
+            if (self.$$conf.bound) {
+              self.$$conf.bound.unbind();
             }
-            $firebaseUtils.each(self, function(v,k) {
+            $firebaseUtils.each(self, function (v, k) {
               delete self[k];
             });
           }
         },
 
-        $$updated: function(snap) {
+        $$updated: function (snap) {
           this.$id = snap.name();
+          // applies new data to this object
           $firebaseUtils.updateRec(this, snap);
+          // notifies $watch listeners and
+          // updates $scope if bound to a variable
+          this.$$conf.updated();
         },
 
-        $$error: function(err) {
+        $$error: function (err) {
           $log.error(err);
           this.$destroy();
-        },
-
-        $$toJSON: function() {
-          var out = {};
-          if( angular.isDefined(this.$value) ) {
-            out['.value'] = this.$value;
-          }
-          else {
-            $firebaseUtils.each(this, function(v,k) {
-              out[k] = v;
-            });
-          }
-          if( angular.isDefined(this.$priority) && this.$priority !== null ) {
-            out['.priority'] = this.$priority;
-          }
-          return out;
         }
       };
 

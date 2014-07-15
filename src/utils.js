@@ -128,15 +128,17 @@
             data = {$value: data};
           }
           // remove keys that don't exist anymore
+          delete rec.$value;
           each(rec, function(val, key) {
             if( !data.hasOwnProperty(key) ) {
               delete rec[key];
             }
           });
-          delete rec.$value;
+
           // apply new values
           angular.extend(rec, data);
           rec.$priority = snap.getPriority();
+
           return rec;
         }
 
@@ -146,6 +148,46 @@
               iterator.call(context, v, k, obj);
             }
           });
+        }
+
+        /**
+         * A utility for converting records to JSON objects
+         * which we can save into Firebase. It asserts valid
+         * keys and strips off any items prefixed with $.
+         *
+         * If the rec passed into this method has a toJSON()
+         * method, that will be used in place of the custom
+         * functionality here.
+         *
+         * @param rec
+         * @returns {*}
+         */
+        function toJSON(rec) {
+          var dat;
+          if (angular.isFunction(rec.toJSON)) {
+            dat = rec.toJSON();
+          }
+          else if(rec.hasOwnProperty('$value')) {
+            dat = {'.value': rec.$value};
+          }
+          else {
+            dat = {};
+            each(rec, function (v, k) {
+              dat[k] = v;
+            });
+          }
+          if( rec.hasOwnProperty('$priority') && Object.keys(dat).length > 0 ) {
+            dat['.priority'] = rec.$priority;
+          }
+          angular.forEach(dat, function(v,k) {
+            if (k.match(/[.$\[\]#\/]/) && k !== '.value' && k !== '.priority' ) {
+              throw new Error('Invalid key ' + k + ' (cannot contain .$[]#)');
+            }
+            else if( angular.isUndefined(v) ) {
+              throw new Error('Key '+k+' was undefined. Cannot pass undefined in JSON. Use null instead.');
+            }
+          });
+          return dat;
         }
 
         return {
@@ -159,7 +201,8 @@
           getPublicMethods: getPublicMethods,
           reject: reject,
           defer: defer,
-          each: each
+          each: each,
+          toJSON: toJSON
         };
       }
     ]);

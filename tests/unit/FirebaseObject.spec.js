@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   describe('$FirebaseObject', function() {
-    var $firebase, $FirebaseObject, $timeout, $fb, obj, $fbUtil, $rootScope;
+    var $firebase, $FirebaseObject, $timeout, $fb, obj, objData, objNew, $utils, $rootScope, destroySpy;
     beforeEach(function() {
       module('mock.firebase');
       module('firebase');
@@ -9,11 +9,22 @@
         $firebase = _$firebase_;
         $FirebaseObject = _$FirebaseObject_;
         $timeout = _$timeout_;
-        $fbUtil = $firebaseUtils;
+        $utils = $firebaseUtils;
         $rootScope = _$rootScope_;
         $fb = $firebase(new Firebase('Mock://').child('data/a'));
-        // must use $asObject() to create our instance in order to test sync proxy
+        //todo-test must use $asObject() to create our instance in order to test sync proxy
         obj = $fb.$asObject();
+
+        // start using the direct methods here until we can refactor `obj`
+        destroySpy = jasmine.createSpy('destroy');
+        objData = {
+          aString: 'alpha',
+          aNumber: 1,
+          aBoolean: false
+        };
+        objNew = new $FirebaseObject($fb, destroySpy);
+        objNew.$$updated(fakeSnap($fb.$ref(), objData, 99));
+
         flushAll();
       })
     });
@@ -30,8 +41,8 @@
 
       it('should return a promise', function() {
         var res = obj.$save();
-        expect(angular.isObject(res)).toBe(true);
-        expect(typeof res.then).toBe('function');
+        expect(res).toBeAn('object');
+        expect(res.then).toBeA('function');
       });
 
       it('should resolve promise to the ref for this object', function() {
@@ -59,8 +70,7 @@
     describe('$loaded', function() {
       it('should return a promise', function() {
         var res = obj.$loaded();
-        expect(angular.isObject(res)).toBe(true);
-        expect(angular.isFunction(res.then)).toBe(true);
+        expect(res).toBeAPromise();
       });
 
       it('should resolve when all server data is downloaded', function() {
@@ -102,19 +112,66 @@
     });
 
     describe('$bindTo', function() {
-      it('should return a promise'); //todo-test
+      it('should return a promise', function() {
+        var res = objNew.$bindTo($rootScope.$new(), 'test');
+        expect(res).toBeAPromise();
+      });
 
-      it('should have data when it resolves'); //todo-test
+      it('should resolve to an off function', function() {
+        var whiteSpy = jasmine.createSpy('resolve').and.callFake(function(off) {
+          expect(off).toBeA('function');
+        });
+        var blackSpy = jasmine.createSpy('reject');
+        objNew.$bindTo($rootScope.$new(), 'test').then(whiteSpy, blackSpy);
+        flushAll();
+        expect(whiteSpy).toHaveBeenCalled();
+        expect(blackSpy).not.toHaveBeenCalled();
+      });
 
-      it('should extend and not destroy an object if already exists in scope'); //todo-test
+      it('should have data when it resolves', function() {
+        var whiteSpy = jasmine.createSpy('resolve').and.callFake(function() {
+          var dat = $fb.$ref().getData();
+          expect(obj).toEqual(jasmine.objectContaining(dat));
+        });
+        var blackSpy = jasmine.createSpy('reject');
+        objNew.$bindTo($rootScope.$new(), 'test').then(whiteSpy, blackSpy);
+        flushAll();
+        expect(whiteSpy).toHaveBeenCalled();
+        expect(blackSpy).not.toHaveBeenCalled();
+      });
 
-      it('should allow defaults to be set inside promise callback'); //todo-test
+      it('should allow data to be set inside promise callback', function() {
+        var $scope = $rootScope.$new();
+        var newData = { 'bar': 'foo' };
+          var whiteSpy = jasmine.createSpy('resolve').and.callFake(function() {
+          $scope.test = newData;
+        });
+        var blackSpy = jasmine.createSpy('reject');
+        objNew.$bindTo($scope, 'test').then(whiteSpy, blackSpy);
+        flushAll();
+        expect(whiteSpy).toHaveBeenCalled();
+        expect(blackSpy).not.toHaveBeenCalled();
+        expect($scope.test).toEqual(jasmine.objectContaining(newData));
+      });
 
-      it('should send local changes to the server'); //todo-test
+      it('should send local changes to the server', function() {
+        var $scope = $rootScope.$new();
+        objNew.$bindTo($scope, 'test');
+        $timeout.flush();
+        expect($scope.test).toEqual(jasmine.objectContaining(objData));
+      });
 
-      it('should apply server changes to scope variable'); //todo-test
+      it('should apply server changes to scope variable', function() {
 
-      it('should only send keys in toJSON'); //todo-test
+      });
+
+      it('should stop binding when off function is called');
+
+      it('should only send keys in toJSON');
+
+      it('should not destroy remote data if local is set');
+
+      it('should not fail if remote data is null');
     });
 
     describe('$destroy', function() {
@@ -174,40 +231,13 @@
       });
     });
 
-    describe('$toJSON', function() {
-      it('should strip prototype functions', function() {
-        var dat = obj.$$toJSON();
-        for (var key in $FirebaseObject.prototype) {
-          if (obj.hasOwnProperty(key)) {
-            expect(dat.hasOwnProperty(key)).toBeFalsy();
-          }
-        }
-      });
-
-      it('should strip $ keys', function() {
-        obj.$test = true;
-        var dat = obj.$$toJSON();
-        for(var key in dat) {
-          expect(/\$/.test(key)).toBeFalsy();
-        }
-      });
-
-      it('should return a primitive if the value is a primitive', function() {
-        $fb.$ref().set(true);
-        flushAll();
-        var dat = obj.$$toJSON();
-        expect(dat['.value']).toBe(true);
-        expect(Object.keys(dat).length).toBe(1);
-      });
-    });
-
     describe('$extendFactory', function() {
       it('should preserve child prototype', function() {
         function Extend() { $FirebaseObject.apply(this, arguments); }
         Extend.prototype.foo = function() {};
         $FirebaseObject.$extendFactory(Extend);
         var arr = new Extend($fb, jasmine.createSpy);
-        expect(typeof(arr.foo)).toBe('function');
+        expect(arr.foo).toBeA('function');
       });
 
       it('should return child class', function() {
@@ -219,15 +249,15 @@
       it('should be instanceof $FirebaseObject', function() {
         function A() {}
         $FirebaseObject.$extendFactory(A);
-        expect(new A($fb, noop) instanceof $FirebaseObject).toBe(true);
+        expect(new A($fb, noop)).toBeInstanceOf($FirebaseObject);
       });
 
       it('should add on methods passed into function', function() {
         function foo() { return 'foo'; }
         var F = $FirebaseObject.$extendFactory({foo: foo});
         var res = new F($fb, noop);
-        expect(typeof res.$$updated).toBe('function');
-        expect(typeof res.foo).toBe('function');
+        expect(res.$$updated).toBeA('function');
+        expect(res.foo).toBeA('function');
         expect(res.foo()).toBe('foo');
       });
     });
@@ -281,6 +311,19 @@
       $rootScope.$digest();
       try { $timeout.flush(); }
       catch(e) {}
+    }
+
+    function fakeSnap(ref, data, pri) {
+       return {
+         ref: function() { return ref; },
+         val: function() { return data; },
+         getPriority: function() { return angular.isDefined(pri)? pri : null; },
+         name: function() { return ref.name(); },
+         child: function(key) {
+           var childData = angular.isObject(data) && data.hasOwnProperty(key)? data[key] : null;
+           return fakeSnap(ref.child(key), childData, null);
+         }
+       }
     }
 
     function noop() {}

@@ -5,6 +5,7 @@ module.exports = function(config) {
   config.set({
     frameworks: ['jasmine'],
     files: [
+      'lib/jasmineMatchers.js',
       '../bower_components/angular/angular.js',
       '../bower_components/angular-mocks/angular-mocks.js',
       'lib/lodash.js',
