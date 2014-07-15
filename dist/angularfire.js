@@ -1,5 +1,5 @@
 /*!
- angularfire v0.8.0-pre1 2014-07-13
+ angularfire v0.8.0-pre1 2014-07-15
 * https://github.com/firebase/angularFire
 * Copyright (c) 2014 Firebase, Inc.
 * MIT LICENSE: http://firebase.mit-license.org/
@@ -44,49 +44,49 @@
       }
 
       /**
-       * Array.isArray will not work on object which extend the Array class.
+       * Array.isArray will not work on objects which extend the Array class.
        * So instead of extending the Array class, we just return an actual array.
        * However, it's still possible to extend FirebaseArray and have the public methods
        * appear on the array object. We do this by iterating the prototype and binding
        * any method that is not prefixed with an underscore onto the final array.
        */
       FirebaseArray.prototype = {
-        add: function(data) {
-          return this.inst().push(data);
+        $add: function(data) {
+          return this.$inst().$push(data);
         },
 
-        save: function(indexOrItem) {
+        $save: function(indexOrItem) {
           var item = this._resolveItem(indexOrItem);
-          var key = this.keyAt(item);
+          var key = this.$keyAt(item);
           if( key !== null ) {
-            return this.inst().set(key, this.$toJSON(item));
+            return this.$inst().$set(key, this.$$toJSON(item));
           }
           else {
             return $firebaseUtils.reject('Invalid record; could determine its key: '+indexOrItem);
           }
         },
 
-        remove: function(indexOrItem) {
-          var key = this.keyAt(indexOrItem);
+        $remove: function(indexOrItem) {
+          var key = this.$keyAt(indexOrItem);
           if( key !== null ) {
-            return this.inst().remove(this.keyAt(indexOrItem));
+            return this.$inst().$remove(this.$keyAt(indexOrItem));
           }
           else {
             return $firebaseUtils.reject('Invalid record; could not find key: '+indexOrItem);
           }
         },
 
-        keyAt: function(indexOrItem) {
+        $keyAt: function(indexOrItem) {
           var item = this._resolveItem(indexOrItem);
           return angular.isUndefined(item) || angular.isUndefined(item.$id)? null : item.$id;
         },
 
-        indexFor: function(key) {
+        $indexFor: function(key) {
           // todo optimize and/or cache these? they wouldn't need to be perfect
           return this._list.findIndex(function(rec) { return rec.$id === key; });
         },
 
-        loaded: function() {
+        $loaded: function() {
           var promise = this._promise;
           if( arguments.length ) {
             promise = promise.then.apply(promise, arguments);
@@ -94,9 +94,9 @@
           return promise;
         },
 
-        inst: function() { return this._inst; },
+        $inst: function() { return this._inst; },
 
-        watch: function(cb, context) {
+        $watch: function(cb, context) {
           var list = this._observers;
           list.push([cb, context]);
           // an off function for cancelling the listener
@@ -110,20 +110,20 @@
           };
         },
 
-        destroy: function() {
+        $destroy: function() {
           if( !this._isDestroyed ) {
             this._isDestroyed = true;
             this._list.length = 0;
-            $log.debug('destroy called for FirebaseArray: '+this._inst.ref().toString());
+            $log.debug('destroy called for FirebaseArray: '+this.$inst().$ref().toString());
             this._destroyFn();
           }
         },
 
-        $created: function(snap, prevChild) {
-          var i = this.indexFor(snap.name());
+        $$added: function(snap, prevChild) {
+          var i = this.$indexFor(snap.name());
           if( i > -1 ) {
-            this.$moved(snap, prevChild);
-            this.$updated(snap, prevChild);
+            this.$$moved(snap, prevChild);
+            this.$$updated(snap, prevChild);
           }
           else {
             var dat = this.$createObject(snap);
@@ -132,25 +132,25 @@
           }
         },
 
-        $removed: function(snap) {
+        $$removed: function(snap) {
           var dat = this._spliceOut(snap.name());
           if( angular.isDefined(dat) ) {
             this.$notify('child_removed', snap.name());
           }
         },
 
-        $updated: function(snap) {
-          var i = this.indexFor(snap.name());
+        $$updated: function(snap) {
+          var i = this.$indexFor(snap.name());
           if( i >= 0 ) {
-            var oldData = this.$toJSON(this._list[i]);
+            var oldData = this.$$toJSON(this._list[i]);
             $firebaseUtils.updateRec(this._list[i], snap);
-            if( !angular.equals(oldData, this.$toJSON(this._list[i])) ) {
+            if( !angular.equals(oldData, this.$$toJSON(this._list[i])) ) {
               this.$notify('child_changed', snap.name());
             }
           }
         },
 
-        $moved: function(snap, prevChild) {
+        $$moved: function(snap, prevChild) {
           var dat = this._spliceOut(snap.name());
           if( angular.isDefined(dat) ) {
             this._addAfter(dat, prevChild);
@@ -158,12 +158,12 @@
           }
         },
 
-        $error: function(err) {
+        $$error: function(err) {
           $log.error(err);
-          this.destroy(err);
+          this.$destroy(err);
         },
 
-        $toJSON: function(rec) {
+        $$toJSON: function(rec) {
           var dat;
           if (angular.isFunction(rec.toJSON)) {
             dat = rec.toJSON();
@@ -214,14 +214,14 @@
             i = 0;
           }
           else {
-            i = this.indexFor(prevChild)+1;
+            i = this.$indexFor(prevChild)+1;
             if( i === 0 ) { i = this._list.length; }
           }
           this._list.splice(i, 0, dat);
         },
 
         _spliceOut: function(key) {
-          var i = this.indexFor(key);
+          var i = this.$indexFor(key);
           if( i > -1 ) {
             return this._list.splice(i, 1)[0];
           }
@@ -235,7 +235,7 @@
           var self = this;
           var list = self._list;
           var def = $firebaseUtils.defer();
-          var ref = self.inst().ref();
+          var ref = self.$inst().$ref();
 
           // we return _list, but apply our public prototype to it first
           // see FirebaseArray.prototype's assignment comments
@@ -243,7 +243,7 @@
             list[key] = fn.bind(self);
           });
 
-          // for our loaded() function
+          // for our $loaded() function
           ref.once('value', function() {
             $firebaseUtils.compile(function() {
               if( self._isDestroyed ) {
@@ -259,10 +259,10 @@
         }
       };
 
-      FirebaseArray.extendFactory = function(ChildClass, methods) {
+      FirebaseArray.$extendFactory = function(ChildClass, methods) {
         if( arguments.length === 1 && angular.isObject(ChildClass) ) {
           methods = ChildClass;
-          ChildClass = function() { FirebaseArray.apply(this, arguments); };
+          ChildClass = function() { return FirebaseArray.apply(this, arguments); };
         }
         return $firebaseUtils.inherit(ChildClass, FirebaseArray, methods);
       };
@@ -286,10 +286,10 @@
           listeners: []
         };
 
-        self.$id = $firebase.ref().name();
+        self.$id = $firebase.$ref().name();
         self.$data = {};
         self.$priority = null;
-        self.$conf.inst.ref().once('value',
+        self.$conf.inst.$ref().once('value',
           function() {
             $firebaseUtils.compile(def.resolve.bind(def, self));
           },
@@ -300,18 +300,8 @@
       }
 
       FirebaseObject.prototype = {
-        $updated: function(snap) {
-          this.$id = snap.name();
-          $firebaseUtils.updateRec(this, snap);
-        },
-
-        $error: function(err) {
-          $log.error(err);
-          this.$destroy();
-        },
-
         $save: function() {
-          return this.$conf.inst.set(this.$toJSON(this));
+          return this.$conf.inst.$set(this.$$toJSON(this));
         },
 
         $loaded: function() {
@@ -336,9 +326,9 @@
 
             // monitor scope for any changes
             var off = scope.$watch(varName, function() {
-              var data = self.$toJSON($bound.get());
+              var data = self.$$toJSON($bound.get());
               if( !angular.equals(data, self.$data)) {
-                self.$conf.inst.set(data);
+                self.$conf.inst.$set(data);
               }
             }, true);
 
@@ -395,7 +385,17 @@
           }
         },
 
-        $toJSON: function() {
+        $$updated: function(snap) {
+          this.$id = snap.name();
+          $firebaseUtils.updateRec(this, snap);
+        },
+
+        $$error: function(err) {
+          $log.error(err);
+          this.$destroy();
+        },
+
+        $$toJSON: function() {
           var out = {};
           if( angular.isDefined(this.$value) ) {
             out['.value'] = this.$value;
@@ -412,7 +412,7 @@
         }
       };
 
-      FirebaseObject.extendFactory = function(ChildClass, methods) {
+      FirebaseObject.$extendFactory = function(ChildClass, methods) {
         if( arguments.length === 1 && angular.isObject(ChildClass) ) {
           methods = ChildClass;
           ChildClass = function() { FirebaseObject.apply(this, arguments); };
@@ -450,11 +450,11 @@
         }
 
         AngularFire.prototype = {
-          ref: function () {
+          $ref: function () {
             return this._ref;
           },
 
-          push: function (data) {
+          $push: function (data) {
             var def = $firebaseUtils.defer();
             var ref = this._ref.ref().push();
             var done = this._handle(def, ref);
@@ -467,7 +467,7 @@
             return def.promise;
           },
 
-          set: function (key, data) {
+          $set: function (key, data) {
             var ref = this._ref.ref();
             var def = $firebaseUtils.defer();
             if (arguments.length > 1) {
@@ -480,7 +480,7 @@
             return def.promise;
           },
 
-          remove: function (key) {
+          $remove: function (key) {
             //todo is this the best option? should remove blow away entire
             //todo data set if we are operating on a query result? probably
             //todo not; instead, we should probably forEach the results and
@@ -495,7 +495,7 @@
             return def.promise;
           },
 
-          update: function (key, data) {
+          $update: function (key, data) {
             var ref = this._ref.ref();
             var def = $firebaseUtils.defer();
             if (arguments.length > 1) {
@@ -508,7 +508,7 @@
             return def.promise;
           },
 
-          transaction: function (key, valueFn, applyLocally) {
+          $transaction: function (key, valueFn, applyLocally) {
             var ref = this._ref.ref();
             if( angular.isFunction(key) ) {
               applyLocally = valueFn;
@@ -533,22 +533,18 @@
             return def.promise;
           },
 
-          asObject: function () {
-            if (!this._objectSync || this._objectSync.$isDestroyed) {
+          $asObject: function () {
+            if (!this._objectSync || this._objectSync.isDestroyed) {
               this._objectSync = new SyncObject(this, this._config.objectFactory);
             }
             return this._objectSync.getObject();
           },
 
-          asArray: function () {
-            if (!this._arraySync || this._arraySync._isDestroyed) {
+          $asArray: function () {
+            if (!this._arraySync || this._arraySync.isDestroyed) {
               this._arraySync = new SyncArray(this, this._config.arrayFactory);
             }
             return this._arraySync.getArray();
-          },
-
-          getRecordFactory: function() {
-            return this._config.recordFactory;
           },
 
           _handle: function (def) {
@@ -577,8 +573,8 @@
 
         function SyncArray($inst, ArrayFactory) {
           function destroy() {
-            self.$isDestroyed = true;
-            var ref = $inst.ref();
+            self.isDestroyed = true;
+            var ref = $inst.$ref();
             ref.off('child_added', created);
             ref.off('child_moved', moved);
             ref.off('child_changed', updated);
@@ -587,7 +583,7 @@
           }
 
           function init() {
-            var ref = $inst.ref();
+            var ref = $inst.$ref();
 
             // listen for changes at the Firebase instance
             ref.on('child_added', created, error);
@@ -598,21 +594,21 @@
 
           var array = new ArrayFactory($inst, destroy);
           var batch = $firebaseUtils.batch();
-          var created = batch(array.$created, array);
-          var updated = batch(array.$updated, array);
-          var moved = batch(array.$moved, array);
-          var removed = batch(array.$removed, array);
-          var error = batch(array.$error, array);
+          var created = batch(array.$$added, array);
+          var updated = batch(array.$$updated, array);
+          var moved = batch(array.$$moved, array);
+          var removed = batch(array.$$removed, array);
+          var error = batch(array.$$error, array);
 
           var self = this;
-          self.$isDestroyed = false;
+          self.isDestroyed = false;
           self.getArray = function() { return array; };
           init();
         }
 
         function SyncObject($inst, ObjectFactory) {
           function destroy() {
-            self.$isDestroyed = true;
+            self.isDestroyed = true;
             ref.off('value', applyUpdate);
             obj = null;
           }
@@ -622,13 +618,13 @@
           }
 
           var obj = new ObjectFactory($inst, destroy);
-          var ref = $inst.ref();
+          var ref = $inst.$ref();
           var batch = $firebaseUtils.batch();
-          var applyUpdate = batch(obj.$updated, obj);
-          var error = batch(obj.$error, obj);
+          var applyUpdate = batch(obj.$$updated, obj);
+          var error = batch(obj.$$error, obj);
 
           var self = this;
-          self.$isDestroyed = false;
+          self.isDestroyed = false;
           self.getObject = function() { return obj; };
           init();
         }
@@ -1063,6 +1059,9 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
           var timer;
 
           function addToBatch(fn, context) {
+             if( typeof(fn) !== 'function' ) {
+               throw new Error('Must provide a function to be batched. Got '+fn);
+             }
              return function() {
                var args = Array.prototype.slice.call(arguments, 0);
                list.push([fn, context, args]);
@@ -1138,7 +1137,7 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
 
         function getPublicMethods(inst, iterator, context) {
           getPrototypeMethods(inst, function(m, k) {
-            if( typeof(m) === 'function' && !/^(_|\$\$)/.test(k) ) {
+            if( typeof(m) === 'function' && !/^_/.test(k) ) {
               iterator.call(context, m, k);
             }
           });
