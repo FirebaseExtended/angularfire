@@ -23,6 +23,9 @@
           var timer;
 
           function addToBatch(fn, context) {
+             if( typeof(fn) !== 'function' ) {
+               throw new Error('Must provide a function to be batched. Got '+fn);
+             }
              return function() {
                var args = Array.prototype.slice.call(arguments, 0);
                list.push([fn, context, args]);
@@ -98,7 +101,7 @@
 
         function getPublicMethods(inst, iterator, context) {
           getPrototypeMethods(inst, function(m, k) {
-            if( typeof(m) === 'function' && !/^(_|\$\$)/.test(k) ) {
+            if( typeof(m) === 'function' && !/^_/.test(k) ) {
               iterator.call(context, m, k);
             }
           });

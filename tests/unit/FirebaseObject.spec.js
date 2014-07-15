@@ -12,15 +12,15 @@
         $fbUtil = $firebaseUtils;
         $rootScope = _$rootScope_;
         $fb = $firebase(new Firebase('Mock://').child('data/a'));
-        // must use asObject() to create our instance in order to test sync proxy
-        obj = $fb.asObject();
+        // must use $asObject() to create our instance in order to test sync proxy
+        obj = $fb.$asObject();
         flushAll();
       })
     });
 
-    describe('#save', function() {
+    describe('$save', function() {
       it('should push changes to Firebase', function() {
-        var calls = $fb.ref().set.calls;
+        var calls = $fb.$ref().set.calls;
         expect(calls.count()).toBe(0);
         obj.newkey = true;
         obj.$save();
@@ -47,7 +47,7 @@
       it('should reject promise on failure', function(){
         var whiteSpy = jasmine.createSpy('resolve');
         var blackSpy = jasmine.createSpy('reject');
-        $fb.ref().failNext('set', 'oops');
+        $fb.$ref().failNext('set', 'oops');
         obj.$save().then(whiteSpy, blackSpy);
         expect(blackSpy).not.toHaveBeenCalled();
         flushAll();
@@ -56,7 +56,7 @@
       });
     });
 
-    describe('#loaded', function() {
+    describe('$loaded', function() {
       it('should return a promise', function() {
         var res = obj.$loaded();
         expect(angular.isObject(res)).toBe(true);
@@ -77,7 +77,7 @@
       it('should reject if the server data cannot be accessed', function() {
         var whiteSpy = jasmine.createSpy('resolve');
         var blackSpy = jasmine.createSpy('reject');
-        $fb.ref().failNext('once', 'doh');
+        $fb.$ref().failNext('once', 'doh');
         var obj = new $FirebaseObject($fb);
         obj.$loaded().then(whiteSpy, blackSpy);
         expect(blackSpy).not.toHaveBeenCalled();
@@ -95,13 +95,13 @@
       });
     });
 
-    describe('#inst', function(){
+    describe('$inst', function(){
       it('should return the $firebase instance that created it', function() {
         expect(obj.$inst()).toBe($fb);
       });
     });
 
-    describe('#bindTo', function() {
+    describe('$bindTo', function() {
       it('should return a promise'); //todo-test
 
       it('should have data when it resolves'); //todo-test
@@ -117,11 +117,11 @@
       it('should only send keys in toJSON'); //todo-test
     });
 
-    describe('#destroy', function() {
+    describe('$destroy', function() {
       it('should remove the value listener', function() {
-        var old = $fb.ref().off.calls.count();
+        var old = $fb.$ref().off.calls.count();
         obj.$destroy();
-        expect($fb.ref().off.calls.count()).toBe(old+1);
+        expect($fb.$ref().off.calls.count()).toBe(old+1);
       });
 
       it('should dispose of any bound instance', function() {
@@ -174,9 +174,9 @@
       });
     });
 
-    describe('#toJSON', function() {
+    describe('$toJSON', function() {
       it('should strip prototype functions', function() {
-        var dat = obj.$toJSON();
+        var dat = obj.$$toJSON();
         for (var key in $FirebaseObject.prototype) {
           if (obj.hasOwnProperty(key)) {
             expect(dat.hasOwnProperty(key)).toBeFalsy();
@@ -186,33 +186,67 @@
 
       it('should strip $ keys', function() {
         obj.$test = true;
-        var dat = obj.$toJSON();
+        var dat = obj.$$toJSON();
         for(var key in dat) {
           expect(/\$/.test(key)).toBeFalsy();
         }
       });
 
       it('should return a primitive if the value is a primitive', function() {
-        $fb.ref().set(true);
+        $fb.$ref().set(true);
         flushAll();
-        var dat = obj.$toJSON();
+        var dat = obj.$$toJSON();
         expect(dat['.value']).toBe(true);
         expect(Object.keys(dat).length).toBe(1);
       });
     });
 
+    describe('$extendFactory', function() {
+      it('should preserve child prototype', function() {
+        function Extend() { $FirebaseObject.apply(this, arguments); }
+        Extend.prototype.foo = function() {};
+        $FirebaseObject.$extendFactory(Extend);
+        var arr = new Extend($fb, jasmine.createSpy);
+        expect(typeof(arr.foo)).toBe('function');
+      });
+
+      it('should return child class', function() {
+        function A() {}
+        var res = $FirebaseObject.$extendFactory(A);
+        expect(res).toBe(A);
+      });
+
+      it('should be instanceof $FirebaseObject', function() {
+        function A() {}
+        $FirebaseObject.$extendFactory(A);
+        expect(new A($fb, noop) instanceof $FirebaseObject).toBe(true);
+      });
+
+      it('should add on methods passed into function', function() {
+        function foo() { return 'foo'; }
+        var F = $FirebaseObject.$extendFactory({foo: foo});
+        var res = new F($fb, noop);
+        expect(typeof res.$$updated).toBe('function');
+        expect(typeof res.foo).toBe('function');
+        expect(res.foo()).toBe('foo');
+      });
+    });
+
+    //todo-test most of this logic is now part of by SyncObject
+    //todo-test should add tests for $$updated, $$error, and $$toJSON
+    //todo-test and then move this logic to $asObject
     describe('server update', function() {
       it('should add keys to local data', function() {
-        $fb.ref().set({'key1': true, 'key2': 5});
+        $fb.$ref().set({'key1': true, 'key2': 5});
         flushAll();
         expect(obj.key1).toBe(true);
         expect(obj.key2).toBe(5);
       });
 
       it('should remove old keys', function() {
-        var keys = Object.keys($fb.ref());
+        var keys = Object.keys($fb.$ref());
         expect(keys.length).toBeGreaterThan(0);
-        $fb.ref().set(null);
+        $fb.$ref().set(null);
         flushAll();
         keys.forEach(function(k) {
           expect(obj.hasOwnProperty(k)).toBe(false);
@@ -220,7 +254,7 @@
       });
 
       it('should assign primitive value to $value', function() {
-        $fb.ref().set(true);
+        $fb.$ref().set(true);
         flushAll();
         expect(obj.$value).toBe(true);
       });
@@ -228,7 +262,7 @@
       it('should trigger an angular compile', function() {
         var spy = spyOn($rootScope, '$apply').and.callThrough();
         var x = spy.calls.count();
-        $fb.ref().fakeEvent('value', {foo: 'bar'}).flush();
+        $fb.$ref().fakeEvent('value', {foo: 'bar'}).flush();
         flushAll();
         expect(spy.calls.count()).toBeGreaterThan(x);
       });
@@ -240,7 +274,7 @@
 
     function flushAll() {
       // the order of these flush events is significant
-      $fb.ref().flush();
+      $fb.$ref().flush();
       Array.prototype.slice.call(arguments, 0).forEach(function(o) {
         o.flush();
       });
@@ -248,6 +282,8 @@
       try { $timeout.flush(); }
       catch(e) {}
     }
+
+    function noop() {}
   });
 
 })();

@@ -24,11 +24,11 @@
         }
 
         AngularFire.prototype = {
-          ref: function () {
+          $ref: function () {
             return this._ref;
           },
 
-          push: function (data) {
+          $push: function (data) {
             var def = $firebaseUtils.defer();
             var ref = this._ref.ref().push();
             var done = this._handle(def, ref);
@@ -41,7 +41,7 @@
             return def.promise;
           },
 
-          set: function (key, data) {
+          $set: function (key, data) {
             var ref = this._ref.ref();
             var def = $firebaseUtils.defer();
             if (arguments.length > 1) {
@@ -54,7 +54,7 @@
             return def.promise;
           },
 
-          remove: function (key) {
+          $remove: function (key) {
             //todo is this the best option? should remove blow away entire
             //todo data set if we are operating on a query result? probably
             //todo not; instead, we should probably forEach the results and
@@ -69,7 +69,7 @@
             return def.promise;
           },
 
-          update: function (key, data) {
+          $update: function (key, data) {
             var ref = this._ref.ref();
             var def = $firebaseUtils.defer();
             if (arguments.length > 1) {
@@ -82,7 +82,7 @@
             return def.promise;
           },
 
-          transaction: function (key, valueFn, applyLocally) {
+          $transaction: function (key, valueFn, applyLocally) {
             var ref = this._ref.ref();
             if( angular.isFunction(key) ) {
               applyLocally = valueFn;
@@ -107,22 +107,18 @@
             return def.promise;
           },
 
-          asObject: function () {
-            if (!this._objectSync || this._objectSync.$isDestroyed) {
+          $asObject: function () {
+            if (!this._objectSync || this._objectSync.isDestroyed) {
               this._objectSync = new SyncObject(this, this._config.objectFactory);
             }
             return this._objectSync.getObject();
           },
 
-          asArray: function () {
-            if (!this._arraySync || this._arraySync._isDestroyed) {
+          $asArray: function () {
+            if (!this._arraySync || this._arraySync.isDestroyed) {
               this._arraySync = new SyncArray(this, this._config.arrayFactory);
             }
             return this._arraySync.getArray();
-          },
-
-          getRecordFactory: function() {
-            return this._config.recordFactory;
           },
 
           _handle: function (def) {
@@ -151,8 +147,8 @@
 
         function SyncArray($inst, ArrayFactory) {
           function destroy() {
-            self.$isDestroyed = true;
-            var ref = $inst.ref();
+            self.isDestroyed = true;
+            var ref = $inst.$ref();
             ref.off('child_added', created);
             ref.off('child_moved', moved);
             ref.off('child_changed', updated);
@@ -161,7 +157,7 @@
           }
 
           function init() {
-            var ref = $inst.ref();
+            var ref = $inst.$ref();
 
             // listen for changes at the Firebase instance
             ref.on('child_added', created, error);
@@ -172,21 +168,21 @@
 
           var array = new ArrayFactory($inst, destroy);
           var batch = $firebaseUtils.batch();
-          var created = batch(array.$created, array);
-          var updated = batch(array.$updated, array);
-          var moved = batch(array.$moved, array);
-          var removed = batch(array.$removed, array);
-          var error = batch(array.$error, array);
+          var created = batch(array.$$added, array);
+          var updated = batch(array.$$updated, array);
+          var moved = batch(array.$$moved, array);
+          var removed = batch(array.$$removed, array);
+          var error = batch(array.$$error, array);
 
           var self = this;
-          self.$isDestroyed = false;
+          self.isDestroyed = false;
           self.getArray = function() { return array; };
           init();
         }
 
         function SyncObject($inst, ObjectFactory) {
           function destroy() {
-            self.$isDestroyed = true;
+            self.isDestroyed = true;
             ref.off('value', applyUpdate);
             obj = null;
           }
@@ -196,13 +192,13 @@
           }
 
           var obj = new ObjectFactory($inst, destroy);
-          var ref = $inst.ref();
+          var ref = $inst.$ref();
           var batch = $firebaseUtils.batch();
-          var applyUpdate = batch(obj.$updated, obj);
-          var error = batch(obj.$error, obj);
+          var applyUpdate = batch(obj.$$updated, obj);
+          var error = batch(obj.$$error, obj);
 
           var self = this;
-          self.$isDestroyed = false;
+          self.isDestroyed = false;
           self.getObject = function() { return obj; };
           init();
         }

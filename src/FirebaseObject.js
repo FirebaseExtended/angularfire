@@ -13,10 +13,10 @@
           listeners: []
         };
 
-        self.$id = $firebase.ref().name();
+        self.$id = $firebase.$ref().name();
         self.$data = {};
         self.$priority = null;
-        self.$conf.inst.ref().once('value',
+        self.$conf.inst.$ref().once('value',
           function() {
             $firebaseUtils.compile(def.resolve.bind(def, self));
           },
@@ -27,18 +27,8 @@
       }
 
       FirebaseObject.prototype = {
-        $updated: function(snap) {
-          this.$id = snap.name();
-          $firebaseUtils.updateRec(this, snap);
-        },
-
-        $error: function(err) {
-          $log.error(err);
-          this.$destroy();
-        },
-
         $save: function() {
-          return this.$conf.inst.set(this.$toJSON(this));
+          return this.$conf.inst.$set(this.$$toJSON(this));
         },
 
         $loaded: function() {
@@ -63,9 +53,9 @@
 
             // monitor scope for any changes
             var off = scope.$watch(varName, function() {
-              var data = self.$toJSON($bound.get());
+              var data = self.$$toJSON($bound.get());
               if( !angular.equals(data, self.$data)) {
-                self.$conf.inst.set(data);
+                self.$conf.inst.$set(data);
               }
             }, true);
 
@@ -122,7 +112,17 @@
           }
         },
 
-        $toJSON: function() {
+        $$updated: function(snap) {
+          this.$id = snap.name();
+          $firebaseUtils.updateRec(this, snap);
+        },
+
+        $$error: function(err) {
+          $log.error(err);
+          this.$destroy();
+        },
+
+        $$toJSON: function() {
           var out = {};
           if( angular.isDefined(this.$value) ) {
             out['.value'] = this.$value;
@@ -139,7 +139,7 @@
         }
       };
 
-      FirebaseObject.extendFactory = function(ChildClass, methods) {
+      FirebaseObject.$extendFactory = function(ChildClass, methods) {
         if( arguments.length === 1 && angular.isObject(ChildClass) ) {
           methods = ChildClass;
           ChildClass = function() { FirebaseObject.apply(this, arguments); };
