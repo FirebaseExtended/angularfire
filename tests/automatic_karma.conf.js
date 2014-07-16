@@ -4,21 +4,28 @@
 module.exports = function(config) {
   config.set({
     frameworks: ['jasmine'],
+    browsers: ['PhantomJS'],
+    reporters: ['dots', 'failed', 'coverage'],
+    autowatch: false,
+    singleRun: true,
+
+    preprocessors: {
+      "../src/**/*.js": "coverage"
+    },
+    coverageReporter: {
+      type: "html"
+    },
+
     files: [
-      'lib/jasmineMatchers.js',
+      '../bower_components/lodash/dist/lodash.js',
       '../bower_components/angular/angular.js',
       '../bower_components/angular-mocks/angular-mocks.js',
-      'lib/lodash.js',
       'lib/MockFirebase.js',
+      'lib/jasmineMatchers.js',
       '../src/module.js',
       '../src/**/*.js',
       'mocks/**/*.js',
       'unit/**/*.spec.js'
-    ],
-    notify: true,
-
-    autoWatch: true,
-    //Recommend starting Chrome manually with experimental javascript flag enabled, and open localhost:9876.
-    browsers: ['PhantomJS']
+    ]
   });
 };
