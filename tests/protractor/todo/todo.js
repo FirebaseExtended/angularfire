@@ -2,41 +2,58 @@ var app = angular.module('todo', ['firebase']);
 app. controller('Todo', function Todo($scope, $firebase) {
   // Get a reference to the Firebase
   var todosFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/todo');
+  var todosSync = $firebase(todosFirebaseRef);
 
-  // Bind the todos using AngularFire
-  $firebase(todosFirebaseRef).$bind($scope, 'todos').then(function(unbind) {
-    $scope.newTodo = '';
-  });
+  // Get the todos as an array
+  $scope.todos = todosSync.$asArray();
 
-  // Clears the demo Firebase reference
-  $scope.clearRef = function () {
-    todosFirebaseRef.set(null);
+  // Verify that $inst() works
+  if ($scope.todos.$inst() !== todosSync) {
+    console.log("Something is wrong with FirebaseArray.$inst().");
+    throw new Error("Something is wrong with FirebaseArray.$inst().")
+  }
+
+  $scope.loaded = function() {
+    todosFirebaseRef.on("value", function() {
+
+    });
   };
 
-  // Adds a new todo item
+  /* Clears the todos Firebase reference */
+  $scope.clearRef = function () {
+    todosSync.$remove();
+  };
+
+  /* Adds a new todo item */
   $scope.addTodo = function() {
     if ($scope.newTodo !== '') {
-      if (!$scope.todos) {
-        $scope.todos = {};
-      }
-
-      $scope.todos[todosFirebaseRef.push().name()] = {
+      $scope.todos.$add({
         title: $scope.newTodo,
         completed: false
-      };
+      });
 
       $scope.newTodo = '';
     }
   };
 
-  // Adds a random todo item
+  /* Adds a random todo item */
   $scope.addRandomTodo = function () {
-    $scope.newTodo = 'Todo ' + new Date();
+    $scope.newTodo = 'Todo ' + new Date().getTime();
     $scope.addTodo();
   }
 
-  // Removes a todo item
+  /* Removes the todo item with the inputted ID */
   $scope.removeTodo = function(id) {
-    delete $scope.todos[id];
+    // Verify that $indexFor() and $keyAt() work
+    if ($scope.todos.$indexFor($scope.todos.$keyAt(id)) !== id) {
+      console.log("Something is wrong with FirebaseArray.$indexFor() or FirebaseArray.$keyAt().");
+      throw new Error("Something is wrong with FirebaseArray.$indexFor() or FirebaseArray.$keyAt().");
+    }
+    $scope.todos.$remove(id);
+  };
+
+  /* Unbinds the todos array */
+  $scope.destroyArray = function() {
+    $scope.todos.$destroy();
   };
 });
