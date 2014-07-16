@@ -4,15 +4,19 @@
 module.exports = function(config) {
   config.set({
     frameworks: ['jasmine'],
+    browsers: ['Chrome'],
+    reporters: ['dots', 'failed'],
+    autowatch: false,
+    singleRun: false,
+
     files: [
       '../bower_components/angular/angular.js',
       '../bower_components/angular-mocks/angular-mocks.js',
       '../bower_components/firebase/firebase.js',
       '../bower_components/firebase-simple-login/firebase-simple-login.js',
-      '../angularfire.js',
+      '../src/module.js',
+      '../src/**/*.js',
       'manual/**/*.spec.js'
-    ],
-    autoWatch: true,
-    browsers: ['Chrome']
+    ]
   });
 };

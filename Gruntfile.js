@@ -3,6 +3,26 @@ module.exports = function(grunt) {
   'use strict';
 
   grunt.initConfig({
+    pkg: grunt.file.readJSON('package.json'),
+    meta: {
+      banner: '/*!\n <%= pkg.title || pkg.name %> v<%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %>\n' +
+        '<%= pkg.homepage ? "* " + pkg.homepage + "\\n" : "" %>' +
+        '* Copyright (c) <%= grunt.template.today("yyyy") %> Firebase, Inc.\n' +
+        '* MIT LICENSE: http://firebase.mit-license.org/\n*/\n\n'
+    },
+
+    // merge files from src/ into angularfire.js
+    concat: {
+      app: {
+        options: { banner: '<%= meta.banner %>' },
+        src: [
+          'src/module.js',
+          'src/**/*.js'
+        ],
+        dest: 'dist/angularfire.js'
+      }
+    },
+
     // Run shell commands
     shell: {
       options: {
@@ -33,7 +53,7 @@ module.exports = function(grunt) {
     uglify : {
       app : {
         files : {
-          'angularfire.min.js' : ['angularfire.js']
+          'dist/angularfire.min.js' : ['dist/angularfire.js']
         }
       }
     },
@@ -41,18 +61,20 @@ module.exports = function(grunt) {
     // Lint JavaScript
     jshint : {
       options : {
-        jshintrc: '.jshintrc'
+        jshintrc: '.jshintrc',
+        ignores: ['src/polyfills.js'],
       },
-      all : ['angularfire.js']
+      all : ['src/**/*.js']
     },
 
     // Auto-run tasks on file changes
     watch : {
       scripts : {
-        files : 'angularfire.js',
-        tasks : ['build', 'test:unit', 'notify:watch'],
+        files : ['src/**/*.js', 'tests/unit/**/*.spec.js', 'tests/lib/**/*.js', 'tests/mocks/**/*.js'],
+        tasks : ['test:unit', 'notify:watch'],
         options : {
-          interrupt : true
+          interrupt : true,
+          atBegin: true
         }
       }
     },
@@ -60,15 +82,15 @@ module.exports = function(grunt) {
     // Unit tests
     karma: {
       options: {
-        configFile: 'tests/automatic_karma.conf.js',
+        configFile: 'tests/automatic_karma.conf.js'
       },
-      singlerun: {
-        autowatch: false,
-        singleRun: true
+      manual: {
+        configFile: 'tests/manual_karma.conf.js',
       },
+      singlerun: {},
       watch: {
          autowatch: true,
-         singleRun: false,
+         singleRun: false
       }
     },
 
@@ -109,16 +131,13 @@ module.exports = function(grunt) {
   grunt.registerTask('test', ['test:unit', 'test:e2e']);
   grunt.registerTask('test:unit', ['karma:singlerun']);
   grunt.registerTask('test:e2e', ['connect:testserver', 'protractor:singlerun']);
-
-  // Watch tests
-  grunt.registerTask('test:watch', ['karma:watch']);
-  grunt.registerTask('test:watch:unit', ['karma:watch']);
+  grunt.registerTask('test:manual', ['karma:manual']);
 
   // Travis CI testing
   grunt.registerTask('travis', ['build', 'test:unit', 'connect:testserver', 'protractor:saucelabs']);
 
   // Build tasks
-  grunt.registerTask('build', ['jshint', 'uglify']);
+  grunt.registerTask('build', ['concat', 'jshint', 'uglify']);
 
   // Default task
   grunt.registerTask('default', ['build', 'test']);

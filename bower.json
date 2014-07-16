@@ -2,7 +2,7 @@
   "name": "angularfire",
   "description": "An officially supported AngularJS binding for Firebase.",
   "version": "0.7.1",
-  "main": "angularfire.js",
+  "main": "dist/angularfire.js",
   "ignore": [
     "Gruntfile.js",
     "bower_components",
@@ -16,11 +16,12 @@
     ".gitignore"
   ],
   "dependencies": {
-    "angular": "~1.2.0",
+    "angular": "~1.2.18",
     "firebase": "1.0.x",
     "firebase-simple-login": "1.6.x"
   },
   "devDependencies": {
-    "angular-mocks" : "~1.2.0"
+    "lodash": "~2.4.1",
+    "angular-mocks": "~1.2.18"
   }
 }

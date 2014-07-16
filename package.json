@@ -1,9 +1,9 @@
 {
   "name": "angularfire",
+  "version": "0.8.0-pre2",
   "description": "An officially supported AngularJS binding for Firebase.",
-  "version": "0.7.1",
-  "main": "angularfire.js",
-  "private": true,
+  "main": "dist/angularfire.js",
+  "homepage": "https://github.com/firebase/angularFire",
   "repository": {
     "type": "git",
     "url": "https://github.com/firebase/angularFire.git"
@@ -11,25 +11,25 @@
   "bugs": {
     "url": "https://github.com/firebase/angularFire/issues"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
+    "firebase": "1.0.x",
     "grunt": "~0.4.1",
-    "grunt-karma": "~0.6.2",
-    "grunt-notify": "~0.2.7",
-    "load-grunt-tasks": "~0.2.0",
-    "grunt-shell-spawn": "^0.3.0",
-    "grunt-contrib-watch": "~0.5.1",
+    "grunt-contrib-concat": "^0.4.0",
+    "grunt-contrib-connect": "^0.7.1",
     "grunt-contrib-jshint": "~0.10.0",
     "grunt-contrib-uglify": "~0.2.2",
-    "grunt-contrib-connect": "^0.7.1",
+    "grunt-contrib-watch": "~0.5.1",
+    "grunt-karma": "~0.8.3",
+    "grunt-notify": "~0.2.7",
     "grunt-protractor-runner": "^1.0.0",
-
-    "karma": "~0.10.4",
-    "karma-jasmine": "~0.1.3",
+    "grunt-shell-spawn": "^0.3.0",
+    "karma": "~0.12.0",
+    "karma-jasmine": "~0.2.0",
     "karma-phantomjs-launcher": "~0.1.0",
-
-    "firebase": "1.0.x",
-    "protractor": "^0.23.1"
+    "load-grunt-tasks": "~0.2.0",
+    "protractor": "^0.23.1",
+    "karma-coverage": "^0.2.4",
+    "karma-failed-reporter": "0.0.2"
   }
 }
