@@ -5,7 +5,7 @@ module.exports = function(config) {
   config.set({
     frameworks: ['jasmine'],
     browsers: ['Chrome'],
-    reporters: ['dots', 'failed', 'coverage'],
+    reporters: ['dots', 'failed'],
     autowatch: false,
     singleRun: false,
 
