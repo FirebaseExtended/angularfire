@@ -4,6 +4,11 @@
 module.exports = function(config) {
   config.set({
     frameworks: ['jasmine'],
+    browsers: ['Chrome'],
+    reporters: ['dots', 'failed'],
+    autowatch: false,
+    singleRun: false,
+
     files: [
       '../bower_components/angular/angular.js',
       '../bower_components/angular-mocks/angular-mocks.js',
@@ -12,8 +17,6 @@ module.exports = function(config) {
       '../src/module.js',
       '../src/**/*.js',
       'manual/**/*.spec.js'
-    ],
-    autoWatch: true,
-    browsers: ['Chrome']
+    ]
   });
 };
