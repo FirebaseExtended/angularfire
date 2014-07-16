@@ -290,6 +290,8 @@
         $loaded: function () {
           var promise = this.$$conf.promise;
           if (arguments.length) {
+            // allow this method to be called just like .then
+            // by passing any arguments on to .then
             promise = promise.then.apply(promise, arguments);
           }
           return promise;
@@ -318,14 +320,16 @@
             var $bound = self.$$conf.bound = {
               update: function() {
                 var curr = $bound.get();
-                if( angular.isObject(curr) ) {
-                  $firebaseUtils.updateRec(curr, self);
-                }
-                else {
+                if( !angular.isObject(curr) ) {
                   curr = {};
-                  $firebaseUtils.each(self, function(v,k) {
-                    curr[k] = v;
-                  });
+                }
+                $firebaseUtils.each(self, function(v,k) {
+                  curr[k] = v;
+                });
+                curr.$id = self.$id;
+                curr.$priority = self.$priority;
+                if( self.hasOwnProperty('$value') ) {
+                  curr.$value = self.$value;
                 }
                 parsed.assign(scope, curr);
               },
@@ -341,9 +345,9 @@
             // monitor scope for any changes
             var off = scope.$watch(varName, function () {
               var newData = $firebaseUtils.toJSON($bound.get());
-              var oldData = $firebaseUtils.toJSON(this);
+              var oldData = $firebaseUtils.toJSON(self);
               if (!angular.equals(newData, oldData)) {
-                self.$$conf.inst.$set(newData);
+                self.$inst().$set(newData);
               }
             }, true);
 

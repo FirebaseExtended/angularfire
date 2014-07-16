@@ -23,7 +23,7 @@
           aBoolean: false
         };
         objNew = new $FirebaseObject($fb, destroySpy);
-        objNew.$$updated(fakeSnap($fb.$ref(), objData, 99));
+        objNew.$$updated(fakeSnap($fb.$ref(), objData));
 
         flushAll();
       })
@@ -140,10 +140,22 @@
         expect(blackSpy).not.toHaveBeenCalled();
       });
 
+      it('should send local changes to the server', function() {
+        var $scope = $rootScope.$new();
+        var spy = spyOn(obj.$inst(), '$set');
+        objNew.$bindTo($scope, 'test');
+        $timeout.flush();
+        $scope.$apply(function() {
+          $scope.test.bar = 'baz';
+        });
+        expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({bar: 'baz'}));
+      });
+
       it('should allow data to be set inside promise callback', function() {
         var $scope = $rootScope.$new();
         var newData = { 'bar': 'foo' };
-          var whiteSpy = jasmine.createSpy('resolve').and.callFake(function() {
+        var setSpy = spyOn(obj.$inst(), '$set');
+        var whiteSpy = jasmine.createSpy('resolve').and.callFake(function() {
           $scope.test = newData;
         });
         var blackSpy = jasmine.createSpy('reject');
@@ -152,26 +164,79 @@
         expect(whiteSpy).toHaveBeenCalled();
         expect(blackSpy).not.toHaveBeenCalled();
         expect($scope.test).toEqual(jasmine.objectContaining(newData));
-      });
-
-      it('should send local changes to the server', function() {
-        var $scope = $rootScope.$new();
-        objNew.$bindTo($scope, 'test');
-        $timeout.flush();
-        expect($scope.test).toEqual(jasmine.objectContaining(objData));
+        expect(setSpy).toHaveBeenCalled();
       });
 
       it('should apply server changes to scope variable', function() {
-
+        var $scope = $rootScope.$new();
+        var spy = jasmine.createSpy('$watch');
+        $scope.$watchCollection('test', spy);
+        objNew.$bindTo($scope, 'test');
+        $timeout.flush();
+        expect(spy.calls.count()).toBe(1);
+        objNew.$$updated(fakeSnap($fb.$ref(), {foo: 'bar'}, null));
+        $scope.$digest();
+        expect(spy.calls.count()).toBe(2);
       });
 
-      it('should stop binding when off function is called');
+      it('should stop binding when off function is called', function() {
+        var off;
+        var $scope = $rootScope.$new();
+        var spy = jasmine.createSpy('$watch');
+        $scope.$watchCollection('test', spy);
+        objNew.$bindTo($scope, 'test').then(function(_off) {
+          off = _off;
+        });
+        $timeout.flush();
+        expect(spy.calls.count()).toBe(1);
+        off();
+        objNew.$$updated(fakeSnap($fb.$ref(), {foo: 'bar'}, null));
+        $scope.$digest();
+        expect(spy.calls.count()).toBe(1);
+      });
 
-      it('should only send keys in toJSON');
+      it('should not destroy remote data if local is pre-set', function() {
+        var origValue = $utils.toJSON(obj);
+        var $scope = $rootScope.$new();
+        $scope.test = {foo: true};
+        objNew.$bindTo($scope, 'test');
+        flushAll();
+        expect($utils.toJSON(obj)).toEqual(origValue);
+      });
 
-      it('should not destroy remote data if local is set');
+      it('should not fail if remote data is null', function() {
+        var $scope = $rootScope.$new();
+        var obj = new $FirebaseObject($fb, noop);
+        obj.$bindTo($scope, 'test');
+        obj.$$updated(fakeSnap($fb.$ref(), null, null));
+        flushAll();
+        expect($scope.test).toEqual({$value: null, $id: 'a', $priority: null});
+      });
 
-      it('should not fail if remote data is null');
+      //todo-test https://github.com/firebase/angularFire/issues/333
+      xit('should update priority if $priority changed in $scope', function() {
+        var $scope = $rootScope.$new();
+        var spy = spyOn(objNew.$inst(), '$set');
+        objNew.$bindTo($scope, 'test');
+        $timeout.flush();
+        $scope.test.$priority = 999;
+        $scope.$digest();
+        expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({'.priority': 999}));
+      });
+
+      //todo-test https://github.com/firebase/angularFire/issues/333
+      xit('should update value if $value changed in $scope', function() {
+        var $scope = $rootScope.$new();
+        var obj = new $FirebaseObject($fb, noop);
+        obj.$$updated(fakeSnap($fb.$ref(), 'foo', null));
+        expect(obj.$value).toBe('foo');
+        var spy = spyOn(obj.$inst(), '$set');
+        objNew.$bindTo($scope, 'test');
+        $timeout.flush();
+        $scope.test.$value = 'bar';
+        $scope.$digest();
+        expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({'.value': 'bar'}));
+      });
     });
 
     describe('$destroy', function() {
