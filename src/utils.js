@@ -101,7 +101,7 @@
 
         function getPublicMethods(inst, iterator, context) {
           getPrototypeMethods(inst, function(m, k) {
-            if( typeof(m) === 'function' && !/^_/.test(k) ) {
+            if( typeof(m) === 'function' && k.charAt(0) !== '_' ) {
               iterator.call(context, m, k);
             }
           });
@@ -144,7 +144,8 @@
 
         function each(obj, iterator, context) {
           angular.forEach(obj, function(v,k) {
-            if( !k.match(/^[_$]/) ) {
+            var c = k.charAt(0);
+            if( c !== '_' && c !== '$' ) {
               iterator.call(context, v, k, obj);
             }
           });
