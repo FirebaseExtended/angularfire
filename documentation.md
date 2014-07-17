@@ -707,6 +707,8 @@ to process all of the server synchronizations and can be overridden:
 
 **$FirebaseArray**
 
+ - **$createObject**: creates the actual record that will be stored in the array, used internally
+ by `$$added`
  - **$$added**: called with `snapshot` and `prevChild` each time a `child_added` event occurs
  - **$$updated**: called with `shapshot` each time a `child_changed` event occurs
  - **$$removed**: called with `snapshot` ecah time a `child_removed` event occurs
