@@ -681,7 +681,7 @@ var list = $firebase(ref).$asArray();
 list.sort(compare);
 
 // each time the server sends records, re-sort
-list.watch(function() { list.sort(compare); });
+list.$watch(function() { list.sort(compare); });
 
 // custom sorting routine (sort by last name)
 function compare(a, b) {
