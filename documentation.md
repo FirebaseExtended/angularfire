@@ -12,7 +12,7 @@ Using AngularFire is as simple as including two JavaScript files, one for
 Firebase and another for AngularFire, in your HTML file. Note that they're both
 served from Firebase's CDN, which you are welcome to use.
 
-``` html
+```html
 <script src="https://cdn.firebase.com/js/client/1.0.17/firebase.js"></script>
 <script src="https://cdn.firebase.com/libs/angularfire/0.8.0/angularfire.js"></script>
 ```
@@ -20,7 +20,7 @@ served from Firebase's CDN, which you are welcome to use.
 If you want to use any Simple Login related functionality, you'll need to include
 the appropriate version of the Simple Login library as well.
 
-``` html
+```html
 <script src="https://cdn.firebase.com/js/simple-login/1.6.1/firebase-simple-login.js"></script>
 ```
 
@@ -68,7 +68,7 @@ the supporting libraries. The following table documents the version requirements
 
 Next, add the Firebase module as a dependency for your Angular app.
 
-``` js
+```js
 var myapp = angular.module("myapp", ["firebase"]);
 ```
 
@@ -442,6 +442,10 @@ obj.$bindTo($scope, 'data').then(function() {
    ref.$set({foo: 'baz'});   // $scope.data will soon be updated to {foo: 'baz'}
 });
 ```
+
+IMPORTANT NOTE: Angular.js does not report variables prefixed with `$` to any `$watch` listeners.
+So to set `$priority` or `$value`, we must manually call `$save()` and should not rely on
+`$bindTo` to automatically sync those changes. 
 
 ```html
 <!-- This input field is 3-way synchronized to Firebase (changing value updates remote data; remote changes are applied here) -->
