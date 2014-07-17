@@ -13,12 +13,6 @@ app. controller('Todo', function Todo($scope, $firebase) {
     throw new Error("Something is wrong with FirebaseArray.$inst().")
   }
 
-  $scope.loaded = function() {
-    todosFirebaseRef.on("value", function() {
-
-    });
-  };
-
   /* Clears the todos Firebase reference */
   $scope.clearRef = function () {
     todosSync.$remove();
