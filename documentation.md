@@ -94,19 +94,19 @@ myapp.controller("MyController", function($firebase) {
    var sync = $firebase(ref);
 
    // if ref points to a data collection
-   $scope.list = sync.asArray();
+   $scope.list = sync.$asArray();
 
    // if ref points to a single record
-   $scope.rec = sync.asObject();
+   $scope.rec = sync.$asObject();
 });
 ```
 
 ```html
-<!-- iterate asArray data -->
+<!-- iterate $asArray data -->
 <li ng-repeat="item in list">{{item|json}}</li>
 
-<!-- debug asObject data -->
-{{rec.$data|json}}
+<!-- debug $asObject data -->
+{{rec|json}}
 ```
 
 ### Constructor
@@ -307,7 +307,7 @@ var messageCount = $firebase(new Firebase(URL + "/messageCount"));
 messageCount.$transaction(function(currentCount) {
 	if (!currentCount) return 1;   // Initial value for counter.
 	if (currentCount < 0) return;  // Return undefined to abort transaction.
-	return currentCount + 1;			 // Increment the count by 1.
+	return currentCount + 1;       // Increment the count by 1.
 }).then(function(snapshot) {
 	if (!snapshot) {
 		// Handle aborted transaction.
@@ -322,7 +322,7 @@ messageCount.$transaction(function(currentCount) {
 $FirebaseObject
 ---------------
 
-By default, an instance of this Class is returned by `$firebase.$asObject()`.
+By default, an instance of this class is returned by `$firebase.$asObject()`.
 It will automatically be kept in sync with the remote Firebase data. **Note that any 
 changes to that object will *not* automatically result in any changes to the remote data**. 
 All such changes will have to performed via one of the `$save`/`$set`/`$remove` methods 
@@ -443,25 +443,28 @@ obj.$bindTo($scope, 'data').then(function() {
 });
 ```
 
-IMPORTANT NOTE: Angular.js does not report variables prefixed with `$` to any `$watch` listeners.
+**IMPORTANT NOTE**: Angular.js does not report variables prefixed with `$` to any `$watch` listeners.
 So to set `$priority` or `$value`, we must manually call `$save()` and should not rely on
 `$bindTo` to automatically sync those changes. 
 
 ```html
-<!-- This input field is 3-way synchronized to Firebase (changing value updates remote data; remote changes are applied here) -->
+<!-- 
+  This input field has 3-way data binding to Firebase 
+  (changing value updates remote data; remote changes are applied here) 
+-->
 <input type="text" ng-model="data.foo" />
 ```
 
 If `$destroy` is emitted by `scope` (this happens when a controller is destroyed), then this
-object is automatically unbound from `scope`. It can also be manually unbound using the
-off method, which is passed into the promise callback.
+object is automatically unbound from `scope`. It can also be manually unbound using 
+`unbind` method, which is passed into the promise callback.
 
 ```js
 var obj = $firebase(ref).$asObject();
-obj.$bindTo($scope, 'data').then(function(off) {
+obj.$bindTo($scope, 'data').then(function(unbind) {
 
    // unbind this later:
-   //off()
+   //unbind()
 
 });
 ```
@@ -473,7 +476,7 @@ Calling this method cancels event listeners and frees memory used by data in thi
 $FirebaseArray
 --------------
 
-By default, `$firebase.$asArray()` returns an instance of this Class.
+By default, `$firebase.$asArray()` returns an instance of this class.
 This is a **READ-ONLY ARRAY** suitable for use in directives
 like `ng-repeat` and with filters (which expect an array). 
 The array will automatically be kept in sync with remote changes.
@@ -489,10 +492,10 @@ myapp.controller("MyController", ["$firebase",
      var list = sync.$asArray();
 
      // add an item
-     list.add({foo: 'bar'}).then(...);
+     list.$add({foo: 'bar'}).then(...);
 
      // remove an item
-     list.remove(2);
+     list.$remove(2);
 
      // make the list available in the DOM
      $scope.list = list;
@@ -609,7 +612,7 @@ Returns a promise which is resolved when the initial array data has been downloa
 The promise resolves to the array itself.
 
 ```js
-var list = $firebase(ref).asArray();
+var list = $firebase(ref).$asArray();
 list.$loaded()
   .then(function(x) {
     x === list; // true
@@ -622,7 +625,7 @@ list.$loaded()
 The resolve/reject methods may also be passed directly into $loaded:
 
 ```js
-var list = $firebase(ref).asArray();
+var list = $firebase(ref).$asArray();
 list.$loaded(
   function(x) {
     x === list; // true
@@ -666,9 +669,9 @@ list.$add({hello: 'world'});
 
 A common use case for this would be to customize the sorting for a synchronized array. Since
 each time an add or update arrives from the server, the data could become out of order, we
-can resort on each event. We don't have to worry about excessive resorts slowing down Angular's
-compile process, or creating excessive DOM updates, because the evens are already batched
-nicely into a single $apply event (we gather them up and trigger the events in batches  before
+can re-sort on each event. We don't have to worry about excessive re-sorts slowing down Angular's
+compile process, or creating excessive DOM updates, because the events are already batched
+nicely into a single $apply event (we gather them up and trigger the events in batches before
 telling $digest to dirty check).
 
 ```js
@@ -677,7 +680,7 @@ var list = $firebase(ref).$asArray();
 // sort our list
 list.sort(compare);
 
-// each time the server sends records, resort
+// each time the server sends records, re-sort
 list.watch(function() { list.sort(compare); });
 
 // custom sorting routine (sort by last name)
@@ -694,7 +697,7 @@ Transforming the Array/Object Factories
 -------------------------------------
 
 There are several powerful techniques for transforming the data downloaded and saved
-by `$FirebaseArray` and `$FirebaseObject`. Since these are fully fledged services, with
+by `$FirebaseArray` and `$FirebaseObject`. Since these are full-fledged services, with
 a real prototype, they can be overridden or extended.
 
 ### The Sync Methods
@@ -704,16 +707,16 @@ to process all of the server synchronizations and can be overridden:
 
 **$FirebaseArray**
 
- - **$$added**: called with `snapshot` and `prevChild` each time a child_added event occurs
- - **$$updated**: called with `shapshot` each time a child_changed event occurs
- - **$$removed**: called with `snapshot` ecah time a child_removed event occurs
- - **$$moved**: called with `snapshot` and `prevChild` each time a child_moved event occurs
+ - **$$added**: called with `snapshot` and `prevChild` each time a `child_added` event occurs
+ - **$$updated**: called with `shapshot` each time a `child_changed` event occurs
+ - **$$removed**: called with `snapshot` ecah time a `child_removed` event occurs
+ - **$$moved**: called with `snapshot` and `prevChild` each time a `child_moved` event occurs
  - **$$error**: called with `error` message any time there is a security error in listeners (these
  are generally not recoverable errors)
 
 **$FirebaseObject**
 
- - **$$updated**: called with `snapshot` any time a value event is received from Firebase
+ - **$$updated**: called with `snapshot` any time a `value` event is received from Firebase
  - **$$error**: called if a security error occurs (these are generally not recoverable)
 
 ### Extending the Factories
@@ -723,7 +726,7 @@ a copy with modified or added methods. For example, we could add a sum method to
 
 ```
 app.factory('ArrayWithSum', function($FirebaseArray) {
-  return $FirebaseArray.extendFactory({
+  return $FirebaseArray.$extendFactory({
     sum: function() {
       var total = 0;
       angular.forEach(this._list, function(rec) {
@@ -738,7 +741,7 @@ app.factory('ArrayWithSum', function($FirebaseArray) {
 We can then use this factory with any `$firebase` constructor:
 
 ```
-var list = $firebase(ref, {arrayFactory: 'ArrayWithSum'}).asArray();
+var list = $firebase(ref, {arrayFactory: 'ArrayWithSum'}).$asArray();
 list.sum();
 ```
 
@@ -770,7 +773,7 @@ app.factory('SillyObject', function($FirebaseObject) {
      return this.data;
   };
 
-  return $FirebaseObject.extendFactory(Silly);
+  return $FirebaseObject.$extendFactory(Silly);
 });
 ```
 
@@ -815,7 +818,7 @@ a minimal amount of code. For example, we can create a "User" factory:
 ```
 // create a User factory
 app.factory('UserObject', function($FirebaseObject) {
-  return $FirebaseObject.extendFactory({
+  return $FirebaseObject.$extendFactory({
       getFullName: function() {
          // concatenate first and last name
          return this.first_name + ' ' + this.last_name;
@@ -830,7 +833,7 @@ And pass it into `$firebase` to be used whenever $asObject() is called:
 app.factory('User', function($firebase, $FirebaseObject) {
   var ref = new Firebase(URL+'/users/');
   return function(userid) {
-     return $firebase(ref.child(userid), {objectFactory: 'UserObject'}).asObject();
+     return $firebase(ref.child(userid), {objectFactory: 'UserObject'}).$asObject();
   }
 });
 ```
@@ -860,7 +863,7 @@ We can then use that to extend the `$FirebaseArray` factory:
 
 ```
 app.factory('MessageFactory', function($FirebaseArray, Message) {
-  return $FirebaseArray.extendFactory({
+  return $FirebaseArray.$extendFactory({
       // override the $$added behavior to return a Message object
       $$added: function(snap) {
         return new Message(snap);
@@ -881,7 +884,7 @@ And finally, we can put it all together into a synchronized list of messages:
 ```
 app.factory('MessageList', function($firebase, MessageFactory) {
   return function(ref) {
-    return $firebase(ref, {arrayFactory: MessageFactory}).asArray();
+    return $firebase(ref, {arrayFactory: MessageFactory}).$asArray();
   }
 });
 ```
