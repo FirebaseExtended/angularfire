@@ -5,18 +5,29 @@ var ptor = protractor.getInstance();
 var cleared = false;
 
 describe('Chat App', function () {
+  // Protractor instance
+  var ptor = protractor.getInstance();
+
+  // Reference to the Firebase which stores the data for this demo
+  var firebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/chat');
+
+  // Boolean used to clear the Firebase on the first test only
+  var firebaseCleared = false;
+
+  // Reference to the messages repeater
+  var messages = element.all(by.repeater('message in messages'));
+
+  // Reference to messages count
+  var messagesCount = element(by.id('messagesCount'));
+
   beforeEach(function (done) {
     // Navigate to the chat app
-    ptor.get('chat/chat.html');
-
-    // Verify the title
-    expect(ptor.getTitle()).toBe('AngularFire Chat e2e Test');
+    browser.get('chat/chat.html');
 
     // Clear the Firebase before the first test and sleep until it's finished
-    if (!cleared) {
-      var firebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/');
+    if (!firebaseCleared) {
       firebaseRef.remove(function() {
-        cleared = true;
+        firebaseCleared = true;
         done();
       });
     }
@@ -29,9 +40,13 @@ describe('Chat App', function () {
   it('loads', function () {
   });
 
+  it('has the correct title', function() {
+    expect(browser.getTitle()).toEqual('AngularFire Chat e2e Test');
+  });
+
   it('starts with an empty list of messages', function () {
-    var messages = element.all(by.repeater('message in messages'));
     expect(messages.count()).toBe(0);
+    expect(messagesCount.getText()).toEqual('0');
   });
 
   it('adds new messages', function () {
@@ -41,66 +56,67 @@ describe('Chat App', function () {
     newMessageInput.sendKeys('Oh, hi. How are you?\n');
     newMessageInput.sendKeys('Pretty fantastic!\n');
 
-    var messages = element.all(by.repeater('message in messages'));
+    // We should only have two messages in the repeater since we did a limit query
     expect(messages.count()).toBe(2);
 
-    var messageCount = element(by.id('messageCount'));
-    messageCount.getText().then(function(messageCount) {
-      expect(parseInt(messageCount)).toBe(3);
-    });
+    // Messages count should include all messages, not just the ones displayed
+    expect(messagesCount.getText()).toEqual('3');
   });
 
   it('updates upon new remote messages', function(done) {
     // Simulate a message being added remotely
-    var messagesFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/chat');
-    messagesFirebaseRef.push({
+    firebaseRef.child("messages").push({
       from: 'Guest 2000',
       content: 'Remote message detected'
     }, function() {
-      var messageCountFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/numChatMessages');
-      messageCountFirebaseRef.transaction(function(currentCount) {
+      // Update the message count as well
+      firebaseRef.child("numMessages").transaction(function(currentCount) {
         if (!currentCount) {
           return 1;
         } else {
           return currentCount + 1;
         }
       }, function() {
-        var messages = element.all(by.repeater('message in messages'));
+        // We should only have two messages in the repeater since we did a limit query
         expect(messages.count()).toBe(2);
 
-        var messageCount = element(by.id('messageCount'));
-        messageCount.getText().then(function(messageCount) {
-          expect(parseInt(messageCount)).toBe(4);
-          done();
-        });
+        // Messages count should include all messages, not just the ones displayed
+        expect(messagesCount.getText()).toEqual('4');
+
+        done();
       });
     });
   });
 
   it('updates upon removed remote messages', function(done) {
     // Simulate a message being deleted remotely
-    var messagesFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/chat');
-    messagesFirebaseRef.limit(1).on("child_added", function(childSnapshot) {
-      messagesFirebaseRef.off();
+    var onCallback = firebaseRef.child("messages").limit(1).on("child_added", function(childSnapshot) {
+      firebaseRef.child("messages").off("child_added", onCallback);
       childSnapshot.ref().remove(function() {
-        var messageCountFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/numChatMessages');
-        messageCountFirebaseRef.transaction(function(currentCount) {
+        firebaseRef.child("numMessages").transaction(function(currentCount) {
           if (!currentCount) {
             return 1;
           } else {
             return currentCount - 1;
           }
         }, function() {
-          var messages = element.all(by.repeater('message in messages'));
+          // We should only have two messages in the repeater since we did a limit query
           expect(messages.count()).toBe(2);
 
-          var messageCount = element(by.id('messageCount'));
-          messageCount.getText().then(function(messageCount) {
-            expect(parseInt(messageCount)).toBe(3);
-            done();
-          });
+          // Messages count should include all messages, not just the ones displayed
+          expect(messagesCount.getText()).toEqual('3');
+
+          done();
         });
       });
     });
+  });
+
+  it('stops updating once the AngularFire bindings are destroyed', function() {
+    // Destroy the AngularFire bindings
+    $('#destroyButton').click();
+
+    expect(messages.count()).toBe(0);
+    expect(messagesCount.getText()).toEqual('0');
   });
 });
