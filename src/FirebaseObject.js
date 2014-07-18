@@ -138,10 +138,12 @@
         $$updated: function (snap) {
           this.$id = snap.name();
           // applies new data to this object
-          $firebaseUtils.updateRec(this, snap);
-          // notifies $watch listeners and
-          // updates $scope if bound to a variable
-          this.$$conf.updated();
+          var changed = $firebaseUtils.updateRec(this, snap);
+          if( changed ) {
+            // notifies $watch listeners and
+            // updates $scope if bound to a variable
+            this.$$conf.updated();
+          }
         },
 
         $$error: function (err) {
