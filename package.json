@@ -24,13 +24,14 @@
     "grunt-notify": "~0.2.7",
     "grunt-protractor-runner": "^1.0.0",
     "grunt-shell-spawn": "^0.3.0",
+    "jasmine-spec-reporter": "^0.4.0",
     "karma": "~0.12.0",
-    "karma-jasmine": "~0.2.0",
-    "karma-phantomjs-launcher": "~0.1.0",
-    "load-grunt-tasks": "~0.2.0",
-    "protractor": "^0.23.1",
     "karma-coverage": "^0.2.4",
     "karma-failed-reporter": "0.0.2",
-    "jasmine-spec-reporter": "^0.4.0"
+    "karma-jasmine": "~0.2.0",
+    "karma-phantomjs-launcher": "~0.1.0",
+    "karma-spec-reporter": "0.0.13",
+    "load-grunt-tasks": "~0.2.0",
+    "protractor": "^0.23.1"
   }
 }
