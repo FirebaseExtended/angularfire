@@ -1,30 +1,83 @@
 (function() {
   'use strict';
+  /**
+   * Creates and maintains a synchronized list of data. This constructor should not be
+   * manually invoked. Instead, one should create a $firebase object and call $asArray
+   * on it:  <code>$firebase( firebaseRef ).$asArray()</code>;
+   *
+   * Internally, the $firebase object depends on this class to provide 5 methods, which it invokes
+   * to notify the array whenever a change has been made at the server:
+   *    $$added - called whenever a child_added event occurs
+   *    $$updated - called whenever a child_changed event occurs
+   *    $$moved - called whenever a child_moved event occurs
+   *    $$removed - called whenever a child_removed event occurs
+   *    $$error - called when listeners are canceled due to a security error
+   *
+   * Instead of directly modifying this class, one should generally use the $extendFactory
+   * method to add or change how methods behave:
+   *
+   * <pre><code>
+   * var NewFactory = $FirebaseArray.$extendFactory({
+   *    // add a new method to the prototype
+   *    foo: function() { return 'bar'; },
+   *
+   *    // change how records are created
+   *    $$createRecord: function(snap) {
+   *       return new Widget(snap);
+   *    }
+   * });
+   * </code></pre>
+   *
+   * And then the new factory can be used by passing it as an argument:
+   * <code>$firebase( firebaseRef, {arrayFactory: NewFactory}).$asObject();</code>
+   */
+  var nott;
   angular.module('firebase').factory('$FirebaseArray', ["$log", "$firebaseUtils",
     function($log, $firebaseUtils) {
+      if( !nott ) {
+        nott = true;
+        throw new Error('oops');
+      }
+      /**
+       * This constructor should probably never be called manually. It is used internally by
+       * <code>$firebase.$asArray()</code>.
+       *
+       * @param {$firebase} $firebase
+       * @param {Function} destroyFn invoking this will cancel all event listeners and stop
+       *                   notifications from being delivered to $$added, $$updated, $$moved, and $$removed
+       * @returns {Array}
+       * @constructor
+       */
       function FirebaseArray($firebase, destroyFn) {
+        // observers registered with the $watch function
         this._observers = [];
-        this._events = [];
-        this._list = [];
+        // the synchronized list of records
+        this.$list = [];
         this._inst = $firebase;
+        // used by the $loaded() function
         this._promise = this._init();
         this._destroyFn = destroyFn;
-        return this._list;
+        // Array.isArray will not work on objects which extend the Array class.
+        // So instead of extending the Array class, we just return an actual array.
+        // However, it's still possible to extend FirebaseArray and have the public methods
+        // appear on the array object. We do this by iterating the prototype and binding
+        // any method that is not prefixed with an underscore onto the final array.
+        return this.$list;
       }
 
-      /**
-       * Array.isArray will not work on objects which extend the Array class.
-       * So instead of extending the Array class, we just return an actual array.
-       * However, it's still possible to extend FirebaseArray and have the public methods
-       * appear on the array object. We do this by iterating the prototype and binding
-       * any method that is not prefixed with an underscore onto the final array.
-       */
       FirebaseArray.prototype = {
+        /**
+         *
+         * @param data
+         * @returns {*}
+         */
         $add: function(data) {
+          this._assertNotDestroyed('$add');
           return this.$inst().$push(data);
         },
 
         $save: function(indexOrItem) {
+          this._assertNotDestroyed('$save');
           var item = this._resolveItem(indexOrItem);
           var key = this.$keyAt(item);
           if( key !== null ) {
@@ -36,6 +89,7 @@
         },
 
         $remove: function(indexOrItem) {
+          this._assertNotDestroyed('$remove');
           var key = this.$keyAt(indexOrItem);
           if( key !== null ) {
             return this.$inst().$remove(this.$keyAt(indexOrItem));
@@ -52,7 +106,7 @@
 
         $indexFor: function(key) {
           // todo optimize and/or cache these? they wouldn't need to be perfect
-          return this._list.findIndex(function(rec) { return rec.$id === key; });
+          return this.$list.findIndex(function(rec) { return rec.$id === key; });
         },
 
         $loaded: function() {
@@ -82,57 +136,18 @@
         $destroy: function() {
           if( !this._isDestroyed ) {
             this._isDestroyed = true;
-            this._list.length = 0;
+            this.$list.length = 0;
             $log.debug('destroy called for FirebaseArray: '+this.$inst().$ref().toString());
             this._destroyFn();
           }
         },
 
-        $$added: function(snap, prevChild) {
-          var i = this.$indexFor(snap.name());
-          if( i > -1 ) {
-            this.$$moved(snap, prevChild);
-            this.$$updated(snap, prevChild);
-          }
-          else {
-            var dat = this.$createObject(snap);
-            this._addAfter(dat, prevChild);
-            this.$notify('child_added', snap.name(), prevChild);
-          }
+        $getRecord: function(key) {
+          var i = this.$indexFor(key);
+          return i > -1? this.$list[i] : null;
         },
 
-        $$removed: function(snap) {
-          var dat = this._spliceOut(snap.name());
-          if( angular.isDefined(dat) ) {
-            this.$notify('child_removed', snap.name());
-          }
-        },
-
-        $$updated: function(snap) {
-          var i = this.$indexFor(snap.name());
-          if( i >= 0 ) {
-            var oldData = $firebaseUtils.toJSON(this._list[i]);
-            $firebaseUtils.updateRec(this._list[i], snap);
-            if( !angular.equals(oldData, $firebaseUtils.toJSON(this._list[i])) ) {
-              this.$notify('child_changed', snap.name());
-            }
-          }
-        },
-
-        $$moved: function(snap, prevChild) {
-          var dat = this._spliceOut(snap.name());
-          if( angular.isDefined(dat) ) {
-            this._addAfter(dat, prevChild);
-            this.$notify('child_moved', snap.name(), prevChild);
-          }
-        },
-
-        $$error: function(err) {
-          $log.error(err);
-          this.$destroy(err);
-        },
-
-        $createObject: function(snap) {
+        $$createRecord: function(snap) {
           var data = snap.val();
           if( !angular.isObject(data) ) {
             data = { $value: data };
@@ -142,7 +157,57 @@
           return data;
         },
 
-        $notify: function(event, key, prevChild) {
+        $$added: function(snap, prevChild) {
+          var rec = this.$getRecord(snap.name());
+          if( !rec ) {
+            // get the new record object
+            rec = this.$$createRecord(snap);
+            // add it to the array
+            this._addAfter(rec, prevChild);
+            // send notifications to anybody monitoring $watch
+            this._notify('child_added', snap.name(), prevChild);
+          }
+        },
+
+        $$removed: function(snap) {
+          // remove record from the array
+          var rec = this._spliceOut(snap.name());
+          if( angular.isDefined(rec) ) {
+            // if it was found, send notifications
+            this._notify('child_removed', snap.name());
+          }
+        },
+
+        $$updated: function(snap) {
+          // find the record
+          var rec = this.$getRecord(snap.name());
+          if( angular.isObject(rec) ) {
+            // apply changes to the record
+            var changed = $firebaseUtils.updateRec(rec, snap);
+            if( changed ) {
+              // if something actually changed, notify listeners of $watch
+              this._notify('child_changed', snap.name());
+            }
+          }
+        },
+
+        $$moved: function(snap, prevChild) {
+          // take record out of the array
+          var dat = this._spliceOut(snap.name());
+          if( angular.isDefined(dat) ) {
+            // if it was found, put it back in the new location
+            this._addAfter(dat, prevChild);
+            // notify listeners of $watch
+            this._notify('child_moved', snap.name(), prevChild);
+          }
+        },
+
+        $$error: function(err) {
+          $log.error(err);
+          this.$destroy(err);
+        },
+
+        _notify: function(event, key, prevChild) {
           var eventData = {event: event, key: key};
           if( arguments.length === 3 ) {
             eventData.prevChild = prevChild;
@@ -159,29 +224,35 @@
           }
           else {
             i = this.$indexFor(prevChild)+1;
-            if( i === 0 ) { i = this._list.length; }
+            if( i === 0 ) { i = this.$list.length; }
           }
-          this._list.splice(i, 0, dat);
+          this.$list.splice(i, 0, dat);
         },
 
         _spliceOut: function(key) {
           var i = this.$indexFor(key);
           if( i > -1 ) {
-            return this._list.splice(i, 1)[0];
+            return this.$list.splice(i, 1)[0];
           }
         },
 
         _resolveItem: function(indexOrItem) {
-          return angular.isNumber(indexOrItem)? this._list[indexOrItem] : indexOrItem;
+          return angular.isNumber(indexOrItem)? this.$list[indexOrItem] : indexOrItem;
+        },
+
+        _assertNotDestroyed: function(method) {
+          if( this._isDestroyed ) {
+            throw new Error('Cannot call ' + method + ' method on a destroyed $FirebaseArray object');
+          }
         },
 
         _init: function() {
           var self = this;
-          var list = self._list;
+          var list = self.$list;
           var def = $firebaseUtils.defer();
           var ref = self.$inst().$ref();
 
-          // we return _list, but apply our public prototype to it first
+          // we return $list, but apply our public prototype to it first
           // see FirebaseArray.prototype's assignment comments
           $firebaseUtils.getPublicMethods(self, function(fn, key) {
             list[key] = fn.bind(self);
