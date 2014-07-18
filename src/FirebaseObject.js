@@ -22,7 +22,6 @@
         };
 
         self.$id = $firebase.$ref().name();
-        self.$data = {};
         self.$priority = null;
         self.$$conf.inst.$ref().once('value',
           function() {
