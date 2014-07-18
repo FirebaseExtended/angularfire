@@ -384,8 +384,6 @@ describe('$FirebaseArray', function () {
       expect(args[0]).toEqual({event: 'child_moved', key: 'c', prevChild: 'a'});
     });
 
-    it('should batch events'); //todo-test
-
     it('should not get notified if destroy is invoked?'); //todo-test
   });
 
