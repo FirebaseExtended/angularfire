@@ -112,8 +112,12 @@
         }
 
         function reject(msg) {
+          return $q.reject(msg);
+        }
+
+        function resolve() {
           var def = defer();
-          def.reject(msg);
+          def.resolve.apply(def, arguments);
           return def.promise;
         }
 
@@ -206,6 +210,7 @@
           getPrototypeMethods: getPrototypeMethods,
           getPublicMethods: getPublicMethods,
           reject: reject,
+          resolve: resolve,
           defer: defer,
           allPromises: $q.all.bind($q),
           each: each,
