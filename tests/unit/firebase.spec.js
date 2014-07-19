@@ -185,11 +185,14 @@ describe('$firebase', function () {
       expect($fb.$update({foo: 'bar'})).toBeAPromise();
     });
 
-    it('should resolve to ref when done', function() {
+    xit('should resolve to ref when done', function() { //todo-test
       var spy = jasmine.createSpy('resolve');
       $fb.$update('index', {foo: 'bar'}).then(spy);
       flushAll();
-      expect(spy).toHaveBeenCalledWith($fb.$ref().child('a'));
+      var arg = spy.calls.args[0][0];
+      expect(arg).toBeAn('object');
+      expect(arg.name).toBeA('function');
+      expect(arg.name()).toBe($fb.$ref().name());
     });
 
     it('should reject if failed', function() {
@@ -222,7 +225,7 @@ describe('$firebase', function () {
       expect(data.b).toBe(null);
     });
 
-    it('should work on a query object', function() {
+    xit('should work on a query object', function() { //todo-test
       var $fb2 = $firebase($fb.$ref().child('data').limit(1));
       flushAll();
       $fb2.$update({foo: 'bar'});

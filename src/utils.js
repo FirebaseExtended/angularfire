@@ -207,6 +207,7 @@
           getPublicMethods: getPublicMethods,
           reject: reject,
           defer: defer,
+          allPromises: $q.all.bind($q),
           each: each,
           toJSON: toJSON
         };

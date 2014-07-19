@@ -91,7 +91,7 @@
                   ss.ref().remove(this._handle(d, ss.ref()));
                 }, this);
               });
-              this._handle($q.all(promises), ref);
+              this._handle($firebaseUtils.allPromises(promises), ref);
             }
             return def.promise;
           },
