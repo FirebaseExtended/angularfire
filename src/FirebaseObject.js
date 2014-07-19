@@ -11,6 +11,18 @@
           bound: null,
           destroyFn: destroyFn,
           listeners: [],
+          resolve: function(err) {
+            if( def ) {
+              var d = def;
+              def = null;
+              if( err ) {
+                d.reject(err);
+              }
+              else {
+                d.resolve(self);
+              }
+            }
+          },
           updated: function() {
             if( self.$$conf.bound ) {
               self.$$conf.bound.update();
@@ -18,19 +30,13 @@
             angular.forEach(self.$$conf.listeners, function (parts) {
               parts[0].call(parts[1], {event: 'updated', key: self.$id});
             });
+            // be sure to do this after setting up data and init state
+            self.$$conf.resolve();
           }
         };
 
         self.$id = $firebase.$ref().name();
         self.$priority = null;
-        self.$$conf.inst.$ref().once('value',
-          function() {
-            $firebaseUtils.compile(def.resolve.bind(def, self));
-          },
-          function(err) {
-            $firebaseUtils.compile(def.reject.bind(def, err));
-          }
-        );
       }
 
       FirebaseObject.prototype = {
@@ -131,6 +137,7 @@
             $firebaseUtils.each(self, function (v, k) {
               delete self[k];
             });
+            self.$$conf.resolve('destroyed');
           }
         },
 
@@ -146,7 +153,11 @@
         },
 
         $$error: function (err) {
+          // prints an error to the console (via Angular's logger)
           $log.error(err);
+          // rejects the $loaded promise
+          this.$$conf.resolve(err);
+          // frees memory and cancels any remaining listeners
           this.$destroy();
         }
       };
