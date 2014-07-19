@@ -22,14 +22,15 @@
    *    foo: function() { return 'bar'; },
    *
    *    // change how records are created
-   *    $$createRecord: function(snap) {
-   *       return new Widget(snap);
+   *    $$added: function(snap) {
+   *       var rec = new Widget(snap);
+   *       this._process('child_added', rec);
    *    }
    * });
    * </code></pre>
    *
    * And then the new factory can be used by passing it as an argument:
-   * <code>$firebase( firebaseRef, {arrayFactory: NewFactory}).$asObject();</code>
+   * <code>$firebase( firebaseRef, {arrayFactory: NewFactory}).$asArray();</code>
    */
   angular.module('firebase').factory('$FirebaseArray', ["$log", "$firebaseUtils",
     function($log, $firebaseUtils) {
@@ -142,7 +143,7 @@
          */
         $keyAt: function(indexOrItem) {
           var item = this._resolveItem(indexOrItem);
-          return item === null? null : item.$id;
+          return this._getKey(item);
         },
 
         /**
@@ -154,8 +155,9 @@
          * @returns {int} -1 if not found
          */
         $indexFor: function(key) {
+          var self = this;
           // todo optimize and/or cache these? they wouldn't need to be perfect
-          return this.$list.findIndex(function(rec) { return rec.$id === key; });
+          return this.$list.findIndex(function(rec) { return self._getKey(rec) === key; });
         },
 
         /**
@@ -191,9 +193,11 @@
          * Additionally, added and moved events receive a prevChild parameter, containing the
          * key of the item before this one in the array.
          *
+         * This method returns a function which can be invoked to stop observing events.
+         *
          * @param {Function} cb
          * @param {Object} [context]
-         * @returns {Function}
+         * @returns {Function} used to stop observing
          */
         $watch: function(cb, context) {
           var list = this._observers;
@@ -210,7 +214,7 @@
         },
 
         /**
-         * Informs $firebase to stop sending events to this object and clears memory being used
+         * Informs $firebase to stop sending events and clears memory being used
          * by this array (delete's its local content).
          */
         $destroy: function() {
@@ -235,25 +239,6 @@
         },
 
         /**
-         * This method is used internally by $$added to create new records before inserting
-         * them into the array. This creates a simple way to modify the initial object creation
-         * process without having to implement all the functionality of $$added. This method
-         * is not part of the contract provided by $firebase.$asObject() and is only used internally.
-         *
-         * @param snap a firebase snapshot
-         * @returns {object}
-         */
-        $$createRecord: function(snap) {
-          var data = snap.val();
-          if( !angular.isObject(data) ) {
-            data = { $value: data };
-          }
-          data.$id = snap.name();
-          data.$priority = snap.getPriority();
-          return data;
-        },
-
-        /**
          * Called by $firebase to inform the array when a new item has been added at the server.
          * This method must exist on any array factory used by $firebase.
          *
@@ -261,66 +246,63 @@
          * @param {string} prevChild
          */
         $$added: function(snap, prevChild) {
-          var rec = this.$getRecord(snap.name());
-          if( !rec ) {
-            // get the new record object
-            rec = this.$$createRecord(snap);
-            // add it to the array
-            this._addAfter(rec, prevChild);
-            // send notifications to anybody monitoring $watch
-            this._notify('child_added', snap.name(), prevChild);
+          // check to make sure record does not exist
+          var i = this.$indexFor(snap.name());
+          if( i === -1 ) {
+            // parse data and create record
+            var rec = snap.val();
+            if( !angular.isObject(rec) ) {
+              rec = { $value: rec };
+            }
+            rec.$id = snap.name();
+            rec.$priority = snap.getPriority();
+
+            // add it to array and send notifications
+            this._process('child_added', rec, prevChild);
           }
         },
 
         /**
          * Called by $firebase whenever an item is removed at the server.
-         * This method must exist on any array factory used by $firebase.
+         * This method must exist on any arrayFactory passed into $firebase
          *
          * @param snap
          */
         $$removed: function(snap) {
-          // remove record from the array
-          var rec = this._spliceOut(snap.name());
-          if( angular.isDefined(rec) ) {
-            // if it was found, send notifications
-            this._notify('child_removed', snap.name());
+          var rec = this.$getRecord(snap.name());
+          if( angular.isObject(rec) ) {
+            this._process('child_removed', rec);
           }
         },
 
         /**
          * Called by $firebase whenever an item is changed at the server.
-         * This method must exist on any array factory used by $firebase.
+         * This method must exist on any arrayFactory passed into $firebase
          *
          * @param snap
          */
         $$updated: function(snap) {
-          // find the record
           var rec = this.$getRecord(snap.name());
           if( angular.isObject(rec) ) {
             // apply changes to the record
             var changed = $firebaseUtils.updateRec(rec, snap);
             if( changed ) {
-              // if something actually changed, notify listeners of $watch
-              this._notify('child_changed', snap.name());
+              this._process('child_changed', rec);
             }
           }
         },
 
         /**
          * Called by $firebase whenever an item changes order (moves) on the server.
-         * This method must exist on any array factory used by $firebase.
+         * This method must exist on any arrayFactory passed into $firebase
          *
          * @param snap
          * @param {string} prevChild
          */
         $$moved: function(snap, prevChild) {
-          // take record out of the array
-          var dat = this._spliceOut(snap.name());
-          if( angular.isDefined(dat) ) {
-            // if it was found, put it back in the new location
-            this._addAfter(dat, prevChild);
-            // notify listeners of $watch
-            this._notify('child_moved', snap.name(), prevChild);
+          var rec = this.$getRecord(snap.name());
+          if( angular.isObject(rec) ) {
+            this._process('child_moved', rec, prevChild);
           }
         },
 
@@ -335,6 +317,46 @@
         },
 
         /**
+         * Returns ID for a given record
+         * @param {object} rec
+         * @returns {string||null}
+         * @private
+         */
+        _getKey: function(rec) {
+          return angular.isObject(rec)? rec.$id : null;
+        },
+
+        /**
+         * Handles placement of recs in the array, sending notifications,
+         * and other internals.
+         *
+         * @param {string} event one of child_added, child_removed, child_moved, or child_changed
+         * @param {object} rec
+         * @param {string} [prevChild]
+         * @private
+         */
+        _process: function(event, rec, prevChild) {
+          var key = this._getKey(rec);
+          switch(event) {
+            case 'child_moved':
+              this._spliceOut(key);
+              break;
+            case 'child_removed':
+              // remove record from the array
+              this._spliceOut(key);
+              break;
+            default:
+              // nothing to do
+          }
+          if( !_.isUndefined(prevChild) ) {
+            // add it to the array
+            this._addAfter(rec, prevChild);
+          }
+          // send notifications to anybody monitoring $watch
+          this._notify(event, key, prevChild);
+        },
+
+        /**
          * Used to trigger notifications for listeners registered using $watch
          * @param {string} event
          * @param {string} key
@@ -343,7 +365,7 @@
          */
         _notify: function(event, key, prevChild) {
           var eventData = {event: event, key: key};
-          if( arguments.length === 3 ) {
+          if( angular.isDefined(prevChild) ) {
             eventData.prevChild = prevChild;
           }
           angular.forEach(this._observers, function(parts) {

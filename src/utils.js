@@ -112,9 +112,7 @@
         }
 
         function reject(msg) {
-          var def = defer();
-          def.reject(msg);
-          return def.promise;
+          return $q.reject(msg);
         }
 
         function compile(fn, wait) {
