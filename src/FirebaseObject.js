@@ -33,38 +33,22 @@
        * @param $firebase
        * @param {Function} destroyFn invoking this will cancel all event listeners and stop
        *                   notifications from being delivered to $$updated and $$error
+       * @param readyPromise resolved when the initial data downloaded from Firebase
        * @returns {FirebaseObject}
        * @constructor
        */
-      function FirebaseObject($firebase, destroyFn) {
-        var self = this, def = $firebaseUtils.defer();
+      function FirebaseObject($firebase, destroyFn, readyPromise) {
+        var self = this;
 
         // These are private config props and functions used internally
         // they are collected here to reduce clutter on the prototype
         // and instance signatures.
         self.$$conf = {
-          promise: def.promise,
+          promise: readyPromise,
           inst: $firebase,
           bound: null,
           destroyFn: destroyFn,
           listeners: [],
-          /**
-           * Called when initial data is loaded or an error occurs to resolve the promise
-           * used by $loaded method
-           * @param {Error|string} [err] rejects the promise
-           */
-          resolve: function(err) {
-            if( def ) {
-              var d = def;
-              def = null;
-              if( err ) {
-                d.reject(err);
-              }
-              else {
-                d.resolve(self);
-              }
-            }
-          },
           /**
            * Updates any bound scope variables and notifies listeners registered
            * with $watch any time there is a change to data
@@ -74,7 +58,6 @@
               self.$$conf.bound.update();
             }
             // be sure to do this after setting up data and init state
-            self.$$conf.resolve();
             angular.forEach(self.$$conf.listeners, function (parts) {
               parts[0].call(parts[1], {event: 'updated', key: self.$id});
             });
@@ -219,18 +202,17 @@
          * Informs $firebase to stop sending events and clears memory being used
          * by this object (delete's its local content).
          */
-        $destroy: function () {
+        $destroy: function (err) {
           var self = this;
           if (!self.$isDestroyed) {
             self.$isDestroyed = true;
-            self.$$conf.destroyFn();
             if (self.$$conf.bound) {
               self.$$conf.bound.unbind();
             }
             $firebaseUtils.each(self, function (v, k) {
               delete self[k];
             });
-            self.$$conf.resolve('destroyed');
+            self.$$conf.destroyFn(err);
           }
         },
 
@@ -259,10 +241,8 @@
         $$error: function (err) {
           // prints an error to the console (via Angular's logger)
           $log.error(err);
-          // rejects the $loaded promise
-          this.$$conf.resolve(err);
           // frees memory and cancels any remaining listeners
-          this.$destroy();
+          this.$destroy(err);
         }
       };
 

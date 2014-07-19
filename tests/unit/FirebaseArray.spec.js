@@ -315,22 +315,28 @@ describe('$FirebaseArray', function () {
     });
 
     it('should resolve after array has all current data in Firebase', function() {
+      var arr = makeArray();
       var spy = jasmine.createSpy('resolve').and.callFake(function() {
-        expect(arr.length).toBeGreaterThan(0);
-        expect(arr.length).toBe(Object.keys($fb.$ref().getData()).length);
+        expect(arr.length).toBe(3);
       });
       arr.$loaded().then(spy);
       flushAll();
+      expect(spy).not.toHaveBeenCalled();
+      arr.$$test.load({
+        a: {foo: 'a'},
+        b: {foo: 'b'},
+        c: {foo: 'c'}
+      });
       expect(spy).toHaveBeenCalled();
     });
 
     it('should reject when error fetching records', function() {
       var whiteSpy = jasmine.createSpy('resolve');
       var blackSpy = jasmine.createSpy('reject');
-      $fb.$ref().failNext('once', 'oops');
-      var arr = new $FirebaseArray($fb);
+      var arr = makeArray();
       arr.$loaded().then(whiteSpy, blackSpy);
       flushAll();
+      arr.$$test.fail('oops');
       expect(whiteSpy).not.toHaveBeenCalled();
       expect(blackSpy).toHaveBeenCalledWith('oops');
     });
@@ -403,13 +409,13 @@ describe('$FirebaseArray', function () {
     it('should reject $loaded() if not completed yet', function() {
       var whiteSpy = jasmine.createSpy('resolve');
       var blackSpy = jasmine.createSpy('reject');
-      var destroySpy = jasmine.createSpy('destroy');
-      var arr = new $FirebaseArray($fb, destroySpy);
+      var arr = makeArray();
       arr.$loaded().then(whiteSpy, blackSpy);
       arr.$destroy();
       flushAll();
-      expect(destroySpy).toHaveBeenCalled();
+      expect(arr.$$test.spy).toHaveBeenCalled();
       expect(whiteSpy).not.toHaveBeenCalled();
+      expect(blackSpy).toHaveBeenCalled();
       expect(blackSpy.calls.argsFor(0)[0]).toMatch(/destroyed/i);
     });
   });
@@ -577,14 +583,14 @@ describe('$FirebaseArray', function () {
   describe('$extendFactory', function() {
     it('should return a valid array', function() {
       var F = $FirebaseArray.$extendFactory({});
-      expect(Array.isArray(new F($fb, noop))).toBe(true);
+      expect(Array.isArray(new F($fb, noop, $utils.resolve()))).toBe(true);
     });
 
     it('should preserve child prototype', function() {
       function Extend() { $FirebaseArray.apply(this, arguments); }
       Extend.prototype.foo = function() {};
       $FirebaseArray.$extendFactory(Extend);
-      var arr = new Extend($fb, jasmine.createSpy);
+      var arr = new Extend($fb, noop, $utils.resolve());
       expect(typeof(arr.foo)).toBe('function');
     });
 
@@ -597,13 +603,13 @@ describe('$FirebaseArray', function () {
     it('should be instanceof $FirebaseArray', function() {
       function A() {}
       $FirebaseArray.$extendFactory(A);
-      expect(new A($fb, noop) instanceof $FirebaseArray).toBe(true);
+      expect(new A($fb, noop, $utils.resolve()) instanceof $FirebaseArray).toBe(true);
     });
 
     it('should add on methods passed into function', function() {
       function foo() { return 'foo'; }
       var F = $FirebaseArray.$extendFactory({foo: foo});
-      var res = new F($fb, noop);
+      var res = new F($fb, noop, $utils.resolve());
       expect(typeof res.$$updated).toBe('function');
       expect(typeof res.foo).toBe('function');
       expect(res.foo()).toBe('foo');
@@ -630,6 +636,57 @@ describe('$FirebaseArray', function () {
       catch(e) {}
     }
   })();
+
+  function fakeSnap(ref, data, pri) {
+    return {
+      ref: function() { return ref; },
+      val: function() { return data; },
+      getPriority: function() { return angular.isDefined(pri)? pri : null; },
+      name: function() { return ref.name(); },
+      child: function(key) {
+        var childData = angular.isObject(data) && data.hasOwnProperty(key)? data[key] : null;
+        return fakeSnap(ref.child(key), childData, null);
+      }
+    }
+  }
+
+  function makeArray(resolveWithData, $altFb) {
+    if( !$altFb ) { $altFb = $fb; }
+    var def = $utils.defer();
+    var spy = jasmine.createSpy('destroy').and.callFake(function(err) {
+      def.reject(err||'destroyed');
+    });
+    var list = new $FirebaseArray($altFb, spy, def.promise);
+    list.$$test = {
+      def: def,
+      spy: spy,
+      load: function(data) {
+        var ref = $altFb.$ref();
+        if( data === true ) { data = ref.getData(); }
+        var prev = null;
+        angular.forEach(data, function(v,key) {
+          var pri;
+          if( angular.isObject(v) && v.hasOwnProperty('$priority') ) {
+            pri = data[key]['$priority'];
+            delete data[key]['$priority'];
+          }
+          list.$$added(fakeSnap(ref.child(key), data[key], pri), prev);
+          prev = key;
+        });
+        def.resolve(list);
+        $timeout.flush();
+      },
+      fail: function(err) {
+        def.reject(err);
+        list.$$error(err);
+        $timeout.flush();
+      }
+    };
+    if( resolveWithData ) {
+      list.$$test.load(resolveWithData);
+    }
+    return list;
+  }
 
   function noop() {}
 

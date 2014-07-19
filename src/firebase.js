@@ -173,7 +173,7 @@
         };
 
         function SyncArray($inst, ArrayFactory) {
-          function destroy() {
+          function destroy(err) {
             self.isDestroyed = true;
             var ref = $inst.$ref();
             ref.off('child_added', created);
@@ -181,6 +181,7 @@
             ref.off('child_changed', updated);
             ref.off('child_removed', removed);
             array = null;
+            resolve(err||'destroyed');
           }
 
           function init() {
@@ -191,9 +192,21 @@
             ref.on('child_moved', moved, error);
             ref.on('child_changed', updated, error);
             ref.on('child_removed', removed, error);
+
+            // determine when initial load is completed
+            ref.once('value', resolve.bind(null, null), resolve);
           }
 
-          var array = new ArrayFactory($inst, destroy);
+          function resolve(err) {
+            if( def ) {
+              if( err ) { def.reject(err); }
+              else { def.resolve(array); }
+              def = null;
+            }
+          }
+
+          var def = $firebaseUtils.defer();
+          var array = new ArrayFactory($inst, destroy, def.promise);
           var batch = $firebaseUtils.batch();
           var created = batch(array.$$added, array);
           var updated = batch(array.$$updated, array);
@@ -208,17 +221,28 @@
         }
 
         function SyncObject($inst, ObjectFactory) {
-          function destroy() {
+          function destroy(err) {
             self.isDestroyed = true;
             ref.off('value', applyUpdate);
             obj = null;
+            resolve(err||'destroyed');
           }
 
           function init() {
             ref.on('value', applyUpdate, error);
+            ref.once('value', resolve.bind(null, null), resolve);
           }
 
-          var obj = new ObjectFactory($inst, destroy);
+          function resolve(err) {
+            if( def ) {
+              if( err ) { def.reject(err); }
+              else { def.resolve(obj); }
+              def = null;
+            }
+          }
+
+          var def = $firebaseUtils.defer();
+          var obj = new ObjectFactory($inst, destroy, def.promise);
           var ref = $inst.$ref();
           var batch = $firebaseUtils.batch();
           var applyUpdate = batch(obj.$$updated, obj);

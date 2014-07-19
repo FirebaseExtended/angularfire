@@ -1,5 +1,5 @@
 /*!
- angularfire v0.8.0-pre2 2014-07-18
+ angularfire v0.8.0-pre2 2014-07-19
 * https://github.com/firebase/angularFire
 * Copyright (c) 2014 Firebase, Inc.
 * MIT LICENSE: http://firebase.mit-license.org/
@@ -53,14 +53,15 @@
    *    foo: function() { return 'bar'; },
    *
    *    // change how records are created
-   *    $$createRecord: function(snap) {
-   *       return new Widget(snap);
+   *    $$added: function(snap) {
+   *       var rec = new Widget(snap);
+   *       this._process('child_added', rec);
    *    }
    * });
    * </code></pre>
    *
    * And then the new factory can be used by passing it as an argument:
-   * <code>$firebase( firebaseRef, {arrayFactory: NewFactory}).$asObject();</code>
+   * <code>$firebase( firebaseRef, {arrayFactory: NewFactory}).$asArray();</code>
    */
   angular.module('firebase').factory('$FirebaseArray', ["$log", "$firebaseUtils",
     function($log, $firebaseUtils) {
@@ -71,23 +72,27 @@
        * @param $firebase
        * @param {Function} destroyFn invoking this will cancel all event listeners and stop
        *                   notifications from being delivered to $$added, $$updated, $$moved, and $$removed
+       * @param readyPromise resolved when the initial data downloaded from Firebase
        * @returns {Array}
        * @constructor
        */
-      function FirebaseArray($firebase, destroyFn) {
-        // observers registered with the $watch function
+      function FirebaseArray($firebase, destroyFn, readyPromise) {
+        var self = this;
         this._observers = [];
-        // the synchronized list of records
         this.$list = [];
         this._inst = $firebase;
-        // used by the $loaded() function
-        this._promise = this._init();
+        this._promise = readyPromise;
         this._destroyFn = destroyFn;
+
         // Array.isArray will not work on objects which extend the Array class.
         // So instead of extending the Array class, we just return an actual array.
         // However, it's still possible to extend FirebaseArray and have the public methods
         // appear on the array object. We do this by iterating the prototype and binding
         // any method that is not prefixed with an underscore onto the final array.
+        $firebaseUtils.getPublicMethods(self, function(fn, key) {
+          self.$list[key] = fn.bind(self);
+        });
+
         return this.$list;
       }
 
@@ -173,7 +178,7 @@
          */
         $keyAt: function(indexOrItem) {
           var item = this._resolveItem(indexOrItem);
-          return item === null? null : item.$id;
+          return this._getKey(item);
         },
 
         /**
@@ -185,8 +190,9 @@
          * @returns {int} -1 if not found
          */
         $indexFor: function(key) {
+          var self = this;
           // todo optimize and/or cache these? they wouldn't need to be perfect
-          return this.$list.findIndex(function(rec) { return rec.$id === key; });
+          return this.$list.findIndex(function(rec) { return self._getKey(rec) === key; });
         },
 
         /**
@@ -222,9 +228,11 @@
          * Additionally, added and moved events receive a prevChild parameter, containing the
          * key of the item before this one in the array.
          *
+         * This method returns a function which can be invoked to stop observing events.
+         *
          * @param {Function} cb
          * @param {Object} [context]
-         * @returns {Function}
+         * @returns {Function} used to stop observing
          */
         $watch: function(cb, context) {
           var list = this._observers;
@@ -241,15 +249,15 @@
         },
 
         /**
-         * Informs $firebase to stop sending events to this object and clears memory being used
+         * Informs $firebase to stop sending events and clears memory being used
          * by this array (delete's its local content).
          */
-        $destroy: function() {
+        $destroy: function(err) {
           if( !this._isDestroyed ) {
             this._isDestroyed = true;
             this.$list.length = 0;
             $log.debug('destroy called for FirebaseArray: '+this.$inst().$ref().toString());
-            this._destroyFn();
+            this._destroyFn(err);
           }
         },
 
@@ -266,25 +274,6 @@
         },
 
         /**
-         * This method is used internally by $$added to create new records before inserting
-         * them into the array. This creates a simple way to modify the initial object creation
-         * process without having to implement all the functionality of $$added. This method
-         * is not part of the contract provided by $firebase.$asObject() and is only used internally.
-         *
-         * @param snap a firebase snapshot
-         * @returns {object}
-         */
-        $$createRecord: function(snap) {
-          var data = snap.val();
-          if( !angular.isObject(data) ) {
-            data = { $value: data };
-          }
-          data.$id = snap.name();
-          data.$priority = snap.getPriority();
-          return data;
-        },
-
-        /**
          * Called by $firebase to inform the array when a new item has been added at the server.
          * This method must exist on any array factory used by $firebase.
          *
@@ -292,66 +281,63 @@
          * @param {string} prevChild
          */
         $$added: function(snap, prevChild) {
-          var rec = this.$getRecord(snap.name());
-          if( !rec ) {
-            // get the new record object
-            rec = this.$$createRecord(snap);
-            // add it to the array
-            this._addAfter(rec, prevChild);
-            // send notifications to anybody monitoring $watch
-            this._notify('child_added', snap.name(), prevChild);
+          // check to make sure record does not exist
+          var i = this.$indexFor(snap.name());
+          if( i === -1 ) {
+            // parse data and create record
+            var rec = snap.val();
+            if( !angular.isObject(rec) ) {
+              rec = { $value: rec };
+            }
+            rec.$id = snap.name();
+            rec.$priority = snap.getPriority();
+
+            // add it to array and send notifications
+            this._process('child_added', rec, prevChild);
           }
         },
 
         /**
          * Called by $firebase whenever an item is removed at the server.
-         * This method must exist on any array factory used by $firebase.
+         * This method must exist on any arrayFactory passed into $firebase
          *
          * @param snap
          */
         $$removed: function(snap) {
-          // remove record from the array
-          var rec = this._spliceOut(snap.name());
-          if( angular.isDefined(rec) ) {
-            // if it was found, send notifications
-            this._notify('child_removed', snap.name());
+          var rec = this.$getRecord(snap.name());
+          if( angular.isObject(rec) ) {
+            this._process('child_removed', rec);
           }
         },
 
         /**
          * Called by $firebase whenever an item is changed at the server.
-         * This method must exist on any array factory used by $firebase.
+         * This method must exist on any arrayFactory passed into $firebase
          *
          * @param snap
          */
         $$updated: function(snap) {
-          // find the record
           var rec = this.$getRecord(snap.name());
           if( angular.isObject(rec) ) {
             // apply changes to the record
             var changed = $firebaseUtils.updateRec(rec, snap);
             if( changed ) {
-              // if something actually changed, notify listeners of $watch
-              this._notify('child_changed', snap.name());
+              this._process('child_changed', rec);
             }
           }
         },
 
         /**
          * Called by $firebase whenever an item changes order (moves) on the server.
-         * This method must exist on any array factory used by $firebase.
+         * This method must exist on any arrayFactory passed into $firebase
          *
          * @param snap
          * @param {string} prevChild
          */
         $$moved: function(snap, prevChild) {
-          // take record out of the array
-          var dat = this._spliceOut(snap.name());
-          if( angular.isDefined(dat) ) {
-            // if it was found, put it back in the new location
-            this._addAfter(dat, prevChild);
-            // notify listeners of $watch
-            this._notify('child_moved', snap.name(), prevChild);
+          var rec = this.$getRecord(snap.name());
+          if( angular.isObject(rec) ) {
+            this._process('child_moved', rec, prevChild);
           }
         },
 
@@ -366,6 +352,46 @@
         },
 
         /**
+         * Returns ID for a given record
+         * @param {object} rec
+         * @returns {string||null}
+         * @private
+         */
+        _getKey: function(rec) {
+          return angular.isObject(rec)? rec.$id : null;
+        },
+
+        /**
+         * Handles placement of recs in the array, sending notifications,
+         * and other internals.
+         *
+         * @param {string} event one of child_added, child_removed, child_moved, or child_changed
+         * @param {object} rec
+         * @param {string} [prevChild]
+         * @private
+         */
+        _process: function(event, rec, prevChild) {
+          var key = this._getKey(rec);
+          switch(event) {
+            case 'child_moved':
+              this._spliceOut(key);
+              break;
+            case 'child_removed':
+              // remove record from the array
+              this._spliceOut(key);
+              break;
+            default:
+              // nothing to do
+          }
+          if( angular.isDefined(prevChild) ) {
+            // add it to the array
+            this._addAfter(rec, prevChild);
+          }
+          // send notifications to anybody monitoring $watch
+          this._notify(event, key, prevChild);
+        },
+
+        /**
          * Used to trigger notifications for listeners registered using $watch
          * @param {string} event
          * @param {string} key
@@ -374,7 +400,7 @@
          */
         _notify: function(event, key, prevChild) {
           var eventData = {event: event, key: key};
-          if( arguments.length === 3 ) {
+          if( angular.isDefined(prevChild) ) {
             eventData.prevChild = prevChild;
           }
           angular.forEach(this._observers, function(parts) {
@@ -453,42 +479,6 @@
           if( this._isDestroyed ) {
             throw new Error('Cannot call ' + method + ' method on a destroyed $FirebaseArray object');
           }
-        },
-
-        /**
-         * Copies our prototype onto the actual array element and preps our $loaded() promise
-         *
-         * @returns a promise that resolves after initial data is loaded
-         * @private
-         */
-        _init: function() {
-          var self = this;
-          var list = self.$list;
-          var def = $firebaseUtils.defer();
-          var ref = self.$inst().$ref();
-
-          // we return $list, but apply our public prototype to it first
-          // see FirebaseArray.prototype's assignment comments
-          $firebaseUtils.getPublicMethods(self, function(fn, key) {
-            list[key] = fn.bind(self);
-          });
-
-          // for our $loaded() function
-          // this is guaranteed by Firebase to trigger after any child_added events for
-          // data which already existed when this snapshot was taken, thus, it's a convenient
-          // way to decide when all existing records have come down from the server
-          ref.once('value', function() {
-            $firebaseUtils.compile(function() {
-              if( self._isDestroyed ) {
-                def.reject('instance was destroyed before load completed');
-              }
-              else {
-                def.resolve(list);
-              }
-            });
-          }, def.reject.bind(def));
-
-          return def.promise;
         }
       };
 
@@ -536,38 +526,67 @@
 })();
 (function() {
   'use strict';
+  /**
+   * Creates and maintains a synchronized boject. This constructor should not be
+   * manually invoked. Instead, one should create a $firebase object and call $asObject
+   * on it:  <code>$firebase( firebaseRef ).$asObject()</code>;
+   *
+   * Internally, the $firebase object depends on this class to provide 2 methods, which it invokes
+   * to notify the object whenever a change has been made at the server:
+   *    $$updated - called whenever a change occurs (a value event from Firebase)
+   *    $$error - called when listeners are canceled due to a security error
+   *
+   * Instead of directly modifying this class, one should generally use the $extendFactory
+   * method to add or change how methods behave:
+   *
+   * <pre><code>
+   * var NewFactory = $FirebaseObject.$extendFactory({
+   *    // add a new method to the prototype
+   *    foo: function() { return 'bar'; },
+   * });
+   * </code></pre>
+   *
+   * And then the new factory can be used by passing it as an argument:
+   * <code>$firebase( firebaseRef, {objectFactory: NewFactory}).$asObject();</code>
+   */
   angular.module('firebase').factory('$FirebaseObject', [
     '$parse', '$firebaseUtils', '$log',
     function($parse, $firebaseUtils, $log) {
-      function FirebaseObject($firebase, destroyFn) {
-        var self = this, def = $firebaseUtils.defer();
+      /**
+       * This constructor should probably never be called manually. It is used internally by
+       * <code>$firebase.$asObject()</code>.
+       *
+       * @param $firebase
+       * @param {Function} destroyFn invoking this will cancel all event listeners and stop
+       *                   notifications from being delivered to $$updated and $$error
+       * @param readyPromise resolved when the initial data downloaded from Firebase
+       * @returns {FirebaseObject}
+       * @constructor
+       */
+      function FirebaseObject($firebase, destroyFn, readyPromise) {
+        var self = this;
+
+        // These are private config props and functions used internally
+        // they are collected here to reduce clutter on the prototype
+        // and instance signatures.
         self.$$conf = {
-          promise: def.promise,
+          promise: readyPromise,
           inst: $firebase,
           bound: null,
           destroyFn: destroyFn,
           listeners: [],
-          resolve: function(err) {
-            if( def ) {
-              var d = def;
-              def = null;
-              if( err ) {
-                d.reject(err);
-              }
-              else {
-                d.resolve(self);
-              }
-            }
-          },
-          updated: function() {
+          /**
+           * Updates any bound scope variables and notifies listeners registered
+           * with $watch any time there is a change to data
+           */
+          notify: function() {
             if( self.$$conf.bound ) {
               self.$$conf.bound.update();
             }
+            // be sure to do this after setting up data and init state
             angular.forEach(self.$$conf.listeners, function (parts) {
               parts[0].call(parts[1], {event: 'updated', key: self.$id});
             });
-            // be sure to do this after setting up data and init state
-            self.$$conf.resolve();
           }
         };
 
@@ -576,24 +595,56 @@
       }
 
       FirebaseObject.prototype = {
+        /**
+         * Saves all data on the FirebaseObject back to Firebase.
+         * @returns a promise which will resolve after the save is completed.
+         */
         $save: function () {
           return this.$inst().$set($firebaseUtils.toJSON(this));
         },
 
-        $loaded: function () {
+        /**
+         * The loaded method is invoked after the initial batch of data arrives from the server.
+         * When this resolves, all data which existed prior to calling $asObject() is now cached
+         * locally in the object.
+         *
+         * As a shortcut is also possible to pass resolve/reject methods directly into this
+         * method just as they would be passed to .then()
+         *
+         * @param {Function} resolve
+         * @param {Function} reject
+         * @returns a promise which resolves after initial data is downloaded from Firebase
+         */
+        $loaded: function(resolve, reject) {
           var promise = this.$$conf.promise;
           if (arguments.length) {
             // allow this method to be called just like .then
             // by passing any arguments on to .then
-            promise = promise.then.apply(promise, arguments);
+            promise = promise.then.call(promise, resolve, reject);
           }
           return promise;
         },
 
+        /**
+         * @returns the original $firebase object used to create this object.
+         */
         $inst: function () {
           return this.$$conf.inst;
         },
 
+        /**
+         * Creates a 3-way data sync between this object, the Firebase server, and a
+         * scope variable. This means that any changes made to the scope variable are
+         * pushed to Firebase, and vice versa.
+         *
+         * If scope emits a $destroy event, the binding is automatically severed. Otherwise,
+         * it is possible to unbind the scope variable by using the `unbind` function
+         * passed into the resolve method.
+         *
+         * @param {object} scope
+         * @param {string} varName
+         * @returns a promise which resolves to an unbind method after data is set in scope
+         */
         $bindTo: function (scope, varName) {
           var self = this;
           return self.$loaded().then(function () {
@@ -648,6 +699,17 @@
           });
         },
 
+        /**
+         * Listeners passed into this method are notified whenever a new change is received
+         * from the server. Each invocation is sent an object containing
+         * <code>{ type: 'updated', key: 'my_firebase_id' }</code>
+         *
+         * This method returns an unbind function that can be used to detach the listener.
+         *
+         * @param {Function} cb
+         * @param {Object} [context]
+         * @returns {Function} invoke to stop observing events
+         */
         $watch: function (cb, context) {
           var list = this.$$conf.listeners;
           list.push([cb, context]);
@@ -662,21 +724,30 @@
           };
         },
 
-        $destroy: function () {
+        /**
+         * Informs $firebase to stop sending events and clears memory being used
+         * by this object (delete's its local content).
+         */
+        $destroy: function (err) {
           var self = this;
           if (!self.$isDestroyed) {
             self.$isDestroyed = true;
-            self.$$conf.destroyFn();
             if (self.$$conf.bound) {
               self.$$conf.bound.unbind();
             }
             $firebaseUtils.each(self, function (v, k) {
               delete self[k];
             });
-            self.$$conf.resolve('destroyed');
+            self.$$conf.destroyFn(err);
           }
         },
 
+        /**
+         * Called by $firebase whenever an item is changed at the server.
+         * This method must exist on any objectFactory passed into $firebase.
+         *
+         * @param snap
+         */
         $$updated: function (snap) {
           this.$id = snap.name();
           // applies new data to this object
@@ -684,20 +755,52 @@
           if( changed ) {
             // notifies $watch listeners and
             // updates $scope if bound to a variable
-            this.$$conf.updated();
+            this.$$conf.notify();
           }
         },
 
+        /**
+         * Called whenever a security error or other problem causes the listeners to become
+         * invalid. This is generally an unrecoverable error.
+         * @param {Object} err which will have a `code` property and possibly a `message`
+         */
         $$error: function (err) {
           // prints an error to the console (via Angular's logger)
           $log.error(err);
-          // rejects the $loaded promise
-          this.$$conf.resolve(err);
           // frees memory and cancels any remaining listeners
-          this.$destroy();
+          this.$destroy(err);
         }
       };
 
+      /**
+       * This method allows FirebaseObject to be copied into a new factory. Methods passed into this
+       * function will be added onto the object's prototype. They can override existing methods as
+       * well.
+       *
+       * In addition to passing additional methods, it is also possible to pass in a class function.
+       * The prototype on that class function will be preserved, and it will inherit from
+       * FirebaseObject. It's also possible to do both, passing a class to inherit and additional
+       * methods to add onto the prototype.
+       *
+       * Once a factory is obtained by this method, it can be passed into $firebase as the
+       * `objectFactory` parameter:
+       *
+       * <pre><code>
+       * var MyFactory = $FirebaseObject.$extendFactory({
+       *    // add a method onto the prototype that prints a greeting
+       *    getGreeting: function() {
+       *       return 'Hello ' + this.first_name + ' ' + this.last_name + '!';
+       *    }
+       * });
+       *
+       * // use our new factory in place of $FirebaseObject
+       * var obj = $firebase(ref, {objectFactory: MyFactory}).$asObject();
+       * </code></pre>
+       *
+       * @param {Function} [ChildClass] a child class which should inherit FirebaseObject
+       * @param {Object} [methods] a list of functions to add onto the prototype
+       * @returns {Function} a new factory suitable for use with $firebase
+       */
       FirebaseObject.$extendFactory = function(ChildClass, methods) {
         if( arguments.length === 1 && angular.isObject(ChildClass) ) {
           methods = ChildClass;
@@ -885,7 +988,7 @@
         };
 
         function SyncArray($inst, ArrayFactory) {
-          function destroy() {
+          function destroy(err) {
             self.isDestroyed = true;
             var ref = $inst.$ref();
             ref.off('child_added', created);
@@ -893,6 +996,7 @@
             ref.off('child_changed', updated);
             ref.off('child_removed', removed);
             array = null;
+            resolve(err||'destroyed');
           }
 
           function init() {
@@ -903,9 +1007,21 @@
             ref.on('child_moved', moved, error);
             ref.on('child_changed', updated, error);
             ref.on('child_removed', removed, error);
+
+            // determine when initial load is completed
+            ref.once('value', resolve.bind(null, null), resolve);
           }
 
-          var array = new ArrayFactory($inst, destroy);
+          function resolve(err) {
+            if( def ) {
+              if( err ) { def.reject(err); }
+              else { def.resolve(array); }
+              def = null;
+            }
+          }
+
+          var def = $firebaseUtils.defer();
+          var array = new ArrayFactory($inst, destroy, def.promise);
           var batch = $firebaseUtils.batch();
           var created = batch(array.$$added, array);
           var updated = batch(array.$$updated, array);
@@ -920,17 +1036,28 @@
         }
 
         function SyncObject($inst, ObjectFactory) {
-          function destroy() {
+          function destroy(err) {
             self.isDestroyed = true;
             ref.off('value', applyUpdate);
             obj = null;
+            resolve(err||'destroyed');
           }
 
           function init() {
             ref.on('value', applyUpdate, error);
+            ref.once('value', resolve.bind(null, null), resolve);
           }
 
-          var obj = new ObjectFactory($inst, destroy);
+          function resolve(err) {
+            if( def ) {
+              if( err ) { def.reject(err); }
+              else { def.resolve(obj); }
+              def = null;
+            }
+          }
+
+          var def = $firebaseUtils.defer();
+          var obj = new ObjectFactory($inst, destroy, def.promise);
           var ref = $inst.$ref();
           var batch = $firebaseUtils.batch();
           var applyUpdate = batch(obj.$$updated, obj);
@@ -1461,8 +1588,12 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
         }
 
         function reject(msg) {
+          return $q.reject(msg);
+        }
+
+        function resolve() {
           var def = defer();
-          def.reject(msg);
+          def.resolve.apply(def, arguments);
           return def.promise;
         }
 
@@ -1555,6 +1686,7 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
           getPrototypeMethods: getPrototypeMethods,
           getPublicMethods: getPublicMethods,
           reject: reject,
+          resolve: resolve,
           defer: defer,
           allPromises: $q.all.bind($q),
           each: each,

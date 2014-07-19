@@ -115,6 +115,12 @@
           return $q.reject(msg);
         }
 
+        function resolve() {
+          var def = defer();
+          def.resolve.apply(def, arguments);
+          return def.promise;
+        }
+
         function compile(fn, wait) {
           $timeout(fn||function() {}, wait||0);
         }
@@ -204,6 +210,7 @@
           getPrototypeMethods: getPrototypeMethods,
           getPublicMethods: getPublicMethods,
           reject: reject,
+          resolve: resolve,
           defer: defer,
           allPromises: $q.all.bind($q),
           each: each,

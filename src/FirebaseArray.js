@@ -41,23 +41,27 @@
        * @param $firebase
        * @param {Function} destroyFn invoking this will cancel all event listeners and stop
        *                   notifications from being delivered to $$added, $$updated, $$moved, and $$removed
+       * @param readyPromise resolved when the initial data downloaded from Firebase
        * @returns {Array}
        * @constructor
        */
-      function FirebaseArray($firebase, destroyFn) {
-        // observers registered with the $watch function
+      function FirebaseArray($firebase, destroyFn, readyPromise) {
+        var self = this;
         this._observers = [];
-        // the synchronized list of records
         this.$list = [];
         this._inst = $firebase;
-        // used by the $loaded() function
-        this._promise = this._init();
+        this._promise = readyPromise;
         this._destroyFn = destroyFn;
+
         // Array.isArray will not work on objects which extend the Array class.
         // So instead of extending the Array class, we just return an actual array.
         // However, it's still possible to extend FirebaseArray and have the public methods
         // appear on the array object. We do this by iterating the prototype and binding
         // any method that is not prefixed with an underscore onto the final array.
+        $firebaseUtils.getPublicMethods(self, function(fn, key) {
+          self.$list[key] = fn.bind(self);
+        });
+
         return this.$list;
       }
 
@@ -217,12 +221,12 @@
          * Informs $firebase to stop sending events and clears memory being used
          * by this array (delete's its local content).
          */
-        $destroy: function() {
+        $destroy: function(err) {
           if( !this._isDestroyed ) {
             this._isDestroyed = true;
             this.$list.length = 0;
             $log.debug('destroy called for FirebaseArray: '+this.$inst().$ref().toString());
-            this._destroyFn();
+            this._destroyFn(err);
           }
         },
 
@@ -348,7 +352,7 @@
             default:
               // nothing to do
           }
-          if( !_.isUndefined(prevChild) ) {
+          if( angular.isDefined(prevChild) ) {
             // add it to the array
             this._addAfter(rec, prevChild);
           }
@@ -444,42 +448,6 @@
           if( this._isDestroyed ) {
             throw new Error('Cannot call ' + method + ' method on a destroyed $FirebaseArray object');
           }
-        },
-
-        /**
-         * Copies our prototype onto the actual array element and preps our $loaded() promise
-         *
-         * @returns a promise that resolves after initial data is loaded
-         * @private
-         */
-        _init: function() {
-          var self = this;
-          var list = self.$list;
-          var def = $firebaseUtils.defer();
-          var ref = self.$inst().$ref();
-
-          // we return $list, but apply our public prototype to it first
-          // see FirebaseArray.prototype's assignment comments
-          $firebaseUtils.getPublicMethods(self, function(fn, key) {
-            list[key] = fn.bind(self);
-          });
-
-          // for our $loaded() function
-          // this is guaranteed by Firebase to trigger after any child_added events for
-          // data which already existed when this snapshot was taken, thus, it's a convenient
-          // way to decide when all existing records have come down from the server
-          ref.once('value', function() {
-            $firebaseUtils.compile(function() {
-              if( self._isDestroyed ) {
-                def.reject('instance was destroyed before load completed');
-              }
-              else {
-                def.resolve(list);
-              }
-            });
-          }, def.reject.bind(def));
-
-          return def.promise;
         }
       };
 
