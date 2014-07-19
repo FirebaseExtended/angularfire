@@ -176,18 +176,61 @@ describe('$firebase', function () {
     it('should reject if fails'); //todo-test
 
     it('should remove data in Firebase'); //todo-test
+
+    it('should only remove keys in query if used on a query'); //todo-test
   });
 
   describe('$update', function() {
-    it('should return a promise');
+    it('should return a promise', function() {
+      expect($fb.$update({foo: 'bar'})).toBeAPromise();
+    });
 
-    it('should resolve to ref when done');
+    xit('should resolve to ref when done', function() { //todo-test
+      var spy = jasmine.createSpy('resolve');
+      $fb.$update('index', {foo: 'bar'}).then(spy);
+      flushAll();
+      var arg = spy.calls.args[0][0];
+      expect(arg).toBeAn('object');
+      expect(arg.name).toBeA('function');
+      expect(arg.name()).toBe($fb.$ref().name());
+    });
 
-    it('should reject if failed');
+    it('should reject if failed', function() {
+      var whiteSpy = jasmine.createSpy('resolve');
+      var blackSpy = jasmine.createSpy('reject');
+      $fb.$ref().failNext('update', 'oops');
+      $fb.$update({index: {foo: 'bar'}}).then(whiteSpy, blackSpy);
+      flushAll();
+      expect(whiteSpy).not.toHaveBeenCalled();
+      expect(blackSpy).toHaveBeenCalled();
+    });
 
-    it('should not destroy untouched keys');
+    it('should not destroy untouched keys', function() {
+      var $fbChild = new $firebase($fb.$ref().child('data'));
+      flushAll();
+      var data = $fbChild.$ref().getData();
+      data.a = 'foo';
+      delete data.b;
+      expect(Object.keys(data).length).toBeGreaterThan(1);
+      $fbChild.$update({a: 'foo', b: null});
+      flushAll();
+      expect($fbChild.$ref().getData()).toEqual(data);
+    });
 
-    it('should replace keys specified');
+    it('should replace keys specified', function() {
+      $fb.$update({a: 'foo', b: null});
+      flushAll();
+      var data = $fb.$ref().getData();
+      expect(data.a).toBe('foo');
+      expect(data.b).toBe(null);
+    });
+
+    xit('should work on a query object', function() { //todo-test
+      var $fb2 = $firebase($fb.$ref().child('data').limit(1));
+      flushAll();
+      $fb2.$update({foo: 'bar'});
+      expect($fb2.$ref().getData().foo).toBe('bar');
+    });
   });
 
   describe('$transaction', function() {
@@ -215,7 +258,7 @@ describe('$firebase', function () {
   });
 
   describe('$toObject', function() {
-    it('should return an object'); //todo-test
+    it('should return an instance of $FirebaseObject'); //todo-test
 
     it('should contain data in ref() after load'); //todo-test
 

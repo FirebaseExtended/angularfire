@@ -42,30 +42,57 @@
           },
 
           $set: function (key, data) {
-            var ref = this._ref.ref();
+            var ref = this._ref;
             var def = $firebaseUtils.defer();
             if (arguments.length > 1) {
-              ref = ref.child(key);
+              ref = ref.ref().child(key);
             }
             else {
               data = key;
             }
-            ref.set(data, this._handle(def, ref));
+            if( angular.isFunction(ref.set) || !angular.isObject(data) ) {
+              // this is not a query, just do a flat set
+              ref.ref().set(data, this._handle(def, ref));
+            }
+            else {
+              // this is a query, so we will replace all the elements
+              // of this query with the value provided, but not blow away
+              // the entire Firebase path
+              ref.once('value', function(snap) {
+                snap.forEach(function(ss) {
+                  if( !data.hasOwnProperty(ss.name()) ) {
+                    data[ss.name()] = null;
+                  }
+                });
+                ref.ref().update(data, this._handle(def, ref));
+              }, this);
+            }
             return def.promise;
           },
 
           $remove: function (key) {
-            //todo is this the best option? should remove blow away entire
-            //todo data set if we are operating on a query result? probably
-            //todo not; instead, we should probably forEach the results and
-            //todo remove them individually
-            //todo https://github.com/firebase/angularFire/issues/325
-            var ref = this._ref.ref();
-            var def = $firebaseUtils.defer();
+            var ref = this._ref;
             if (arguments.length > 0) {
-              ref = ref.child(key);
+              ref = ref.ref().child(key);
             }
-            ref.remove(this._handle(def, ref));
+            var def = $firebaseUtils.defer();
+            if( angular.isFunction(ref.remove) ) {
+              // this is not a query, just do a flat remove
+              ref.remove(this._handle(def, ref));
+            }
+            else {
+              var promises = [];
+              // this is a query so let's only remove the
+              // items in the query and not the entire path
+              ref.once('value', function(snap) {
+                snap.forEach(function(ss) {
+                  var d = $firebaseUtils.defer();
+                  promises.push(d);
+                  ss.ref().remove(this._handle(d, ss.ref()));
+                }, this);
+              });
+              this._handle($firebaseUtils.allPromises(promises), ref);
+            }
             return def.promise;
           },
 

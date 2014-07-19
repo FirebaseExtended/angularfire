@@ -95,6 +95,13 @@ describe('$FirebaseArray', function () {
       var lastId = successSpy.calls.argsFor(0)[0].name();
       expect($fb.$ref().getData()[lastId]).toEqual('hello');
     });
+
+    it('should throw error if array is destroyed', function() {
+      arr.$destroy();
+      expect(function() {
+        arr.$add({foo: 'bar'});
+      }).toThrowError(Error);
+    });
   });
 
   describe('$save', function() {
@@ -188,6 +195,13 @@ describe('$FirebaseArray', function () {
       flushAll();
       expect($fb.$ref().child(key).set).toHaveBeenCalledWith(expData, jasmine.any(Function));
     });
+
+    it('should throw error if object is destroyed', function() {
+      arr.$destroy();
+      expect(function() {
+        arr.$save(0);
+      }).toThrowError(Error);
+    });
   });
 
   describe('$remove', function() {
@@ -239,6 +253,13 @@ describe('$FirebaseArray', function () {
       flushAll();
       expect(whiteSpy).not.toHaveBeenCalled();
       expect(blackSpy.calls.argsFor(0)[0]).toMatch(/invalid/i);
+    });
+
+    it('should throw Error if array destroyed', function() {
+      arr.$destroy();
+      expect(function () {
+        arr.$remove(0);
+      }).toThrowError(Error);
     });
   });
 
@@ -363,8 +384,6 @@ describe('$FirebaseArray', function () {
       expect(args[0]).toEqual({event: 'child_moved', key: 'c', prevChild: 'a'});
     });
 
-    it('should batch events'); //todo-test
-
     it('should not get notified if destroy is invoked?'); //todo-test
   });
 
@@ -433,13 +452,6 @@ describe('$FirebaseArray', function () {
       var len = arr.length;
       $fb.$ref().fakeEvent('child_added', 'c', {fake: 'add'}).flush();
       expect(arr.length).toBe(len);
-    });
-
-    it('should move record if already exists', function() {
-      var newIdx = arr.$indexFor('a')+1;
-      $fb.$ref().fakeEvent('child_added', 'c', {fake: 'add'}, 'a').flush();
-      flushAll();
-      expect(arr.$indexFor('c')).toBe(newIdx);
     });
 
     it('should accept a primitive', function() {

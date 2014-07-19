@@ -76,10 +76,12 @@
       it('should resolve when all server data is downloaded', function() {
         var whiteSpy = jasmine.createSpy('resolve');
         var blackSpy = jasmine.createSpy('reject');
-        var obj = new $FirebaseObject($fb);
+        var ref = $fb.$ref();
+        var obj = new $FirebaseObject($fb, noop);
         obj.$loaded().then(whiteSpy, blackSpy);
         expect(whiteSpy).not.toHaveBeenCalled();
-        flushAll();
+        obj.$$updated(fakeSnap(ref, ref.getData(), ref.priority));
+        $timeout.flush();
         expect(whiteSpy).toHaveBeenCalled();
         expect(blackSpy).not.toHaveBeenCalled();
       });
@@ -88,10 +90,11 @@
         var whiteSpy = jasmine.createSpy('resolve');
         var blackSpy = jasmine.createSpy('reject');
         $fb.$ref().failNext('once', 'doh');
-        var obj = new $FirebaseObject($fb);
+        var obj = new $FirebaseObject($fb, noop);
         obj.$loaded().then(whiteSpy, blackSpy);
         expect(blackSpy).not.toHaveBeenCalled();
-        flushAll();
+        obj.$$error('doh');
+        $timeout.flush();
         expect(whiteSpy).not.toHaveBeenCalled();
         expect(blackSpy).toHaveBeenCalledWith('doh');
       });
@@ -103,6 +106,25 @@
         expect(spy).toHaveBeenCalled();
         expect(spy.calls.argsFor(0)[0]).toBe(obj);
       });
+
+      it('should contain all data at the time $loaded is called', function() {
+        var ref = obj.$inst().$ref();
+        var spy = jasmine.createSpy('loaded').and.callFake(function(data) {
+          expect(data).toBe(obj);
+          expect(dataFor(obj)).toEqual(jasmine.objectContaining(ref.getData()));
+          expect(obj.$priority).toBe(ref.priority);
+          expect(obj.$id).toBe(ref.name());
+        });
+        obj.$loaded(spy);
+        flushAll();
+        expect(spy).toHaveBeenCalled();
+      });
+
+      it('should trigger if attached before load completes'); //todo-test
+
+      it('should trigger if attached after load completes'); //todo-test
+
+      it('should reject if destroyed during load');
     });
 
     describe('$inst', function(){
@@ -393,5 +415,20 @@
 
     function noop() {}
   });
+
+  function dataFor(obj) {
+    var dat = {};
+    angular.forEach(obj, function(v,k) {
+      if(k.charAt(0) !== '$' && k.charAt(0) !== '_') {
+        dat[k] = v;
+      }
+    });
+    angular.forEach(['$id', '$value', '$priority'], function(k) {
+      if( obj && obj.hasOwnProperty(k) ) {
+        dat[k] = obj[k];
+      }
+    });
+    return dat;
+  }
 
 })();

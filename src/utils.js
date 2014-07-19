@@ -123,10 +123,13 @@
 
         function updateRec(rec, snap) {
           var data = snap.val();
+          var oldData = angular.extend({}, rec);
+
           // deal with primitives
           if( !angular.isObject(data) ) {
             data = {$value: data};
           }
+
           // remove keys that don't exist anymore
           delete rec.$value;
           each(rec, function(val, key) {
@@ -139,7 +142,9 @@
           angular.extend(rec, data);
           rec.$priority = snap.getPriority();
 
-          return rec;
+          return !angular.equals(oldData, rec) ||
+            oldData.$value !== rec.$value ||
+            oldData.$priority !== rec.$priority;
         }
 
         function each(obj, iterator, context) {
@@ -202,6 +207,7 @@
           getPublicMethods: getPublicMethods,
           reject: reject,
           defer: defer,
+          allPromises: $q.all.bind($q),
           each: each,
           toJSON: toJSON
         };
