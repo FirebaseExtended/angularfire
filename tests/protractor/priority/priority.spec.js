@@ -1,22 +1,27 @@
 var protractor = require('protractor');
 var Firebase = require('firebase');
 
-var ptor = protractor.getInstance();
-var cleared = false;
-
 describe('Priority App', function () {
-  beforeEach(function (done) {
-    // Navigate to the priority app
-    ptor.get('priority/priority.html');
+  // Protractor instance
+  var ptor = protractor.getInstance();
 
-    // Verify the title
-    expect(ptor.getTitle()).toBe('AngularFire Priority e2e Test');
+  // Reference to the Firebase which stores the data for this demo
+  var firebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/priority');
+
+  // Boolean used to clear the Firebase on the first test only
+  var firebaseCleared = false;
+
+  // Reference to the messages repeater
+  var messages = element.all(by.repeater('message in messages'));
+
+  beforeEach(function (done) {
+    // Navigate to the chat app
+    browser.get('priority/priority.html');
 
     // Clear the Firebase before the first test and sleep until it's finished
-    if (!cleared) {
-      var firebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/');
+    if (!firebaseCleared) {
       firebaseRef.remove(function() {
-        cleared = true;
+        firebaseCleared = true;
         done();
       });
     }
@@ -29,8 +34,12 @@ describe('Priority App', function () {
   it('loads', function () {
   });
 
+  it('has the correct title', function() {
+    expect(browser.getTitle()).toEqual('AngularFire Priority e2e Test');
+  });
+
   it('starts with an empty list of messages', function () {
-    var messages = element.all(by.repeater('message in messages | orderByPriority'));
+    // Make sure the page has no messages
     expect(messages.count()).toBe(0);
   });
 
@@ -41,41 +50,41 @@ describe('Priority App', function () {
     newMessageInput.sendKeys('Oh, hi. How are you?\n');
     newMessageInput.sendKeys('Pretty fantastic!\n');
 
-    var messages = element.all(by.repeater('message in messages | orderByPriority'));
+    // Make sure the page has three messages
     expect(messages.count()).toBe(3);
 
     // Make sure the priority of each message is correct
-    element(by.css('.message:nth-of-type(1) .priority')).getText().then(function(priority) {
-      expect(parseInt(priority)).toBe(0);
-    });
-    element(by.css('.message:nth-of-type(2) .priority')).getText().then(function(priority) {
-      expect(parseInt(priority)).toBe(1);
-    });
-    element(by.css('.message:nth-of-type(3) .priority')).getText().then(function(priority) {
-      expect(parseInt(priority)).toBe(2);
-    });
+    expect($('.message:nth-of-type(1) .priority').getText()).toEqual('0');
+    expect($('.message:nth-of-type(2) .priority').getText()).toEqual('1');
+    expect($('.message:nth-of-type(3) .priority').getText()).toEqual('2');
+
+    // Make sure the content of each message is correct
+    expect($('.message:nth-of-type(1) .content').getText()).toEqual('Hey there!');
+    expect($('.message:nth-of-type(2) .content').getText()).toEqual('Oh, hi. How are you?');
+    expect($('.message:nth-of-type(3) .content').getText()).toEqual('Pretty fantastic!');
   });
 
   it('updates priorities dynamically', function(done) {
-    var messagesFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/priority/');
-
     // Update the priority of the first message
-    messagesFirebaseRef.startAt().limit(1).once("child_added", function(dataSnapshot) {
-      dataSnapshot.ref().setPriority(4, function() {
+    firebaseRef.startAt().limit(1).once("child_added", function(dataSnapshot1) {
+      dataSnapshot1.ref().setPriority(4, function() {
         // Update the priority of the third message
-        messagesFirebaseRef.startAt(2).limit(1).once("child_added", function(dataSnapshot) {
-          dataSnapshot.ref().setPriority(0, function() {
+        messagesFirebaseRef.startAt(2).limit(1).once("child_added", function(dataSnapshot2) {
+          dataSnapshot2.ref().setPriority(0, function() {
+            // Make sure the page has three messages
+            expect(messages.count()).toBe(3);
+
             // Make sure the priority of each message is correct
-            element(by.css('.message:nth-of-type(1) .priority')).getText().then(function(priority) {
-              expect(parseInt(priority)).toBe(0);
-              element(by.css('.message:nth-of-type(2) .priority')).getText().then(function(priority) {
-                expect(parseInt(priority)).toBe(1);
-                element(by.css('.message:nth-of-type(3) .priority')).getText().then(function(priority) {
-                  expect(parseInt(priority)).toBe(4);
-                  done();
-                });
-              });
-            });
+            expect($('.message:nth-of-type(1) .priority').getText()).toEqual('0');
+            expect($('.message:nth-of-type(2) .priority').getText()).toEqual('1');
+            expect($('.message:nth-of-type(3) .priority').getText()).toEqual('4');
+
+            // Make sure the content of each message is correct
+            expect($('.message:nth-of-type(1) .content').getText()).toEqual('Pretty fantastic!');
+            expect($('.message:nth-of-type(2) .content').getText()).toEqual('Oh, hi. How are you?');
+            expect($('.message:nth-of-type(3) .content').getText()).toEqual('Hey there!');
+
+            done();
           });
         });
       });

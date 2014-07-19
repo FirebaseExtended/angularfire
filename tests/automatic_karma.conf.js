@@ -5,7 +5,7 @@ module.exports = function(config) {
   config.set({
     frameworks: ['jasmine'],
     browsers: ['PhantomJS'],
-    reporters: ['dots', 'failed', 'coverage'],
+    reporters: ['spec', 'failed', 'coverage'],
     autowatch: false,
     singleRun: true,
 

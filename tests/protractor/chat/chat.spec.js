@@ -1,9 +1,6 @@
 var protractor = require('protractor');
 var Firebase = require('firebase');
 
-var ptor = protractor.getInstance();
-var cleared = false;
-
 describe('Chat App', function () {
   // Protractor instance
   var ptor = protractor.getInstance();

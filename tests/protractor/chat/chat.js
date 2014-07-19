@@ -1,5 +1,5 @@
 var app = angular.module('chat', ['firebase']);
-app.controller('Chat', function Chat($scope, $firebase) {
+app.controller('ChatCtrl', function Chat($scope, $firebase) {
   // Get a reference to the Firebase
   var chatFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/chat');
   var messagesFirebaseRef = chatFirebaseRef.child("messages").limit(2);
@@ -18,12 +18,12 @@ app.controller('Chat', function Chat($scope, $firebase) {
 
   // Verify that $inst() works
   if ($scope.chat.$inst() !== chatSync) {
-    console.log("Something is wrong with FirebaseObject.$inst().");
-    throw new Error("Something is wrong with FirebaseObject.$inst().")
+    console.log("Something is wrong with $FirebaseObject.$inst().");
+    throw new Error("Something is wrong with $FirebaseObject.$inst().")
   }
   if ($scope.messages.$inst() !== messagesSync) {
-    console.log("Something is wrong with FirebaseArray.$inst().");
-    throw new Error("Something is wrong with FirebaseArray.$inst().")
+    console.log("Something is wrong with $FirebaseArray.$inst().");
+    throw new Error("Something is wrong with $FirebaseArray.$inst().")
   }
 
   // Initialize $scope variables

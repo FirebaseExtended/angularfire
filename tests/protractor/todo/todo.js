@@ -1,5 +1,5 @@
 var app = angular.module('todo', ['firebase']);
-app. controller('Todo', function Todo($scope, $firebase) {
+app. controller('TodoCtrl', function Todo($scope, $firebase) {
   // Get a reference to the Firebase
   var todosFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/todo');
   var todosSync = $firebase(todosFirebaseRef);
@@ -9,8 +9,8 @@ app. controller('Todo', function Todo($scope, $firebase) {
 
   // Verify that $inst() works
   if ($scope.todos.$inst() !== todosSync) {
-    console.log("Something is wrong with FirebaseArray.$inst().");
-    throw new Error("Something is wrong with FirebaseArray.$inst().")
+    console.log("Something is wrong with $FirebaseArray.$inst().");
+    throw new Error("Something is wrong with $FirebaseArray.$inst().")
   }
 
   /* Clears the todos Firebase reference */
@@ -40,8 +40,8 @@ app. controller('Todo', function Todo($scope, $firebase) {
   $scope.removeTodo = function(id) {
     // Verify that $indexFor() and $keyAt() work
     if ($scope.todos.$indexFor($scope.todos.$keyAt(id)) !== id) {
-      console.log("Something is wrong with FirebaseArray.$indexFor() or FirebaseArray.$keyAt().");
-      throw new Error("Something is wrong with FirebaseArray.$indexFor() or FirebaseArray.$keyAt().");
+      console.log("Something is wrong with $FirebaseArray.$indexFor() or FirebaseArray.$keyAt().");
+      throw new Error("Something is wrong with $FirebaseArray.$indexFor() or FirebaseArray.$keyAt().");
     }
     $scope.todos.$remove(id);
   };
