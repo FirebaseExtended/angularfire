@@ -1,9 +1,26 @@
 /**
  * MockFirebase: A Firebase stub/spy library for writing unit tests
  * https://github.com/katowulf/mockfirebase
- * @version 0.1.2
+ * @version 0.2.0
  */
-(function(exports) {
+(function (root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module.
+    define(['lodash', 'sinon'], factory);
+  } else if (typeof exports === 'object') {
+    // Node. Does not work with strict CommonJS, but
+    // only CommonJS-like environments that support module.exports,
+    // like Node.
+    module.exports = factory(require('lodash'), require('sinon'));
+  } else {
+    // Browser globals (root is window)
+    var exports = factory(root._, root.sinon);
+    root._.each(exports, function(v,k) {
+      root[k] = v;
+    });
+  }
+}(this, function (_, sinon) {
+  var exports = {};
   var DEBUG = false; // enable lots of console logging (best used while isolating one test case)
 
   /**
@@ -14,19 +31,23 @@
    *     // in windows
    *     <script src="lib/lodash.js"></script> <!-- dependency -->
    *     <script src="lib/MockFirebase.js"></script> <!-- the lib -->
-   *     <!-- not working yet: MockFirebase.stub(window, 'Firebase'); // replace window.Firebase -->
+   *     <script>
+   *       // to override all calls to new Firebase:
+   *       MockFirebase.override();
+   *       // test units can be invoked now...
+   *     </script>
    *
    *     // in node.js
    *     var Firebase = require('../lib/MockFirebase');
    *
    * ## Usage Examples
    *
-   *     var fb = new Firebase('Mock://foo/bar');
+   *     var fb = new MockFirebase('Mock://foo/bar');
    *     fb.on('value', function(snap) {
     *        console.log(snap.val());
     *     });
    *
-   *     // do something async or synchronously...
+   *     // do things async or synchronously, like fb.child('foo').set('bar')...
    *
    *     // trigger callbacks and event listeners
    *     fb.flush();
@@ -45,9 +66,26 @@
    *     var fb = new MockFirebase('Mock://fails/a/lot');
    *     fb.failNext('set', new Error('PERMISSION_DENIED'); // create an error to be invoked on the next set() op
    *     fb.set({foo: bar}, function(err) {
-    *         // err.message === 'PERMISSION_DENIED'
-    *     });
+   *         // err.message === 'PERMISSION_DENIED'
+   *     });
    *     fb.flush();
+   *
+   * ## Building with custom data
+   *
+   *     // change data for all mocks
+   *     MockFirebase.DEFAULT_DATA = {foo: { bar: 'baz'}};
+   *     var fb = new MockFirebase('Mock://foo');
+   *     fb.once('value', function(snap) {
+   *        snap.name(); // foo
+   *        snap.val(); //  {bar: 'baz'}
+   *     });
+   *
+   *     // customize for a single instance
+   *     var fb = new MockFirebase('Mock://foo', {foo: 'bar'});
+   *     fb.once('value', function(snap) {
+   *        snap.name(); // foo
+   *        snap.val(); //  'bar'
+   *     });
    *
    * @param {string} [currentPath] use a relative path here or a url, all .child() calls will append to this
    * @param {Object} [data] specify the data in this Firebase instance (defaults to MockFirebase.DEFAULT_DATA)
@@ -56,9 +94,6 @@
    * @constructor
    */
   function MockFirebase(currentPath, data, parent, name) {
-    // these are set whenever startAt(), limit() or endAt() get invoked
-    this._queryProps = { limit: undefined, startAt: undefined, endAt: undefined };
-
     // represents the fake url
     //todo should unwrap nested paths; Firebase
     //todo accepts sub-paths, mock should too
@@ -123,7 +158,8 @@
      *
      * This also affects all child and parent paths that were created using .child from the original
      * MockFirebase instance; all events queued before a flush, regardless of the node level in hierarchy,
-     * are processed together.
+     * are processed together. To make child and parent paths fire on a different timeline or out of order,
+     * check out splitFlushQueue() below.
      *
      * <code>
      *   var fbRef = new MockFirebase();
@@ -171,6 +207,23 @@
     },
 
     /**
+     * If we can't use fakeEvent() and we need to test events out of order, we can give a child its own flush queue
+     * so that calling flush() does not also trigger parent and siblings in the queue.
+     */
+    splitFlushQueue: function() {
+      this.flushQueue = new FlushQueue();
+    },
+
+    /**
+     * Restore the flush queue after using splitFlushQueue() so that child/sibling/parent queues are flushed in order.
+     */
+    joinFlushQueue: function() {
+      if( this.parent ) {
+        this.flushQueue = this.parent.flushQueue;
+      }
+    },
+
+    /**
      * Simulate a failure by specifying that the next invocation of methodName should
      * fail with the provided error.
      *
@@ -187,6 +240,14 @@
      */
     getData: function() {
       return _.cloneDeep(this.data);
+    },
+
+    /**
+     * Returns keys from the data in this path
+     * @returns {Array}
+     */
+    getKeys: function() {
+      return this.sortedDataKeys.slice();
     },
 
     /**
@@ -287,18 +348,20 @@
       });
     },
 
-    setPriority: function(newPriority) {
+    setPriority: function(newPriority, callback) {
       var self = this;
+      var err = this._nextErr('setPriority');
       DEBUG && console.log('setPriority called', self.toString(), newPriority);
       self._defer(function() {
         DEBUG && console.log('setPriority flushed', self.toString(), newPriority);
         self._priChanged(newPriority);
-      })
+        callback && callback(err);
+      });
     },
 
-    setWithPriority: function(data, pri) {
+    setWithPriority: function(data, pri, callback) {
       this.setPriority(pri);
-      this.set(data);
+      this.set(data, callback);
     },
 
     name: function() {
@@ -350,11 +413,11 @@
       }
       else {
         function fn(snap) {
-          self.off(event, fn);
+          self.off(event, fn, context);
           callback.call(context, snap);
         }
 
-        this.on(event, fn);
+        this.on(event, fn, context);
       }
     },
 
@@ -373,7 +436,7 @@
     },
 
     on: function(event, callback, cancel, context) {
-      if( arguments.length === 3 && !angular.isFunction(cancel) ) {
+      if( arguments.length === 3 && !_.isFunction(cancel) ) {
         context = cancel;
         cancel = function() {};
       }
@@ -437,8 +500,8 @@
 
     transaction: function(valueFn, finishedFn, applyLocally) {
       var self = this;
-      var valueSpy = spyFactory(valueFn);
-      var finishedSpy = spyFactory(finishedFn);
+      var valueSpy = spyFactory(valueFn, 'trxn:valueFn');
+      var finishedSpy = spyFactory(finishedFn, 'trxn:finishedFn');
 
       this._defer(function() {
         var err = self._nextErr('transaction');
@@ -470,18 +533,15 @@
      * @param {int} limit
      */
     limit: function(limit) {
-      this._queryProps.limit = limit;
-      //todo
+      return new MockQuery(this).limit(limit);
     },
 
-    startAt: function(priority, recordId) {
-      this._queryProps.startAt = [priority, recordId];
-      //todo
+    startAt: function(priority, key) {
+      return new MockQuery(this).startAt(priority, key);
     },
 
-    endAt: function(priority, recordId) {
-      this._queryProps.endAt = [priority, recordId];
-      //todo
+    endAt: function(priority, key) {
+      return new MockQuery(this).endAt(priority, key);
     },
 
     /*****************************************************
@@ -511,8 +571,8 @@
       }
       if( !_.isEqual(data, self.data) ) {
         DEBUG && console.log('_dataChanged', self.toString(), data);
-        var oldKeys = _.keys(self.data);
-        var newKeys = _.keys(data);
+        var oldKeys = _.keys(self.data).sort();
+        var newKeys = _.keys(data).sort();
         var keysToRemove = _.difference(oldKeys, newKeys);
         var keysToChange = _.difference(newKeys, keysToRemove);
         var events = [];
@@ -530,6 +590,9 @@
             self._updateOrAdd(key, unparsedData[key], events);
           });
         }
+
+        // update order of my child keys
+        self._resort();
 
         // trigger parent notifications after all children have
         // been processed
@@ -550,9 +613,16 @@
     },
 
     _resort: function(childKeyMoved) {
-      this.sortedDataKeys.sort(this.childComparator.bind(this));
-      if( !_.isUndefined(childKeyMoved) && _.has(this.data, childKeyMoved) ) {
-        this._trigger('child_moved', this.data[childKeyMoved], this._getPri(childKeyMoved), childKeyMoved);
+      var self = this;
+      self.sortedDataKeys.sort(self.childComparator.bind(self));
+      // resort the data object to match our keys so value events return ordered content
+      var oldDat = _.assign({}, self.data);
+      _.each(oldDat, function(v,k) { delete self.data[k]; });
+      _.each(self.sortedDataKeys, function(k) {
+        self.data[k] = oldDat[k];
+      });
+      if( !_.isUndefined(childKeyMoved) && _.has(self.data, childKeyMoved) ) {
+        self._trigger('child_moved', self.data[childKeyMoved], self._getPri(childKeyMoved), childKeyMoved);
       }
     },
 
@@ -615,7 +685,7 @@
     },
 
     _addChild: function(key, data, events) {
-      if(_.isObject(this.data) && _.has(this.data, key)) {
+      if(this._hasChild(key)) {
         throw new Error('Tried to add existing object', key);
       }
       if( !_.isObject(this.data) ) {
@@ -629,7 +699,7 @@
     },
 
     _removeChild: function(key, events) {
-      if(_.isObject(this.data) && _.has(this.data, key)) {
+      if(this._hasChild(key)) {
         this._dropKey(key);
         var data = this.data[key];
         delete this.data[key];
@@ -664,8 +734,12 @@
       return err||null;
     },
 
+    _hasChild: function(key) {
+      return _.isObject(this.data) && _.has(this.data, key);
+    },
+
     _childData: function(key) {
-      return _.isObject(this.data) && _.has(this.data, key)? this.data[key] : null;
+      return this._hasChild(key)? this.data[key] : null;
     },
 
     _getPrevChild: function(key) {
@@ -684,15 +758,155 @@
     childComparator: function(a, b) {
       var aPri = this._getPri(a);
       var bPri = this._getPri(b);
-      if(aPri === bPri) {
-        return ( ( a === b ) ? 0 : ( ( a > b ) ? 1 : -1 ) );
+      var x = priorityComparator(aPri, bPri);
+      if( x === 0 ) {
+        if( a !== b ) {
+          x = a < b? -1 : 1;
+        }
       }
-      else if( aPri === null || bPri === null ) {
-        return aPri !== null? 1 : -1;
+      return x;
+    }
+  };
+
+
+  /*******************************************************************************
+   * MOCK QUERY
+   ******************************************************************************/
+  function MockQuery(ref) {
+    this._ref = ref;
+    this._subs = [];
+    // startPri, endPri, startKey, endKey, and limit
+    this._q = {};
+  }
+
+  MockQuery.prototype = {
+    /*******************
+     * UTILITY FUNCTIONS
+     *******************/
+    flush: function() {
+      this.ref().flush.apply(this.ref(), arguments);
+      return this;
+    },
+
+    autoFlush: function() {
+      this.ref().autoFlush.apply(this.ref(), arguments);
+      return this;
+    },
+
+    slice: function() {
+      return new Slice(this);
+    },
+
+    fakeEvent: function(event, snap) {
+      _.each(this._subs, function(parts) {
+        if( parts[0] === 'event' ) {
+          parts[1].call(parts[2], snap);
+        }
+      })
+    },
+
+    /*******************
+     *   API FUNCTIONS
+     *******************/
+    on: function(event, callback, cancelCallback, context) {
+      var self = this, isFirst = true, lastSlice = this.slice(), map;
+      var fn = function(snap, prevChild) {
+        var slice = new Slice(self, event==='value'? snap : makeRefSnap(snap.ref().parent()));
+        if( (event !== 'value' || !isFirst) && lastSlice.equals(slice) ) {
+          return;
+        }
+        switch(event) {
+          case 'value':
+            callback.call(context, slice.snap());
+            break;
+          case 'child_moved':
+            var x = slice.pos(snap.name());
+            var y = slice.insertPos(snap.name());
+            if( x > -1 && y > -1 ) {
+              callback.call(context, snap, prevChild);
+            }
+            else if( x > -1 || y > -1 ) {
+              map = lastSlice.changeMap(slice);
+            }
+            break;
+          case 'child_added':
+          case 'child_removed':
+            map = lastSlice.changeMap(slice);
+            break;
+          case 'child_changed':
+            callback.call(context, snap);
+            break;
+          default:
+            throw new Error('Invalid event: '+event);
+        }
+
+        if( map ) {
+          var newSnap = slice.snap();
+          var oldSnap = lastSlice.snap();
+          _.each(map.added, function(addKey) {
+            self.fakeEvent('child_added', newSnap.child(addKey));
+          });
+          _.each(map.removed, function(remKey) {
+            self.fakeEvent('child_removed', oldSnap.child(remKey));
+          });
+        }
+
+        isFirst = false;
+        lastSlice = slice;
+      };
+      var cancelFn = function(err) {
+        cancelCallback.call(context, err);
+      };
+      self._subs.push([event, callback, context, fn]);
+      this.ref().on(event, fn, cancelFn);
+    },
+
+    off: function(event, callback, context) {
+      var ref = this.ref();
+      _.each(this._subs, function(parts) {
+        if( parts[0] === event && parts[1] === callback && parts[2] === context ) {
+          ref.off(event, parts[3]);
+        }
+      })
+    },
+
+    once: function(event, callback, context) {
+      var self = this;
+      // once is tricky because we want the first match within our range
+      // so we use the on() method above which already does the needed legwork
+      function fn(snap, prevChild) {
+        self.off(event, fn);
+        // the snap is already sliced in on() so we can just pass it on here
+        callback.apply(context, arguments);
       }
-      else {
-        return aPri < bPri? -1 : 1;
+      self.on(event, fn);
+    },
+
+    limit: function(intVal) {
+      if( typeof intVal !== 'number' ) {
+        throw new Error('Query.limit: First argument must be a positive integer.');
       }
+      var q = new MockQuery(this.ref());
+      _.extend(q._q, this._q, {limit: intVal});
+      return q;
+    },
+
+    startAt: function(priority, key) {
+      assertQuery('Query.startAt', priority, key);
+      var q = new MockQuery(this.ref());
+      _.extend(q._q, this._q, {startKey: key, startPri: priority});
+      return q;
+    },
+
+    endAt: function(priority, key) {
+      assertQuery('Query.endAt', priority, key);
+      var q = new MockQuery(this.ref());
+      _.extend(q._q, this._q, {endKey: key, endPri: priority});
+      return q;
+    },
+
+    ref: function() {
+      return this._ref;
     }
   };
 
@@ -909,6 +1123,191 @@
   };
 
   /***
+   * DATA SLICE
+   * A utility to handle limits, startAts, and endAts
+   */
+  function Slice(queue, snap) {
+    var data = snap? snap.val() : queue.ref().getData();
+    this.ref = snap? snap.ref() : queue.ref();
+    this.priority = snap? snap.getPriority() : this.ref.priority;
+    this.pris = {};
+    this.data = {};
+    this.map = {};
+    this.outerMap = {};
+    this.keys = [];
+    this.props = this._makeProps(queue._q, this.ref, this.ref.getKeys().length);
+    this._build(this.ref, data);
+  }
+
+  Slice.prototype = {
+    prev: function(key) {
+      var pos = this.pos(key);
+      if( pos === 0 ) { return null; }
+      else {
+        if( pos < 0 ) { pos = this.keys.length; }
+        return this.keys[pos-1];
+      }
+    },
+
+    equals: function(slice) {
+      return _.isEqual(this.keys, slice.keys) && _.isEqual(this.data, slice.data);
+    },
+
+    pos: function(key) {
+      return this.has(key)? this.map[key] : -1;
+    },
+
+    insertPos: function(prevChild) {
+      var outerPos = this.outerMap[prevChild];
+      if( outerPos >= this.min && outerPos < this.max ) {
+        return outerPos+1;
+      }
+      return -1;
+    },
+
+    has: function(key) {
+      return this.map.hasOwnProperty(key);
+    },
+
+    snap: function(key) {
+      var ref = this.ref;
+      var data = this.data;
+      var pri = this.priority;
+      if( key ) {
+        data = this.get(key);
+        ref = ref.child(key);
+        pri = this.pri(key);
+      }
+      return makeSnap(ref, data, pri);
+    },
+
+    get: function(key) {
+      return this.has(key)? this.data[key] : null;
+    },
+
+    pri: function(key) {
+      return this.has(key)? this.pris[key] : null;
+    },
+
+    changeMap: function(slice) {
+      var self = this;
+      var changes = { in: [], out: [] };
+      _.each(self.data, function(v,k) {
+        if( !slice.has(k) ) {
+          changes.out.push(k);
+        }
+      });
+      _.each(slice.data, function(v,k) {
+        if( !self.has(k) ) {
+          changes.in.push(k);
+        }
+      });
+      return changes;
+    },
+
+    _inRange: function(props, key, pri, pos) {
+      if( pos === -1 ) { return false; }
+      if( !_.isUndefined(props.startPri) && priorityComparator(pri, props.startPri) < 0 ) {
+        return false;
+      }
+      if( !_.isUndefined(props.startKey) && priorityComparator(key, props.startKey) < 0 ) {
+        return false;
+      }
+      if( !_.isUndefined(props.endPri) && priorityComparator(pri, props.endPri) > 0 ) {
+        return false;
+      }
+      if( !_.isUndefined(props.endKey) && priorityComparator(key, props.endKey) > 0 ) {
+        return false;
+      }
+      if( props.max > -1 && pos > props.max ) {
+        return false;
+      }
+      return pos >= props.min;
+    },
+
+    _findPos: function(pri, key, ref, isStartBoundary) {
+      var keys = ref.getKeys(), firstMatch = -1, lastMatch = -1;
+      var len = keys.length, i, x, k;
+      if(_.isUndefined(pri) && _.isUndefined(key)) {
+        return -1;
+      }
+      for(i = 0; i < len; i++) {
+        k = keys[i];
+        x = priAndKeyComparator(pri, key, ref.child(k).priority, k);
+        if( x === 0 ) {
+          // if the key is undefined, we may have several matching comparisons
+          // so we will record both the first and last successful match
+          if (firstMatch === -1) {
+            firstMatch = i;
+          }
+          lastMatch = i;
+        }
+        else if( x < 0 ) {
+          // we found the breakpoint where our keys exceed the match params
+          if( i === 0 ) {
+            // if this is 0 then our match point is before the data starts, we
+            // will use len here because -1 already has a special meaning (no limit)
+            // and len ensures we won't get any data (no matches)
+            i = len;
+          }
+          break;
+        }
+      }
+
+      if( firstMatch !== -1 ) {
+        // we found a match, life is simple
+        return isStartBoundary? firstMatch : lastMatch;
+      }
+      else if( i < len ) {
+        // if we're looking for the start boundary then it's the first record after
+        // the breakpoint. If we're looking for the end boundary, it's the last record before it
+        return isStartBoundary? i : i -1;
+      }
+      else {
+        // we didn't find one, so use len (i.e. after the data, no results)
+        return len;
+      }
+    },
+
+    _makeProps: function(queueProps, ref, numRecords) {
+      var out = {};
+      _.each(queueProps, function(v,k) {
+        if(!_.isUndefined(v)) {
+          out[k] = v;
+        }
+      });
+      out.min = this._findPos(out.startPri, out.startKey, ref, true);
+      out.max = this._findPos(out.endPri, out.endKey, ref);
+      if( !_.isUndefined(queueProps.limit) ) {
+        if( out.min > -1 ) {
+          out.max = out.min + queueProps.limit;
+        }
+        else if( out.max > -1 ) {
+          out.min = out.max - queueProps.limit;
+        }
+        else if( queueProps.limit < numRecords ) {
+          out.max = numRecords-1;
+          out.min = Math.max(0, out.max - queueProps.limit);
+        }
+      }
+      return out;
+    },
+
+    _build: function(ref, rawData) {
+      var i = 0, map = this.map, keys = this.keys, outer = this.outerMap;
+      var props = this.props, slicedData = this.data;
+      _.each(rawData, function(v,k) {
+        outer[k] = i < props.min? props.min - i : i - Math.max(props.min,0);
+        if( this._inRange(props, k, ref.child(k).priority, i++) ) {
+          map[k] = keys.length;
+          keys.push(k);
+          slicedData[k] = v;
+        }
+      }, this);
+    }
+  };
+
+  /***
    * FLUSH QUEUE
    * A utility to make sure events are flushed in the order
    * they are invoked.
@@ -951,30 +1350,73 @@
 
   /*** UTIL FUNCTIONS ***/
   var lastChildAutoId = null;
-  var _ = requireLib('lodash', '_');
-  var sinon = requireLib('sinon');
+
+  function priAndKeyComparator(testPri, testKey, valPri, valKey) {
+    var x = 0;
+    if( !_.isUndefined(testPri) ) {
+      x = priorityComparator(testPri, valPri);
+    }
+    if( x === 0 && !_.isUndefined(testKey) && testKey !== valKey ) {
+      x = testKey < valKey? -1 : 1;
+    }
+    return x;
+  }
+
+  function priorityComparator(a,b) {
+    if (a !== b) {
+      if( a === null || b === null ) {
+        return a === null? -1 : 1;
+      }
+      if (typeof a !== typeof b) {
+        return typeof a === "number" ? -1 : 1;
+      } else {
+        return a > b ? 1 : -1;
+      }
+    }
+    return 0;
+  }
 
   var spyFactory = (function() {
-    var fn;
+    var spyFunction;
     if( typeof(jasmine) !== 'undefined' ) {
-      fn = function(obj, method) {
-        if( arguments.length === 2 ) {
-          return spyOn(obj, method).and.callThrough();
+      spyFunction = function(obj, method) {
+        var fn;
+        if( typeof(obj) === 'object' ) {
+          var spy = spyOn(obj, method);
+          if( typeof(spy.andCallThrough) === 'function' ) {
+            // karma < 0.12.x
+            fn = spy.andCallThrough();
+          }
+          else {
+            fn = spy.and.callThrough();
+          }
         }
         else {
-          var fn = jasmine.createSpy();
+          fn = jasmine.createSpy(method);
           if( arguments.length === 1 && typeof(arguments[0]) === 'function' ) {
-            fn.andCallFake(obj);
+            if( typeof(fn.andCallFake) === 'function' ) {
+              // karma < 0.12.x
+              fn.andCallFake(obj);
+            }
+            else {
+              fn.and.callFake(obj);
+            }
           }
-          return fn;
         }
+        return fn;
       }
     }
     else {
-      var sinon = requireLib('sinon');
-      fn = sinon.spy.bind(sinon);
+      spyFunction = function(obj, method) {
+        if ( typeof (obj) === 'object') {
+          return sinon.spy(obj, method);
+        }
+        else {
+          return sinon.spy(obj);
+        }
+      };
     }
-    return fn;
+    return spyFunction;
   })();
 
   var USER_COUNT = 100;
@@ -1054,8 +1496,13 @@
     return base.replace(/\/$/, '')+'/'+add.replace(/^\//, '');
   }
 
+  function makeRefSnap(ref) {
+    return makeSnap(ref, ref.getData(), ref.priority);
+  }
+
   function makeSnap(ref, data, pri) {
     data = _.cloneDeep(data);
+    if(_.isObject(data) && _.isEmpty(data)) { data = null; }
     return {
       val: function() { return data; },
       ref: function() { return ref; },
@@ -1069,6 +1516,9 @@
           var res = cb.call(scope, makeSnap(child, v, child.priority));
           return !(res === true);
         });
+      },
+      child: function(key) {
+        return makeSnap(ref.child(key), _.isObject(data) && _.has(data, key)? data[key] : null, ref.child(key).priority);
       }
     }
   }
@@ -1147,15 +1597,6 @@
     return { code: code||'UNKNOWN_ERROR', message: 'FirebaseSimpleLogin: '+(message||code||'unspecific error') };
   }
 
-  function requireLib(moduleName, variableName) {
-    if( typeof module !== "undefined" && module.exports && typeof(require) === 'function' ) {
-      return require(moduleName);
-    }
-    else {
-      return exports[variableName||moduleName];
-    }
-  }
-
   function hasMeta(data) {
     return _.isObject(data) && (_.has(data, '.priority') || _.has(data, '.value'));
   }
@@ -1176,14 +1617,31 @@
       if(_.has(newData, '.value')) {
         newData = _.clone(newData['.value']);
       }
-      _.each(newData, function(v,k) {
-        if( k !== '.priority' ) {
-          newData[k] = cleanData(v);
-        }
-      });
+      if(_.has(newData, '.priority')) {
+        delete newData['.priority'];
+      }
+//      _.each(newData, function(v,k) {
+//        newData[k] = cleanData(v);
+//      });
       if(_.isEmpty(newData)) { newData = null; }
     }
     return newData;
+  }
+
+  function assertKey(method, key, argNum) {
+    argNum || (argNum = 'first');
+    if( typeof(key) !== 'string' || key.match(/[.#$\/\[\]]/) ) {
+      throw new Error(method + ' failed: '+argNum+' was an invalid key "'+(key+'')+'. Firebase keys must be non-empty strings and can\'t contain ".", "#", "$", "/", "[", or "]"');
+    }
+  }
+
+  function assertQuery(method, pri, key) {
+    if( pri !== null && typeof(pri) !== 'string' && typeof(pri) !== 'number' ) {
+      throw new Error(method + ' failed: first argument must be a valid firebase priority (a string, number, or null).')
+    }
+    if(!_.isUndefined(key)) {
+      assertKey(method, key, 'second');
+    }
   }
 
   /*** PUBLIC METHODS AND FIXTURES ***/
@@ -1220,14 +1678,22 @@
   MockFirebaseSimpleLogin.DEFAULT_AUTO_FLUSH = false;
 
   MockFirebase._ = _; // expose for tests
+  MockFirebase.Query = MockQuery; // expose for tests
 
-  MockFirebase._origFirebase = exports.Firebase;
-  MockFirebase._origFirebaseSimpleLogin = exports.FirebaseSimpleLogin;
-
-  MockFirebase.override = function() {
-    exports.Firebase = MockFirebase;
-    exports.FirebaseSimpleLogin = MockFirebaseSimpleLogin;
-  };
+  if( typeof(window) !== 'undefined' ) {
+    MockFirebase._origFirebase = window.Firebase;
+    MockFirebase._origFirebaseSimpleLogin = window.FirebaseSimpleLogin;
+    MockFirebase.override = function () {
+      window.Firebase = MockFirebase;
+      window.FirebaseSimpleLogin = MockFirebaseSimpleLogin;
+    };
+  }
+  else {
+    MockFirebase.override = function() {
+      console.warn('MockFirebase.override is only useful in a browser environment. See README' +
+        ' for some node.js alternatives.')
+    };
+  }
 
   MockFirebase.ref = ref;
   MockFirebase.DEFAULT_DATA  = {
@@ -1243,7 +1709,7 @@
         aBoolean: true
       },
       'c': {
-        bar: 'charlie',
+        aString: 'charlie',
         aNumber: 3,
         aBoolean: true
       },
@@ -1260,7 +1726,56 @@
     'index': {
       'b': true,
       'c': 1,
-      'e': false
+      'e': false,
+      'z': true // must not exist in `data`
+    },
+    'ordered': {
+      'null_a': {
+        aNumber: 0,
+        aLetter: 'a'
+      },
+      'null_b': {
+        aNumber: 0,
+        aLetter: 'b'
+      },
+      'null_c': {
+        aNumber: 0,
+        aLetter: 'c'
+      },
+      'num_1_a': {
+        '.priority': 1,
+        aNumber: 1
+      },
+      'num_1_b': {
+        '.priority': 1,
+        aNumber: 1
+      },
+      'num_2': {
+        '.priority': 2,
+        aNumber: 2
+      },
+      'num_3': {
+        '.priority': 3,
+        aNumber: 3
+      },
+      'char_a_1': {
+        '.priority': 'a',
+        aNumber: 1,
+        aLetter: 'a'
+      },
+      'char_a_2': {
+        '.priority': 'a',
+        aNumber: 2,
+        aLetter: 'a'
+      },
+      'char_b': {
+        '.priority': 'b',
+        aLetter: 'b'
+      },
+      'char_c': {
+        '.priority': 'c',
+        aLetter: 'c'
+      }
     }
   };
 
@@ -1268,4 +1783,5 @@
   exports.MockFirebase = MockFirebase;
   exports.MockFirebaseSimpleLogin = MockFirebaseSimpleLogin;
 
-})(typeof(window) === 'object'? window : module.exports);
+  return exports;
+}));

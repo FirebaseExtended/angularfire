@@ -76,6 +76,8 @@ describe('$firebase', function () {
       expect(spy).toHaveBeenCalled();
       expect($fb.$ref().getData()[id]).toEqual({foo: 'pushtest'});
     });
+
+    it('should work on a query'); //todo-test
   });
 
   describe('$set', function() {
@@ -128,6 +130,8 @@ describe('$firebase', function () {
       expect(whiteSpy).not.toHaveBeenCalled();
       expect(blackSpy).toHaveBeenCalledWith('setfail');
     });
+
+    it('should affect query keys only if query used'); //todo-test
   });
 
   describe('$remove', function() {
@@ -185,14 +189,14 @@ describe('$firebase', function () {
       expect($fb.$update({foo: 'bar'})).toBeAPromise();
     });
 
-    xit('should resolve to ref when done', function() { //todo-test
+    it('should resolve to ref when done', function() { //todo-test
       var spy = jasmine.createSpy('resolve');
       $fb.$update('index', {foo: 'bar'}).then(spy);
       flushAll();
-      var arg = spy.calls.args[0][0];
+      var arg = spy.calls.argsFor(0)[0];
       expect(arg).toBeAn('object');
       expect(arg.name).toBeA('function');
-      expect(arg.name()).toBe($fb.$ref().name());
+      expect(arg.name()).toBe('index');
     });
 
     it('should reject if failed', function() {
@@ -225,11 +229,12 @@ describe('$firebase', function () {
       expect(data.b).toBe(null);
     });
 
-    xit('should work on a query object', function() { //todo-test
+    it('should work on a query object', function() { //todo-test
       var $fb2 = $firebase($fb.$ref().child('data').limit(1));
       flushAll();
       $fb2.$update({foo: 'bar'});
-      expect($fb2.$ref().getData().foo).toBe('bar');
+      flushAll();
+      expect($fb2.$ref().ref().getData().foo).toBe('bar');
     });
   });
 
@@ -243,6 +248,8 @@ describe('$firebase', function () {
     it('should reject if failed'); //todo-test
 
     it('should modify data in firebase'); //todo-test
+
+    it('should work okay on a query'); //todo-test
   });
 
   describe('$toArray', function() {
@@ -255,6 +262,8 @@ describe('$firebase', function () {
     it('should use arrayFactory'); //todo-test
 
     it('should use recordFactory'); //todo-test
+
+    it('should only contain query nodes if query used'); //todo-test
   });
 
   describe('$toObject', function() {
@@ -265,15 +274,11 @@ describe('$firebase', function () {
     it('should return same instance if called multiple times'); //todo-test
 
     it('should use recordFactory'); //todo-test
+
+    it('should only contain query keys if query used'); //todo-test
   });
 
   describe('query support', function() {
-    it('should allow set() with a query'); //todo-test
-
-    it('should allow push() with a query'); //todo-test
-
-    it('should allow remove() with a query'); //todo-test
-
     it('should create array of correct length with limit'); //todo-test
 
     it('should return the query object in ref'); //todo-test
