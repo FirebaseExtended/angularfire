@@ -5,10 +5,10 @@ associate Firebase URLs with Angular models so that they will be transparently a
 kept in sync with the Firebase servers and with all other clients currently using your app.
 
 The focus of this library is to abstract much of the boilerplate involved in creating Angular
- bindings from Firebase data, and to make it easy to create services that sync to Firebase data.
- However, this library does not attempt to replace the capabilities of the entire Firebase API
- and that may still be suitable for some advanced usages (particularly if you find yourself
- working with $firebase methods frequently or calling $ref() to get higher level functions).
+bindings from Firebase data, and to make it easy to create services that sync to Firebase data.
+However, this library does not attempt to replace the capabilities of the entire Firebase API
+and that may still be suitable for some advanced usages (particularly if you find yourself
+working with $firebase methods frequently or calling $ref() to get higher level functions).
 
 
 Getting Started
@@ -482,7 +482,7 @@ obj.$bindTo($scope, 'data').then(function(unbind) {
 ### $destroy()
 
 Calling this method cancels event listeners and frees memory used by this object (deletes the
-local data)
+local data).
 
 $FirebaseArray
 --------------
@@ -661,8 +661,8 @@ Any callback passed here will be invoked each time data in the array is updated 
 The callback receives an object with the following keys:
  * `event`: child_added, child_moved, child_removed, or child_changed
  * `key`: The id of the record that triggered event
- * `prevChild`: If event is child_added or child_moved, this contains the prev record key 
-   or null (first record)
+ * `prevChild`: If event is child_added or child_moved, this contains the previous record's key 
+   or null if `key` belongs to the first record in the collection.
 
 ```js
 var ref = new Firebase(URL);
@@ -702,7 +702,7 @@ function compare(a, b) {
 ```
 
 ### $destroy
-Stop listening for events and free memory used by this array (empties the local copy)
+Stop listening for events and free memory used by this array (empties the local copy).
 
 
 Extending the Factories
