@@ -16,14 +16,11 @@
         obj = $fb.$asObject();
 
         // start using the direct methods here until we can refactor `obj`
-        destroySpy = jasmine.createSpy('destroy');
-        objData = {
+        objNew = makeObject({
           aString: 'alpha',
           aNumber: 1,
           aBoolean: false
-        };
-        objNew = new $FirebaseObject($fb, destroySpy);
-        objNew.$$updated(fakeSnap($fb.$ref(), objData));
+        });
 
         flushAll();
       })
@@ -77,11 +74,11 @@
         var whiteSpy = jasmine.createSpy('resolve');
         var blackSpy = jasmine.createSpy('reject');
         var ref = $fb.$ref();
-        var obj = new $FirebaseObject($fb, noop);
+        var obj = makeObject();
         obj.$loaded().then(whiteSpy, blackSpy);
+        flushAll();
         expect(whiteSpy).not.toHaveBeenCalled();
-        obj.$$updated(fakeSnap(ref, ref.getData(), ref.priority));
-        $timeout.flush();
+        obj.$$test.load(ref.getData());
         expect(whiteSpy).toHaveBeenCalled();
         expect(blackSpy).not.toHaveBeenCalled();
       });
@@ -89,12 +86,11 @@
       it('should reject if the server data cannot be accessed', function() {
         var whiteSpy = jasmine.createSpy('resolve');
         var blackSpy = jasmine.createSpy('reject');
-        $fb.$ref().failNext('once', 'doh');
-        var obj = new $FirebaseObject($fb, noop);
+        var obj = makeObject();
         obj.$loaded().then(whiteSpy, blackSpy);
+        flushAll();
         expect(blackSpy).not.toHaveBeenCalled();
-        obj.$$error('doh');
-        $timeout.flush();
+        obj.$$test.fail('doh');
         expect(whiteSpy).not.toHaveBeenCalled();
         expect(blackSpy).toHaveBeenCalledWith('doh');
       });
@@ -108,15 +104,18 @@
       });
 
       it('should contain all data at the time $loaded is called', function() {
+        var obj =  makeObject();
         var ref = obj.$inst().$ref();
         var spy = jasmine.createSpy('loaded').and.callFake(function(data) {
           expect(data).toBe(obj);
-          expect(dataFor(obj)).toEqual(jasmine.objectContaining(ref.getData()));
-          expect(obj.$priority).toBe(ref.priority);
+          expect(dataFor(obj)).toEqual(jasmine.objectContaining({foo: 'bar'}));
+          expect(obj.$priority).toBe(22);
           expect(obj.$id).toBe(ref.name());
         });
         obj.$loaded(spy);
         flushAll();
+        expect(spy).not.toHaveBeenCalled();
+        obj.$$test.load({foo: 'bar'}, 22);
         expect(spy).toHaveBeenCalled();
       });
 
@@ -228,10 +227,9 @@
 
       it('should not fail if remote data is null', function() {
         var $scope = $rootScope.$new();
-        var obj = new $FirebaseObject($fb, noop);
+        var obj = makeObject(new $firebase($fb.$ref().child('a')));
         obj.$bindTo($scope, 'test');
-        obj.$$updated(fakeSnap($fb.$ref(), null, null));
-        flushAll();
+        obj.$$test.load(true);
         expect($scope.test).toEqual({$value: null, $id: 'a', $priority: null});
       });
 
@@ -249,7 +247,7 @@
       //todo-test https://github.com/firebase/angularFire/issues/333
       xit('should update value if $value changed in $scope', function() {
         var $scope = $rootScope.$new();
-        var obj = new $FirebaseObject($fb, noop);
+        var obj = new $FirebaseObject($fb, noop, $utils.resolve());
         obj.$$updated(fakeSnap($fb.$ref(), 'foo', null));
         expect(obj.$value).toBe('foo');
         var spy = spyOn(obj.$inst(), '$set');
@@ -323,7 +321,7 @@
         function Extend() { $FirebaseObject.apply(this, arguments); }
         Extend.prototype.foo = function() {};
         $FirebaseObject.$extendFactory(Extend);
-        var arr = new Extend($fb, jasmine.createSpy);
+        var arr = new Extend($fb, noop, $utils.resolve());
         expect(arr.foo).toBeA('function');
       });
 
@@ -336,13 +334,13 @@
       it('should be instanceof $FirebaseObject', function() {
         function A() {}
         $FirebaseObject.$extendFactory(A);
-        expect(new A($fb, noop)).toBeInstanceOf($FirebaseObject);
+        expect(new A($fb, noop, $utils.resolve())).toBeInstanceOf($FirebaseObject);
       });
 
       it('should add on methods passed into function', function() {
         function foo() { return 'foo'; }
         var F = $FirebaseObject.$extendFactory({foo: foo});
-        var res = new F($fb, noop);
+        var res = new F($fb, noop, $utils.resolve());
         expect(res.$$updated).toBeA('function');
         expect(res.foo).toBeA('function');
         expect(res.foo()).toBe('foo');
@@ -393,7 +391,7 @@
       // the order of these flush events is significant
       $fb.$ref().flush();
       Array.prototype.slice.call(arguments, 0).forEach(function(o) {
-        o.flush();
+        angular.isFunction(o.resolve)? o.resolve() : o.flush();
       });
       $rootScope.$digest();
       try { $timeout.flush(); }
@@ -414,7 +412,44 @@
     }
 
     function noop() {}
+
+    function makeObject(resolveWithData, pri, $altFb) {
+      if( arguments.length === 1 && resolveWithData instanceof $firebase) {
+        $altFb = resolveWithData;
+        resolveWithData = null;
+      }
+      var def = $utils.defer();
+      var spy = jasmine.createSpy('destroy').and.callFake(function(err) {
+        def.reject(err||'destroyed');
+      });
+      if( !$altFb ) { $altFb = $fb; }
+      var obj = new $FirebaseObject($altFb, spy, def.promise);
+      obj.$$test = {
+        spy: spy,
+        def: def,
+        load: function(data, pri) {
+          var ref = $altFb.$ref();
+          if( data === true ) { data = ref.getData(); }
+          obj.$$updated(fakeSnap(ref, data, pri));
+          def.resolve(obj);
+          try {
+            $timeout.flush();
+          }
+          catch(e) {}
+        },
+        fail: function(err) {
+          def.reject(err);
+          obj.$$error(err);
+          $timeout.flush();
+        }
+      };
+      if( resolveWithData ) {
+        obj.$$test.load(resolveWithData, pri);
+      }
+      return obj;
+    }
   });
+
 
   function dataFor(obj) {
     var dat = {};
