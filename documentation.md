@@ -1,9 +1,14 @@
 AngularFire
 ===========
-AngularFire is the officially supported AngularJS binding for Firebase. This binding lets you associate
-Firebase URLs with Angular models so that
-they will be transparently and immediately kept in sync with the Firebase
-servers and with all other clients currently using your app.
+AngularFire is the officially supported AngularJS binding for Firebase. This binding lets you 
+associate Firebase URLs with Angular models so that they will be transparently and immediately 
+kept in sync with the Firebase servers and with all other clients currently using your app.
+
+The focus of this library is to abstract much of the boilerplate involved in creating Angular
+ bindings from Firebase data, and to make it easy to create services that sync to Firebase data.
+ However, this library does not attempt to replace the capabilities of the entire Firebase API
+ and that may still be suitable for some advanced usages (particularly if you find yourself
+ working with $firebase methods frequently or calling $ref() to get higher level functions).
 
 
 Getting Started
@@ -124,9 +129,11 @@ var limited = $firebase(ref.limit(10));
 
 ### $asArray()
 
-Returns a synchronized array. **This collection is READ-ONLY**. Clients should not use
-push(), splice(), et al to modify the structure of the array. Multiple calls return the same
-array instance, not unique copies. See [$FirebaseArray](#firebasearray)
+Returns a synchronized array. **This collection is READ-ONLY**. Clients SHOULD NOT use
+push(), splice(), et al to modify the structure of the array. Special setter methods
+are provided instead. Multiple calls return the same array instance, not unique copies. 
+
+See [$FirebaseArray](#firebasearray) for full details.
 
 ```js
 app.controller('myController', function($scope) {
@@ -262,10 +269,13 @@ sync.$update({foo: 10, baz: 20});
 // new data: {foo: 10, bar: 2, baz: 20}
 
 // assume we have this data: {foo: 10, bar: {hello: 'world'}}
+// we will update the child foo by passing a key
 sync.$update('bar', {count: 20});
 // new data: {foo: 10, bar: {hello: 'world', count: 20}}
 
-sync.$update({ bar: {count: 21} }); // only 1 level deep!
+// this time we will not pass a key, which updates root
+// note that all of `bar` is replaced; the update is only 1 level deep!
+sync.$update({ bar: {count: 21} });
 // new data: {foo: 10, bar: {count: 21}} // hello key was deleted
 ```
 
@@ -398,7 +408,7 @@ obj.$loaded()
   .final(...)
 ```
 
-The resolve/reject methods can optionally be passed directly into `$loaded`:
+As a shortcut, the resolve/reject methods can optionally be passed directly into `$loaded`:
 
 ```
 var obj = $firebase(ref).$asObject();
@@ -471,7 +481,8 @@ obj.$bindTo($scope, 'data').then(function(unbind) {
 
 ### $destroy()
 
-Calling this method cancels event listeners and frees memory used by data in this object.
+Calling this method cancels event listeners and frees memory used by this object (deletes the
+local data)
 
 $FirebaseArray
 --------------
@@ -543,8 +554,8 @@ list.$add({foo: 'bar'}).then(function(ref) {
 ### $save(recordOrIndex)
 
 The array itself cannot be modified, but records in the array can be updated and saved back
-to Firebase individually. This method saves a modified local record back to Firebase. It
-accepts either an array index or a reference to an item that exists in the array.
+to Firebase individually. This method saves an existing, modified local record back to Firebase. 
+It accepts either an array index or a reference to an item that exists in the array.
 
 ```js
    $scope.list = $firebase(ref).$asArray();
@@ -650,7 +661,8 @@ Any callback passed here will be invoked each time data in the array is updated 
 The callback receives an object with the following keys:
  * `event`: child_added, child_moved, child_removed, or child_changed
  * `key`: The id of the record that triggered event
- * `prevChild`: If event is child_added or child_moved, this contains the prev record key or null (first record)
+ * `prevChild`: If event is child_added or child_moved, this contains the prev record key 
+   or null (first record)
 
 ```js
 var ref = new Firebase(URL);
@@ -690,41 +702,89 @@ function compare(a, b) {
 ```
 
 ### $destroy
-Stop listening for events, free memory, and empty this array.
+Stop listening for events and free memory used by this array (empties the local copy)
 
 
-Transforming the Array/Object Factories
--------------------------------------
+Extending the Factories
+-----------------------
 
 There are several powerful techniques for transforming the data downloaded and saved
-by `$FirebaseArray` and `$FirebaseObject`. Since these are full-fledged services, with
-a real prototype, they can be overridden or extended.
+by `$FirebaseArray` and `$FirebaseObject`. **These techniques are only for advanced
+Angular users who know their way around the code.**
 
-### The Sync Methods
+### Passing Custom Factories into $firebase
 
-Private methods on `$FirebaseObject` and on `$FirebaseArray`, prefixed with `$$`, are used
-to process all of the server synchronizations and can be overridden:
+A second argument can be passed into $firebase to override the `arrayFactory` or `objectFactory`
+to be used with the respective `$asArray()` or `$asObject()` methods. This hash accepts strings,
+which refers to the name of an Angular factory, or functions which should be the factory
+itself.
 
-**$FirebaseArray**
+```
+// create a $firebase instance which uses the WidgetFactory factory
+$firebase(ref, {firebaseObject: 'WidgetFactory'});
 
- - **$createObject**: creates the actual record that will be stored in the array, used internally
- by `$$added`
- - **$$added**: called with `snapshot` and `prevChild` each time a `child_added` event occurs
- - **$$updated**: called with `shapshot` each time a `child_changed` event occurs
- - **$$removed**: called with `snapshot` ecah time a `child_removed` event occurs
- - **$$moved**: called with `snapshot` and `prevChild` each time a `child_moved` event occurs
- - **$$error**: called with `error` message any time there is a security error in listeners (these
- are generally not recoverable errors)
+// create an instance which uses a function
+$firebase(ref, {firebaseObject: WidgetFactory});
+```
 
-**$FirebaseObject**
+In general, it's easier to simply extend the existing `$FirebaseObject` or `$FirebaseArray` 
+factories by using `$extendFactory`. However, any factory which provides the
+required `$$` methods (explained under `$extendFactory`) can be used.
 
- - **$$updated**: called with `snapshot` any time a `value` event is received from Firebase
- - **$$error**: called if a security error occurs (these are generally not recoverable)
+### $FirebaseObject.$extendFactory
 
-### Extending the Factories
+You can create a new factory for use when `$asObject` is called by using this method. It
+can add additional methods or override any existing method. The new factory is then
+passed into `$firebase` as a parameter:
 
-The factories both provide a special `extendFactory` method which can be used to create
-a copy with modified or added methods. For example, we could add a sum method to $FirebaseArray:
+```
+var NewFactory = $FirebaseObject.$extendFactory({
+  getMyFavoriteColor: function() { 
+    return this.favoriteColor + ', no green!'; // obscure Montey Python reference
+  }
+});
+
+var obj = $firebase(ref, {objectFactory: NewFactory}).$asObject();
+```
+
+This technique can also be used to transform how data is stored and saved by overriding the
+following private methods:
+
+ - **$$updated**: called with a snapshot any time a `value` event is received from Firebase
+ - **$$error**: passed an Error any time a security error occurs (these are generally not recoverable)
+ - **toJSON**: as with any object, if a `toJSON` method is provided, it wil be used by `JSON.stringify` to parse the JSON content beore it is saved to Firebase
+
+```
+var FactoryWithCounter = $FirebaseObject.$extendFactory({
+  getUpdateCount: function() { return this.counter; },
+
+  $$updated: function(snap) {
+    // apply the changes using, here we'll just use the generic "updateRecord"
+    $firebaseUtils.updateRecord(this, snap);
+    
+    // add/increment a counter each time there is an update
+    if( !this.counter ) { this.counter = 0; }
+    this.counter++;
+
+    // notify listeners
+    this.$$conf.notify();
+  },
+
+  // don't save counter when syncing data to the server
+  toJSON: function() {
+    return {
+       foo: this.foo,
+       bar: this.bar
+    };
+  }
+});
+```
+
+### $FirebaseArray.$extendFactory
+
+You can create a new factory for use when `$asArray` is invoked by using this method. It
+can add additional methods or override any existing method. The new factory is then
+passed into `$firebase` as a parameter:
 
 ```
 app.factory('ArrayWithSum', function($FirebaseArray) {
@@ -744,46 +804,110 @@ We can then use this factory with any `$firebase` constructor:
 
 ```
 var list = $firebase(ref, {arrayFactory: 'ArrayWithSum'}).$asArray();
-list.sum();
+list.$loaded().then(function() {
+  console.log('List has ' + list.sum() + ' items');
+});
 ```
 
-We can also pass in a class to inherit methods from either `$FirebaseArray` or
-`$FirebaseObject`:
+This technique can be used to transform how data is stored by overriding the
+following private methods:
+
+ - **$$added**: called with a snapshot and prevChild any itme a `child_added` event occurs
+ - **$$updated**: called with a snapshot any time a `child_changed` event occurs
+ - **$$moved**: called with a snapshot and prevChild any time `child_moved` event occurs
+ - **$$removed**: called with a snapshot any time a `child_removed` event occurs
+ - **$$error**: passed an Error any time a security error occurs (these are generally not recoverable)
+
+To illustrate, let's create a factory that returns Joke objects, instead of a vanilla JSON object:
 
 ```
-app.factory('SillyObject', function($FirebaseObject) {
-  // FirebaseArray and FirebaseObject constructors both accept a $firebase
-  // instance, and a method which they can call in order to destroy any listeners
-  function SillyObject($firebase, destroyFunction) {
-     // call the super constructor
-     $FirebaseObject.call(this, $firebase, destroyFunction);
+// an object to return in our JokeFactory
+app.factory('Joke', function($firebaseUtils) {
+  function Joke(snapshot) {
+    this.$id = snapshot.name();
+    this.update(snapshot);
   }
 
-  SillyObject.prototype.makeJoke = function() { 
-    alert('Why did the chicken cross the road?'); 
+  Joke.prototype = {
+    update: function(snapshot) {
+      // apply changes to this.data instead of directly on `this`
+      this.data = snapshot.val();
+    },
+
+    makeJoke: function() {
+      alert('Why did the ' + this.animal + ' cross the ' + this.obstacle + '?');
+    },
+
+    toJSON: function() {
+      // since we didn't store our data directly on `this`, we need to return
+      // it in parsed format. We can use the util function to remove $ variables
+      // and get it ready to ship
+      return $firebaseUtils.toJSON(this.data);
+    }
   };
 
-  // override the behavior of the $$updated method
-  SillyObject.prototype.$$updated = function(snap) {
-     this.$id = snap.name();
-     this.foo = Math.random();
-     this.data = snap.val();
+  return Joke;
+});
+
+app.factory('JokeFactory', function($FirebaseArray, Joke) {
+  return $FirebaseArray.$extendFactory({
+    // change the added behavior to return Joke objects
+    $$added: function(snap) {
+      return new Joke(snap);
+    },
+
+    // override the update behavior to call Joke.update()
+    JokeFactory.prototype.$$updated = function(snap) {
+       this.$getRecord(snap.name()).update(snap);
+    }
+  });
+});
+```
+
+### Passing a Class into $extendFactory
+
+Instead of just a list of functions, we can also pass in a class constructor to inherit methods from 
+either `$FirebaseArray`. The prototype for this class will be preserved, and it will inherit 
+from $FirebaseArray.
+
+The following factory adds an update counter which is incremented each time `$$added`
+or `$$updated` is called:
+
+```
+app.factory('JokeFactory', function($FirebaseArray, Joke) {
+  // FirebaseArray and FirebaseObject constructors both accept three parameters:
+  // $firebase: the wrapped reference to a Firebase URL
+  // destroyFunction: a method they can call to cancel all listeners
+  // readyPromise:  a promise which is fulfilled when initial data has been loaded
+  function JokeFactory($firebase, destroyFunction, readyPromise) {
+     // call the super constructor
+     $FirebaseObject.call(this, $firebase, destroyFunction, readyPromise);
+     // initialize a counter
+     this.updateCounter = 0;
+  }
+
+  // override the add behavior to return a Joke
+  JokeFactory.prototype.$$added = function(snap) {
+    this.updateCounter++;
+    return new Joke(snap);
   };
 
-  // override how data is returned to the server
-  SillyObject.prototype.toJSON = function() {
-     return this.data;
+  // override the update behavior to call Joke.update()
+  JokeFactory.prototype.$$updated = function(snap) {
+     this.updateCounter++;
+     var joke = this.$getRecord(snap.name());
+     joke.update(snap);
   };
 
-  return $FirebaseObject.$extendFactory(Silly);
+  return $FirebaseObject.$extendFactory(JokeFactory);
 });
 ```
 
 ### Decorating the Factories
 
-In general, it will be more useful to extend the factories to create new services.
-However, it is also possible to modify `$FirebaseArray` or `$FirebaseObject` directly
-by using Angular's `$decorate` method.
+In general, it will be more useful to extend the factories to create new services than
+to use this technique. However, it is also possible to modify `$FirebaseArray` or 
+`$FirebaseObject` globally by using Angular's `$decorate` method.
 
 ```
 angular.config(function($provide) {
@@ -814,12 +938,13 @@ angular.config(function($provide) {
 Creating AngularFire Services
 -----------------------------
 
-With the ability to extend the AngularFire factories, powerful services can be built with
-a minimal amount of code. For example, we can create a "User" factory:
+With the ability to extend the AngularFire factories, services can be built to represent
+our synchronized collections with a minimal amount of code. For example, we can create 
+a "User" factory:
 
 ```
 // create a User factory
-app.factory('UserObject', function($FirebaseObject) {
+app.factory('UserFactory', function($FirebaseObject) {
   return $FirebaseObject.$extendFactory({
       getFullName: function() {
          // concatenate first and last name
@@ -835,7 +960,7 @@ And pass it into `$firebase` to be used whenever $asObject() is called:
 app.factory('User', function($firebase, $FirebaseObject) {
   var ref = new Firebase(URL+'/users/');
   return function(userid) {
-     return $firebase(ref.child(userid), {objectFactory: 'UserObject'}).$asObject();
+     return $firebase(ref.child(userid), {objectFactory: 'UserFactory'}).$asObject();
   }
 });
 ```
@@ -866,8 +991,8 @@ We can then use that to extend the `$FirebaseArray` factory:
 ```
 app.factory('MessageFactory', function($FirebaseArray, Message) {
   return $FirebaseArray.$extendFactory({
-      // override the $$added behavior to return a Message object
-      $$added: function(snap) {
+      // override the $createObject behavior to return a Message object
+      $createObject: function(snap) {
         return new Message(snap);
       },
 
