@@ -1,7 +1,7 @@
 /**
  * MockFirebase: A Firebase stub/spy library for writing unit tests
  * https://github.com/katowulf/mockfirebase
- * @version 0.2.0
+ * @version 0.2.2
  */
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
@@ -14,8 +14,8 @@
     module.exports = factory(require('lodash'), require('sinon'));
   } else {
     // Browser globals (root is window)
-    var exports = factory(root._, root.sinon);
-    root._.each(exports, function(v,k) {
+    var newExports = factory(root._, root.sinon);
+    root._.each(newExports, function(v,k) {
       root[k] = v;
     });
   }
@@ -1287,7 +1287,7 @@
         }
         else if( queueProps.limit < numRecords ) {
           out.max = numRecords-1;
-          out.min = Math.max(0, out.max - queueProps.limit);
+          out.min = Math.max(0, numRecords - queueProps.limit);
         }
       }
       return out;
@@ -1507,13 +1507,11 @@
       val: function() { return data; },
       ref: function() { return ref; },
       name: function() { return ref.name() },
-      getPriority: function() { return pri; }, //todo
+      getPriority: function() { return pri; },
       forEach: function(cb, scope) {
-        _.each(data, function(v, k, list) {
-          var child = ref.child(k);
-          //todo the priority here is inaccurate if child pri modified
-          //todo between calling makeSnap and forEach() on that snap
-          var res = cb.call(scope, makeSnap(child, v, child.priority));
+        var self = this;
+        _.each(data, function(v, k) {
+          var res = cb.call(scope, self.child(k));
           return !(res === true);
         });
       },
