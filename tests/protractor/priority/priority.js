@@ -18,7 +18,7 @@ app.controller('PriorityCtrl', function Chat($scope, $firebase) {
 
   /* Clears the priority Firebase reference */
   $scope.clearRef = function () {
-    chatSync.$remove();
+    messagesSync.$remove();
   };
 
   /* Adds a new message to the messages list */
@@ -33,15 +33,14 @@ app.controller('PriorityCtrl', function Chat($scope, $firebase) {
         var newItem = $firebase(ref).$asObject();
 
         newItem.$loaded().then(function(data) {
-          setTimeout(function() {
-            verify(newItem === data, '$FirebaseObject.$loaded() does not return correct value.');
-            verify(newItem.content === $scope.messages[ref.name()].content, '$FirebaseObject.$push does not return current ref.');
+          verify(newItem === data, '$FirebaseObject.$loaded() does not return correct value.');
+          verify(newItem.content === $scope.messages[ref.name()].content, '$FirebaseObject.$push does not return current ref.');
 
-            // Update the message's priority
-            newItem.$priority = 7;
-            newItem.$save();
-            console.log(newItem);
-          }, 100);
+          // Update the message's priority
+          newItem.testing = "hi";
+          newItem.$priority = 7;
+          newItem.$save();
+          console.log(newItem);
         });
       }, function(error) {
         verify(false, 'Something is wrong with $firebase.$push().');
