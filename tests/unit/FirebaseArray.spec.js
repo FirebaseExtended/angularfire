@@ -229,12 +229,12 @@ describe('$FirebaseArray', function () {
     it('should reject promise on failure', function() {
       var whiteSpy = jasmine.createSpy('resolve');
       var blackSpy = jasmine.createSpy('reject');
-      $fb.$ref().child(arr.$keyAt(1)).failNext('set', 'oops');
+      $fb.$ref().child(arr.$keyAt(1)).failNext('set', 'test_failure');
       arr[1].number = 99;
       arr.$remove(1).then(whiteSpy, blackSpy);
       flushAll();
       expect(whiteSpy).not.toHaveBeenCalled();
-      expect(blackSpy).toHaveBeenCalledWith('oops');
+      expect(blackSpy).toHaveBeenCalledWith('test_failure');
     });
 
     it('should reject promise if bad int', function() {
@@ -336,9 +336,9 @@ describe('$FirebaseArray', function () {
       var arr = makeArray();
       arr.$loaded().then(whiteSpy, blackSpy);
       flushAll();
-      arr.$$test.fail('oops');
+      arr.$$test.fail('test_fail');
       expect(whiteSpy).not.toHaveBeenCalled();
-      expect(blackSpy).toHaveBeenCalledWith('oops');
+      expect(blackSpy).toHaveBeenCalledWith('test_fail');
     });
   });
 
