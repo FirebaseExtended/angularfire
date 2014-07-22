@@ -163,10 +163,7 @@
             // monitor scope for any changes
             var off = scope.$watch(varName, function () {
               var newData = $firebaseUtils.toJSON($bound.get());
-              var oldData = $firebaseUtils.toJSON(self);
-              if (!angular.equals(newData, oldData)) {
-                self.$inst().$set(newData);
-              }
+              self.$inst().$set(newData);
             }, true);
 
             return unbind;

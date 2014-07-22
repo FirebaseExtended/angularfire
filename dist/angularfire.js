@@ -1,5 +1,5 @@
 /*!
- angularfire v0.8.0-pre2 2014-07-19
+ angularfire v0.8.0-pre2 2014-07-21
 * https://github.com/firebase/angularFire
 * Copyright (c) 2014 Firebase, Inc.
 * MIT LICENSE: http://firebase.mit-license.org/
@@ -688,11 +688,9 @@
 
             // monitor scope for any changes
             var off = scope.$watch(varName, function () {
-              var newData = $firebaseUtils.toJSON($bound.get());
-              var oldData = $firebaseUtils.toJSON(self);
-              if (!angular.equals(newData, oldData)) {
-                self.$inst().$set(newData);
-              }
+              var dat = $bound.get();
+              var newData = $firebaseUtils.toJSON(angular.isObject(dat)? dat : {'$value': dat});
+              self.$inst().$set(newData);
             }, true);
 
             return unbind;
@@ -870,43 +868,44 @@
               ref.ref().set(data, this._handle(def, ref));
             }
             else {
+              var dataCopy = angular.extend({}, data);
               // this is a query, so we will replace all the elements
               // of this query with the value provided, but not blow away
               // the entire Firebase path
               ref.once('value', function(snap) {
                 snap.forEach(function(ss) {
-                  if( !data.hasOwnProperty(ss.name()) ) {
-                    data[ss.name()] = null;
+                  if( !dataCopy.hasOwnProperty(ss.name()) ) {
+                    dataCopy[ss.name()] = null;
                   }
                 });
-                ref.ref().update(data, this._handle(def, ref));
+                ref.ref().update(dataCopy, this._handle(def, ref));
               }, this);
             }
             return def.promise;
           },
 
           $remove: function (key) {
-            var ref = this._ref;
+            var ref = this._ref, self = this;
             if (arguments.length > 0) {
               ref = ref.ref().child(key);
             }
             var def = $firebaseUtils.defer();
             if( angular.isFunction(ref.remove) ) {
-              // this is not a query, just do a flat remove
-              ref.remove(this._handle(def, ref));
+              // self is not a query, just do a flat remove
+              ref.remove(self._handle(def, ref));
             }
             else {
               var promises = [];
-              // this is a query so let's only remove the
+              // self is a query so let's only remove the
               // items in the query and not the entire path
               ref.once('value', function(snap) {
                 snap.forEach(function(ss) {
                   var d = $firebaseUtils.defer();
                   promises.push(d);
-                  ss.ref().remove(this._handle(d, ss.ref()));
-                }, this);
+                  ss.ref().remove(self._handle(d, ss.ref()));
+                }, self);
               });
-              this._handle($firebaseUtils.allPromises(promises), ref);
+              self._handle($firebaseUtils.allPromises(promises), ref);
             }
             return def.promise;
           },
@@ -1045,7 +1044,7 @@
 
           function init() {
             ref.on('value', applyUpdate, error);
-            ref.once('value', resolve.bind(null, null), resolve);
+            ref.once('value', batch(resolve.bind(null, null)), resolve);
           }
 
           function resolve(err) {
@@ -1653,16 +1652,17 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
           if (angular.isFunction(rec.toJSON)) {
             dat = rec.toJSON();
           }
-          else if(rec.hasOwnProperty('$value')) {
-            dat = {'.value': rec.$value};
-          }
           else {
             dat = {};
             each(rec, function (v, k) {
               dat[k] = v;
             });
           }
-          if( rec.hasOwnProperty('$priority') && Object.keys(dat).length > 0 ) {
+          var keyLen = Object.keys(dat).length;
+          if( angular.isDefined(rec.$value) && keyLen === 0 ) {
+            dat['.value'] = rec.$value;
+          }
+          if( angular.isDefined(rec.$priority) && keyLen > 0 ) {
             dat['.priority'] = rec.$priority;
           }
           angular.forEach(dat, function(v,k) {

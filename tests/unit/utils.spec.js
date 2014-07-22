@@ -67,7 +67,7 @@ describe('$firebaseUtils', function () {
     });
 
     it('should set $priority if exists', function() {
-      var json = {$value: 'foo', $priority: null};
+      var json = {$value: 'foo', $priority: 0};
       expect($utils.toJSON(json)).toEqual({'.value': json.$value, '.priority': json.$priority});
     });
 
