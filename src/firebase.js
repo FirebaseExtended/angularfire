@@ -195,7 +195,7 @@
             ref.on('child_removed', removed, error);
 
             // determine when initial load is completed
-            ref.once('value', resolve.bind(null, null), resolve);
+            ref.once('value', batch(resolve.bind(null, null)), resolve);
           }
 
           function resolve(err) {
