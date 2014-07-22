@@ -688,8 +688,7 @@
 
             // monitor scope for any changes
             var off = scope.$watch(varName, function () {
-              var dat = $bound.get();
-              var newData = $firebaseUtils.toJSON(angular.isObject(dat)? dat : {'$value': dat});
+              var newData = $firebaseUtils.toJSON($bound.get());
               self.$inst().$set(newData);
             }, true);
 
@@ -1649,6 +1648,9 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
          */
         function toJSON(rec) {
           var dat;
+          if( !angular.isObject(rec) ) {
+            rec = {$value: rec};
+          }
           if (angular.isFunction(rec.toJSON)) {
             dat = rec.toJSON();
           }
@@ -1658,11 +1660,10 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
               dat[k] = v;
             });
           }
-          var keyLen = Object.keys(dat).length;
-          if( angular.isDefined(rec.$value) && keyLen === 0 ) {
+          if( angular.isDefined(rec.$value) && Object.keys(dat).length === 0 ) {
             dat['.value'] = rec.$value;
           }
-          if( angular.isDefined(rec.$priority) && keyLen > 0 ) {
+          if( angular.isDefined(rec.$priority) && Object.keys(dat).length > 0 ) {
             dat['.priority'] = rec.$priority;
           }
           angular.forEach(dat, function(v,k) {
