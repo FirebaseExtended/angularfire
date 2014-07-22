@@ -174,11 +174,11 @@
          */
         function toJSON(rec) {
           var dat;
+          if( !angular.isObject(rec) ) {
+            rec = {$value: rec};
+          }
           if (angular.isFunction(rec.toJSON)) {
             dat = rec.toJSON();
-          }
-          else if(rec.hasOwnProperty('$value')) {
-            dat = {'.value': rec.$value};
           }
           else {
             dat = {};
@@ -186,7 +186,10 @@
               dat[k] = v;
             });
           }
-          if( rec.hasOwnProperty('$priority') && Object.keys(dat).length > 0 ) {
+          if( angular.isDefined(rec.$value) && Object.keys(dat).length === 0 ) {
+            dat['.value'] = rec.$value;
+          }
+          if( angular.isDefined(rec.$priority) && Object.keys(dat).length > 0 ) {
             dat['.priority'] = rec.$priority;
           }
           angular.forEach(dat, function(v,k) {

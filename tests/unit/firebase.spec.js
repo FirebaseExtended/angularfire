@@ -67,14 +67,22 @@ describe('$firebase', function () {
     });
 
     it('should save correct data into Firebase', function() {
-      var id;
       var spy = jasmine.createSpy('push callback').and.callFake(function(ref) {
-        id = ref.name();
+        expect($fb.$ref().getData()[ref.name()]).toEqual({foo: 'pushtest'});
       });
       $fb.$push({foo: 'pushtest'}).then(spy);
       flushAll();
       expect(spy).toHaveBeenCalled();
-      expect($fb.$ref().getData()[id]).toEqual({foo: 'pushtest'});
+    });
+
+    it('should work on a query', function() {
+      var ref = new Firebase('Mock://').limit(5);
+      var $fb = $firebase(ref);
+      flushAll();
+      expect(ref.ref().push).not.toHaveBeenCalled();
+      $fb.$push({foo: 'querytest'});
+      flushAll();
+      expect(ref.ref().push).toHaveBeenCalled();
     });
   });
 
@@ -128,6 +136,17 @@ describe('$firebase', function () {
       expect(whiteSpy).not.toHaveBeenCalled();
       expect(blackSpy).toHaveBeenCalledWith('setfail');
     });
+
+    it('should affect query keys only if query used', function() {
+      var ref = new Firebase('Mock://').child('ordered').limit(1);
+      var $fb = $firebase(ref);
+      ref.flush();
+      var expKeys = ref.slice().keys;
+      $fb.$set({hello: 'world'});
+      ref.flush();
+      var args = ref.ref().update.calls.mostRecent().args[0];
+      expect(_.keys(args)).toEqual(['hello'].concat(expKeys));
+    });
   });
 
   describe('$remove', function() {
@@ -177,7 +196,20 @@ describe('$firebase', function () {
 
     it('should remove data in Firebase'); //todo-test
 
-    it('should only remove keys in query if used on a query'); //todo-test
+    //todo-test this is working, but MockFirebase is not properly deleting the records
+    xit('should only remove keys in query if used on a query', function() {
+      var ref = new Firebase('Mock://').child('ordered').limit(2);
+      var keys = ref.slice().keys;
+      var origKeys = ref.ref().getKeys();
+      var expLength = origKeys.length - keys.length;
+      expect(keys.length).toBeGreaterThan(0);
+      expect(origKeys.length).toBeGreaterThan(keys.length);
+      var $fb = $firebase(ref);
+      flushAll(ref);
+      $fb.$remove();
+      flushAll(ref);
+      expect(ref.ref().getKeys().length).toBe(expLength);
+    });
   });
 
   describe('$update', function() {
@@ -185,14 +217,14 @@ describe('$firebase', function () {
       expect($fb.$update({foo: 'bar'})).toBeAPromise();
     });
 
-    xit('should resolve to ref when done', function() { //todo-test
+    it('should resolve to ref when done', function() { //todo-test
       var spy = jasmine.createSpy('resolve');
       $fb.$update('index', {foo: 'bar'}).then(spy);
       flushAll();
-      var arg = spy.calls.args[0][0];
+      var arg = spy.calls.argsFor(0)[0];
       expect(arg).toBeAn('object');
       expect(arg.name).toBeA('function');
-      expect(arg.name()).toBe($fb.$ref().name());
+      expect(arg.name()).toBe('index');
     });
 
     it('should reject if failed', function() {
@@ -225,11 +257,12 @@ describe('$firebase', function () {
       expect(data.b).toBe(null);
     });
 
-    xit('should work on a query object', function() { //todo-test
+    it('should work on a query object', function() { //todo-test
       var $fb2 = $firebase($fb.$ref().child('data').limit(1));
       flushAll();
       $fb2.$update({foo: 'bar'});
-      expect($fb2.$ref().getData().foo).toBe('bar');
+      flushAll();
+      expect($fb2.$ref().ref().getData().foo).toBe('bar');
     });
   });
 
@@ -243,6 +276,8 @@ describe('$firebase', function () {
     it('should reject if failed'); //todo-test
 
     it('should modify data in firebase'); //todo-test
+
+    it('should work okay on a query'); //todo-test
   });
 
   describe('$toArray', function() {
@@ -255,6 +290,8 @@ describe('$firebase', function () {
     it('should use arrayFactory'); //todo-test
 
     it('should use recordFactory'); //todo-test
+
+    it('should only contain query nodes if query used'); //todo-test
   });
 
   describe('$toObject', function() {
@@ -265,18 +302,8 @@ describe('$firebase', function () {
     it('should return same instance if called multiple times'); //todo-test
 
     it('should use recordFactory'); //todo-test
-  });
 
-  describe('query support', function() {
-    it('should allow set() with a query'); //todo-test
-
-    it('should allow push() with a query'); //todo-test
-
-    it('should allow remove() with a query'); //todo-test
-
-    it('should create array of correct length with limit'); //todo-test
-
-    it('should return the query object in ref'); //todo-test
+    it('should only contain query keys if query used'); //todo-test
   });
 
   function deepCopy(arr) {
