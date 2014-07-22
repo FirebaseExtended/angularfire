@@ -3,14 +3,14 @@ app.controller('PriorityCtrl', function Chat($scope, $firebase) {
   // Get a reference to the Firebase
   var messagesFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/priority');
 
-  // Get AngularFire sync objects
+  // Get the messages as an AngularFire sync object
   var messagesSync = $firebase(messagesFirebaseRef);
 
-  // Get the chat messages as an object
-  $scope.messages = messagesSync.$asObject();
+  // Get the chat messages as an array
+  $scope.messages = messagesSync.$asArray();
 
   // Verify that $inst() works
-  verify($scope.messages.$inst() === messagesSync, 'Something is wrong with $FirebaseObject.$inst().');
+  verify($scope.messages.$inst() === messagesSync, 'Something is wrong with $FirebaseArray.$inst().');
 
   // Initialize $scope variables
   $scope.message = '';
@@ -26,6 +26,7 @@ app.controller('PriorityCtrl', function Chat($scope, $firebase) {
     if ($scope.message !== '') {
       // Add a new message to the messages list
       console.log($scope.messages);
+      var priority = $scope.messages.length;
       $scope.messages.$inst().$push({
         from: $scope.username,
         content: $scope.message
@@ -33,14 +34,16 @@ app.controller('PriorityCtrl', function Chat($scope, $firebase) {
         var newItem = $firebase(ref).$asObject();
 
         newItem.$loaded().then(function(data) {
-          verify(newItem === data, '$FirebaseObject.$loaded() does not return correct value.');
-          verify(newItem.content === $scope.messages[ref.name()].content, '$FirebaseObject.$push does not return current ref.');
+          //console.log($scope.messages.length);
+          //console.log(ref.name());
+          //console.log($scope.messages.$keyAt($scope.messages.length - 1));
+          verify(newItem === data, '$FirebaseArray.$loaded() does not return correct value.');
+          //verify(ref.name() === $scope.messages.$keyAt($scope.messages.length - 1), '$FirebaseObject.$push does not return correct ref.');
 
           // Update the message's priority
-          newItem.testing = "hi";
-          newItem.$priority = 7;
+          newItem.a = 0;
+          newItem.$priority = priority;
           newItem.$save();
-          console.log(newItem);
         });
       }, function(error) {
         verify(false, 'Something is wrong with $firebase.$push().');

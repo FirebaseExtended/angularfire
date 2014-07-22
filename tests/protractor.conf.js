@@ -6,6 +6,7 @@ exports.config = {
 
   // Tests to run
   specs: [
+    './protractor/tictactoe/tictactoe.spec.js',
     './protractor/priority/priority.spec.js'
   ],
 

@@ -1506,7 +1506,7 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
                resetTimer();
              };
           }
-          
+
           function resetTimer() {
             if( timer ) {
               clearTimeout(timer);

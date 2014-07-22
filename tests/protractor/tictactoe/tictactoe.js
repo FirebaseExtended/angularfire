@@ -1,25 +1,27 @@
 var app = angular.module('tictactoe', ['firebase']);
-app.controller('TictactoeCtrl', function Chat($scope, $firebase) {
+app.controller('TicTacToeCtrl', function Chat($scope, $firebase) {
   // Get a reference to the Firebase
   var boardFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/tictactoe');
 
+  // Get the board as an AngularFire sync object
+  var boardSync = $firebase(boardFirebaseRef);
+
   // Get the board as an AngularFire object
-  var obj = $firebase(boardFirebaseRef).$asObject();
+  $scope.boardObject = boardSync.$asObject();
 
   // Create a 3-way binding to Firebase
-  obj.$bindTo($scope, 'boardBinding').then(function() {
-    $scope.resetRef();
-  });
+  $scope.boardObject.$bindTo($scope, 'boardBinding');
+
+  // Verify that $inst() works
+  verify($scope.boardObject.$inst() === boardSync, 'Something is wrong with $FirebaseObject.$inst().');
 
   // Initialize $scope variables
   $scope.whoseTurn = 'X';
 
 
-  /* Resetd the tictactoe Firebase reference */
-  $scope.resetRef = function () {
-    console.log("reset");
-    $scope.boardBinding.board = "A";
-    /*$scope.boardBinding.board = {
+  /* Resets the tictactoe Firebase reference */
+  $scope.resetRef = function() {
+    $scope.boardBinding.board = {
       x0: {
         y0: "",
         y1: "",
@@ -35,19 +37,15 @@ app.controller('TictactoeCtrl', function Chat($scope, $firebase) {
         y1: "",
         y2: ""
       }
-    }*/
+    };
   };
 
   /* Makes a move at the current cell */
   $scope.makeMove = function(rowId, columnId) {
-    console.log(rowId, columnId);
-    //rowId = rowId.toString();
-    //columnId = columnId.toString();
+    // Only make a move if the current cell is not already taken
     if ($scope.boardBinding.board[rowId][columnId] === "") {
       // Update the board
-      $scope.boardBinding.board[x + rowId][y + columnId] = $scope.whoseTurn;
-
-      console.log($scope.boardBinding.board);
+      $scope.boardBinding.board[rowId][columnId] = $scope.whoseTurn;
 
       // Change whose turn it is
       $scope.whoseTurn = ($scope.whoseTurn === 'X') ? 'O' : 'X';
@@ -56,7 +54,7 @@ app.controller('TictactoeCtrl', function Chat($scope, $firebase) {
 
   /* Destroys all AngularFire bindings */
   $scope.destroy = function() {
-    $scope.messages.$destroy();
+    $scope.boardObject.$destroy();
   };
 
   /* Logs a message and throws an error if the inputted expression is false */

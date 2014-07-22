@@ -15,7 +15,7 @@ describe('Priority App', function () {
   var messages = element.all(by.repeater('message in messages'));
 
   beforeEach(function (done) {
-    // Navigate to the chat app
+    // Navigate to the priority app
     browser.get('priority/priority.html');
 
     // Clear the Firebase before the first test and sleep until it's finished
@@ -65,12 +65,17 @@ describe('Priority App', function () {
   });
 
   it('updates priorities dynamically', function(done) {
+    console.log("a");
     // Update the priority of the first message
     firebaseRef.startAt().limit(1).once("child_added", function(dataSnapshot1) {
+      console.log("b");
       dataSnapshot1.ref().setPriority(4, function() {
+        console.log("c");
         // Update the priority of the third message
         messagesFirebaseRef.startAt(2).limit(1).once("child_added", function(dataSnapshot2) {
+          console.log("d");
           dataSnapshot2.ref().setPriority(0, function() {
+            console.log("e");
             // Make sure the page has three messages
             expect(messages.count()).toBe(3);
 
