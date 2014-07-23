@@ -119,9 +119,7 @@
             else {
               ref = ref.child(key);
             }
-            if( angular.isUndefined(applyLocally) ) {
-              applyLocally = false;
-            }
+            applyLocally = !!applyLocally;
 
             var def = $firebaseUtils.defer();
             ref.transaction(valueFn, function(err, committed, snap) {
@@ -206,6 +204,14 @@
             }
           }
 
+          function assertArray(arr) {
+            if( !angular.isArray(arr) ) {
+              var type = Object.prototype.toString.call(arr);
+              throw new Error('arrayFactory must return a valid array that passes ' +
+                'angular.isArray and Array.isArray, but received "' + type + '"');
+            }
+          }
+
           var def = $firebaseUtils.defer();
           var array = new ArrayFactory($inst, destroy, def.promise);
           var batch = $firebaseUtils.batch();
@@ -218,6 +224,8 @@
           var self = this;
           self.isDestroyed = false;
           self.getArray = function() { return array; };
+
+          assertArray(array);
           init();
         }
 

@@ -1,7 +1,7 @@
 /**
  * MockFirebase: A Firebase stub/spy library for writing unit tests
  * https://github.com/katowulf/mockfirebase
- * @version 0.2.2
+ * @version 0.2.4
  */
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
@@ -235,6 +235,31 @@
     },
 
     /**
+     * Simulate a security error by cancelling any opened listeners on the given path
+     * and returning the error provided. If event/callback/context are provided, then
+     * only listeners exactly matching this signature (same rules as off()) will be cancelled.
+     *
+     * This also invokes off() on the events--they won't be notified of future changes.
+     *
+     * @param {String|Error} error
+     * @param {String} [event]
+     * @param {Function} [callback]
+     * @param {Object} [context]
+     */
+    forceCancel: function(error, event, callback, context) {
+      var self = this, events = self._events;
+      _.each(event? [event] : _.keys(events), function(eventType) {
+        var list = _.filter(events[eventType], function(parts) {
+          return !event || !callback || (callback === parts[0] && context === parts[1]);
+        });
+        _.each(list, function(parts) {
+          parts[2].call(parts[1], error);
+          self.off(event, callback, context);
+        });
+      });
+    },
+
+    /**
      * Returns a copy of the current data
      * @returns {*}
      */
@@ -423,7 +448,7 @@
 
     remove: function(callback) {
       var self = this;
-      var err = this._nextErr('set');
+      var err = this._nextErr('remove');
       DEBUG && console.log('remove called', this.toString());
       this._defer(function() {
         DEBUG && console.log('remove completed',self.toString());
@@ -442,7 +467,6 @@
       }
       else if( arguments.length < 3 ) {
         cancel = function() {};
-        context = null;
       }
 
       var err = this._nextErr('on');
@@ -452,7 +476,7 @@
         });
       }
       else {
-        var eventArr = [callback, context];
+        var eventArr = [callback, context, cancel];
         this._events[event].push(eventArr);
         var self = this;
         if( event === 'value' ) {
@@ -502,7 +526,6 @@
       var self = this;
       var valueSpy = spyFactory(valueFn, 'trxn:valueFn');
       var finishedSpy = spyFactory(finishedFn, 'trxn:finishedFn');
-
       this._defer(function() {
         var err = self._nextErr('transaction');
         // unlike most defer methods, self will use the value as it exists at the time
@@ -510,8 +533,8 @@
         // it would have in reality
         var res = valueSpy(self.getData());
         var newData = _.isUndefined(res) || err? self.getData() : res;
-        finishedSpy(err, err === null && !_.isUndefined(res), makeSnap(self, newData, self.priority));
         self._dataChanged(newData);
+        finishedSpy(err, err === null && !_.isUndefined(res), makeSnap(self, newData, self.priority));
       });
       return [valueSpy, finishedSpy, applyLocally];
     },
@@ -797,6 +820,10 @@
       return new Slice(this);
     },
 
+    getData: function() {
+      return this.slice().data;
+    },
+
     fakeEvent: function(event, snap) {
       _.each(this._subs, function(parts) {
         if( parts[0] === 'event' ) {
@@ -812,12 +839,11 @@
       var self = this, isFirst = true, lastSlice = this.slice(), map;
       var fn = function(snap, prevChild) {
         var slice = new Slice(self, event==='value'? snap : makeRefSnap(snap.ref().parent()));
-        if( (event !== 'value' || !isFirst) && lastSlice.equals(slice) ) {
-          return;
-        }
         switch(event) {
           case 'value':
-            callback.call(context, slice.snap());
+            if( isFirst || !lastSlice.equals(slice) ) {
+              callback.call(context, slice.snap());
+            }
             break;
           case 'child_moved':
             var x = slice.pos(snap.name());
@@ -830,6 +856,12 @@
             }
             break;
           case 'child_added':
+            if( slice.has(snap.name()) && lastSlice.has(snap.name()) ) {
+              // is a child_added for existing event so allow it
+              callback.call(context, snap, prevChild);
+            }
+            map = lastSlice.changeMap(slice);
+            break;
           case 'child_removed':
             map = lastSlice.changeMap(slice);
             break;
@@ -1380,9 +1412,9 @@
     var spyFunction;
     if( typeof(jasmine) !== 'undefined' ) {
       spyFunction = function(obj, method) {
-        var fn;
+        var fn, spy;
         if( typeof(obj) === 'object' ) {
-          var spy = spyOn(obj, method);
+          spy = spyOn(obj, method);
           if( typeof(spy.andCallThrough) === 'function' ) {
             // karma < 0.12.x
             fn = spy.andCallThrough();
@@ -1392,15 +1424,18 @@
           }
         }
         else {
-          fn = jasmine.createSpy(method);
-          if( arguments.length === 1 && typeof(arguments[0]) === 'function' ) {
-            if( typeof(fn.andCallFake) === 'function' ) {
+          spy = jasmine.createSpy(method);
+          if( typeof(arguments[0]) === 'function' ) {
+            if( typeof(spy.andCallFake) === 'function' ) {
               // karma < 0.12.x
-              fn.andCallFake(obj);
+              fn = spy.andCallFake(obj);
             }
             else {
-              fn.and.callFake(obj);
+              fn = spy.and.callFake(obj);
             }
+          }
+          else {
+            fn = spy;
           }
         }
         return fn;

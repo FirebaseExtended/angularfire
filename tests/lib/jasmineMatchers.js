@@ -31,6 +31,34 @@ beforeEach(function() {
   }
 
   jasmine.addMatchers({
+    toBeAFirebaseRef: function() {
+      return {
+        compare: function(actual) {
+          var type = extendedTypeOf(actual);
+          var pass = isFirebaseRef(actual);
+          var notText = pass? ' not' : '';
+          var msg = 'Expected ' + type + notText + ' to be a Firebase ref';
+          return {pass: pass, message: msg};
+        }
+      }
+    },
+
+    toBeASnapshot: function() {
+      return {
+        compare: function(actual) {
+          var type = extendedTypeOf(actual);
+          var pass =
+            type === 'object' &&
+            typeof actual.val === 'function' &&
+            typeof actual.ref === 'function' &&
+            typeof actual.name === 'function';
+          var notText = pass? ' not' : '';
+          var msg = 'Expected ' + type + notText + ' to be a Firebase snapshot';
+          return {pass: pass, message: msg};
+        }
+      }
+    },
+
     toBeAPromise: function() {
       return {
         compare: function(obj) {
@@ -79,6 +107,15 @@ beforeEach(function() {
       }
     }
   });
+
+  function isFirebaseRef(obj) {
+    return extendedTypeOf(obj) === 'object' &&
+      typeof obj.ref === 'function' &&
+      typeof obj.set === 'function' &&
+      typeof obj.on === 'function' &&
+      typeof obj.once === 'function' &&
+      typeof obj.transaction === 'function';
+  }
 
   // inspired by: https://gist.github.com/prantlf/8631877
   function compare(article, actual) {

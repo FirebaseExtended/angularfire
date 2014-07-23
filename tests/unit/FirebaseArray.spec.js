@@ -229,7 +229,7 @@ describe('$FirebaseArray', function () {
     it('should reject promise on failure', function() {
       var whiteSpy = jasmine.createSpy('resolve');
       var blackSpy = jasmine.createSpy('reject');
-      $fb.$ref().child(arr.$keyAt(1)).failNext('set', 'test_failure');
+      $fb.$ref().child(arr.$keyAt(1)).failNext('remove', 'test_failure');
       arr[1].number = 99;
       arr.$remove(1).then(whiteSpy, blackSpy);
       flushAll();
