@@ -1,5 +1,5 @@
 /*!
- angularfire v0.8.0-pre2 2014-07-21
+ angularfire v0.8.0-pre2 2014-07-22
 * https://github.com/firebase/angularFire
 * Copyright (c) 2014 Firebase, Inc.
 * MIT LICENSE: http://firebase.mit-license.org/
@@ -931,9 +931,7 @@
             else {
               ref = ref.child(key);
             }
-            if( angular.isUndefined(applyLocally) ) {
-              applyLocally = false;
-            }
+            applyLocally = !!applyLocally;
 
             var def = $firebaseUtils.defer();
             ref.transaction(valueFn, function(err, committed, snap) {
@@ -1007,7 +1005,7 @@
             ref.on('child_removed', removed, error);
 
             // determine when initial load is completed
-            ref.once('value', resolve.bind(null, null), resolve);
+            ref.once('value', batch(resolve.bind(null, null)), resolve);
           }
 
           function resolve(err) {
@@ -1015,6 +1013,14 @@
               if( err ) { def.reject(err); }
               else { def.resolve(array); }
               def = null;
+            }
+          }
+
+          function assertArray(arr) {
+            if( !angular.isArray(arr) ) {
+              var type = Object.prototype.toString.call(arr);
+              throw new Error('arrayFactory must return a valid array that passes ' +
+                'angular.isArray and Array.isArray, but received "' + type + '"');
             }
           }
 
@@ -1030,6 +1036,8 @@
           var self = this;
           self.isDestroyed = false;
           self.getArray = function() { return array; };
+
+          assertArray(array);
           init();
         }
 
