@@ -228,9 +228,8 @@ describe('$firebase', function () {
       expect($fb.$ref().remove).toHaveBeenCalled();
     });
 
-    //todo-test this is working, but MockFirebase is not properly deleting the records
     //todo-test https://github.com/katowulf/mockfirebase/issues/9
-    xit('should only remove keys in query if used on a query', function() {
+    it('should only remove keys in query if used on a query', function() {
       var ref = new Firebase('Mock://').child('ordered').limit(2);
       var keys = ref.slice().keys;
       var origKeys = ref.ref().getKeys();
@@ -241,7 +240,14 @@ describe('$firebase', function () {
       flushAll(ref);
       $fb.$remove();
       flushAll(ref);
-      expect(ref.ref().getKeys().length).toBe(expLength);
+      keys.forEach(function(key) {
+        expect(ref.ref().child(key).remove).toHaveBeenCalled();
+      });
+      origKeys.forEach(function(key) {
+        if( keys.indexOf(key) === -1 ) {
+          expect(ref.ref().child(key).remove).not.toHaveBeenCalled();
+        }
+      });
     });
   });
 
