@@ -1,5 +1,5 @@
 /*!
- angularfire v0.8.0-pre2 2014-07-22
+ angularfire v0.8.0-pre2 2014-07-23
 * https://github.com/firebase/angularFire
 * Copyright (c) 2014 Firebase, Inc.
 * MIT LICENSE: http://firebase.mit-license.org/

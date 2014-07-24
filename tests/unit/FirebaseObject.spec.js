@@ -413,6 +413,18 @@
 
     function noop() {}
 
+    function deepCopyObject(obj) {
+      var newCopy = angular.isArray(obj)? obj.slice() : angular.extend({}, obj);
+      for (var key in newCopy) {
+        if (newCopy.hasOwnProperty(key)) {
+          if( angular.isObject(newCopy[key]) ) {
+            newCopy[key] = deepCopyObject(newCopy[key]);
+          }
+        }
+      }
+      return newCopy;
+    }
+
     function makeObject(resolveWithData, pri, $altFb) {
       if( arguments.length === 1 && resolveWithData instanceof $firebase) {
         $altFb = resolveWithData;
@@ -430,6 +442,7 @@
         load: function(data, pri) {
           var ref = $altFb.$ref();
           if( data === true ) { data = ref.getData(); }
+          else { data = deepCopyObject(data); }
           obj.$$updated(fakeSnap(ref, data, pri));
           def.resolve(obj);
           try {

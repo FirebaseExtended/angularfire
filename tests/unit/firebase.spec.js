@@ -1,21 +1,26 @@
 'use strict';
 describe('$firebase', function () {
 
-  var $firebase, $timeout, $fb, $rootScope;
+  var $firebase, $timeout, $rootScope, $utils;
 
   beforeEach(function() {
-    module('mock.firebase');
     module('firebase');
-    inject(function (_$firebase_, _$timeout_, _$rootScope_) {
+    module('mock.firebase');
+    module('mock.utils');
+    inject(function (_$firebase_, _$timeout_, _$rootScope_, $firebaseUtils) {
       $firebase = _$firebase_;
       $timeout = _$timeout_;
       $rootScope = _$rootScope_;
-      $fb = $firebase(new Firebase('Mock://').child('data'));
-      flushAll();
+      $utils = $firebaseUtils;
     });
   });
 
   describe('<constructor>', function() {
+    var $fb;
+    beforeEach(function() {
+      $fb = $firebase(new Firebase('Mock://').child('data'));
+    });
+
     it('should accept a Firebase ref', function() {
       var ref = new Firebase('Mock://');
       var $fb = new $firebase(ref);
@@ -30,6 +35,11 @@ describe('$firebase', function () {
   });
 
   describe('$ref', function() {
+    var $fb;
+    beforeEach(function() {
+      $fb = $firebase(new Firebase('Mock://').child('data'));
+    });
+
     it('should return ref that created the $firebase instance', function() {
       var ref = new Firebase('Mock://');
       var $fb = new $firebase(ref);
@@ -38,6 +48,12 @@ describe('$firebase', function () {
   });
 
   describe('$push', function() {
+    var $fb, flushAll;
+    beforeEach(function() {
+      $fb = $firebase(new Firebase('Mock://').child('data'));
+      flushAll = flush.bind(null, $fb.$ref());
+    });
+
     it('should return a promise', function() {
       var res = $fb.$push({foo: 'bar'});
       expect(angular.isObject(res)).toBe(true);
@@ -87,6 +103,12 @@ describe('$firebase', function () {
   });
 
   describe('$set', function() {
+    var $fb, flushAll;
+    beforeEach(function() {
+      $fb = $firebase(new Firebase('Mock://').child('data'));
+      flushAll = flush.bind(null, $fb.$ref());
+    });
+
     it('should return a promise', function() {
       var res = $fb.$set(null);
       expect(angular.isObject(res)).toBe(true);
@@ -146,6 +168,12 @@ describe('$firebase', function () {
   });
 
   describe('$remove', function() {
+    var $fb, flushAll;
+    beforeEach(function() {
+      $fb = $firebase(new Firebase('Mock://').child('data'));
+      flushAll = flush.bind(null, $fb.$ref());
+    });
+
     it('should return a promise', function() {
       var res = $fb.$remove();
       expect(angular.isObject(res)).toBe(true);
@@ -218,6 +246,12 @@ describe('$firebase', function () {
   });
 
   describe('$update', function() {
+    var $fb, flushAll;
+    beforeEach(function() {
+      $fb = $firebase(new Firebase('Mock://').child('data'));
+      flushAll = flush.bind(null, $fb.$ref());
+    });
+
     it('should return a promise', function() {
       expect($fb.$update({foo: 'bar'})).toBeAPromise();
     });
@@ -270,6 +304,12 @@ describe('$firebase', function () {
   });
 
   describe('$transaction', function() {
+    var $fb, flushAll;
+    beforeEach(function() {
+      $fb = $firebase(new Firebase('Mock://').child('data'));
+      flushAll = flush.bind(null, $fb.$ref());
+    });
+
     it('should return a promise', function() {
       expect($fb.$transaction('a', function() {})).toBeAPromise();
     });
@@ -320,21 +360,26 @@ describe('$firebase', function () {
   });
 
   describe('$asArray', function() {
-    var $ArrayFactory, $fbArr;
+    var $ArrayFactory, $fb;
+
+    function flushAll() {
+      flush($fb.$ref());
+    }
+
     beforeEach(function() {
       $ArrayFactory = stubArrayFactory();
-      $fbArr = $firebase(new Firebase('Mock://').child('data'), {arrayFactory: $ArrayFactory});
+      $fb = $firebase(new Firebase('Mock://').child('data'), {arrayFactory: $ArrayFactory});
     });
 
     it('should call $FirebaseArray constructor with correct args', function() {
-      var arr = $fbArr.$asArray();
-      expect($ArrayFactory).toHaveBeenCalledWith($fbArr, jasmine.any(Function), jasmine.objectContaining({}));
-      expect(arr.$readyPromise).toBeAPromise();
+      var arr = $fb.$asArray();
+      expect($ArrayFactory).toHaveBeenCalledWith($fb, jasmine.any(Function), jasmine.objectContaining({}));
+      expect(arr.$$$readyPromise).toBeAPromise();
     });
 
     it('should return the factory value (an array)', function() {
       var factory = stubArrayFactory();
-      var res = $firebase($fbArr.$ref(), {arrayFactory: factory}).$asArray();
+      var res = $firebase($fb.$ref(), {arrayFactory: factory}).$asArray();
       expect(res).toBe(factory.$myArray);
     });
 
@@ -346,185 +391,236 @@ describe('$firebase', function () {
     });
 
     it('should contain data in ref() after load', function() {
-      var count = Object.keys($fbArr.$ref().getData()).length;
+      var count = Object.keys($fb.$ref().getData()).length;
       expect(count).toBeGreaterThan(1);
-      var arr = $fbArr.$asArray();
-      flushAll($fbArr.$ref());
+      var arr = $fb.$asArray();
+      flushAll();
       expect(arr.$$added.calls.count()).toBe(count);
     });
 
     it('should return same instance if called multiple times', function() {
-      expect($fbArr.$asArray()).toBe($fbArr.$asArray());
+      expect($fb.$asArray()).toBe($fb.$asArray());
     });
 
     it('should use arrayFactory', function() {
       var spy = stubArrayFactory();
-      $firebase($fbArr.$ref(), {arrayFactory: spy}).$asArray();
+      $firebase($fb.$ref(), {arrayFactory: spy}).$asArray();
       expect(spy).toHaveBeenCalled();
     });
 
     it('should match query keys if query used', function() {
       // needs to contain more than 2 items in data for this limit to work
-      expect(Object.keys($fbArr.$ref().getData()).length).toBeGreaterThan(2);
-      var ref = $fbArr.$ref().limit(2);
+      expect(Object.keys($fb.$ref().getData()).length).toBeGreaterThan(2);
+      var ref = $fb.$ref().limit(2);
       var arr = $firebase(ref, {arrayFactory: $ArrayFactory}).$asArray();
-      flushAll(ref);
+      flushAll();
       expect(arr.$$added.calls.count()).toBe(2);
     });
 
     it('should return new instance if old one is destroyed', function() {
-      var arr = $fbArr.$asArray();
+      var arr = $fb.$asArray();
       // invoke the destroy function
-      arr.$destroyFn();
-      expect($fbArr.$asObject()).not.toBe(arr);
+      arr.$$$destroyFn();
+      expect($fb.$asObject()).not.toBe(arr);
     });
 
     it('should call $$added if child_added event is received', function() {
-      var ref = $fbArr.$ref();
-      var arr = $fbArr.$asArray();
+      var arr = $fb.$asArray();
       // flush all the existing data through
-      flushAll(ref);
+      flushAll();
       arr.$$added.calls.reset();
       // now add a new record and see if it sticks
-      ref.push({hello: 'world'});
-      flushAll(ref);
+      $fb.$ref().push({hello: 'world'});
+      flushAll();
       expect(arr.$$added.calls.count()).toBe(1);
     });
 
     it('should call $$updated if child_changed event is received', function() {
-      var ref = $fbArr.$ref();
-      var arr = $fbArr.$asArray();
+      var arr = $fb.$asArray();
       // flush all the existing data through
-      flushAll(ref);
+      flushAll();
       // now change a new record and see if it sticks
-      ref.child('c').set({hello: 'world'});
-      flushAll(ref);
+      $fb.$ref().child('c').set({hello: 'world'});
+      flushAll();
       expect(arr.$$updated.calls.count()).toBe(1);
     });
 
     it('should call $$moved if child_moved event is received', function() {
-      var ref = $fbArr.$ref();
-      var arr = $fbArr.$asArray();
+      var arr = $fb.$asArray();
       // flush all the existing data through
-      flushAll(ref);
+      flushAll();
       // now change a new record and see if it sticks
-      ref.child('c').setPriority(299);
-      flushAll(ref);
+      $fb.$ref().child('c').setPriority(299);
+      flushAll();
       expect(arr.$$moved.calls.count()).toBe(1);
     });
 
     it('should call $$removed if child_removed event is received', function() {
-      var ref = $fbArr.$ref();
-      var arr = $fbArr.$asArray();
+      var arr = $fb.$asArray();
       // flush all the existing data through
-      flushAll(ref);
+      flushAll();
       // now change a new record and see if it sticks
-      ref.child('a').remove();
-      flushAll(ref);
+      $fb.$ref().child('a').remove();
+      flushAll();
       expect(arr.$$removed.calls.count()).toBe(1);
     });
 
     it('should call $$error if an error event occurs', function() {
-      var ref = $fbArr.$ref();
-      var arr = $fbArr.$asArray();
+      var arr = $fb.$asArray();
       // flush all the existing data through
-      flushAll(ref);
-      ref.forceCancel('test_failure');
-      flushAll(ref);
+      flushAll();
+      $fb.$ref().forceCancel('test_failure');
+      flushAll();
       expect(arr.$$error).toHaveBeenCalledWith('test_failure');
     });
 
     it('should resolve readyPromise after initial data loaded', function() {
-      var arr = $fbArr.$asArray();
-      var spy = jasmine.createSpy('resolved');
-      arr.$readyPromise.then(spy);
+      var arr = $fb.$asArray();
+      var spy = jasmine.createSpy('resolved').and.callFake(function(arrRes) {
+        var count = arrRes.$$added.calls.count();
+        expect(count).toBe($fb.$ref().getKeys().length);
+      });
+      arr.$$$readyPromise.then(spy);
       expect(spy).not.toHaveBeenCalled();
-      flushAll($fbArr.$ref());
+      flushAll($fb.$ref());
       expect(spy).toHaveBeenCalled();
     });
 
     it('should cancel listeners if destroyFn is invoked', function() {
-      var arr = $fbArr.$asArray();
-      var ref = $fbArr.$ref();
-      flushAll(ref);
+      var arr = $fb.$asArray();
+      var ref = $fb.$ref();
+      flushAll();
       expect(ref.on).toHaveBeenCalled();
-      arr.$destroyFn();
+      arr.$$$destroyFn();
       expect(ref.off.calls.count()).toBe(ref.on.calls.count());
+    });
+
+    it('should trigger an angular compile', function() {
+      $fb.$asObject(); // creates the listeners
+      var ref = $fb.$ref();
+      flushAll();
+      $utils.compile.completed.calls.reset();
+      ref.push({newa: 'newa'});
+      flushAll();
+      expect($utils.compile.completed).toHaveBeenCalled();
+    });
+
+    it('should batch requests', function() {
+      $fb.$asArray(); // creates listeners
+      flushAll();
+      $utils.compile.completed.calls.reset();
+      var ref = $fb.$ref();
+      ref.push({newa: 'newa'});
+      ref.push({newb: 'newb'});
+      ref.push({newc: 'newc'});
+      ref.push({newd: 'newd'});
+      flushAll();
+      expect($utils.compile.completed.calls.count()).toBe(1);
     });
   });
 
   describe('$asObject', function() {
-    var $fbObj, $FirebaseRecordFactory;
+    var $fb;
+
+    function flushAll() {
+      flush($fb.$ref());
+    }
 
     beforeEach(function() {
       var Factory = stubObjectFactory();
-      $fbObj = $firebase(new Firebase('Mock://').child('data'), {objectFactory: Factory});
-      $fbObj.$Factory = Factory;
+      $fb = $firebase(new Firebase('Mock://').child('data'), {objectFactory: Factory});
+      $fb.$Factory = Factory;
     });
 
     it('should contain data in ref() after load', function() {
-      var data = $fbObj.$ref().getData();
-      var obj = $fbObj.$asObject();
-      flushAll($fbObj.$ref());
+      var data = $fb.$ref().getData();
+      var obj = $fb.$asObject();
+      flushAll();
       expect(obj.$$updated.calls.argsFor(0)[0].val()).toEqual(jasmine.objectContaining(data));
     });
 
     it('should return same instance if called multiple times', function() {
-      expect($fbObj.$asObject()).toBe($fbObj.$asObject());
+      expect($fb.$asObject()).toBe($fb.$asObject());
     });
 
     it('should use recordFactory', function() {
-      var res = $fbObj.$asObject();
-      expect(res).toBeInstanceOf($fbObj.$Factory);
+      var res = $fb.$asObject();
+      expect(res).toBeInstanceOf($fb.$Factory);
     });
 
     it('should only contain query keys if query used', function() {
-      var ref = $fbObj.$ref().limit(2);
+      var ref = $fb.$ref().limit(2);
       // needs to have more data than our query slice
       expect(ref.ref().getKeys().length).toBeGreaterThan(2);
-      var obj = $fbObj.$asObject();
-      flushAll(ref);
+      var obj = $fb.$asObject();
+      flushAll();
       var snap = obj.$$updated.calls.argsFor(0)[0];
       expect(snap.val()).toEqual(jasmine.objectContaining(ref.getData()));
     });
 
     it('should call $$updated if value event is received', function() {
-      var obj = $fbObj.$asObject();
-      var ref = $fbObj.$ref();
-      flushAll(ref);
+      var obj = $fb.$asObject();
+      var ref = $fb.$ref();
+      flushAll();
       obj.$$updated.calls.reset();
       expect(obj.$$updated).not.toHaveBeenCalled();
       ref.set({foo: 'bar'});
-      flushAll(ref);
+      flushAll();
       expect(obj.$$updated).toHaveBeenCalled();
     });
 
     it('should call $$error if an error event occurs', function() {
-      var ref = $fbObj.$ref();
-      var obj = $fbObj.$asObject();
-      flushAll(ref);
+      var ref = $fb.$ref();
+      var obj = $fb.$asObject();
+      flushAll();
       expect(obj.$$error).not.toHaveBeenCalled();
       ref.forceCancel('test_cancel');
-      flushAll(ref);
+      flushAll();
       expect(obj.$$error).toHaveBeenCalledWith('test_cancel');
     });
 
     it('should resolve readyPromise after initial data loaded', function() {
-      var obj = $fbObj.$asObject();
-      var spy = jasmine.createSpy('resolved');
-      obj.$readyPromise.then(spy);
+      var obj = $fb.$asObject();
+      var spy = jasmine.createSpy('resolved').and.callFake(function(obj) {
+        var snap = obj.$$updated.calls.argsFor(0)[0];
+        expect(snap.val()).toEqual(jasmine.objectContaining($fb.$ref().getData()));
+      });
+      obj.$$$readyPromise.then(spy);
       expect(spy).not.toHaveBeenCalled();
-      flushAll($fbObj.$ref());
+      flushAll();
       expect(spy).toHaveBeenCalled();
     });
 
     it('should cancel listeners if destroyFn is invoked', function() {
-      var obj = $fbObj.$asObject();
-      var ref = $fbObj.$ref();
-      flushAll(ref);
+      var obj = $fb.$asObject();
+      var ref = $fb.$ref();
+      flushAll();
       expect(ref.on).toHaveBeenCalled();
-      obj.$destroyFunction();
+      obj.$$$destroyFn();
       expect(ref.off.calls.count()).toBe(ref.on.calls.count());
+    });
+
+    it('should trigger an angular compile', function() {
+      $fb.$asObject(); // creates the listeners
+      var ref = $fb.$ref();
+      flushAll();
+      $utils.compile.completed.calls.reset();
+      ref.push({newa: 'newa'});
+      flushAll();
+      expect($utils.compile.completed).toHaveBeenCalled();
+    });
+
+    it('should batch requests', function() {
+      var obj = $fb.$asObject(); // creates listeners
+      flushAll();
+      $utils.compile.completed.calls.reset();
+      var ref = $fb.$ref();
+      ref.push({newa: 'newa'});
+      ref.push({newb: 'newb'});
+      ref.push({newc: 'newc'});
+      ref.push({newd: 'newd'});
+      flushAll();
+      expect($utils.compile.completed.calls.count()).toBe(1);
     });
   });
 
@@ -535,9 +631,9 @@ describe('$firebase', function () {
     });
     var factory = jasmine.createSpy('ArrayFactory')
       .and.callFake(function(inst, destroyFn, readyPromise) {
-        arraySpy.$inst = inst;
-        arraySpy.$destroyFn = destroyFn;
-        arraySpy.$readyPromise = readyPromise;
+        arraySpy.$$$inst = inst;
+        arraySpy.$$$destroyFn = destroyFn;
+        arraySpy.$$$readyPromise = readyPromise;
         return arraySpy;
       });
     factory.$myArray = arraySpy;
@@ -546,9 +642,9 @@ describe('$firebase', function () {
 
   function stubObjectFactory() {
     function Factory(inst, destFn, readyPromise) {
-      this.$myInst = inst;
-      this.$destroyFunction = destFn;
-      this.$readyPromise = readyPromise;
+      this.$$$inst = inst;
+      this.$$$destroyFn = destFn;
+      this.$$$readyPromise = readyPromise;
     }
     angular.forEach(['$$updated', '$$error'], function(m) {
       Factory.prototype[m] = jasmine.createSpy(m);
@@ -556,23 +652,12 @@ describe('$firebase', function () {
     return Factory;
   }
 
-  function deepCopy(arr) {
-    var newCopy = arr.slice();
-    angular.forEach(arr, function(obj, k)  {
-      newCopy[k] = angular.extend({}, obj);
+  function flush() {
+    // the order of these flush events is significant
+    Array.prototype.slice.call(arguments, 0).forEach(function(o) {
+      o.flush();
     });
-    return newCopy;
+    try { $timeout.flush(); }
+    catch(e) {}
   }
-
-  var flushAll = (function() {
-    return function flushAll() {
-      // the order of these flush events is significant
-      $fb.$ref().flush();
-      Array.prototype.slice.call(arguments, 0).forEach(function(o) {
-        o.flush();
-      });
-      try { $timeout.flush(); }
-      catch(e) {}
-    }
-  })();
 });
