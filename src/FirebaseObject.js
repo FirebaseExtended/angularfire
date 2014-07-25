@@ -115,6 +115,9 @@
          * it is possible to unbind the scope variable by using the `unbind` function
          * passed into the resolve method.
          *
+         * Can only be bound to one scope variable at a time. If a second is attempted,
+         * the promise will be rejected with an error.
+         *
          * @param {object} scope
          * @param {string} varName
          * @returns a promise which resolves to an unbind method after data is set in scope
@@ -122,8 +125,11 @@
         $bindTo: function (scope, varName) {
           var self = this;
           return self.$loaded().then(function () {
+            //todo split this into a subclass and shorten this method
+            //todo add comments and explanations
             if (self.$$conf.bound) {
-              throw new Error('Can only bind to one scope variable at a time');
+              $log.error('Can only bind to one scope variable at a time');
+              return $firebaseUtils.reject('Can only bind to one scope variable at a time');
             }
 
             var unbind = function () {
@@ -137,18 +143,7 @@
             var parsed = $parse(varName);
             var $bound = self.$$conf.bound = {
               update: function() {
-                var curr = $bound.get();
-                if( !angular.isObject(curr) ) {
-                  curr = {};
-                }
-                $firebaseUtils.each(self, function(v,k) {
-                  curr[k] = v;
-                });
-                curr.$id = self.$id;
-                curr.$priority = self.$priority;
-                if( self.hasOwnProperty('$value') ) {
-                  curr.$value = self.$value;
-                }
+                var curr = $firebaseUtils.parseScopeData(self);
                 parsed.assign(scope, curr);
               },
               get: function () {
@@ -220,9 +215,9 @@
          * @param snap
          */
         $$updated: function (snap) {
-          this.$id = snap.name();
           // applies new data to this object
           var changed = $firebaseUtils.updateRec(this, snap);
+          this.$id = snap.name();
           if( changed ) {
             // notifies $watch listeners and
             // updates $scope if bound to a variable

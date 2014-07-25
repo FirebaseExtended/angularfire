@@ -686,7 +686,7 @@ describe('$FirebaseArray', function () {
 
   function stubFb() {
     var ref = stubRef('data');
-    var fb = {}, pushCounter = 1;
+    var fb = {};
     [
       '$set', '$update', '$remove', '$transaction', '$asArray', '$asObject', '$ref', '$push'
     ].forEach(function(m) {

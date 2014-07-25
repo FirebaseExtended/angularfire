@@ -15,7 +15,7 @@
 
     .factory('$firebaseUtils', ["$q", "$timeout", "firebaseBatchDelay",
       function($q, $timeout, firebaseBatchDelay) {
-        var fns = {
+        var utils = {
           /**
            * Returns a function which, each time it is invoked, will pause for `wait`
            * milliseconds before invoking the original `fn` instance. If another
@@ -74,11 +74,11 @@
                 timer = null;
               }
               if( start && Date.now() - start > maxWait ) {
-                fns.compile(runNow);
+                utils.compile(runNow);
               }
               else {
                 if( !start ) { start = Date.now(); }
-                timer = fns.compile(runNow, wait);
+                timer = utils.compile(runNow, wait);
               }
             }
 
@@ -137,7 +137,7 @@
           },
 
           getPublicMethods: function(inst, iterator, context) {
-            fns.getPrototypeMethods(inst, function(m, k) {
+            utils.getPrototypeMethods(inst, function(m, k) {
               if( typeof(m) === 'function' && k.charAt(0) !== '_' ) {
                 iterator.call(context, m, k);
               }
@@ -149,11 +149,13 @@
           },
 
           reject: function(msg) {
-            return $q.reject(msg);
+            var def = utils.defer();
+            def.reject(msg);
+            return def.promise;
           },
 
           resolve: function() {
-            var def = fns.defer();
+            var def = utils.defer();
             def.resolve.apply(def, arguments);
             return def.promise;
           },
@@ -162,18 +164,47 @@
             return $timeout(fn||function() {}, wait||0);
           },
 
+          deepCopy: function(obj) {
+            if( !angular.isObject(obj) ) { return obj; }
+            var newCopy = angular.isArray(obj) ? obj.slice() : angular.extend({}, obj);
+            for (var key in newCopy) {
+              if (newCopy.hasOwnProperty(key)) {
+                if (angular.isObject(newCopy[key])) {
+                  newCopy[key] = utils.deepCopy(newCopy[key]);
+                }
+              }
+            }
+            return newCopy;
+          },
+
+          parseScopeData: function(rec) {
+            var out = {};
+            utils.each(rec, function(v,k) {
+              out[k] = utils.deepCopy(v);
+            });
+            out.$id = rec.$id;
+            out.$priority = rec.$priority;
+            if( rec.hasOwnProperty('$value') ) {
+              out.$value = rec.$value;
+            }
+            return out;
+          },
+
           updateRec: function(rec, snap) {
             var data = snap.val();
             var oldData = angular.extend({}, rec);
 
             // deal with primitives
             if( !angular.isObject(data) ) {
-              data = {$value: data};
+              rec.$value = data;
+              data = {};
+            }
+            else {
+              delete rec.$value;
             }
 
             // remove keys that don't exist anymore
-            delete rec.$value;
-            fns.each(rec, function(val, key) {
+            utils.each(rec, function(val, key) {
               if( !data.hasOwnProperty(key) ) {
                 delete rec[key];
               }
@@ -186,6 +217,14 @@
             return !angular.equals(oldData, rec) ||
               oldData.$value !== rec.$value ||
               oldData.$priority !== rec.$priority;
+          },
+
+          dataKeys: function(obj) {
+            var out = [];
+            utils.each(obj, function(v,k) {
+              out.push(k);
+            });
+            return out;
           },
 
           each: function(obj, iterator, context) {
@@ -219,14 +258,14 @@
             }
             else {
               dat = {};
-              fns.each(rec, function (v, k) {
+              utils.each(rec, function (v, k) {
                 dat[k] = v;
               });
             }
-            if( angular.isDefined(rec.$value) && Object.keys(dat).length === 0 ) {
+            if( angular.isDefined(rec.$value) && Object.keys(dat).length === 0 && rec.$value !== null ) {
               dat['.value'] = rec.$value;
             }
-            if( angular.isDefined(rec.$priority) && Object.keys(dat).length > 0 ) {
+            if( angular.isDefined(rec.$priority) && Object.keys(dat).length > 0 && rec.$priority !== null ) {
               dat['.priority'] = rec.$priority;
             }
             angular.forEach(dat, function(v,k) {
@@ -243,7 +282,7 @@
           allPromises: $q.all.bind($q)
         };
 
-        return fns;
+        return utils;
       }
     ]);
 })();
