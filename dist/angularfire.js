@@ -1,5 +1,5 @@
 /*!
- angularfire v0.8.0-pre2 2014-07-22
+ angularfire v0.8.0-pre2 2014-07-26
 * https://github.com/firebase/angularFire
 * Copyright (c) 2014 Firebase, Inc.
 * MIT LICENSE: http://firebase.mit-license.org/
@@ -17,6 +17,7 @@
 // Define the `firebase` module under which all AngularFire
 // services will live.
   angular.module("firebase", [])
+    //todo use $window
     .value("Firebase", exports.Firebase)
 
     // used in conjunction with firebaseUtils.debounce function, this is the
@@ -210,7 +211,7 @@
         $loaded: function(resolve, reject) {
           var promise = this._promise;
           if( arguments.length ) {
-            promise = promise.then.call(resolve, reject);
+            promise = promise.then.call(promise, resolve, reject);
           }
           return promise;
         },
@@ -372,23 +373,35 @@
          */
         _process: function(event, rec, prevChild) {
           var key = this._getKey(rec);
+          var changed = false;
+          var pos;
           switch(event) {
+            case 'child_added':
+              pos = this.$indexFor(key);
+              break;
             case 'child_moved':
+              pos = this.$indexFor(key);
               this._spliceOut(key);
               break;
             case 'child_removed':
               // remove record from the array
-              this._spliceOut(key);
+              changed = this._spliceOut(key) !== null;
+              break;
+            case 'child_changed':
+              changed = true;
               break;
             default:
               // nothing to do
           }
-          if( angular.isDefined(prevChild) ) {
+          if( angular.isDefined(pos) ) {
             // add it to the array
-            this._addAfter(rec, prevChild);
+            changed = this._addAfter(rec, prevChild) !== pos;
           }
-          // send notifications to anybody monitoring $watch
-          this._notify(event, key, prevChild);
+          if( changed ) {
+            // send notifications to anybody monitoring $watch
+            this._notify(event, key, prevChild);
+          }
+          return changed;
         },
 
         /**
@@ -427,6 +440,7 @@
             if( i === 0 ) { i = this.$list.length; }
           }
           this.$list.splice(i, 0, rec);
+          return i;
         },
 
         /**
@@ -641,6 +655,9 @@
          * it is possible to unbind the scope variable by using the `unbind` function
          * passed into the resolve method.
          *
+         * Can only be bound to one scope variable at a time. If a second is attempted,
+         * the promise will be rejected with an error.
+         *
          * @param {object} scope
          * @param {string} varName
          * @returns a promise which resolves to an unbind method after data is set in scope
@@ -648,8 +665,11 @@
         $bindTo: function (scope, varName) {
           var self = this;
           return self.$loaded().then(function () {
+            //todo split this into a subclass and shorten this method
+            //todo add comments and explanations
             if (self.$$conf.bound) {
-              throw new Error('Can only bind to one scope variable at a time');
+              $log.error('Can only bind to one scope variable at a time');
+              return $firebaseUtils.reject('Can only bind to one scope variable at a time');
             }
 
             var unbind = function () {
@@ -663,18 +683,7 @@
             var parsed = $parse(varName);
             var $bound = self.$$conf.bound = {
               update: function() {
-                var curr = $bound.get();
-                if( !angular.isObject(curr) ) {
-                  curr = {};
-                }
-                $firebaseUtils.each(self, function(v,k) {
-                  curr[k] = v;
-                });
-                curr.$id = self.$id;
-                curr.$priority = self.$priority;
-                if( self.hasOwnProperty('$value') ) {
-                  curr.$value = self.$value;
-                }
+                var curr = $firebaseUtils.parseScopeData(self);
                 parsed.assign(scope, curr);
               },
               get: function () {
@@ -746,9 +755,9 @@
          * @param snap
          */
         $$updated: function (snap) {
-          this.$id = snap.name();
           // applies new data to this object
           var changed = $firebaseUtils.updateRec(this, snap);
+          this.$id = snap.name();
           if( changed ) {
             // notifies $watch listeners and
             // updates $scope if bound to a variable
@@ -1005,10 +1014,11 @@
             ref.on('child_removed', removed, error);
 
             // determine when initial load is completed
-            ref.once('value', batch(resolve.bind(null, null)), resolve);
+            ref.once('value', function() { resolve(null); }, resolve);
           }
 
-          function resolve(err) {
+          // call resolve(), do not call this directly
+          function _resolveFn(err) {
             if( def ) {
               if( err ) { def.reject(err); }
               else { def.resolve(array); }
@@ -1024,14 +1034,15 @@
             }
           }
 
-          var def = $firebaseUtils.defer();
-          var array = new ArrayFactory($inst, destroy, def.promise);
-          var batch = $firebaseUtils.batch();
+          var def     = $firebaseUtils.defer();
+          var array   = new ArrayFactory($inst, destroy, def.promise);
+          var batch   = $firebaseUtils.batch();
           var created = batch(array.$$added, array);
           var updated = batch(array.$$updated, array);
-          var moved = batch(array.$$moved, array);
+          var moved   = batch(array.$$moved, array);
           var removed = batch(array.$$removed, array);
-          var error = batch(array.$$error, array);
+          var error   = batch(array.$$error, array);
+          var resolve = batch(_resolveFn);
 
           var self = this;
           self.isDestroyed = false;
@@ -1051,10 +1062,11 @@
 
           function init() {
             ref.on('value', applyUpdate, error);
-            ref.once('value', batch(resolve.bind(null, null)), resolve);
+            ref.once('value', function() { resolve(null); }, resolve);
           }
 
-          function resolve(err) {
+          // call resolve(); do not call this directly
+          function _resolveFn(err) {
             if( def ) {
               if( err ) { def.reject(err); }
               else { def.resolve(obj); }
@@ -1068,6 +1080,7 @@
           var batch = $firebaseUtils.batch();
           var applyUpdate = batch(obj.$$updated, obj);
           var error = batch(obj.$$error, obj);
+          var resolve = batch(_resolveFn);
 
           var self = this;
           self.isDestroyed = false;
@@ -1497,210 +1510,274 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
 
     .factory('$firebaseUtils', ["$q", "$timeout", "firebaseBatchDelay",
       function($q, $timeout, firebaseBatchDelay) {
-        function batch(wait, maxWait) {
-          if( !wait ) { wait = angular.isDefined(wait)? wait : firebaseBatchDelay; }
-          if( !maxWait ) { maxWait = wait*10 || 100; }
-          var list = [];
-          var start;
-          var timer;
+        var utils = {
+          /**
+           * Returns a function which, each time it is invoked, will pause for `wait`
+           * milliseconds before invoking the original `fn` instance. If another
+           * request is received in that time, it resets `wait` up until `maxWait` is
+           * reached.
+           *
+           * Unlike a debounce function, once wait is received, all items that have been
+           * queued will be invoked (not just once per execution). It is acceptable to use 0,
+           * which means to batch all synchronously queued items.
+           *
+           * The batch function actually returns a wrap function that should be called on each
+           * method that is to be batched.
+           *
+           * <pre><code>
+           *   var total = 0;
+           *   var batchWrapper = batch(10, 100);
+           *   var fn1 = batchWrapper(function(x) { return total += x; });
+           *   var fn2 = batchWrapper(function() { console.log(total); });
+           *   fn1(10);
+           *   fn2();
+           *   fn1(10);
+           *   fn2();
+           *   console.log(total); // 0 (nothing invoked yet)
+           *   // after 10ms will log "10" and then "20"
+           * </pre></code>
+           *
+           * @param {int} wait number of milliseconds to pause before sending out after each invocation
+           * @param {int} maxWait max milliseconds to wait before sending out, defaults to wait * 10 or 100
+           * @returns {Function}
+           */
+          batch: function(wait, maxWait) {
+            wait = typeof('wait') === 'number'? wait : firebaseBatchDelay;
+            if( !maxWait ) { maxWait = wait*10 || 100; }
+            var queue = [];
+            var start;
+            var timer;
 
-          function addToBatch(fn, context) {
-             if( typeof(fn) !== 'function' ) {
-               throw new Error('Must provide a function to be batched. Got '+fn);
-             }
-             return function() {
-               var args = Array.prototype.slice.call(arguments, 0);
-               list.push([fn, context, args]);
-               resetTimer();
-             };
-          }
-          
-          function resetTimer() {
-            if( timer ) {
-              clearTimeout(timer);
+            // returns `fn` wrapped in a function that queues up each call event to be
+            // invoked later inside fo runNow()
+            function createBatchFn(fn, context) {
+               if( typeof(fn) !== 'function' ) {
+                 throw new Error('Must provide a function to be batched. Got '+fn);
+               }
+               return function() {
+                 var args = Array.prototype.slice.call(arguments, 0);
+                 queue.push([fn, context, args]);
+                 resetTimer();
+               };
             }
-            if( start && Date.now() - start > maxWait ) {
-              compile(runNow);
-            }
-            else {
-              if( !start ) { start = Date.now(); }
-              timer = compile(runNow, wait);
-            }
-          }
 
-          function runNow() {
-            timer = null;
-            start = null;
-            var copyList = list.slice(0);
-            list = [];
-            angular.forEach(copyList, function(parts) {
-              parts[0].apply(parts[1], parts[2]);
-            });
-          }
-
-          return addToBatch;
-        }
-
-        function assertValidRef(ref, msg) {
-          if( !angular.isObject(ref) ||
-            typeof(ref.ref) !== 'function' ||
-            typeof(ref.ref().transaction) !== 'function' ) {
-            throw new Error(msg || 'Invalid Firebase reference');
-          }
-        }
-
-        // http://stackoverflow.com/questions/7509831/alternative-for-the-deprecated-proto
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
-        function inherit(ChildClass, ParentClass, methods) {
-          var childMethods = ChildClass.prototype;
-          ChildClass.prototype = Object.create(ParentClass.prototype);
-          ChildClass.prototype.constructor = ChildClass; // restoring proper constructor for child class
-          angular.forEach(Object.keys(childMethods), function(k) {
-            ChildClass.prototype[k] = childMethods[k];
-          });
-          if( angular.isObject(methods) ) {
-            angular.extend(ChildClass.prototype, methods);
-          }
-          return ChildClass;
-        }
-
-        function getPrototypeMethods(inst, iterator, context) {
-          var methods = {};
-          var objProto = Object.getPrototypeOf({});
-          var proto = angular.isFunction(inst) && angular.isObject(inst.prototype)?
-            inst.prototype : Object.getPrototypeOf(inst);
-          while(proto && proto !== objProto) {
-            for (var key in proto) {
-              // we only invoke each key once; if a super is overridden it's skipped here
-              if (proto.hasOwnProperty(key) && !methods.hasOwnProperty(key)) {
-                methods[key] = true;
-                iterator.call(context, proto[key], key, proto);
+            // clears the current wait timer and creates a new one
+            // however, if maxWait is exceeded, calles runNow() immediately
+            function resetTimer() {
+              if( timer ) {
+                $timeout.cancel(timer);
+                timer = null;
+              }
+              if( start && Date.now() - start > maxWait ) {
+                utils.compile(runNow);
+              }
+              else {
+                if( !start ) { start = Date.now(); }
+                timer = utils.compile(runNow, wait);
               }
             }
-            proto = Object.getPrototypeOf(proto);
-          }
-        }
 
-        function getPublicMethods(inst, iterator, context) {
-          getPrototypeMethods(inst, function(m, k) {
-            if( typeof(m) === 'function' && k.charAt(0) !== '_' ) {
-              iterator.call(context, m, k);
+            // Clears the queue and invokes all of the functions awaiting notification
+            function runNow() {
+              timer = null;
+              start = null;
+              var copyList = queue.slice(0);
+              queue = [];
+              angular.forEach(copyList, function(parts) {
+                parts[0].apply(parts[1], parts[2]);
+              });
             }
-          });
-        }
 
-        function defer() {
-          return $q.defer();
-        }
+            return createBatchFn;
+          },
 
-        function reject(msg) {
-          return $q.reject(msg);
-        }
-
-        function resolve() {
-          var def = defer();
-          def.resolve.apply(def, arguments);
-          return def.promise;
-        }
-
-        function compile(fn, wait) {
-          $timeout(fn||function() {}, wait||0);
-        }
-
-        function updateRec(rec, snap) {
-          var data = snap.val();
-          var oldData = angular.extend({}, rec);
-
-          // deal with primitives
-          if( !angular.isObject(data) ) {
-            data = {$value: data};
-          }
-
-          // remove keys that don't exist anymore
-          delete rec.$value;
-          each(rec, function(val, key) {
-            if( !data.hasOwnProperty(key) ) {
-              delete rec[key];
+          assertValidRef: function(ref, msg) {
+            if( !angular.isObject(ref) ||
+              typeof(ref.ref) !== 'function' ||
+              typeof(ref.ref().transaction) !== 'function' ) {
+              throw new Error(msg || 'Invalid Firebase reference');
             }
-          });
+          },
 
-          // apply new values
-          angular.extend(rec, data);
-          rec.$priority = snap.getPriority();
-
-          return !angular.equals(oldData, rec) ||
-            oldData.$value !== rec.$value ||
-            oldData.$priority !== rec.$priority;
-        }
-
-        function each(obj, iterator, context) {
-          angular.forEach(obj, function(v,k) {
-            var c = k.charAt(0);
-            if( c !== '_' && c !== '$' ) {
-              iterator.call(context, v, k, obj);
-            }
-          });
-        }
-
-        /**
-         * A utility for converting records to JSON objects
-         * which we can save into Firebase. It asserts valid
-         * keys and strips off any items prefixed with $.
-         *
-         * If the rec passed into this method has a toJSON()
-         * method, that will be used in place of the custom
-         * functionality here.
-         *
-         * @param rec
-         * @returns {*}
-         */
-        function toJSON(rec) {
-          var dat;
-          if( !angular.isObject(rec) ) {
-            rec = {$value: rec};
-          }
-          if (angular.isFunction(rec.toJSON)) {
-            dat = rec.toJSON();
-          }
-          else {
-            dat = {};
-            each(rec, function (v, k) {
-              dat[k] = v;
+          // http://stackoverflow.com/questions/7509831/alternative-for-the-deprecated-proto
+          // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
+          inherit: function(ChildClass, ParentClass, methods) {
+            var childMethods = ChildClass.prototype;
+            ChildClass.prototype = Object.create(ParentClass.prototype);
+            ChildClass.prototype.constructor = ChildClass; // restoring proper constructor for child class
+            angular.forEach(Object.keys(childMethods), function(k) {
+              ChildClass.prototype[k] = childMethods[k];
             });
-          }
-          if( angular.isDefined(rec.$value) && Object.keys(dat).length === 0 ) {
-            dat['.value'] = rec.$value;
-          }
-          if( angular.isDefined(rec.$priority) && Object.keys(dat).length > 0 ) {
-            dat['.priority'] = rec.$priority;
-          }
-          angular.forEach(dat, function(v,k) {
-            if (k.match(/[.$\[\]#\/]/) && k !== '.value' && k !== '.priority' ) {
-              throw new Error('Invalid key ' + k + ' (cannot contain .$[]#)');
+            if( angular.isObject(methods) ) {
+              angular.extend(ChildClass.prototype, methods);
             }
-            else if( angular.isUndefined(v) ) {
-              throw new Error('Key '+k+' was undefined. Cannot pass undefined in JSON. Use null instead.');
-            }
-          });
-          return dat;
-        }
+            return ChildClass;
+          },
 
-        return {
-          batch: batch,
-          compile: compile,
-          updateRec: updateRec,
-          assertValidRef: assertValidRef,
+          getPrototypeMethods: function(inst, iterator, context) {
+            var methods = {};
+            var objProto = Object.getPrototypeOf({});
+            var proto = angular.isFunction(inst) && angular.isObject(inst.prototype)?
+              inst.prototype : Object.getPrototypeOf(inst);
+            while(proto && proto !== objProto) {
+              for (var key in proto) {
+                // we only invoke each key once; if a super is overridden it's skipped here
+                if (proto.hasOwnProperty(key) && !methods.hasOwnProperty(key)) {
+                  methods[key] = true;
+                  iterator.call(context, proto[key], key, proto);
+                }
+              }
+              proto = Object.getPrototypeOf(proto);
+            }
+          },
+
+          getPublicMethods: function(inst, iterator, context) {
+            utils.getPrototypeMethods(inst, function(m, k) {
+              if( typeof(m) === 'function' && k.charAt(0) !== '_' ) {
+                iterator.call(context, m, k);
+              }
+            });
+          },
+
+          defer: function() {
+            return $q.defer();
+          },
+
+          reject: function(msg) {
+            var def = utils.defer();
+            def.reject(msg);
+            return def.promise;
+          },
+
+          resolve: function() {
+            var def = utils.defer();
+            def.resolve.apply(def, arguments);
+            return def.promise;
+          },
+
+          compile: function(fn, wait) {
+            return $timeout(fn||function() {}, wait||0);
+          },
+
+          deepCopy: function(obj) {
+            if( !angular.isObject(obj) ) { return obj; }
+            var newCopy = angular.isArray(obj) ? obj.slice() : angular.extend({}, obj);
+            for (var key in newCopy) {
+              if (newCopy.hasOwnProperty(key)) {
+                if (angular.isObject(newCopy[key])) {
+                  newCopy[key] = utils.deepCopy(newCopy[key]);
+                }
+              }
+            }
+            return newCopy;
+          },
+
+          parseScopeData: function(rec) {
+            var out = {};
+            utils.each(rec, function(v,k) {
+              out[k] = utils.deepCopy(v);
+            });
+            out.$id = rec.$id;
+            out.$priority = rec.$priority;
+            if( rec.hasOwnProperty('$value') ) {
+              out.$value = rec.$value;
+            }
+            return out;
+          },
+
+          updateRec: function(rec, snap) {
+            var data = snap.val();
+            var oldData = angular.extend({}, rec);
+
+            // deal with primitives
+            if( !angular.isObject(data) ) {
+              rec.$value = data;
+              data = {};
+            }
+            else {
+              delete rec.$value;
+            }
+
+            // remove keys that don't exist anymore
+            utils.each(rec, function(val, key) {
+              if( !data.hasOwnProperty(key) ) {
+                delete rec[key];
+              }
+            });
+
+            // apply new values
+            angular.extend(rec, data);
+            rec.$priority = snap.getPriority();
+
+            return !angular.equals(oldData, rec) ||
+              oldData.$value !== rec.$value ||
+              oldData.$priority !== rec.$priority;
+          },
+
+          dataKeys: function(obj) {
+            var out = [];
+            utils.each(obj, function(v,k) {
+              out.push(k);
+            });
+            return out;
+          },
+
+          each: function(obj, iterator, context) {
+            angular.forEach(obj, function(v,k) {
+              var c = k.charAt(0);
+              if( c !== '_' && c !== '$' && c !== '.' ) {
+                iterator.call(context, v, k, obj);
+              }
+            });
+          },
+
+          /**
+           * A utility for converting records to JSON objects
+           * which we can save into Firebase. It asserts valid
+           * keys and strips off any items prefixed with $.
+           *
+           * If the rec passed into this method has a toJSON()
+           * method, that will be used in place of the custom
+           * functionality here.
+           *
+           * @param rec
+           * @returns {*}
+           */
+          toJSON: function(rec) {
+            var dat;
+            if( !angular.isObject(rec) ) {
+              rec = {$value: rec};
+            }
+            if (angular.isFunction(rec.toJSON)) {
+              dat = rec.toJSON();
+            }
+            else {
+              dat = {};
+              utils.each(rec, function (v, k) {
+                dat[k] = v;
+              });
+            }
+            if( angular.isDefined(rec.$value) && Object.keys(dat).length === 0 && rec.$value !== null ) {
+              dat['.value'] = rec.$value;
+            }
+            if( angular.isDefined(rec.$priority) && Object.keys(dat).length > 0 && rec.$priority !== null ) {
+              dat['.priority'] = rec.$priority;
+            }
+            angular.forEach(dat, function(v,k) {
+              if (k.match(/[.$\[\]#\/]/) && k !== '.value' && k !== '.priority' ) {
+                throw new Error('Invalid key ' + k + ' (cannot contain .$[]#)');
+              }
+              else if( angular.isUndefined(v) ) {
+                throw new Error('Key '+k+' was undefined. Cannot pass undefined in JSON. Use null instead.');
+              }
+            });
+            return dat;
+          },
           batchDelay: firebaseBatchDelay,
-          inherit: inherit,
-          getPrototypeMethods: getPrototypeMethods,
-          getPublicMethods: getPublicMethods,
-          reject: reject,
-          resolve: resolve,
-          defer: defer,
-          allPromises: $q.all.bind($q),
-          each: each,
-          toJSON: toJSON
+          allPromises: $q.all.bind($q)
         };
+
+        return utils;
       }
     ]);
 })();

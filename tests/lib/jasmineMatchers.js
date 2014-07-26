@@ -105,6 +105,19 @@ beforeEach(function() {
       return {
         compare: compare.bind(null, 'an')
       }
+    },
+
+    toHaveKey: function() {
+      return {
+        compare: function(actual, key) {
+          var pass = actual.hasOwnProperty(key);
+          var notText = pass? ' not' : '';
+          return {
+            pass: pass,
+            message: 'Expected ' + key + notText + ' to exist in ' + extendedTypeOf(actual)
+          }
+        }
+      }
     }
   });
 
