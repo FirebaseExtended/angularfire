@@ -324,6 +324,24 @@ describe('$FirebaseArray', function () {
       expect(whiteSpy).not.toHaveBeenCalled();
       expect(blackSpy).toHaveBeenCalledWith('test_fail');
     });
+
+    it('should resolve if function passed directly into $loaded', function() {
+      var spy = jasmine.createSpy('resolve');
+      arr.$loaded(spy);
+      flushAll();
+      expect(spy).toHaveBeenCalledWith(arr);
+    });
+
+    it('should reject properly when function passed directly into $loaded', function() {
+      var whiteSpy = jasmine.createSpy('resolve');
+      var blackSpy = jasmine.createSpy('reject');
+      var arr = stubArray();
+      arr.$$$readyFuture.reject('test_fail');
+      arr.$loaded(whiteSpy, blackSpy);
+      flushAll();
+      expect(whiteSpy).not.toHaveBeenCalled();
+      expect(blackSpy).toHaveBeenCalledWith('test_fail');
+    });
   });
 
   describe('$inst', function() {

@@ -179,7 +179,7 @@
         $loaded: function(resolve, reject) {
           var promise = this._promise;
           if( arguments.length ) {
-            promise = promise.then.call(resolve, reject);
+            promise = promise.then.call(promise, resolve, reject);
           }
           return promise;
         },

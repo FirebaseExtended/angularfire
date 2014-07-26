@@ -75,7 +75,7 @@ describe('$FirebaseObject', function() {
       expect(blackSpy).not.toHaveBeenCalled();
     });
 
-    it('should reject if the server data cannot be accessed', function () {
+    it('should reject if the ready promise is rejected', function () {
       var whiteSpy = jasmine.createSpy('resolve');
       var blackSpy = jasmine.createSpy('reject');
       var obj = makeObject();
@@ -121,6 +121,24 @@ describe('$FirebaseObject', function() {
       obj.$loaded(spy);
       flushAll();
       expect(spy).toHaveBeenCalled();
+    });
+
+    it('should resolve properly if function passed directly into $loaded', function() {
+      var spy = jasmine.createSpy('loaded');
+      obj.$loaded(spy);
+      flushAll();
+      expect(spy).toHaveBeenCalledWith(obj);
+    });
+
+    it('should reject properly if function passed directly into $loaded', function() {
+      var whiteSpy = jasmine.createSpy('resolve');
+      var blackSpy = jasmine.createSpy('reject');
+      var obj = makeObject();
+      obj.$loaded(whiteSpy, blackSpy);
+      obj.$$$reject('test_fail');
+      flushAll();
+      expect(whiteSpy).not.toHaveBeenCalled();
+      expect(blackSpy).toHaveBeenCalledWith('test_fail');
     });
   });
 

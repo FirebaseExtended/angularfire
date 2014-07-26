@@ -1,5 +1,5 @@
 /*!
- angularfire v0.8.0-pre2 2014-07-24
+ angularfire v0.8.0-pre2 2014-07-26
 * https://github.com/firebase/angularFire
 * Copyright (c) 2014 Firebase, Inc.
 * MIT LICENSE: http://firebase.mit-license.org/
@@ -211,7 +211,7 @@
         $loaded: function(resolve, reject) {
           var promise = this._promise;
           if( arguments.length ) {
-            promise = promise.then.call(resolve, reject);
+            promise = promise.then.call(promise, resolve, reject);
           }
           return promise;
         },
@@ -655,6 +655,9 @@
          * it is possible to unbind the scope variable by using the `unbind` function
          * passed into the resolve method.
          *
+         * Can only be bound to one scope variable at a time. If a second is attempted,
+         * the promise will be rejected with an error.
+         *
          * @param {object} scope
          * @param {string} varName
          * @returns a promise which resolves to an unbind method after data is set in scope
@@ -662,8 +665,11 @@
         $bindTo: function (scope, varName) {
           var self = this;
           return self.$loaded().then(function () {
+            //todo split this into a subclass and shorten this method
+            //todo add comments and explanations
             if (self.$$conf.bound) {
-              throw new Error('Can only bind to one scope variable at a time');
+              $log.error('Can only bind to one scope variable at a time');
+              return $firebaseUtils.reject('Can only bind to one scope variable at a time');
             }
 
             var unbind = function () {
@@ -677,18 +683,7 @@
             var parsed = $parse(varName);
             var $bound = self.$$conf.bound = {
               update: function() {
-                var curr = $bound.get();
-                if( !angular.isObject(curr) ) {
-                  curr = {};
-                }
-                $firebaseUtils.each(self, function(v,k) {
-                  curr[k] = v;
-                });
-                curr.$id = self.$id;
-                curr.$priority = self.$priority;
-                if( self.hasOwnProperty('$value') ) {
-                  curr.$value = self.$value;
-                }
+                var curr = $firebaseUtils.parseScopeData(self);
                 parsed.assign(scope, curr);
               },
               get: function () {
@@ -760,9 +755,9 @@
          * @param snap
          */
         $$updated: function (snap) {
-          this.$id = snap.name();
           // applies new data to this object
           var changed = $firebaseUtils.updateRec(this, snap);
+          this.$id = snap.name();
           if( changed ) {
             // notifies $watch listeners and
             // updates $scope if bound to a variable
@@ -1515,7 +1510,7 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
 
     .factory('$firebaseUtils', ["$q", "$timeout", "firebaseBatchDelay",
       function($q, $timeout, firebaseBatchDelay) {
-        var fns = {
+        var utils = {
           /**
            * Returns a function which, each time it is invoked, will pause for `wait`
            * milliseconds before invoking the original `fn` instance. If another
@@ -1574,11 +1569,11 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
                 timer = null;
               }
               if( start && Date.now() - start > maxWait ) {
-                fns.compile(runNow);
+                utils.compile(runNow);
               }
               else {
                 if( !start ) { start = Date.now(); }
-                timer = fns.compile(runNow, wait);
+                timer = utils.compile(runNow, wait);
               }
             }
 
@@ -1637,7 +1632,7 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
           },
 
           getPublicMethods: function(inst, iterator, context) {
-            fns.getPrototypeMethods(inst, function(m, k) {
+            utils.getPrototypeMethods(inst, function(m, k) {
               if( typeof(m) === 'function' && k.charAt(0) !== '_' ) {
                 iterator.call(context, m, k);
               }
@@ -1649,11 +1644,13 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
           },
 
           reject: function(msg) {
-            return $q.reject(msg);
+            var def = utils.defer();
+            def.reject(msg);
+            return def.promise;
           },
 
           resolve: function() {
-            var def = fns.defer();
+            var def = utils.defer();
             def.resolve.apply(def, arguments);
             return def.promise;
           },
@@ -1662,18 +1659,47 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
             return $timeout(fn||function() {}, wait||0);
           },
 
+          deepCopy: function(obj) {
+            if( !angular.isObject(obj) ) { return obj; }
+            var newCopy = angular.isArray(obj) ? obj.slice() : angular.extend({}, obj);
+            for (var key in newCopy) {
+              if (newCopy.hasOwnProperty(key)) {
+                if (angular.isObject(newCopy[key])) {
+                  newCopy[key] = utils.deepCopy(newCopy[key]);
+                }
+              }
+            }
+            return newCopy;
+          },
+
+          parseScopeData: function(rec) {
+            var out = {};
+            utils.each(rec, function(v,k) {
+              out[k] = utils.deepCopy(v);
+            });
+            out.$id = rec.$id;
+            out.$priority = rec.$priority;
+            if( rec.hasOwnProperty('$value') ) {
+              out.$value = rec.$value;
+            }
+            return out;
+          },
+
           updateRec: function(rec, snap) {
             var data = snap.val();
             var oldData = angular.extend({}, rec);
 
             // deal with primitives
             if( !angular.isObject(data) ) {
-              data = {$value: data};
+              rec.$value = data;
+              data = {};
+            }
+            else {
+              delete rec.$value;
             }
 
             // remove keys that don't exist anymore
-            delete rec.$value;
-            fns.each(rec, function(val, key) {
+            utils.each(rec, function(val, key) {
               if( !data.hasOwnProperty(key) ) {
                 delete rec[key];
               }
@@ -1686,6 +1712,14 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
             return !angular.equals(oldData, rec) ||
               oldData.$value !== rec.$value ||
               oldData.$priority !== rec.$priority;
+          },
+
+          dataKeys: function(obj) {
+            var out = [];
+            utils.each(obj, function(v,k) {
+              out.push(k);
+            });
+            return out;
           },
 
           each: function(obj, iterator, context) {
@@ -1719,14 +1753,14 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
             }
             else {
               dat = {};
-              fns.each(rec, function (v, k) {
+              utils.each(rec, function (v, k) {
                 dat[k] = v;
               });
             }
-            if( angular.isDefined(rec.$value) && Object.keys(dat).length === 0 ) {
+            if( angular.isDefined(rec.$value) && Object.keys(dat).length === 0 && rec.$value !== null ) {
               dat['.value'] = rec.$value;
             }
-            if( angular.isDefined(rec.$priority) && Object.keys(dat).length > 0 ) {
+            if( angular.isDefined(rec.$priority) && Object.keys(dat).length > 0 && rec.$priority !== null ) {
               dat['.priority'] = rec.$priority;
             }
             angular.forEach(dat, function(v,k) {
@@ -1743,7 +1777,7 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
           allPromises: $q.all.bind($q)
         };
 
-        return fns;
+        return utils;
       }
     ]);
 })();
