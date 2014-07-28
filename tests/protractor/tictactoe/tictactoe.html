@@ -25,7 +25,7 @@
 
     <!-- Name input -->
     <div id="board">
-      <div class="row" ng-repeat="(rowId, row) in boardBinding.board track by $index">
+      <div class="row" ng-repeat="(rowId, row) in board track by $index">
         <div class="cell" ng-repeat="(columnId, cell) in row track by $index" ng-click="makeMove(rowId, columnId)">
           {{ cell }}
         </div>
