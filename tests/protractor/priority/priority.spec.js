@@ -34,7 +34,7 @@ describe('Priority App', function () {
   it('loads', function () {
   });
 
-  it('has the correct title', function() {
+  it('has the correct title', function () {
     expect(browser.getTitle()).toEqual('AngularFire Priority e2e Test');
   });
 
@@ -64,18 +64,13 @@ describe('Priority App', function () {
     expect($('.message:nth-of-type(3) .content').getText()).toEqual('Pretty fantastic!');
   });
 
-  it('updates priorities dynamically', function(done) {
-    console.log("a");
+  it('updates priorities dynamically', function (done) {
     // Update the priority of the first message
-    firebaseRef.startAt().limit(1).once("child_added", function(dataSnapshot1) {
-      console.log("b");
+    firebaseRef.startAt().limit(1).once("child_added", function (dataSnapshot1) {
       dataSnapshot1.ref().setPriority(4, function() {
-        console.log("c");
         // Update the priority of the third message
-        messagesFirebaseRef.startAt(2).limit(1).once("child_added", function(dataSnapshot2) {
-          console.log("d");
+        firebaseRef.startAt(2).limit(1).once("child_added", function (dataSnapshot2) {
           dataSnapshot2.ref().setPriority(0, function() {
-            console.log("e");
             // Make sure the page has three messages
             expect(messages.count()).toBe(3);
 
