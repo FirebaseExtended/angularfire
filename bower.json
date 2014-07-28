@@ -30,7 +30,7 @@
     "release.sh"
   ],
   "dependencies": {
-    "angular": TODO,
+    "angular": "1.2.21",
     "firebase": "1.0.x",
     "firebase-simple-login": "1.6.x"
   },
