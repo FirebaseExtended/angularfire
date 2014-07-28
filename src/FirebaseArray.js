@@ -179,7 +179,7 @@
         $loaded: function(resolve, reject) {
           var promise = this._promise;
           if( arguments.length ) {
-            promise = promise.then.call(resolve, reject);
+            promise = promise.then.call(promise, resolve, reject);
           }
           return promise;
         },
@@ -341,23 +341,35 @@
          */
         _process: function(event, rec, prevChild) {
           var key = this._getKey(rec);
+          var changed = false;
+          var pos;
           switch(event) {
+            case 'child_added':
+              pos = this.$indexFor(key);
+              break;
             case 'child_moved':
+              pos = this.$indexFor(key);
               this._spliceOut(key);
               break;
             case 'child_removed':
               // remove record from the array
-              this._spliceOut(key);
+              changed = this._spliceOut(key) !== null;
+              break;
+            case 'child_changed':
+              changed = true;
               break;
             default:
               // nothing to do
           }
-          if( angular.isDefined(prevChild) ) {
+          if( angular.isDefined(pos) ) {
             // add it to the array
-            this._addAfter(rec, prevChild);
+            changed = this._addAfter(rec, prevChild) !== pos;
           }
-          // send notifications to anybody monitoring $watch
-          this._notify(event, key, prevChild);
+          if( changed ) {
+            // send notifications to anybody monitoring $watch
+            this._notify(event, key, prevChild);
+          }
+          return changed;
         },
 
         /**
@@ -396,6 +408,7 @@
             if( i === 0 ) { i = this.$list.length; }
           }
           this.$list.splice(i, 0, rec);
+          return i;
         },
 
         /**

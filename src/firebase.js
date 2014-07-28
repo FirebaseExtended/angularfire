@@ -119,9 +119,7 @@
             else {
               ref = ref.child(key);
             }
-            if( angular.isUndefined(applyLocally) ) {
-              applyLocally = false;
-            }
+            applyLocally = !!applyLocally;
 
             var def = $firebaseUtils.defer();
             ref.transaction(valueFn, function(err, committed, snap) {
@@ -195,10 +193,11 @@
             ref.on('child_removed', removed, error);
 
             // determine when initial load is completed
-            ref.once('value', resolve.bind(null, null), resolve);
+            ref.once('value', function() { resolve(null); }, resolve);
           }
 
-          function resolve(err) {
+          // call resolve(), do not call this directly
+          function _resolveFn(err) {
             if( def ) {
               if( err ) { def.reject(err); }
               else { def.resolve(array); }
@@ -206,18 +205,29 @@
             }
           }
 
-          var def = $firebaseUtils.defer();
-          var array = new ArrayFactory($inst, destroy, def.promise);
-          var batch = $firebaseUtils.batch();
+          function assertArray(arr) {
+            if( !angular.isArray(arr) ) {
+              var type = Object.prototype.toString.call(arr);
+              throw new Error('arrayFactory must return a valid array that passes ' +
+                'angular.isArray and Array.isArray, but received "' + type + '"');
+            }
+          }
+
+          var def     = $firebaseUtils.defer();
+          var array   = new ArrayFactory($inst, destroy, def.promise);
+          var batch   = $firebaseUtils.batch();
           var created = batch(array.$$added, array);
           var updated = batch(array.$$updated, array);
-          var moved = batch(array.$$moved, array);
+          var moved   = batch(array.$$moved, array);
           var removed = batch(array.$$removed, array);
-          var error = batch(array.$$error, array);
+          var error   = batch(array.$$error, array);
+          var resolve = batch(_resolveFn);
 
           var self = this;
           self.isDestroyed = false;
           self.getArray = function() { return array; };
+
+          assertArray(array);
           init();
         }
 
@@ -231,10 +241,11 @@
 
           function init() {
             ref.on('value', applyUpdate, error);
-            ref.once('value', batch(resolve.bind(null, null)), resolve);
+            ref.once('value', function() { resolve(null); }, resolve);
           }
 
-          function resolve(err) {
+          // call resolve(); do not call this directly
+          function _resolveFn(err) {
             if( def ) {
               if( err ) { def.reject(err); }
               else { def.resolve(obj); }
@@ -248,6 +259,7 @@
           var batch = $firebaseUtils.batch();
           var applyUpdate = batch(obj.$$updated, obj);
           var error = batch(obj.$$error, obj);
+          var resolve = batch(_resolveFn);
 
           var self = this;
           self.isDestroyed = false;

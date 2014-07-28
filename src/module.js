@@ -10,6 +10,7 @@
 // Define the `firebase` module under which all AngularFire
 // services will live.
   angular.module("firebase", [])
+    //todo use $window
     .value("Firebase", exports.Firebase)
 
     // used in conjunction with firebaseUtils.debounce function, this is the
