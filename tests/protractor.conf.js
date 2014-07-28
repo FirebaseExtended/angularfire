@@ -6,8 +6,7 @@ exports.config = {
 
   // Tests to run
   specs: [
-    './protractor/chat/chat.spec.js',
-    './protractor/todo/todo.spec.js'
+    './protractor/**/*.spec.js'
   ],
 
   // Capabilities to be passed to the webdriver instance
