@@ -1,9 +1,9 @@
-/*!
- angularfire v0.8.0-pre2 2014-07-27
-* https://github.com/firebase/angularFire
-* Copyright (c) 2014 Firebase, Inc.
-* MIT LICENSE: http://firebase.mit-license.org/
-*/
+/**
+ * angularfire 0.8.0-pre2 2014-07-28
+ * https://github.com/firebase/angularFire
+ * Copyright (c) 2014 Firebase, Inc.
+ * MIT LICENSE: http://firebase.mit-license.org/
+ */
 
 // AngularFire is an officially supported AngularJS binding for Firebase.
 // The bindings let you associate a Firebase URL with a model (or set of

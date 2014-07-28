@@ -5,10 +5,10 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     meta: {
-      banner: '/*!\n <%= pkg.title || pkg.name %> v<%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %>\n' +
-        '<%= pkg.homepage ? "* " + pkg.homepage + "\\n" : "" %>' +
-        '* Copyright (c) <%= grunt.template.today("yyyy") %> Firebase, Inc.\n' +
-        '* MIT LICENSE: http://firebase.mit-license.org/\n*/\n\n'
+      banner: '/**\n * <%= pkg.title || pkg.name %> <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %>\n' +
+        '<%= pkg.homepage ? " * " + pkg.homepage + "\\n" : "" %>' +
+        ' * Copyright (c) <%= grunt.template.today("yyyy") %> Firebase, Inc.\n' +
+        ' * MIT LICENSE: http://firebase.mit-license.org/\n */\n\n'
     },
 
     // merge files from src/ into angularfire.js
