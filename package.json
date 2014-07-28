@@ -56,6 +56,6 @@
     "karma-spec-reporter": "0.0.13"
   },
   "scripts": {
-    "travis": "grunt travis"
+    "test": "grunt travis"
   }
 }
