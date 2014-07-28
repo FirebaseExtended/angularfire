@@ -34,7 +34,7 @@ describe('TicTacToe App', function () {
   it('loads', function () {
   });
 
-  it('has the correct title', function() {
+  it('has the correct title', function () {
     expect(browser.getTitle()).toEqual('AngularFire TicTacToe e2e Test');
   });
 
@@ -69,7 +69,7 @@ describe('TicTacToe App', function () {
     expect(cells.get(6).getText()).toBe('X');
   });
 
-  it('persists state across refresh', function(done) {
+  it('persists state across refresh', function() {
     // Make sure the board has 9 cells
     expect(cells.count()).toBe(9);
 
@@ -77,28 +77,32 @@ describe('TicTacToe App', function () {
     expect(cells.get(0).getText()).toBe('X');
     expect(cells.get(2).getText()).toBe('O');
     expect(cells.get(6).getText()).toBe('X');
-
-    /* For next test */
-    // Destroy the AngularFire bindings
-    $('#destroyButton').click().then(function() {
-      ptor.sleep(1000);
-
-      // Click the middle cell
-      cells.get(4).click();
-
-      done();
-    });
   });
 
-  it('stops updating Firebase once the AngularFire bindings are destroyed', function(done) {
+  it('stops updating Firebase once the AngularFire bindings are destroyed', function (done) {
     // Make sure the board has 9 cells
     expect(cells.count()).toBe(9);
+
+    // Destroy the AngularFire bindings
+    $('#destroyButton').click();
+
+    // Click the middle cell
+    cells.get(4).click();
 
     // Make sure the content of the clicked cell is correct
     expect(cells.get(4).getText()).toBe('X');
 
+    // Refresh the browser
+    browser.refresh();
+
+    // Sleep to allow Firebase bindings to take effect
+    ptor.sleep(500);
+
+    // Make sure the content of the previously clicked cell is empty
+    expect(cells.get(4).getText()).toBe('');
+
     // Make sure Firebase is not updated
-    firebaseRef.child('board/x1/y1').once('value', function(dataSnapshot) {
+    firebaseRef.child('x1/y1').once('value', function (dataSnapshot) {
       expect(dataSnapshot.val()).toBe('');
 
       done();
