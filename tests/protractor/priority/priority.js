@@ -22,30 +22,27 @@ app.controller('PriorityCtrl', function Chat($scope, $firebase) {
   };
 
   /* Adds a new message to the messages list */
-  $scope.addMessage = function() {
+  $scope.addMessage = function () {
     if ($scope.message !== '') {
       // Add a new message to the messages list
-      console.log($scope.messages);
       var priority = $scope.messages.length;
       $scope.messages.$inst().$push({
         from: $scope.username,
         content: $scope.message
-      }).then(function(ref) {
+      }).then(function (ref) {
         var newItem = $firebase(ref).$asObject();
 
-        newItem.$loaded().then(function(data) {
-          //console.log($scope.messages.length);
-          //console.log(ref.name());
-          //console.log($scope.messages.$keyAt($scope.messages.length - 1));
+        newItem.$loaded().then(function (data) {
           verify(newItem === data, '$FirebaseArray.$loaded() does not return correct value.');
-          //verify(ref.name() === $scope.messages.$keyAt($scope.messages.length - 1), '$FirebaseObject.$push does not return correct ref.');
 
           // Update the message's priority
-          newItem.a = 0;
+          // Note: we need to also update a non-$priority variable since Angular won't
+          // recognize the change otherwise
+          newItem.a = priority;
           newItem.$priority = priority;
           newItem.$save();
         });
-      }, function(error) {
+      }, function (error) {
         verify(false, 'Something is wrong with $firebase.$push().');
       });
 

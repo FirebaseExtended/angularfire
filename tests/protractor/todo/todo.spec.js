@@ -31,18 +31,18 @@ describe('Todo App', function () {
     }
   });
 
-  it('loads', function() {
+  it('loads', function () {
   });
 
-  it('has the correct title', function() {
+  it('has the correct title', function () {
     expect(browser.getTitle()).toEqual('AngularFire Todo e2e Test');
   });
 
-  it('starts with an empty list of Todos', function() {
+  it('starts with an empty list of Todos', function () {
     expect(todos.count()).toBe(0);
   });
 
-  it('adds new Todos', function() {
+  it('adds new Todos', function () {
     // Add three new todos by typing into the input and pressing enter
     var newTodoInput = element(by.model('newTodo'));
     newTodoInput.sendKeys('Buy groceries\n');
@@ -52,7 +52,7 @@ describe('Todo App', function () {
     expect(todos.count()).toBe(3);
   });
 
-  it('adds random Todos', function() {
+  it('adds random Todos', function () {
     // Add a three new random todos via the provided button
     var addRandomTodoButton = $('#addRandomTodoButton');
     addRandomTodoButton.click();
@@ -62,7 +62,7 @@ describe('Todo App', function () {
     expect(todos.count()).toBe(6);
   });
 
-  it('removes Todos', function() {
+  it('removes Todos', function () {
     // Remove two of the todos via the provided buttons
     $('.todo:nth-of-type(2) .removeTodoButton').click();
     $('.todo:nth-of-type(3) .removeTodoButton').click();
@@ -70,7 +70,7 @@ describe('Todo App', function () {
     expect(todos.count()).toBe(4);
   });
 
-  it('updates when a new Todo is added remotely', function(done) {
+  it('updates when a new Todo is added remotely', function (done) {
     // Simulate a todo being added remotely
     firebaseRef.push({
       title: 'Wash the dishes',
@@ -81,7 +81,7 @@ describe('Todo App', function () {
     });
   });
 
-  it('updates when an existing Todo is removed remotely', function(done) {
+  it('updates when an existing Todo is removed remotely', function (done) {
     // Simulate a todo being removed remotely
     var onCallback = firebaseRef.limit(1).on("child_added", function(childSnapshot) {
       // Make sure we only remove a child once
@@ -94,7 +94,7 @@ describe('Todo App', function () {
     });
   });
 
-  it('stops updating once the sync array is destroyed', function() {
+  it('stops updating once the sync array is destroyed', function () {
     // Destroy the sync array
     $('#destroyArrayButton').click();
 

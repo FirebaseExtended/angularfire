@@ -37,7 +37,7 @@ describe('Chat App', function () {
   it('loads', function () {
   });
 
-  it('has the correct title', function() {
+  it('has the correct title', function () {
     expect(browser.getTitle()).toEqual('AngularFire Chat e2e Test');
   });
 
@@ -60,7 +60,7 @@ describe('Chat App', function () {
     expect(messagesCount.getText()).toEqual('3');
   });
 
-  it('updates upon new remote messages', function(done) {
+  it('updates upon new remote messages', function (done) {
     // Simulate a message being added remotely
     firebaseRef.child("messages").push({
       from: 'Guest 2000',
@@ -73,19 +73,22 @@ describe('Chat App', function () {
         } else {
           return currentCount + 1;
         }
-      }, function() {
+      }, function () {
         // We should only have two messages in the repeater since we did a limit query
         expect(messages.count()).toBe(2);
 
         // Messages count should include all messages, not just the ones displayed
         expect(messagesCount.getText()).toEqual('4');
 
-        done();
+        // We need to sleep long enough for the promises above to resolve
+        ptor.sleep(500).then(function() {
+          done();
+        });
       });
     });
   });
 
-  it('updates upon removed remote messages', function(done) {
+  it('updates upon removed remote messages', function (done) {
     // Simulate a message being deleted remotely
     var onCallback = firebaseRef.child("messages").limit(1).on("child_added", function(childSnapshot) {
       firebaseRef.child("messages").off("child_added", onCallback);
@@ -103,13 +106,16 @@ describe('Chat App', function () {
           // Messages count should include all messages, not just the ones displayed
           expect(messagesCount.getText()).toEqual('3');
 
-          done();
+          // We need to sleep long enough for the promises above to resolve
+          ptor.sleep(500).then(function() {
+            done();
+          });
         });
       });
     });
   });
 
-  it('stops updating once the AngularFire bindings are destroyed', function() {
+  it('stops updating once the AngularFire bindings are destroyed', function () {
     // Destroy the AngularFire bindings
     $('#destroyButton').click();
 

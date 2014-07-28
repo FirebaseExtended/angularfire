@@ -64,7 +64,7 @@ describe('Priority App', function () {
     expect($('.message:nth-of-type(3) .content').getText()).toEqual('Pretty fantastic!');
   });
 
-  it('updates priorities dynamically', function (done) {
+  xit('responds to external priority updates', function (done) {
     // Update the priority of the first message
     firebaseRef.startAt().limit(1).once("child_added", function (dataSnapshot1) {
       dataSnapshot1.ref().setPriority(4, function() {
@@ -84,7 +84,10 @@ describe('Priority App', function () {
             expect($('.message:nth-of-type(2) .content').getText()).toEqual('Oh, hi. How are you?');
             expect($('.message:nth-of-type(3) .content').getText()).toEqual('Hey there!');
 
-            done();
+            // We need to sleep long enough for the promises above to resolve
+            ptor.sleep(500).then(function() {
+              done();
+            });
           });
         });
       });

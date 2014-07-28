@@ -8,10 +8,7 @@ app. controller('TodoCtrl', function Todo($scope, $firebase) {
   $scope.todos = todosSync.$asArray();
 
   // Verify that $inst() works
-  if ($scope.todos.$inst() !== todosSync) {
-    console.log("Something is wrong with $FirebaseArray.$inst().");
-    throw new Error("Something is wrong with $FirebaseArray.$inst().")
-  }
+  verify($scope.todos.$inst() === todosSync, "Something is wrong with $FirebaseArray.$inst().");
 
   /* Clears the todos Firebase reference */
   $scope.clearRef = function () {
@@ -39,10 +36,8 @@ app. controller('TodoCtrl', function Todo($scope, $firebase) {
   /* Removes the todo item with the inputted ID */
   $scope.removeTodo = function(id) {
     // Verify that $indexFor() and $keyAt() work
-    if ($scope.todos.$indexFor($scope.todos.$keyAt(id)) !== id) {
-      console.log("Something is wrong with $FirebaseArray.$indexFor() or FirebaseArray.$keyAt().");
-      throw new Error("Something is wrong with $FirebaseArray.$indexFor() or FirebaseArray.$keyAt().");
-    }
+    verify($scope.todos.$indexFor($scope.todos.$keyAt(id)) === id, "Something is wrong with $FirebaseArray.$indexFor() or FirebaseArray.$keyAt().");
+
     $scope.todos.$remove(id);
   };
 
@@ -50,4 +45,12 @@ app. controller('TodoCtrl', function Todo($scope, $firebase) {
   $scope.destroyArray = function() {
     $scope.todos.$destroy();
   };
+
+  /* Logs a message and throws an error if the inputted expression is false */
+  function verify(expression, message) {
+    if (!expression) {
+      console.log(message);
+      throw new Error(message);
+    }
+  }
 });

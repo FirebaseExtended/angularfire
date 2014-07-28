@@ -17,14 +17,8 @@ app.controller('ChatCtrl', function Chat($scope, $firebase) {
   $scope.messages = messagesSync.$asArray();
 
   // Verify that $inst() works
-  if ($scope.chat.$inst() !== chatSync) {
-    console.log("Something is wrong with $FirebaseObject.$inst().");
-    throw new Error("Something is wrong with $FirebaseObject.$inst().")
-  }
-  if ($scope.messages.$inst() !== messagesSync) {
-    console.log("Something is wrong with $FirebaseArray.$inst().");
-    throw new Error("Something is wrong with $FirebaseArray.$inst().")
-  }
+  verify($scope.chat.$inst() === chatSync, "Something is wrong with $FirebaseObject.$inst().");
+  verify($scope.messages.$inst() === messagesSync, "Something is wrong with $FirebaseArray.$inst().");
 
   // Initialize $scope variables
   $scope.message = "";
@@ -48,7 +42,7 @@ app.controller('ChatCtrl', function Chat($scope, $firebase) {
       $scope.message = "";
 
       // Increment the messages count by 1
-      numMessagesSync.$transaction(function(currentCount) {
+      numMessagesSync.$transaction(function (currentCount) {
         if (currentCount === null) {
           // Set the initial value
           return 1;
@@ -61,18 +55,16 @@ app.controller('ChatCtrl', function Chat($scope, $firebase) {
           // Increment the messages count by 1
           return currentCount + 1;
         }
-      }).then(function(snapshot) {
+      }).then(function (snapshot) {
         if (snapshot === null) {
           // Handle aborted transaction
-          console.log("Messages count transaction unexpectedly aborted.");
-          throw new Error("Messages count transaction unexpectedly aborted.");
+          verify(false, "Messages count transaction unexpectedly aborted.")
         }
         else {
           // Success
         }
       }, function(error) {
-        console.log("Messages count transaction errored: " + error);
-        throw new Error("Messages count transaction errored: " + error);
+        verify(false, "Messages count transaction errored: " + error);
       });
     }
   };
@@ -82,4 +74,12 @@ app.controller('ChatCtrl', function Chat($scope, $firebase) {
     $scope.chat.$destroy();
     $scope.messages.$destroy();
   };
+
+  /* Logs a message and throws an error if the inputted expression is false */
+  function verify(expression, message) {
+    if (!expression) {
+      console.log(message);
+      throw new Error(message);
+    }
+  }
 });
