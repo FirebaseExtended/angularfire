@@ -137,7 +137,7 @@ module.exports = function(grunt) {
   grunt.registerTask('test:manual', ['karma:manual']);
 
   // Travis CI testing
-  grunt.registerTask('travis', ['build', 'test:unit', 'connect:testserver', 'protractor:saucelabs']);
+  grunt.registerTask('test:travis', ['build', 'test:unit', 'connect:testserver', 'protractor:saucelabs']);
 
   // Build tasks
   grunt.registerTask('build', ['concat', 'jshint', 'uglify']);
