@@ -1,5 +1,5 @@
 /*!
- angularfire v0.8.0-pre2 2014-07-28
+ angularfire v0.8.0-pre2 2014-07-29
 * https://github.com/firebase/angularFire
 * Copyright (c) 2014 Firebase, Inc.
 * MIT LICENSE: http://firebase.mit-license.org/
@@ -338,6 +338,7 @@
         $$moved: function(snap, prevChild) {
           var rec = this.$getRecord(snap.name());
           if( angular.isObject(rec) ) {
+            rec.$priority = snap.getPriority();
             this._process('child_moved', rec, prevChild);
           }
         },
