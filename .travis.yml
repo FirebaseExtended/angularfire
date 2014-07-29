@@ -6,7 +6,6 @@ addons:
 install:
 - git clone git://github.com/n1k0/casperjs.git ~/casperjs
 - export PATH=$PATH:~/casperjs/bin
-- npm install -g grunt-cli
 - npm install -g bower
 - npm install
 - bower install
@@ -14,7 +13,7 @@ before_script:
 - phantomjs --version
 - casperjs --version
 script:
-- grunt travis
+- npm test
 env:
   global:
   - secure: mGHp1rQI11OvbBQn3PnBT5kuyo26gFl8U+nNq0Ot4opgSBX9JaHqS8Dx63uALWWU9qjy08/Mn68t/sKhayH1+XrPDIenOy/XEkkSAG60qAAowD9dRo3WaIMSOcWWYDeqdZOAWZ3LiXvjLO4Swagz5ejz7UtY/ws4CcTi2n/fp7c=
