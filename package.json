@@ -1,19 +1,40 @@
 {
   "name": "angularfire",
-  "version": "0.8.0-pre2",
-  "description": "An officially supported AngularJS binding for Firebase.",
-  "main": "dist/angularfire.js",
+  "description": "The officially supported AngularJS binding for Firebase",
+  "version": "0.8.0",
+  "author": "Firebase <support@firebase.com> (https://www.firebase.com/)",
   "homepage": "https://github.com/firebase/angularFire",
   "repository": {
     "type": "git",
-    "url": "https://github.com/firebase/angularFire.git"
+    "url": "https://github.com/firebase/angularfire.git"
   },
   "bugs": {
-    "url": "https://github.com/firebase/angularFire/issues"
+    "url": "https://github.com/firebase/angularfire/issues"
   },
-  "dependencies": {},
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://firebase.mit-license.org/"
+    }
+  ],
+  "keywords": [
+    "angular",
+    "angularjs",
+    "firebase",
+    "realtime"
+  ],
+  "main": "dist/angularfire.min.js",
+  "files": [
+    "dist/**",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md",
+    "package.json"
+  ],
+  "dependencies": {
+    "firebase": "1.0.x"
+  },
   "devDependencies": {
-    "firebase": "1.0.x",
     "grunt": "~0.4.1",
     "grunt-contrib-concat": "^0.4.0",
     "grunt-contrib-connect": "^0.7.1",
@@ -33,5 +54,8 @@
     "karma-failed-reporter": "0.0.2",
     "jasmine-spec-reporter": "^0.4.0",
     "karma-spec-reporter": "0.0.13"
+  },
+  "scripts": {
+    "test": "grunt travis"
   }
 }
