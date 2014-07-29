@@ -287,6 +287,7 @@
          */
         $$updated: function(snap) {
           var rec = this.$getRecord(snap.name());
+          rec.$priority = snap.getPriority();
           if( angular.isObject(rec) ) {
             // apply changes to the record
             var changed = $firebaseUtils.updateRec(rec, snap);
@@ -305,6 +306,7 @@
          */
         $$moved: function(snap, prevChild) {
           var rec = this.$getRecord(snap.name());
+          rec.$priority = snap.getPriority();
           if( angular.isObject(rec) ) {
             this._process('child_moved', rec, prevChild);
           }
