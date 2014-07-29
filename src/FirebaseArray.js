@@ -306,6 +306,7 @@
         $$moved: function(snap, prevChild) {
           var rec = this.$getRecord(snap.name());
           if( angular.isObject(rec) ) {
+            rec.$priority = snap.getPriority();
             this._process('child_moved', rec, prevChild);
           }
         },

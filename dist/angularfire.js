@@ -1,9 +1,17 @@
 /*!
+<<<<<<< HEAD
+ angularfire v0.8.0-pre2 2014-07-29
+* https://github.com/firebase/angularFire
+* Copyright (c) 2014 Firebase, Inc.
+* MIT LICENSE: http://firebase.mit-license.org/
+*/
+=======
  * angularfire 0.8.0 2014-07-28
  * https://github.com/firebase/angularFire
  * Copyright (c) 2014 Firebase, Inc.
  * MIT LICENSE: http://firebase.mit-license.org/
  */
+>>>>>>> release_0.8
 
 // AngularFire is an officially supported AngularJS binding for Firebase.
 // The bindings let you associate a Firebase URL with a model (or set of
@@ -338,6 +346,7 @@
         $$moved: function(snap, prevChild) {
           var rec = this.$getRecord(snap.name());
           if( angular.isObject(rec) ) {
+            rec.$priority = snap.getPriority();
             this._process('child_moved', rec, prevChild);
           }
         },
