@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html ng-app="tictactoe">
+  <head>
+    <title>AngularFire TicTacToe e2e Test</title>
+
+    <!-- Angular -->
+    <script src="../../../bower_components/angular/angular.min.js"></script>
+
+    <!-- Firebase -->
+    <script src="../../../bower_components/firebase/firebase.js"></script>
+
+    <!-- AngularFire -->
+    <script src="../../../dist/angularfire.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="tictactoe.css">
+  </head>
+
+  <body ng-controller="TicTacToeCtrl">
+    <!-- Reset Firebase button -->
+    <button id="resetRef" ng-click="resetRef()">Reset Ref</button>
+
+    <!-- Destroy button -->
+    <button id="destroyButton" ng-click="destroy()">Destroy AngularFire bindings</button>
+
+    <!-- Name input -->
+    <div id="board">
+      <div class="row" ng-repeat="(rowId, row) in board track by $index">
+        <div class="cell" ng-repeat="(columnId, cell) in row track by $index" ng-click="makeMove(rowId, columnId)">
+          {{ cell }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="tictactoe.js" defer></script>
+  </body>
+</html>

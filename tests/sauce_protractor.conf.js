@@ -24,6 +24,16 @@ exports.config = {
   // Selector for the element housing the angular app
   rootElement: 'body',
 
+  // Options to be passed to Jasmine-node.
+  onPrepare: function() {
+    require('jasmine-spec-reporter');
+    // add jasmine spec reporter
+    jasmine.getEnv().addReporter(new jasmine.SpecReporter({
+      displaySkippedSpec: true,
+      displaySpecDuration: true
+    }));
+  },
+
   // Options to be passed to minijasminenode
   jasmineNodeOpts: {
     // onComplete will be called just before the driver quits.

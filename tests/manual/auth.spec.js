@@ -1,6 +1,7 @@
 angular.module('testx', ['firebase']);
 
 describe("AngularFireAuth Test Suite", function() {
+  jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000
 
   //constants
   var existingUser = {
@@ -21,7 +22,7 @@ describe("AngularFireAuth Test Suite", function() {
   var ngFireRef;
   var ngSimpleLogin;
 
-  function AsyncWaiter(events) {
+  function AsyncWaiter(done, events) {
     var eventsToComplete = events ? events : ["default"];
 
     this.done = function(event) {
@@ -30,16 +31,19 @@ describe("AngularFireAuth Test Suite", function() {
       if(ind >= 0) {
         eventsToComplete.splice(ind, 1);
       }
-    }
+    };
 
     this.wait = function(message, timeout) {
-      waitsFor(function() {
+      var to = setInterval(function() {
         try {
           //We have to call this because the angular $timeout service is mocked for these tests.
           $timeout.flush();
         } catch(err) {}
-        return eventsToComplete == 0;
-      }, message, timeout ? timeout : 2000);
+        if( eventsToComplete.length === 0 ) {
+          clearInterval(to);
+          done();
+        }
+      }, timeout ? timeout : 2000);
     }
   }
 
@@ -64,8 +68,8 @@ describe("AngularFireAuth Test Suite", function() {
 
   //We have this test first, to make sure that initial login state doesn't mess up the promise returned by
   //login.
-  it("Email: failed login", function() {
-    var waiter = new AsyncWaiter(["future_failed", "error_event"]);
+  it("Email: failed login", function(done) {
+    var waiter = new AsyncWaiter(done, ["future_failed", "error_event"]);
 
     var loginFuture = ngSimpleLogin.$login("password", {
       email: "someaccount@here.com",
@@ -91,8 +95,8 @@ describe("AngularFireAuth Test Suite", function() {
   });
 
   //Ensure that getUserInfo gives us a null if we're logged out.
-  it("getUserInfo() triggers promise and is initially null.", function() {
-    var waiter = new AsyncWaiter();
+  it("getUserInfo() triggers promise and is initially null.", function(done) {
+    var waiter = new AsyncWaiter(done);
 
     ngSimpleLogin.$getCurrentUser().then(function(info) {
       expect(info).toBe(null);
@@ -103,8 +107,8 @@ describe("AngularFireAuth Test Suite", function() {
   });
 
   //Make sure logins to providers we haven't enabled fail.
-  it("Failed Facebook login", function() {
-    var waiter = new AsyncWaiter(["future_failed", "error_event"]);
+  it("Failed Facebook login", function(done) {
+    var waiter = new AsyncWaiter(done, ["future_failed", "error_event"]);
 
     var loginFuture = ngSimpleLogin.$login("facebook");
 
@@ -127,8 +131,8 @@ describe("AngularFireAuth Test Suite", function() {
   });
 
   //Login successfully to a twitter account
-  it("Successful Twitter login", function() {
-    var waiter = new AsyncWaiter(["user_info", "login_event"]);
+  it("Successful Twitter login", function(done) {
+    var waiter = new AsyncWaiter(done, ["user_info", "login_event"]);
 
     var loginFuture = ngSimpleLogin.$login("twitter");
 
@@ -154,8 +158,8 @@ describe("AngularFireAuth Test Suite", function() {
   });
 
   //Check that email login works
-  it("Email: login", function() {
-    var waiter = new AsyncWaiter(["future_success", "login_event"]);
+  it("Email: login", function(done) {
+    var waiter = new AsyncWaiter(done, ["future_success", "login_event"]);
 
     var loginFuture = ngSimpleLogin.$login("password", existingUser);
 
@@ -182,8 +186,8 @@ describe("AngularFireAuth Test Suite", function() {
     waiter.wait("email login success");
   });
 
-  it("getCurrentUser for logged-in state", function() {
-    var waiter = new AsyncWaiter();
+  it("getCurrentUser for logged-in state", function(done) {
+    var waiter = new AsyncWaiter(done);
 
     var promise = ngSimpleLogin.$getCurrentUser();
     promise.then(function(user) {
@@ -195,8 +199,8 @@ describe("AngularFireAuth Test Suite", function() {
   });
 
   //Check to make sure logout works.
-  it("Logout", function() {
-    var waiter = new AsyncWaiter(["future", "event"]);
+  it("Logout", function(done) {
+    var waiter = new AsyncWaiter(done, ["future", "event"]);
 
     ngSimpleLogin.$logout();
 
@@ -217,8 +221,8 @@ describe("AngularFireAuth Test Suite", function() {
   });
 
   //Ensure we properly handle errors on account creation.
-  it("Email: failed account creation", function() {
-    var waiter = new AsyncWaiter(["promise", "event"]);
+  it("Email: failed account creation", function(done) {
+    var waiter = new AsyncWaiter(done, ["promise", "event"]);
 
     var promise = ngSimpleLogin.$createUser(existingUser.email, "xaaa");
     promise.then(function(user) {
@@ -238,8 +242,8 @@ describe("AngularFireAuth Test Suite", function() {
   });
 
   //Test account creation.
-  it("Email: account creation", function() {
-    var waiter = new AsyncWaiter(["promise", "getuser"]);
+  it("Email: account creation", function(done) {
+    var waiter = new AsyncWaiter(done, ["promise", "getuser"]);
 
     var accountEmail = "a" + Math.round(Math.random()*10000000000) + "@email.com";
 
@@ -261,8 +265,8 @@ describe("AngularFireAuth Test Suite", function() {
   });
 
   //Test logging into newly created user.
-  it("Email: account creation with subsequent login", function() {
-    var waiter = new AsyncWaiter(["promise", "login"]);
+  it("Email: account creation with subsequent login", function(done) {
+    var waiter = new AsyncWaiter(done, ["promise", "login"]);
     var promise = ngSimpleLogin.$createUser(newUserInf.email, newUserInf.password);
     promise.then(function(user) {
       expect(user.email).toBe(newUserInf.email);
@@ -280,8 +284,8 @@ describe("AngularFireAuth Test Suite", function() {
   });
 
 
-  it("Email: failed change password", function() {
-    var waiter = new AsyncWaiter(["promise", "event"]);
+  it("Email: failed change password", function(done) {
+    var waiter = new AsyncWaiter(done, ["promise", "event"]);
 
     var promise = ngSimpleLogin.$changePassword(existingUser.email, "pxz", "sdf");
     promise.then(function() {
@@ -300,8 +304,8 @@ describe("AngularFireAuth Test Suite", function() {
     waiter.wait("failed change password", 2000);
   });
 
-  it("Email: change password", function() {
-    var waiter = new AsyncWaiter(["fail", "succeed"]);
+  it("Email: change password", function(done) {
+    var waiter = new AsyncWaiter(done, ["fail", "succeed"]);
 
     //this should fail
     ngSimpleLogin.$changePassword(newUserInf.email, "88dfhjgerqwqq", newUserInf.newPW).then(function(user) {
@@ -324,8 +328,8 @@ describe("AngularFireAuth Test Suite", function() {
     waiter.wait("change password", 2000);
   });
 
-  it("Email: remove user", function() {
-    var waiter = new AsyncWaiter(["fail", "success"]);
+  it("Email: remove user", function(done) {
+    var waiter = new AsyncWaiter(done, ["fail", "success"]);
 
     ngSimpleLogin.$removeUser(newUserInf.email + "x", newUserInf.newPW).then(function() {
       expect(true).toBe(false); //die
@@ -351,8 +355,8 @@ describe("AngularFireAuth Test Suite", function() {
     waiter.wait("removeuser fail and success");
   });
 
-  it("Email: reset password", function() {
-    var waiter = new AsyncWaiter(["fail", "success"]);
+  it("Email: reset password", function(done) {
+    var waiter = new AsyncWaiter(done, ["fail", "success"]);
 
     ngSimpleLogin.$sendPasswordResetEmail("invalidemailaddress@example.org").then(function() {
       expect(true).toBe(false);

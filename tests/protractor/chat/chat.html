@@ -10,15 +10,18 @@
     <script src="../../../bower_components/firebase/firebase.js"></script>
 
     <!-- AngularFire -->
-    <script src="../../../angularfire.js"></script>
+    <script src="../../../dist/angularfire.js"></script>
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="chat.css">
   </head>
 
-  <body ng-controller="Chat">
+  <body ng-controller="ChatCtrl">
     <!-- Clear Firebase button -->
     <button id="clearRef" ng-click="clearRef()">Clear Ref</button>
+
+    <!-- Destroy button -->
+    <button id="destroyButton" ng-click="destroy()">Destroy AngularFire bindings</button>
 
     <!-- Messages list -->
     <div id="messagesList">
@@ -26,14 +29,12 @@
         <em>{{ message.from }}: </em>
         <span class="content">{{ message.content }}</span>
       </div>
-      <div ng-cloak ng-if="messages" class="messageCountBlock">
-        Message Count: <span id="messageCount">{{ messageCount.$value ? messageCount.$value : 0 }}</span>
-      </div>
+      Message Count: <span id="messagesCount">{{ chat.numMessages ? chat.numMessages : 0 }}</span>
     </div>
 
     <!-- Add message form -->
     <form ng-submit="addMessage()">
-      <input id="message" type="text" ng-model="message" placeholder="Message...">
+      <input id="message" type="text" ng-model="message" placeholder="Message..." autofocus>
       <input id="submit" type="submit" value="Submit">
     </form>
 

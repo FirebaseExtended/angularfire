@@ -1,22 +1,27 @@
 var protractor = require('protractor');
 var Firebase = require('firebase');
 
-var ptor = protractor.getInstance();
-var cleared = false;
-
 describe('Todo App', function () {
+  // Protractor instance
+  var ptor = protractor.getInstance();
+
+  // Reference to the Firebase which stores the data for this demo
+  var firebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/todo');
+
+  // Boolean used to clear the Firebase on the first test only
+  var firebaseCleared = false;
+
+  // Reference to the todos repeater
+  var todos = element.all(by.repeater('(id, todo) in todos'));
+
   beforeEach(function (done) {
     // Navigate to the todo app
-    ptor.get('todo/todo.html');
-
-    // Verify the title
-    expect(ptor.getTitle()).toBe('AngularFire Todo e2e Test');
+    browser.get('todo/todo.html');
 
     // Clear the Firebase before the first test and sleep until it's finished
-    if (!cleared) {
-      var firebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/');
+    if (!firebaseCleared) {
       firebaseRef.remove(function() {
-        cleared = true;
+        firebaseCleared = true;
         done();
       });
     }
@@ -26,68 +31,73 @@ describe('Todo App', function () {
     }
   });
 
-  it('loads', function() {
+  it('loads', function () {
   });
 
-  it('starts with an empty list of todos', function() {
-    var todos = element.all(by.repeater('(id, todo) in todos'));
+  it('has the correct title', function () {
+    expect(browser.getTitle()).toEqual('AngularFire Todo e2e Test');
+  });
+
+  it('starts with an empty list of Todos', function () {
     expect(todos.count()).toBe(0);
   });
 
-  it('adds new todos', function() {
+  it('adds new Todos', function () {
     // Add three new todos by typing into the input and pressing enter
-    var newTodoInput = element(by.input('newTodo'));
+    var newTodoInput = element(by.model('newTodo'));
     newTodoInput.sendKeys('Buy groceries\n');
     newTodoInput.sendKeys('Run 10 miles\n');
     newTodoInput.sendKeys('Build Firebase\n');
 
-    var todos = element.all(by.repeater('(id, todo) in todos'));
     expect(todos.count()).toBe(3);
   });
 
-  it('adds random todos', function() {
+  it('adds random Todos', function () {
     // Add a three new random todos via the provided button
-    var addRandomTodoButton = element(by.id('addRandomTodo'));
+    var addRandomTodoButton = $('#addRandomTodoButton');
     addRandomTodoButton.click();
     addRandomTodoButton.click();
     addRandomTodoButton.click();
 
-    var todos = element.all(by.repeater('(id, todo) in todos'));
     expect(todos.count()).toBe(6);
   });
 
-  it('updates upon new remote todos', function(done) {
+  it('removes Todos', function () {
+    // Remove two of the todos via the provided buttons
+    $('.todo:nth-of-type(2) .removeTodoButton').click();
+    $('.todo:nth-of-type(3) .removeTodoButton').click();
+
+    expect(todos.count()).toBe(4);
+  });
+
+  it('updates when a new Todo is added remotely', function (done) {
     // Simulate a todo being added remotely
-    var firebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/todo');
     firebaseRef.push({
       title: 'Wash the dishes',
       completed: false
     }, function() {
-      var todos = element.all(by.repeater('(id, todo) in todos'));
-      expect(todos.count()).toBe(7);
+      expect(todos.count()).toBe(5);
       done();
     });
   });
 
-  it('updates upon removed remote todos', function(done) {
+  it('updates when an existing Todo is removed remotely', function (done) {
     // Simulate a todo being removed remotely
-    var firebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/todo');
-    firebaseRef.limit(1).on("child_added", function(childSnapshot) {
-      firebaseRef.off();
+    var onCallback = firebaseRef.limit(1).on("child_added", function(childSnapshot) {
+      // Make sure we only remove a child once
+      firebaseRef.off("child_added", onCallback);
+
       childSnapshot.ref().remove(function() {
-        var todos = element.all(by.repeater('(id, todo) in todos'));
-        expect(todos.count()).toBe(6);
+        expect(todos.count()).toBe(4);
         done();
       });
     });
   });
 
-  it('removes todos', function() {
-    // Remove two of the todos via the provided buttons
-    element(by.css('.todo:nth-of-type(2) .removeTodoButton')).click();
-    element(by.css('.todo:nth-of-type(3) .removeTodoButton')).click();
+  it('stops updating once the sync array is destroyed', function () {
+    // Destroy the sync array
+    $('#destroyArrayButton').click();
 
-    var todos = element.all(by.repeater('(id, todo) in todos'));
-    expect(todos.count()).toBe(4);
+    expect(todos.count()).toBe(0);
   });
 });
