@@ -93,18 +93,22 @@ module.exports = function(grunt) {
       singlerun: {},
       watch: {
          autowatch: true,
-         singleRun: false
+         singleRun: false,
+      },
+      saucelabs: {
+        configFile: 'tests/sauce_karma.conf.js'
       }
     },
 
     // End to end (e2e) tests
     protractor: {
       options: {
-        configFile: "tests/protractor.conf.js"
+        configFile: "tests/local_protractor.conf.js"
       },
       singlerun: {},
       saucelabs: {
         options: {
+          configFile: "tests/sauce_protractor.conf.js",
           args: {
             sauceUser: process.env.SAUCE_USERNAME,
             sauceKey: process.env.SAUCE_ACCESS_KEY
@@ -139,6 +143,14 @@ module.exports = function(grunt) {
   // Travis CI testing
   //grunt.registerTask('test:travis', ['build', 'test:unit', 'connect:testserver', 'protractor:saucelabs']);
   grunt.registerTask('test:travis', ['build', 'test:unit']);
+
+  // Sauce tasks
+  grunt.registerTask('sauce:unit', ['karma:saucelabs']);
+  grunt.registerTask('sauce:e2e', ['connect:testserver', 'protractor:saucelabs']);
+
+  // Watch tests
+  grunt.registerTask('test:watch', ['karma:watch']);
+  grunt.registerTask('test:watch:unit', ['karma:watch']);
 
   // Build tasks
   grunt.registerTask('build', ['concat', 'jshint', 'uglify']);
