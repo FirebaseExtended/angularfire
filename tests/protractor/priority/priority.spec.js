@@ -2,7 +2,8 @@ var protractor = require('protractor');
 var Firebase = require('firebase');
 
 describe('Priority App', function () {
-  var messages;
+  // Reference to the message repeater
+  var messages = element.all(by.repeater('message in messages'));
 
   // Reference to the Firebase which stores the data for this demo
   var firebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/priority');
@@ -21,10 +22,7 @@ describe('Priority App', function () {
     // Navigate to the priority app
     browser.get('priority/priority.html');
 
-    // Reference to the messages repeater
-    messages = element.all(by.repeater('message in messages'));
-
-    // wait for all data to load into the client
+    // Wait for all data to load into the client
     flow.execute(waitForData);
 
     function purge() {
@@ -39,9 +37,7 @@ describe('Priority App', function () {
     function waitForData() {
       var def = protractor.promise.defer();
       firebaseRef.once('value', function() {
-//        setTimeout(function() {
-          def.fulfill(true);
-//        }, 500);
+        def.fulfill(true);
       });
       return def.promise;
     }
@@ -137,5 +133,4 @@ describe('Priority App', function () {
       return def.promise;
     }
   });
-
 });
