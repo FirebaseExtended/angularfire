@@ -5,7 +5,7 @@
   "authors": [
     "Firebase <support@firebase.com> (https://www.firebase.com/)"
   ],
-  "homepage": "https://github.com/firebase/angularFire",
+  "homepage": "https://github.com/firebase/angularfire",
   "repository": {
     "type": "git",
     "url": "https://github.com/firebase/angularfire.git"
