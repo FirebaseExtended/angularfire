@@ -32,7 +32,8 @@
     "package.json"
   ],
   "dependencies": {
-    "firebase": "1.0.x"
+    "firebase": "1.0.x",
+    "mockfirebase": "^0.2.5"
   },
   "devDependencies": {
     "grunt": "~0.4.1",

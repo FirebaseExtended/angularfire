@@ -1,8 +1,8 @@
-/**
- * MockFirebase: A Firebase stub/spy library for writing unit tests
+/*! mockfirebase - v0.2.6 - 2014-07-31
  * https://github.com/katowulf/mockfirebase
- * @version 0.2.4
- */
+ * Copyright (c) 2014 Kato
+ * MIT LICENSE */
+
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
     // AMD. Register as an anonymous module.
@@ -422,7 +422,7 @@
 
     once: function(event, callback, cancel, context) {
       var self = this;
-      if( arguments.length === 3 && !angular.isFunction(cancel) ) {
+      if( arguments.length === 3 && !_.isFunction(cancel) ) {
         context = cancel;
         cancel = function() {};
       }
@@ -1677,7 +1677,7 @@
 
   MockFirebaseSimpleLogin.DEFAULT_FAIL_WHEN = function(provider, options, user) {
     var res = null;
-    if( ['password', 'persona', 'anonymous', 'twitter', 'facebook', 'google', 'github'].indexOf(provider) === -1 ) {
+    if( ['password', 'anonymous', 'twitter', 'facebook', 'google', 'github'].indexOf(provider) === -1 ) {
       console.error('MockFirebaseSimpleLogin:login() failed: unrecognized authentication provider '+provider);
 //      res = createError();
     }
@@ -1691,7 +1691,7 @@
   };
 
   MockFirebaseSimpleLogin.DEFAULT_USER_DATA = {};
-  _.each(['password', 'persona', 'anonymous', 'facebook', 'twitter', 'google', 'github'], function(provider) {
+  _.each(['password', 'anonymous', 'facebook', 'twitter', 'google', 'github'], function(provider) {
     var user = createDefaultUser(provider);
     if( provider !== 'password' ) {
       MockFirebaseSimpleLogin.DEFAULT_USER_DATA[provider] = user;

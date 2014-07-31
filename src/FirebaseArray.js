@@ -83,7 +83,7 @@
          */
         $add: function(data) {
           this._assertNotDestroyed('$add');
-          return this.$inst().$push(data);
+          return this.$inst().$push($firebaseUtils.toJSON(data));
         },
 
         /**
