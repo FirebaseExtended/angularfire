@@ -1483,10 +1483,6 @@
         out.email = 'email@firebase.com';
         out.md5_hash = MD5(out.email);
         break;
-      case 'persona':
-        out.email = 'email@firebase.com';
-        out.md5_hash = MD5(out.email);
-        break;
       case 'twitter':
         out.accessToken = 'ACCESS_TOKEN'; //todo
         out.accessTokenSecret = 'ACCESS_TOKEN_SECRET'; //todo
