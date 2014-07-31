@@ -1,6 +1,6 @@
 /*!
- * angularfire 0.8.0 2014-07-29
- * https://github.com/firebase/angularFire
+ * angularfire 0.8.0 2014-07-31
+ * https://github.com/firebase/angularfire
  * Copyright (c) 2014 Firebase, Inc.
  * MIT LICENSE: http://firebase.mit-license.org/
  */
@@ -115,7 +115,7 @@
          */
         $add: function(data) {
           this._assertNotDestroyed('$add');
-          return this.$inst().$push(data);
+          return this.$inst().$push($firebaseUtils.toJSON(data));
         },
 
         /**

@@ -121,6 +121,12 @@ describe('$FirebaseArray', function () {
         expect(arr[i-1].$priority).toBe(i);
       }
     });
+
+    it('should observe $priority and $value meta keys if present', function() {
+      var arr = stubArray();
+      arr.$add({$value: 'foo', $priority: 99});
+      expect(arr.$$$fb.$push).toHaveBeenCalledWith(jasmine.objectContaining({'.priority': 99, '.value': 'foo'}));
+    });
   });
 
   describe('$save', function() {
