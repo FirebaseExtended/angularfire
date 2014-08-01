@@ -57,13 +57,13 @@ If you'd like to contribute to AngularFire, you'll need to run the following com
 
 ```bash
 $ git clone https://github.com/firebase/angularfire.git
-$ cd angularfire        # go to the angularfire directory
-$ npm install -g grunt  # globally install grunt task runner
-$ npm install -g bower  # globally install Bower package manager
-$ npm install           # install local npm build / test dependencies
-$ bower install         # install local JavaScript dependencies
-$ grunt install         # install Selenium server for end-to-end tests
-$ grunt watch           # watch for source file changes
+$ cd angularfire            # go to the angularfire directory
+$ npm install -g grunt-cli  # globally install grunt task runner
+$ npm install -g bower      # globally install Bower package manager
+$ npm install               # install local npm build / test dependencies
+$ bower install             # install local JavaScript dependencies
+$ grunt install             # install Selenium server for end-to-end tests
+$ grunt watch               # watch for source file changes
 ```
 
 `grunt watch` will watch for changes in the `/src/` directory and lint, concatenate, and minify the source files when a change occurs. The output files - `angularfire.js` and `angularfire.min.js` - are written to the `/dist/` directory. `grunt watch` will also re-run the unit tests every time you update any source files.
