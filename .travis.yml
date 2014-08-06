@@ -29,4 +29,5 @@ deploy:
     secure: E9HfiXQdcK/pUeZyabrNof/vkM7V8lLYNuvEI9sgpDOhME8H1vwH87RGiV+50ulw0cRcYLfPC5mTFyeJ5dL244PbRMEKlvoheJyTKSNK6SnwRiGMNz4Ce4c6g5qJkwv9rYlB4jVZJPjfXGYE5Xp+MpYOkPBrTP02FbyhA/Ykr1A=
   on:
     tags: true
+    all_branches: true
     repo: firebase/angularFire
