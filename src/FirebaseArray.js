@@ -110,7 +110,7 @@
               .then(function(ref) {
                 self._notify('child_changed', key);
                 return ref;
-              })
+              });
           }
           else {
             return $firebaseUtils.reject('Invalid record; could determine its key: '+indexOrItem);

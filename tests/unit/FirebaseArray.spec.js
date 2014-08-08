@@ -671,6 +671,7 @@ describe('$FirebaseArray', function () {
     }
   })();
 
+  //todo abstract into testutils
   function stubFb() {
     var ref = testutils.ref();
     var fb = {};

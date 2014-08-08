@@ -28,6 +28,19 @@ describe('$FirebaseObject', function() {
     });
   });
 
+  describe('constructor', function() {
+    it('should set the record id', function() {
+      expect(obj.$id).toEqual($fb.$ref().name());
+    });
+
+    it('should accept a query', function() {
+      var obj = makeObject(FIXTURE_DATA, $fb.$ref().limit(1).startAt(null));
+      obj.$$updated(testutils.snap({foo: 'bar'}));
+      flushAll();
+      expect(obj).toEqual(jasmine.objectContaining({foo: 'bar'}));
+    });
+  });
+
   describe('$save', function () {
     it('should call $firebase.$set', function () {
       obj.foo = 'bar';
@@ -417,9 +430,9 @@ describe('$FirebaseObject', function() {
     });
 
     it('should preserve the id', function() {
-      var oldId = obj.$id;
+      obj.$id = 'change_id_for_test';
       obj.$$updated(fakeSnap(true));
-      expect(obj.$id).toBe(oldId);
+      expect(obj.$id).toBe('change_id_for_test');
     });
 
     it('should set the priority', function() {
@@ -463,8 +476,9 @@ describe('$FirebaseObject', function() {
     return testutils.refSnap(testutils.ref('data/a'), data, pri);
   }
 
-  function stubFb() {
-    var ref = testutils.ref('data/a');
+  //todo abstract into testutils
+  function stubFb(ref) {
+    if( !ref ) { ref = testutils.ref('data/a'); }
     var fb = {};
     [
       '$set', '$update', '$remove', '$transaction', '$asArray', '$asObject', '$ref', '$push'
@@ -497,10 +511,10 @@ describe('$FirebaseObject', function() {
 
   function noop() {}
 
-  function makeObject(initialData) {
+  function makeObject(initialData, ref) {
     var readyFuture = $utils.defer();
     var destroyFn = jasmine.createSpy('destroyFn');
-    var fb = stubFb();
+    var fb = stubFb(ref);
     var obj = new $FirebaseObject(fb, destroyFn, readyFuture.promise);
     obj.$$$readyFuture = readyFuture;
     obj.$$$destroyFn = destroyFn;
