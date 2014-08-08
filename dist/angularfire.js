@@ -1723,6 +1723,14 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
             angular.extend(rec, data);
             rec.$priority = snap.getPriority();
 
+            if( angular.isObject(rec.$$defaults) ) {
+              angular.forEach(rec.$$defaults, function(v,k) {
+                if( !rec.hasOwnProperty(k) ) {
+                  rec[k] = v;
+                }
+              });
+            }
+
             return !angular.equals(oldData, rec) ||
               oldData.$value !== rec.$value ||
               oldData.$priority !== rec.$priority;

@@ -62,12 +62,11 @@ describe('$firebaseUtils', function () {
       expect($utils.updateRec(rec, testutils.snap({foo: 'bar'}, 'foo'))).toBe(false);
     });
 
-    // save this for the next PR
-    xit('should add $$defaults if they exist', function() {
+    it('should add $$defaults if they exist', function() {
       var rec = { foo: 'bar' };
-      rec.$$defaults = { foo: 'not_applied', bar: 'foo' };
+      rec.$$defaults = { baz: 'not_applied', bar: 'foo' };
       $utils.updateRec(rec, testutils.snap({baz: 'bar'}));
-      expect(rec).toEqual(jasmine.objectContaining({foo: 'bar', bar: 'foo', baz: 'bar', $$defaults: { foo: 'not_applied', bar: 'foo' }}));
+      expect(rec).toEqual(jasmine.objectContaining({bar: 'foo', baz: 'bar'}));
     });
 
     it('should apply changes to record', function() {
