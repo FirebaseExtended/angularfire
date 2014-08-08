@@ -2,13 +2,23 @@
   'use strict';
 
   angular.module('firebase')
-    .factory('$firebaseConfig', ["$FirebaseArray", "$FirebaseObject",
-      function($FirebaseArray, $FirebaseObject) {
+    .factory('$firebaseConfig', ["$FirebaseArray", "$FirebaseObject", "$injector",
+      function($FirebaseArray, $FirebaseObject, $injector) {
         return function(configOpts) {
+          // make a copy we can modify
+          var opts = angular.extend({}, configOpts);
+          // look up factories if passed as string names
+          if( typeof opts.objectFactory === 'string' ) {
+            opts.objectFactory = $injector.get(opts.objectFactory);
+          }
+          if( typeof opts.arrayFactory === 'string' ) {
+            opts.arrayFactory = $injector.get(opts.arrayFactory);
+          }
+          // extend defaults and return
           return angular.extend({
             arrayFactory: $FirebaseArray,
             objectFactory: $FirebaseObject
-          }, configOpts);
+          }, opts);
         };
       }
     ])

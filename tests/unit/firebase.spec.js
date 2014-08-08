@@ -7,6 +7,17 @@ describe('$firebase', function () {
     module('firebase');
     module('mock.firebase');
     module('mock.utils');
+    // have to create these before the first call to inject
+    // or they will not be registered with the angular mock injector
+    angular.module('firebase').provider('TestArrayFactory', {
+      $get: function() {
+        return function() {}
+      }
+    }).provider('TestObjectFactory', {
+      $get: function() {
+        return function() {};
+      }
+    });
     inject(function (_$firebase_, _$timeout_, _$rootScope_, $firebaseUtils) {
       $firebase = _$firebase_;
       $timeout = _$timeout_;
@@ -31,6 +42,39 @@ describe('$firebase', function () {
       expect(function() {
         $firebase('hello world');
       }).toThrowError(/valid Firebase reference/);
+    });
+
+    it('should accept a factory name for arrayFactory', function() {
+      var ref = new Firebase('Mock://');
+      var app = angular.module('firebase');
+      // if this does not throw an error we are fine
+      expect($firebase(ref, {arrayFactory: 'TestArrayFactory'})).toBeAn('object');
+    });
+
+    it('should accept a factory name for objectFactory', function() {
+      var ref = new Firebase('Mock://');
+      var app = angular.module('firebase');
+      app.provider('TestObjectFactory', {
+        $get: function() {
+          return function() {}
+        }
+      });
+      // if this does not throw an error we are fine
+      expect($firebase(ref, {objectFactory: 'TestObjectFactory'})).toBeAn('object');
+    });
+
+    it('should throw an error if factory name for arrayFactory does not exist', function()  {
+      var ref = new Firebase('Mock://');
+      expect(function() {
+        $firebase(ref, {arrayFactory: 'notarealarrayfactorymethod'})
+      }).toThrowError();
+    });
+
+    it('should throw an error if factory name for objectFactory does not exist', function()  {
+      var ref = new Firebase('Mock://');
+      expect(function() {
+        $firebase(ref, {objectFactory: 'notarealobjectfactorymethod'})
+      }).toThrowError();
     });
   });
 
