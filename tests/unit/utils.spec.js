@@ -72,7 +72,7 @@ describe('$firebaseUtils', function () {
 
     it('should apply changes to record', function() {
       var rec = {foo: 'bar',  bar: 'foo', $id: 'foo', $priority: null};
-      $utils.updateRec(rec, {bar: 'baz', baz: 'foo'});
+      $utils.updateRec(rec, testutils.snap({bar: 'baz', baz: 'foo'}));
       expect(rec).toEqual({bar: 'baz', baz: 'foo', $id: 'foo', $priority: null})
     });
   });
