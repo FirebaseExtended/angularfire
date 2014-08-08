@@ -134,10 +134,15 @@
          */
         $save: function(indexOrItem) {
           this._assertNotDestroyed('$save');
-          var item = this._resolveItem(indexOrItem);
-          var key = this.$keyAt(item);
+          var self = this;
+          var item = self._resolveItem(indexOrItem);
+          var key = self.$keyAt(item);
           if( key !== null ) {
-            return this.$inst().$set(key, $firebaseUtils.toJSON(item));
+            return self.$inst().$set(key, $firebaseUtils.toJSON(item))
+              .then(function(ref) {
+                self._notify('child_changed', key);
+                return ref;
+              });
           }
           else {
             return $firebaseUtils.reject('Invalid record; could determine its key: '+indexOrItem);
@@ -600,7 +605,7 @@
             }
             // be sure to do this after setting up data and init state
             angular.forEach(self.$$conf.listeners, function (parts) {
-              parts[0].call(parts[1], {event: 'updated', key: self.$id});
+              parts[0].call(parts[1], {event: 'value', key: self.$id});
             });
           }
         };
@@ -615,7 +620,12 @@
          * @returns a promise which will resolve after the save is completed.
          */
         $save: function () {
-          return this.$inst().$set($firebaseUtils.toJSON(this));
+          var notify = this.$$conf.notify;
+          return this.$inst().$set($firebaseUtils.toJSON(this))
+            .then(function(ref) {
+              notify();
+              return ref;
+            });
         },
 
         /**
@@ -1713,6 +1723,14 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
             // apply new values
             angular.extend(rec, data);
             rec.$priority = snap.getPriority();
+
+            if( angular.isObject(rec.$$defaults) ) {
+              angular.forEach(rec.$$defaults, function(v,k) {
+                if( !rec.hasOwnProperty(k) ) {
+                  rec[k] = v;
+                }
+              });
+            }
 
             return !angular.equals(oldData, rec) ||
               oldData.$value !== rec.$value ||
