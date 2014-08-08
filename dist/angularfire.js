@@ -610,7 +610,7 @@
           }
         };
 
-        self.$id = $firebase.$ref().name();
+        self.$id = $firebase.$ref().ref().name();
         self.$priority = null;
       }
 
@@ -768,7 +768,6 @@
         $$updated: function (snap) {
           // applies new data to this object
           var changed = $firebaseUtils.updateRec(this, snap);
-          this.$id = snap.name();
           if( changed ) {
             // notifies $watch listeners and
             // updates $scope if bound to a variable
