@@ -59,7 +59,7 @@
             }
             // be sure to do this after setting up data and init state
             angular.forEach(self.$$conf.listeners, function (parts) {
-              parts[0].call(parts[1], {event: 'updated', key: self.$id});
+              parts[0].call(parts[1], {event: 'value', key: self.$id});
             });
           }
         };
@@ -74,7 +74,12 @@
          * @returns a promise which will resolve after the save is completed.
          */
         $save: function () {
-          return this.$inst().$set($firebaseUtils.toJSON(this));
+          var notify = this.$$conf.notify;
+          return this.$inst().$set($firebaseUtils.toJSON(this))
+            .then(function(ref) {
+              notify();
+              return ref;
+            });
         },
 
         /**

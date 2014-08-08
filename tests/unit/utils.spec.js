@@ -1,12 +1,14 @@
 'use strict';
 describe('$firebaseUtils', function () {
-  var $utils, $timeout;
+  var $utils, $timeout, testutils;
   beforeEach(function () {
     module('mock.firebase');
     module('firebase');
-    inject(function (_$firebaseUtils_, _$timeout_) {
+    module('testutils');
+    inject(function (_$firebaseUtils_, _$timeout_, _testutils_) {
       $utils = _$firebaseUtils_;
       $timeout = _$timeout_;
+      testutils = _testutils_;
     });
   });
 
@@ -46,6 +48,32 @@ describe('$firebaseUtils', function () {
       $timeout.flush();
       expect(spy).toHaveBeenCalled();
       expect(b).toBe(a);
+    });
+  });
+
+  describe('#updateRec', function() {
+    it('should return true if changes applied', function() {
+      var rec = {};
+      expect($utils.updateRec(rec, testutils.snap('foo'))).toBe(true);
+    });
+
+    it('should be false if no changes applied', function() {
+      var rec = {foo: 'bar',  $id: 'foo', $priority: null};
+      expect($utils.updateRec(rec, testutils.snap({foo: 'bar'}, 'foo'))).toBe(false);
+    });
+
+    // save this for the next PR
+    xit('should add $$defaults if they exist', function() {
+      var rec = { foo: 'bar' };
+      rec.$$defaults = { foo: 'not_applied', bar: 'foo' };
+      $utils.updateRec(rec, testutils.snap({baz: 'bar'}));
+      expect(rec).toEqual(jasmine.objectContaining({foo: 'bar', bar: 'foo', baz: 'bar', $$defaults: { foo: 'not_applied', bar: 'foo' }}));
+    });
+
+    it('should apply changes to record', function() {
+      var rec = {foo: 'bar',  bar: 'foo', $id: 'foo', $priority: null};
+      $utils.updateRec(rec, testutils.snap({bar: 'baz', baz: 'foo'}));
+      expect(rec).toEqual({bar: 'baz', baz: 'foo', $id: 'foo', $priority: null})
     });
   });
 

@@ -28,11 +28,13 @@ describe('$FirebaseArray', function () {
     }
   };
 
-  var $firebase, $fb, $fbOldTodo, arr, arrOldTodo, $FirebaseArray, $utils, $rootScope, $timeout, destroySpy;
+  var $firebase, $fb, $fbOldTodo, arr, $FirebaseArray, $utils, $rootScope, $timeout, destroySpy, testutils;
   beforeEach(function() {
     module('mock.firebase');
     module('firebase');
-    inject(function ($firebase, _$FirebaseArray_, $firebaseUtils, _$rootScope_, _$timeout_) {
+    module('testutils');
+    inject(function ($firebase, _$FirebaseArray_, $firebaseUtils, _$rootScope_, _$timeout_, _testutils_) {
+      testutils = _testutils_;
       destroySpy = jasmine.createSpy('destroy spy');
       $rootScope = _$rootScope_;
       $timeout = _$timeout_;
@@ -80,7 +82,8 @@ describe('$FirebaseArray', function () {
       var spy = jasmine.createSpy();
       arr.$add({foo: 'bar'}).then(spy);
       flushAll();
-      expect(spy).toHaveBeenCalledWith($fb.$ref().$lastPushRef);
+      var lastId = $fb.$ref().getLastAutoId();
+      expect(spy).toHaveBeenCalledWith($fb.$ref().child(lastId));
     });
 
     it('should reject promise on fail', function() {
@@ -94,12 +97,9 @@ describe('$FirebaseArray', function () {
     });
 
     it('should work with a primitive value', function() {
-      var spy = jasmine.createSpy('resolve').and.callFake(function(ref) {
-        expect(ref.getData()).toBe('hello');
-      });
-      arr.$add('hello').then(spy);
+      arr.$add('hello');
       flushAll();
-      expect(spy).toHaveBeenCalled();
+      expect(arr.$inst().$push).toHaveBeenCalledWith(jasmine.objectContaining({'.value': 'hello'}));
     });
 
     it('should throw error if array is destroyed', function() {
@@ -111,11 +111,11 @@ describe('$FirebaseArray', function () {
 
     it('should store priorities', function() {
       var arr = stubArray();
-      arr.$$added(fakeSnap(stubRef('b'), 'one', 1), null);
-      arr.$$added(fakeSnap(stubRef('a'), 'two', 2), 'b');
-      arr.$$added(fakeSnap(stubRef('d'), 'three', 3), 'd');
-      arr.$$added(fakeSnap(stubRef('c'), 'four', 4), 'c');
-      arr.$$added(fakeSnap(stubRef('e'), 'five', 5), 'e');
+      arr.$$added(testutils.snap('one', 'b', 1), null);
+      arr.$$added(testutils.snap('two', 'a', 2), 'b');
+      arr.$$added(testutils.snap('three', 'd', 3), 'd');
+      arr.$$added(testutils.snap('four', 'c', 4), 'c');
+      arr.$$added(testutils.snap('five', 'e', 5), 'e');
       expect(arr.length).toBe(5);
       for(var i=1; i <= 5; i++) {
         expect(arr[i-1].$priority).toBe(i);
@@ -203,6 +203,16 @@ describe('$FirebaseArray', function () {
         arr.$save(0);
       }).toThrowError(Error);
     });
+
+    it('should trigger watch event', function() {
+      var spy = jasmine.createSpy('$watch');
+      arr.$watch(spy);
+      var key = arr.$keyAt(1);
+      arr[1].foo = 'watchtest';
+      arr.$save(1);
+      flushAll();
+      expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({event: 'child_changed', key: key}));
+    });
   });
 
   describe('$remove', function() {
@@ -216,12 +226,16 @@ describe('$FirebaseArray', function () {
       expect(arr.$remove(1)).toBeAPromise();
     });
 
-    it('should resolve promise on success', function() {
+    it('should resolve promise to ref on success', function() {
       var whiteSpy = jasmine.createSpy('resolve');
       var blackSpy = jasmine.createSpy('reject');
+      var expName = arr.$keyAt(1);
       arr.$remove(1).then(whiteSpy, blackSpy);
       flushAll();
+      var resRef = whiteSpy.calls.argsFor(0)[0];
       expect(whiteSpy).toHaveBeenCalled();
+      expect(resRef).toBeAFirebaseRef();
+      expect(resRef.name()).toBe(expName);
       expect(blackSpy).not.toHaveBeenCalled();
     });
 
@@ -290,7 +304,7 @@ describe('$FirebaseArray', function () {
 
     it('should not show up after removing the item', function() {
       expect(arr.$indexFor('b')).toBe(1);
-      arr.$$removed(fakeSnap(stubRef('b')));
+      arr.$$removed(testutils.refSnap(testutils.ref('b')));
       expect(arr.$indexFor('b')).toBe(-1);
     });
   });
@@ -360,7 +374,7 @@ describe('$FirebaseArray', function () {
     it('should get notified on an add', function() {
       var spy = jasmine.createSpy('$watch');
       arr.$watch(spy);
-      arr.$$added(fakeSnap(stubRef('new_add'), {foo: 'bar'}), null);
+      arr.$$added(testutils.snap({foo: 'bar'}, 'new_add'), null);
       flushAll();
       expect(spy).toHaveBeenCalledWith({event: 'child_added', key: 'new_add', prevChild: null});
     });
@@ -368,7 +382,7 @@ describe('$FirebaseArray', function () {
     it('should get notified on a delete', function() {
       var spy = jasmine.createSpy('$watch');
       arr.$watch(spy);
-      arr.$$removed(fakeSnap(stubRef('b'), {foo: 'bar'}));
+      arr.$$removed(testutils.snap({foo: 'bar'}, 'b'));
       flushAll();
       expect(spy).toHaveBeenCalledWith({event: 'child_removed', key: 'b'});
     });
@@ -376,7 +390,7 @@ describe('$FirebaseArray', function () {
     it('should get notified on a change', function() {
       var spy = jasmine.createSpy('$watch');
       arr.$watch(spy);
-      arr.$$updated(fakeSnap(stubRef('c'), {foo: 'bar'}));
+      arr.$$updated(testutils.snap({foo: 'bar'}, 'c'));
       flushAll();
       expect(spy).toHaveBeenCalledWith({event: 'child_changed', key: 'c'});
     });
@@ -384,7 +398,7 @@ describe('$FirebaseArray', function () {
     it('should get notified on a move', function() {
       var spy = jasmine.createSpy('$watch');
       arr.$watch(spy);
-      arr.$$moved(fakeSnap(stubRef('b'), {foo: 'bar'}), 'c');
+      arr.$$moved(testutils.snap({foo: 'bar'}, 'b'), 'c');
       flushAll();
       expect(spy).toHaveBeenCalledWith({event: 'child_moved', key: 'b', prevChild: 'c'});
     });
@@ -418,36 +432,36 @@ describe('$FirebaseArray', function () {
   describe('$$added', function() {
     it('should add to local array', function() {
       var len = arr.length;
-      arr.$$added(fakeSnap(stubRef('addz'), {hello: 'world'}), 'b');
+      arr.$$added(testutils.snap({hello: 'world'}, 'addz'), 'b');
       expect(arr.length).toBe(len+1);
     });
 
     it('should position after prev child', function() {
       var pos = arr.$indexFor('b');
       expect(pos).toBeGreaterThan(-1);
-      arr.$$added(fakeSnap(stubRef('addAfterB'), {hello: 'world'}), 'b');
+      arr.$$added(testutils.snap({hello: 'world'}, 'addAfterB'), 'b');
       expect(arr.$keyAt(pos+1)).toBe('addAfterB');
     });
 
     it('should position first if prevChild is null', function() {
-      arr.$$added(fakeSnap(stubRef('addFirst'), {hello: 'world'}), null);
+      arr.$$added(testutils.snap({hello: 'world'}, 'addFirst'), null);
       expect(arr.$keyAt(0)).toBe('addFirst');
     });
 
     it('should position last if prevChild not found', function() {
       var len = arr.length;
-      arr.$$added(fakeSnap(stubRef('addLast'), {hello: 'world'}), 'notarealkeyinarray');
+      arr.$$added(testutils.snap({hello: 'world'}, 'addLast'), 'notarealkeyinarray');
       expect(arr.$keyAt(len)).toBe('addLast');
     });
 
     it('should not re-add if already exists', function() {
       var len = arr.length;
-      arr.$$added(fakeSnap(stubRef('a'), {hello: 'world'}), 'b');
+      arr.$$added(testutils.snap({hello: 'world'}, 'b'), 'a');
       expect(arr.length).toBe(len);
     });
 
     it('should accept a primitive', function() {
-      arr.$$added(fakeSnap(stubRef('newPrimitive'), true), null);
+      arr.$$added(testutils.snap(true, 'newPrimitive'), null);
       expect(arr.$indexFor('newPrimitive')).toBe(0);
       expect(arr[0].$value).toBe(true);
     });
@@ -455,7 +469,7 @@ describe('$FirebaseArray', function () {
     it('should notify $watch listeners', function() {
       var spy = jasmine.createSpy('$watch');
       arr.$watch(spy);
-      arr.$$added(fakeSnap(stubRef('watchKey'), false), null);
+      arr.$$added(testutils.snap(false, 'watchKey'), null);
       var expectEvent = {event: 'child_added', key: 'watchKey', prevChild: null};
       expect(spy).toHaveBeenCalledWith(jasmine.objectContaining(expectEvent));
     });
@@ -465,7 +479,7 @@ describe('$FirebaseArray', function () {
       var pos = arr.$indexFor('a');
       expect(pos).toBeGreaterThan(-1);
       arr.$watch(spy);
-      arr.$$added(fakeSnap(stubRef('a'), $utils.toJSON(arr[pos])), null);
+      arr.$$added(testutils.snap($utils.toJSON(arr[pos]), 'a'));
       expect(spy).not.toHaveBeenCalled();
     });
   });
@@ -474,36 +488,36 @@ describe('$FirebaseArray', function () {
     it('should update local data', function() {
       var i = arr.$indexFor('b');
       expect(i).toBeGreaterThan(-1);
-      arr.$$updated(fakeSnap(stubRef('b'), 'foo'));
+      arr.$$updated(testutils.snap('foo', 'b'));
       expect(arr[i]).toEqual(jasmine.objectContaining({'$value': 'foo'}));
     });
 
     it('should ignore if not found', function() {
       var len = arr.length;
       expect(len).toBeGreaterThan(0);
-      var copy = deepCopyObject(arr);
-      arr.$$updated(fakeSnap(stubRef('notarealkey'), 'foo'));
+      var copy = testutils.deepCopyObject(arr);
+      arr.$$updated(testutils.snap('foo', 'notarealkey'));
       expect(arr).toEqual(copy);
     });
 
     it('should preserve ids', function() {
       var pos = arr.$indexFor('b');
       expect(pos).toBeGreaterThan(-1);
-      arr.$$updated(fakeSnap(stubRef('b'), {foo: 'bar'}));
+      arr.$$updated(testutils.snap({foo: 'bar'}, 'b'));
       expect(arr[pos].$id).toBe('b');
     });
 
     it('should set priorities', function() {
       var pos = arr.$indexFor('b');
       expect(pos).toBeGreaterThan(-1);
-      arr.$$updated(fakeSnap(stubRef('b'), {foo: 'bar'}, 250));
+      arr.$$updated(testutils.snap({foo: 'bar'}, 'b', 250));
       expect(arr[pos].$priority).toBe(250);
     });
 
     it('should notify $watch listeners', function() {
       var spy = jasmine.createSpy('$watch');
       arr.$watch(spy);
-      arr.$$updated(fakeSnap(stubRef('b'), {foo: 'bar'}));
+      arr.$$updated(testutils.snap({foo: 'bar'}, 'b'));
       flushAll();
       var expEvent = {event: 'child_changed', key: 'b'};
       expect(spy).toHaveBeenCalledWith(expEvent);
@@ -513,7 +527,7 @@ describe('$FirebaseArray', function () {
       var spy = jasmine.createSpy('$watch');
       var pos = arr.$indexFor('a');
       arr.$watch(spy);
-      arr.$$updated(fakeSnap(stubRef('a'), $utils.toJSON(arr[pos])), null);
+      arr.$$updated(testutils.snap($utils.toJSON(arr[pos]), 'a'), null);
       expect(spy).not.toHaveBeenCalled();
     });
   });
@@ -522,7 +536,7 @@ describe('$FirebaseArray', function () {
     it('should move local record', function() {
       var b = arr.$indexFor('b');
       var c = arr.$indexFor('c');
-      arr.$$moved(fakeSnap(stubRef('b')), 'c');
+      arr.$$moved(testutils.refSnap(testutils.ref('b')), 'c');
       expect(arr.$indexFor('c')).toBe(b);
       expect(arr.$indexFor('b')).toBe(c);
     });
@@ -530,20 +544,20 @@ describe('$FirebaseArray', function () {
     it('should position at 0 if prevChild is null', function() {
       var b = arr.$indexFor('b');
       expect(b).toBeGreaterThan(0);
-      arr.$$moved(fakeSnap(stubRef('b')), null);
+      arr.$$moved(testutils.snap(null, 'b'), null);
       expect(arr.$indexFor('b')).toBe(0);
     });
 
     it('should position at end if prevChild not found', function() {
       var b = arr.$indexFor('b');
       expect(b).toBeLessThan(arr.length-1);
-      arr.$$moved(fakeSnap(stubRef('b')), 'notarealkey');
+      arr.$$moved(testutils.refSnap(testutils.ref('b')), 'notarealkey');
       expect(arr.$indexFor('b')).toBe(arr.length-1);
     });
 
     it('should do nothing if record not found', function() {
-      var copy = deepCopyObject(arr);
-      arr.$$moved(fakeSnap(stubRef('notarealkey')), 'a');
+      var copy = testutils.deepCopyObject(arr);
+      arr.$$moved(testutils.snap('a', 'notarealkey'));
       expect(arr).toEqual(copy);
     });
 
@@ -552,7 +566,7 @@ describe('$FirebaseArray', function () {
       var pos = arr.$indexFor('a');
       expect(pos).toBeGreaterThan(-1);
       arr.$watch(spy);
-      arr.$$moved(fakeSnap(stubRef('a'), $utils.toJSON(arr[pos])), 'c');
+      arr.$$moved(testutils.snap($utils.toJSON(arr[pos]), 'c'), 'a');
       expect(spy).toHaveBeenCalled();
     });
 
@@ -561,7 +575,7 @@ describe('$FirebaseArray', function () {
       var pos = arr.$indexFor('a');
       expect(pos).toBe(0);
       arr.$watch(spy);
-      arr.$$moved(fakeSnap(stubRef('a'), $utils.toJSON(arr[pos])), null);
+      arr.$$moved(testutils.snap($utils.toJSON(arr[pos])), 'a');
       expect(spy).not.toHaveBeenCalled();
     });
   });
@@ -570,15 +584,15 @@ describe('$FirebaseArray', function () {
     it('should remove from local array', function() {
       var len = arr.length;
       expect(arr.$indexFor('b')).toBe(1);
-      arr.$$removed(fakeSnap(stubRef('b')));
+      arr.$$removed(testutils.refSnap(testutils.ref('b')));
       expect(arr.length).toBe(len-1);
       expect(arr.$indexFor('b')).toBe(-1);
     });
 
 
     it('should do nothing if record not found', function() {
-      var copy = deepCopyObject(arr);
-      arr.$$removed(fakeSnap(stubRef('notarealrecord')));
+      var copy = testutils.deepCopyObject(arr);
+      arr.$$removed(testutils.refSnap(testutils.ref('notarealrecord')));
       expect(arr).toEqual(copy);
     });
 
@@ -586,7 +600,7 @@ describe('$FirebaseArray', function () {
       var spy = jasmine.createSpy('$watch');
       arr.$watch(spy);
       expect(arr.$indexFor('e')).toBeGreaterThan(-1);
-      arr.$$removed(fakeSnap(stubRef('e')));
+      arr.$$removed(testutils.refSnap(testutils.ref('e')));
       expect(spy).toHaveBeenCalled();
     });
 
@@ -594,7 +608,7 @@ describe('$FirebaseArray', function () {
       var spy = jasmine.createSpy('$watch');
       arr.$watch(spy);
       expect(arr.$indexFor('notarealrecord')).toBe(-1);
-      arr.$$removed(fakeSnap(stubRef('notarealrecord')));
+      arr.$$removed(testutils.refSnap(testutils.ref('notarealrecord')));
       expect(spy).not.toHaveBeenCalled();
     });
   });
@@ -646,27 +660,6 @@ describe('$FirebaseArray', function () {
     });
   });
 
-  function copySnapData(obj) {
-    if( !angular.isObject(obj) ) { return obj; }
-    var copy = {};
-    $utils.each(obj, function(v,k) {
-      copy[k] = angular.isObject(v)? deepCopyObject(v) : v;
-    });
-    return copy;
-  }
-
-  function deepCopyObject(obj) {
-    var newCopy = angular.isArray(obj)? obj.slice() : angular.extend({}, obj);
-    for (var key in newCopy) {
-      if (newCopy.hasOwnProperty(key)) {
-        if( angular.isObject(newCopy[key]) ) {
-          newCopy[key] = deepCopyObject(newCopy[key]);
-        }
-      }
-    }
-    return newCopy;
-  }
-
   var flushAll = (function() {
     return function flushAll() {
       // the order of these flush events is significant
@@ -678,38 +671,8 @@ describe('$FirebaseArray', function () {
     }
   })();
 
-  function fakeSnap(ref, data, pri) {
-    data = copySnapData(data);
-    return {
-      ref: function() { return ref; },
-      val: function() { return data; },
-      getPriority: function() { return angular.isDefined(pri)? pri : null; },
-      name: function() { return ref.name(); },
-      child: function(key) {
-        var childData = angular.isObject(data) && data.hasOwnProperty(key)? data[key] : null;
-        return fakeSnap(ref.child(key), childData, null);
-      }
-    }
-  }
-
-  var pushCounter = 1;
-  function stubRef(key) {
-    var stub = {};
-    stub.$lastPushRef = null;
-    stub.ref = jasmine.createSpy('ref').and.returnValue(stub);
-    stub.child = jasmine.createSpy('child').and.callFake(function(childKey) { return stubRef(key+'/'+childKey); });
-    stub.name = jasmine.createSpy('name').and.returnValue(key);
-    stub.on = jasmine.createSpy('on');
-    stub.off = jasmine.createSpy('off');
-    stub.push = jasmine.createSpy('push').and.callFake(function() {
-      stub.$lastPushRef = stubRef('newpushid-'+(pushCounter++));
-      return stub.$lastPushRef;
-    });
-    return stub;
-  }
-
   function stubFb() {
-    var ref = stubRef('data');
+    var ref = testutils.ref();
     var fb = {};
     [
       '$set', '$update', '$remove', '$transaction', '$asArray', '$asObject', '$ref', '$push'
@@ -748,7 +711,7 @@ describe('$FirebaseArray', function () {
       for (var key in initialData) {
         if (initialData.hasOwnProperty(key)) {
           var pri = extractPri(initialData[key]);
-          arr.$$added(fakeSnap(stubRef(key), deepCopyObject(initialData[key]), pri), prev);
+          arr.$$added(testutils.snap(testutils.deepCopyObject(initialData[key]), key, pri), prev);
           prev = key;
         }
       }
