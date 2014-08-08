@@ -21,8 +21,9 @@ module.exports = function(config) {
       '../bower_components/angular/angular.js',
       '../bower_components/angular-mocks/angular-mocks.js',
       '../bower_components/lodash/dist/lodash.js',
-      'lib/MockFirebase.js',
+      'lib/**/*.js',
       '../dist/angularfire.js',
+      'mocks/**/*.js',
       'unit/**/*.spec.js'
     ],
 

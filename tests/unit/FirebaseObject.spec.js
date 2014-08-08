@@ -1,6 +1,6 @@
 describe('$FirebaseObject', function() {
   'use strict';
-  var $firebase, $FirebaseObject, $utils, $rootScope, $timeout, obj, $fb;
+  var $firebase, $FirebaseObject, $utils, $rootScope, $timeout, obj, $fb, testutils;
 
   var DEFAULT_ID = 'recc';
   var FIXTURE_DATA = {
@@ -13,12 +13,14 @@ describe('$FirebaseObject', function() {
   beforeEach(function () {
     module('mock.firebase');
     module('firebase');
-    inject(function (_$firebase_, _$FirebaseObject_, _$timeout_, $firebaseUtils, _$rootScope_) {
+    module('testutils');
+    inject(function (_$firebase_, _$FirebaseObject_, _$timeout_, $firebaseUtils, _$rootScope_, _testutils_) {
       $firebase = _$firebase_;
       $FirebaseObject = _$FirebaseObject_;
       $timeout = _$timeout_;
       $utils = $firebaseUtils;
       $rootScope = _$rootScope_;
+      testutils = _testutils_;
 
       // start using the direct methods here until we can refactor `obj`
       obj = makeObject(FIXTURE_DATA);
@@ -235,7 +237,7 @@ describe('$FirebaseObject', function() {
       });
       obj.$bindTo($scope, 'obj').then(spy);
       flushAll();
-      obj.$$updated(fakeSnap({foo: 'bar'}, null));
+      obj.$$updated(fakeSnap({foo: 'bar'}));
       flushAll();
       expect(spy).toHaveBeenCalled();
       expect($scope.obj).toEqual(origData);
@@ -273,7 +275,7 @@ describe('$FirebaseObject', function() {
     xit('should update value if $value changed in $scope', function () {
       var $scope = $rootScope.$new();
       var obj = new $FirebaseObject($fb, noop, $utils.resolve());
-      obj.$$updated(fakeSnap($fb.$ref(), 'foo', null));
+      obj.$$updated(testutils.refSnap($fb.$ref(), 'foo', null));
       expect(obj.$value).toBe('foo');
       var spy = spyOn(obj.$inst(), '$set');
       obj.$bindTo($scope, 'test');
@@ -437,30 +439,6 @@ describe('$FirebaseObject', function() {
     catch (e) {}
   }
 
-  function fakeSnap(data, pri, ref) {
-    if( !ref ) { ref = stubRef(); }
-    if( angular.isUndefined(pri) ) { pri = null; }
-    data = $utils.deepCopy(data);
-    return {
-      ref: function () {
-        return ref;
-      },
-      val: function () {
-        return data;
-      },
-      getPriority: function () {
-        return pri;
-      },
-      name: function () {
-        return ref.name();
-      },
-      child: function (key) {
-        var childData = angular.isObject(data) && data.hasOwnProperty(key) ? data[key] : null;
-        return fakeSnap(childData, null, ref.child(key));
-      }
-    }
-  }
-
   var pushCounter = 1;
 
   function stubRef(key) {
@@ -481,8 +459,12 @@ describe('$FirebaseObject', function() {
     return stub;
   }
 
+  function fakeSnap(data, pri) {
+    return testutils.refSnap(testutils.ref('data/a'), data, pri);
+  }
+
   function stubFb() {
-    var ref = stubRef();
+    var ref = testutils.ref('data/a');
     var fb = {};
     [
       '$set', '$update', '$remove', '$transaction', '$asArray', '$asObject', '$ref', '$push'
@@ -526,7 +508,7 @@ describe('$FirebaseObject', function() {
     obj.$$$reject = function(err) { readyFuture.reject(err); };
     obj.$$$ready = function(data, pri) {
       if(angular.isDefined(data)) {
-        obj.$$updated(fakeSnap(data, pri, fb.$ref()));
+        obj.$$updated(testutils.refSnap(fb.$ref(), data, pri));
       }
       readyFuture.resolve(obj);
       flushAll();
