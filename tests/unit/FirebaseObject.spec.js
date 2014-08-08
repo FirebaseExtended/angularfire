@@ -57,6 +57,15 @@ describe('$FirebaseObject', function() {
       expect(whiteSpy).not.toHaveBeenCalled();
       expect(blackSpy).toHaveBeenCalledWith('test_fail');
     });
+
+    it('should trigger watch event', function() {
+      var spy = jasmine.createSpy('$watch');
+      obj.$watch(spy);
+      obj.foo = 'watchtest';
+      obj.$save();
+      flushAll();
+      expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({event: 'value', key: obj.$id}));
+    });
   });
 
   describe('$loaded', function () {

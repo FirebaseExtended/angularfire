@@ -102,10 +102,15 @@
          */
         $save: function(indexOrItem) {
           this._assertNotDestroyed('$save');
-          var item = this._resolveItem(indexOrItem);
-          var key = this.$keyAt(item);
+          var self = this;
+          var item = self._resolveItem(indexOrItem);
+          var key = self.$keyAt(item);
           if( key !== null ) {
-            return this.$inst().$set(key, $firebaseUtils.toJSON(item));
+            return self.$inst().$set(key, $firebaseUtils.toJSON(item))
+              .then(function(ref) {
+                self._notify('child_changed', key);
+                return ref;
+              })
           }
           else {
             return $firebaseUtils.reject('Invalid record; could determine its key: '+indexOrItem);

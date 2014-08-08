@@ -203,6 +203,16 @@ describe('$FirebaseArray', function () {
         arr.$save(0);
       }).toThrowError(Error);
     });
+
+    it('should trigger watch event', function() {
+      var spy = jasmine.createSpy('$watch');
+      arr.$watch(spy);
+      var key = arr.$keyAt(1);
+      arr[1].foo = 'watchtest';
+      arr.$save(1);
+      flushAll();
+      expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({event: 'child_changed', key: key}));
+    });
   });
 
   describe('$remove', function() {
