@@ -216,12 +216,16 @@ describe('$FirebaseArray', function () {
       expect(arr.$remove(1)).toBeAPromise();
     });
 
-    it('should resolve promise on success', function() {
+    it('should resolve promise to ref on success', function() {
       var whiteSpy = jasmine.createSpy('resolve');
       var blackSpy = jasmine.createSpy('reject');
+      var expName = arr.$keyAt(1);
       arr.$remove(1).then(whiteSpy, blackSpy);
       flushAll();
+      var resRef = whiteSpy.calls.argsFor(0)[0];
       expect(whiteSpy).toHaveBeenCalled();
+      expect(resRef).toBeAFirebaseRef();
+      expect(resRef.name()).toBe(expName);
       expect(blackSpy).not.toHaveBeenCalled();
     });
 
@@ -692,15 +696,26 @@ describe('$FirebaseArray', function () {
     }
   }
 
+  function lastPartOfKey(key) {
+    var parts = (key||'').split('/');
+    return parts[parts.length-1];
+  }
+
   var pushCounter = 1;
   function stubRef(key) {
     var stub = {};
     stub.$lastPushRef = null;
     stub.ref = jasmine.createSpy('ref').and.returnValue(stub);
     stub.child = jasmine.createSpy('child').and.callFake(function(childKey) { return stubRef(key+'/'+childKey); });
-    stub.name = jasmine.createSpy('name').and.returnValue(key);
+    stub.name = jasmine.createSpy('name').and.returnValue(lastPartOfKey(key));
     stub.on = jasmine.createSpy('on');
     stub.off = jasmine.createSpy('off');
+    stub.once = jasmine.createSpy('once');
+    stub.set = jasmine.createSpy('set');
+    stub.transaction = jasmine.createSpy('transaction');
+    stub.toString = jasmine.createSpy('toString').and.callFake(function() {
+      return 'stub://'+key;
+    });
     stub.push = jasmine.createSpy('push').and.callFake(function() {
       stub.$lastPushRef = stubRef('newpushid-'+(pushCounter++));
       return stub.$lastPushRef;

@@ -1,5 +1,5 @@
 /*!
- * angularfire 0.8.0 2014-07-31
+ * angularfire 0.8.0 2014-08-08
  * https://github.com/firebase/angularfire
  * Copyright (c) 2014 Firebase, Inc.
  * MIT LICENSE: http://firebase.mit-license.org/
@@ -894,14 +894,15 @@
           },
 
           $remove: function (key) {
-            var ref = this._ref, self = this;
+            var ref = this._ref, self = this, promise;
+            var def = $firebaseUtils.defer();
             if (arguments.length > 0) {
               ref = ref.ref().child(key);
             }
-            var def = $firebaseUtils.defer();
             if( angular.isFunction(ref.remove) ) {
               // self is not a query, just do a flat remove
               ref.remove(self._handle(def, ref));
+              promise = def.promise;
             }
             else {
               var promises = [];
@@ -914,9 +915,12 @@
                   ss.ref().remove(self._handle(d, ss.ref()));
                 }, self);
               });
-              self._handle($firebaseUtils.allPromises(promises), ref);
+              promise = $firebaseUtils.allPromises(promises)
+                .then(function() {
+                  return ref;
+                });
             }
-            return def.promise;
+            return promise;
           },
 
           $update: function (key, data) {

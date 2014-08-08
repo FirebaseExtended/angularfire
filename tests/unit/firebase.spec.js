@@ -189,6 +189,15 @@ describe('$firebase', function () {
       expect(whiteSpy).toHaveBeenCalledWith($fb.$ref());
     });
 
+    it('should resolve to ref if query', function() {
+      var spy = jasmine.createSpy('resolve');
+      var ref = new Firebase('Mock://').child('ordered').limit(2);
+      var $fb = $firebase(ref);
+      $fb.$remove().then(spy);
+      flushAll();
+      expect(spy).toHaveBeenCalledWith(ref);
+    });
+
     it('should resolve to child ref if key', function() {
       var whiteSpy = jasmine.createSpy('resolve');
       var blackSpy = jasmine.createSpy('reject');
