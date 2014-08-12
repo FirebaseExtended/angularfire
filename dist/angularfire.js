@@ -1,5 +1,5 @@
 /*!
- * angularfire 0.8.0 2014-08-11
+ * angularfire 0.8.0 2014-08-08
  * https://github.com/firebase/angularfire
  * Copyright (c) 2014 Firebase, Inc.
  * MIT LICENSE: http://firebase.mit-license.org/
@@ -584,20 +584,34 @@
        * @constructor
        */
       function FirebaseObject($firebase, destroyFn, readyPromise) {
-        // this bit of magic makes $$conf non-enumerable and non-configurable
-        // and non-writable (its properties are writable but the ref cannot be replaced)
-        Object.defineProperty(this, '$$conf', {
-          value: {
-            promise: readyPromise,
-            inst: $firebase,
-            bound: null,
-            destroyFn: destroyFn,
-            listeners: []
-          }
-        });
+        var self = this;
 
-        this.$id = $firebase.$ref().name();
-        this.$priority = null;
+        // These are private config props and functions used internally
+        // they are collected here to reduce clutter on the prototype
+        // and instance signatures.
+        self.$$conf = {
+          promise: readyPromise,
+          inst: $firebase,
+          bound: null,
+          destroyFn: destroyFn,
+          listeners: [],
+          /**
+           * Updates any bound scope variables and notifies listeners registered
+           * with $watch any time there is a change to data
+           */
+          notify: function() {
+            if( self.$$conf.bound ) {
+              self.$$conf.bound.update();
+            }
+            // be sure to do this after setting up data and init state
+            angular.forEach(self.$$conf.listeners, function (parts) {
+              parts[0].call(parts[1], {event: 'value', key: self.$id});
+            });
+          }
+        };
+
+        self.$id = $firebase.$ref().ref().name();
+        self.$priority = null;
       }
 
       FirebaseObject.prototype = {
@@ -606,7 +620,7 @@
          * @returns a promise which will resolve after the save is completed.
          */
         $save: function () {
-          var notify = this.$$notify.bind(this);
+          var notify = this.$$conf.notify;
           return this.$inst().$set($firebaseUtils.toJSON(this))
             .then(function(ref) {
               notify();
@@ -754,11 +768,10 @@
         $$updated: function (snap) {
           // applies new data to this object
           var changed = $firebaseUtils.updateRec(this, snap);
-          this.$id = snap.name();
           if( changed ) {
             // notifies $watch listeners and
             // updates $scope if bound to a variable
-            this.$$notify();
+            this.$$conf.notify();
           }
         },
 
@@ -772,30 +785,6 @@
           $log.error(err);
           // frees memory and cancels any remaining listeners
           this.$destroy(err);
-        },
-
-        /**
-         * Updates any bound scope variables and notifies listeners registered
-         * with $watch any time there is a change to data
-         */
-        $$notify: function() {
-          var self = this;
-          if( self.$$conf.bound ) {
-            self.$$conf.bound.update();
-          }
-          // be sure to do this after setting up data and init state
-          angular.forEach(self.$$conf.listeners, function (parts) {
-            parts[0].call(parts[1], {event: 'value', key: self.$id});
-          });
-        },
-
-        /**
-         * Overrides how Angular.forEach iterates records on this object so that only
-         * fields stored in Firebase are part of the iteration. To include meta fields like
-         * $id and $priority in the iteration, utilize for(key in obj) instead.
-         */
-        forEach: function(iterator, context) {
-          return $firebaseUtils.each(this, iterator, context);
         }
       };
 
@@ -1012,7 +1001,7 @@
               throw new Error('config.arrayFactory must be a valid function');
             }
             if (!angular.isFunction(cnf.objectFactory)) {
-              throw new Error('config.objectFactory must be a valid function');
+              throw new Error('config.arrayFactory must be a valid function');
             }
           }
         };
@@ -1766,22 +1755,12 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
           },
 
           each: function(obj, iterator, context) {
-            if(angular.isObject(obj)) {
-              for (var k in obj) {
-                if (obj.hasOwnProperty(k)) {
-                  var c = k.charAt(0);
-                  if( c !== '_' && c !== '$' && c !== '.' ) {
-                    iterator.call(context, obj[k], k, obj);
-                  }
-                }
+            angular.forEach(obj, function(v,k) {
+              var c = k.charAt(0);
+              if( c !== '_' && c !== '$' && c !== '.' ) {
+                iterator.call(context, v, k, obj);
               }
-            }
-            else if(angular.isArray(obj)) {
-              for(var i = 0, len = obj.length; i < len; i++) {
-                iterator.call(context, obj[i], i, obj);
-              }
-            }
-            return obj;
+            });
           },
 
           /**

@@ -50,7 +50,7 @@
           }
         });
 
-        this.$id = $firebase.$ref().name();
+        this.$id = $firebase.$ref().ref().name();
         this.$priority = null;
       }
 
