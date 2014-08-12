@@ -208,7 +208,6 @@
         $$updated: function (snap) {
           // applies new data to this object
           var changed = $firebaseUtils.updateRec(this, snap);
-          this.$id = snap.name();
           if( changed ) {
             // notifies $watch listeners and
             // updates $scope if bound to a variable
