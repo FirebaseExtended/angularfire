@@ -38,34 +38,20 @@
        * @constructor
        */
       function FirebaseObject($firebase, destroyFn, readyPromise) {
-        var self = this;
-
-        // These are private config props and functions used internally
-        // they are collected here to reduce clutter on the prototype
-        // and instance signatures.
-        self.$$conf = {
-          promise: readyPromise,
-          inst: $firebase,
-          bound: null,
-          destroyFn: destroyFn,
-          listeners: [],
-          /**
-           * Updates any bound scope variables and notifies listeners registered
-           * with $watch any time there is a change to data
-           */
-          notify: function() {
-            if( self.$$conf.bound ) {
-              self.$$conf.bound.update();
-            }
-            // be sure to do this after setting up data and init state
-            angular.forEach(self.$$conf.listeners, function (parts) {
-              parts[0].call(parts[1], {event: 'value', key: self.$id});
-            });
+        // this bit of magic makes $$conf non-enumerable and non-configurable
+        // and non-writable (its properties are writable but the ref cannot be replaced)
+        Object.defineProperty(this, '$$conf', {
+          value: {
+            promise: readyPromise,
+            inst: $firebase,
+            bound: null,
+            destroyFn: destroyFn,
+            listeners: []
           }
-        };
+        });
 
-        self.$id = $firebase.$ref().name();
-        self.$priority = null;
+        this.$id = $firebase.$ref().name();
+        this.$priority = null;
       }
 
       FirebaseObject.prototype = {
@@ -74,7 +60,7 @@
          * @returns a promise which will resolve after the save is completed.
          */
         $save: function () {
-          var notify = this.$$conf.notify;
+          var notify = this.$$notify.bind(this);
           return this.$inst().$set($firebaseUtils.toJSON(this))
             .then(function(ref) {
               notify();
@@ -226,7 +212,7 @@
           if( changed ) {
             // notifies $watch listeners and
             // updates $scope if bound to a variable
-            this.$$conf.notify();
+            this.$$notify();
           }
         },
 
@@ -240,6 +226,30 @@
           $log.error(err);
           // frees memory and cancels any remaining listeners
           this.$destroy(err);
+        },
+
+        /**
+         * Updates any bound scope variables and notifies listeners registered
+         * with $watch any time there is a change to data
+         */
+        $$notify: function() {
+          var self = this;
+          if( self.$$conf.bound ) {
+            self.$$conf.bound.update();
+          }
+          // be sure to do this after setting up data and init state
+          angular.forEach(self.$$conf.listeners, function (parts) {
+            parts[0].call(parts[1], {event: 'value', key: self.$id});
+          });
+        },
+
+        /**
+         * Overrides how Angular.forEach iterates records on this object so that only
+         * fields stored in Firebase are part of the iteration. To include meta fields like
+         * $id and $priority in the iteration, utilize for(key in obj) instead.
+         */
+        forEach: function(iterator, context) {
+          return $firebaseUtils.each(this, iterator, context);
         }
       };
 

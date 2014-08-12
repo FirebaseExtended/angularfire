@@ -246,12 +246,22 @@
           },
 
           each: function(obj, iterator, context) {
-            angular.forEach(obj, function(v,k) {
-              var c = k.charAt(0);
-              if( c !== '_' && c !== '$' && c !== '.' ) {
-                iterator.call(context, v, k, obj);
+            if(angular.isObject(obj)) {
+              for (var k in obj) {
+                if (obj.hasOwnProperty(k)) {
+                  var c = k.charAt(0);
+                  if( c !== '_' && c !== '$' && c !== '.' ) {
+                    iterator.call(context, obj[k], k, obj);
+                  }
+                }
               }
-            });
+            }
+            else if(angular.isArray(obj)) {
+              for(var i = 0, len = obj.length; i < len; i++) {
+                iterator.call(context, obj[i], i, obj);
+              }
+            }
+            return obj;
           },
 
           /**
