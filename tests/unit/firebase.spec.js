@@ -207,7 +207,7 @@ describe('$firebase', function () {
       $fb.$set({hello: 'world'});
       ref.flush();
       var args = ref.ref().update.calls.mostRecent().args[0];
-      expect(_.keys(args)).toEqual(['hello'].concat(expKeys));
+      expect(Object.keys(args)).toEqual(['hello'].concat(expKeys));
     });
   });
 
