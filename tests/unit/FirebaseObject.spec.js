@@ -440,6 +440,16 @@ describe('$FirebaseObject', function() {
       obj.$$updated(fakeSnap(null, true));
       expect(obj.$priority).toBe(true);
     });
+
+    it('should apply $$defaults if they exist', function() {
+      var F = $FirebaseObject.$extendFactory({
+        $$defaults: {baz: 'baz', aString: 'bravo'}
+      });
+      var obj = new F($fb, noop, $utils.resolve());
+      obj.$$updated(fakeSnap(FIXTURE_DATA));
+      expect(obj.aString).toBe(FIXTURE_DATA.aString);
+      expect(obj.baz).toBe('baz');
+    });
   });
 
   function flushAll() {

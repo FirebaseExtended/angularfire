@@ -265,6 +265,7 @@
             }
             rec.$id = snap.name();
             rec.$priority = snap.getPriority();
+            $firebaseUtils.applyDefaults(rec, this.$$defaults);
 
             // add it to array and send notifications
             this._process('child_added', rec, prevChild);
@@ -295,6 +296,7 @@
           if( angular.isObject(rec) ) {
             // apply changes to the record
             var changed = $firebaseUtils.updateRec(rec, snap);
+            $firebaseUtils.applyDefaults(rec, this.$$defaults);
             if( changed ) {
               this._process('child_changed', rec);
             }

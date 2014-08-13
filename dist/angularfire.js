@@ -1,5 +1,5 @@
 /*!
- * angularfire 0.8.0 2014-08-08
+ * angularfire 0.8.0 2014-08-13
  * https://github.com/firebase/angularfire
  * Copyright (c) 2014 Firebase, Inc.
  * MIT LICENSE: http://firebase.mit-license.org/
@@ -297,6 +297,7 @@
             }
             rec.$id = snap.name();
             rec.$priority = snap.getPriority();
+            $firebaseUtils.applyDefaults(rec, this.$$defaults);
 
             // add it to array and send notifications
             this._process('child_added', rec, prevChild);
@@ -327,6 +328,7 @@
           if( angular.isObject(rec) ) {
             // apply changes to the record
             var changed = $firebaseUtils.updateRec(rec, snap);
+            $firebaseUtils.applyDefaults(rec, this.$$defaults);
             if( changed ) {
               this._process('child_changed', rec);
             }
@@ -768,6 +770,7 @@
         $$updated: function (snap) {
           // applies new data to this object
           var changed = $firebaseUtils.updateRec(this, snap);
+          $firebaseUtils.applyDefaults(this, this.$$defaults);
           if( changed ) {
             // notifies $watch listeners and
             // updates $scope if bound to a variable
@@ -1733,17 +1736,20 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
             angular.extend(rec, data);
             rec.$priority = snap.getPriority();
 
-            if( angular.isObject(rec.$$defaults) ) {
-              angular.forEach(rec.$$defaults, function(v,k) {
+            return !angular.equals(oldData, rec) ||
+              oldData.$value !== rec.$value ||
+              oldData.$priority !== rec.$priority;
+          },
+
+          applyDefaults: function(rec, defaults) {
+            if( angular.isObject(defaults) ) {
+              angular.forEach(defaults, function(v,k) {
                 if( !rec.hasOwnProperty(k) ) {
                   rec[k] = v;
                 }
               });
             }
-
-            return !angular.equals(oldData, rec) ||
-              oldData.$value !== rec.$value ||
-              oldData.$priority !== rec.$priority;
+            return rec;
           },
 
           dataKeys: function(obj) {
