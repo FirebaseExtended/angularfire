@@ -66,6 +66,8 @@
 
         self.$id = $firebase.$ref().ref().name();
         self.$priority = null;
+
+        $firebaseUtils.applyDefaults(self, self.$$defaults);
       }
 
       FirebaseObject.prototype = {
