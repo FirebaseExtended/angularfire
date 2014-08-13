@@ -38,16 +38,20 @@
        * @constructor
        */
       function FirebaseObject($firebase, destroyFn, readyPromise) {
+        // IDE does not understand defineProperty so declare traditionally
+        // to avoid lots of IDE warnings about invalid properties
+        this.$$conf = {
+          promise: readyPromise,
+          inst: $firebase,
+          bound: null,
+          destroyFn: destroyFn,
+          listeners: []
+        };
+
         // this bit of magic makes $$conf non-enumerable and non-configurable
-        // and non-writable (its properties are writable but the ref cannot be replaced)
+        // and non-writable (its properties are still writable but the ref cannot be replaced)
         Object.defineProperty(this, '$$conf', {
-          value: {
-            promise: readyPromise,
-            inst: $firebase,
-            bound: null,
-            destroyFn: destroyFn,
-            listeners: []
-          }
+          value: this.$$conf
         });
 
         this.$id = $firebase.$ref().ref().name();
