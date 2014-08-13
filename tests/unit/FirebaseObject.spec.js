@@ -39,6 +39,14 @@ describe('$FirebaseObject', function() {
       flushAll();
       expect(obj).toEqual(jasmine.objectContaining({foo: 'bar'}));
     });
+
+    it('should apply $$defaults if they exist', function() {
+      var F = $FirebaseObject.$extendFactory({
+        $$defaults: {aNum: 0, aStr: 'foo', aBool: false}
+      });
+      var obj = new F($fb, noop, $utils.resolve());
+      expect(obj).toEqual(jasmine.objectContaining({aNum: 0, aStr: 'foo', aBool: false}));
+    })
   });
 
   describe('$save', function () {
