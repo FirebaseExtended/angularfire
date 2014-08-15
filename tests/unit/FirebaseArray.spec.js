@@ -482,6 +482,15 @@ describe('$FirebaseArray', function () {
       arr.$$added(testutils.snap($utils.toJSON(arr[pos]), 'a'));
       expect(spy).not.toHaveBeenCalled();
     });
+
+    it('should apply $$defaults if they exist', function() {
+      var arr = stubArray(STUB_DATA, $FirebaseArray.$extendFactory({
+        $$defaults: {aString: 'not_applied', foo: 'foo'}
+      }));
+      var rec = arr.$getRecord('a');
+      expect(rec.aString).toBe(STUB_DATA.a.aString);
+      expect(rec.foo).toBe('foo');
+    });
   });
 
   describe('$$updated', function() {
@@ -529,6 +538,19 @@ describe('$FirebaseArray', function () {
       arr.$watch(spy);
       arr.$$updated(testutils.snap($utils.toJSON(arr[pos]), 'a'), null);
       expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('should apply $$defaults if they exist', function() {
+      var arr = stubArray(STUB_DATA, $FirebaseArray.$extendFactory({
+        $$defaults: {aString: 'not_applied', foo: 'foo'}
+      }));
+      var rec = arr.$getRecord('a');
+      expect(rec.aString).toBe(STUB_DATA.a.aString);
+      expect(rec.foo).toBe('foo');
+      delete rec.foo;
+      arr.$$updated(testutils.snap($utils.toJSON(rec), 'a'));
+      expect(rec.aString).toBe(STUB_DATA.a.aString);
+      expect(rec.foo).toBe('foo');
     });
   });
 
@@ -700,13 +722,14 @@ describe('$FirebaseArray', function () {
     return fb;
   }
 
-  function stubArray(initialData) {
+  function stubArray(initialData, Factory) {
+    if( !Factory ) { Factory = $FirebaseArray; }
     var readyFuture = $utils.defer();
     var destroySpy = jasmine.createSpy('destroy').and.callFake(function(err) {
       readyFuture.reject(err||'destroyed');
     });
     var fb = stubFb();
-    var arr = new $FirebaseArray(fb, destroySpy, readyFuture.promise);
+    var arr = new Factory(fb, destroySpy, readyFuture.promise);
     if( initialData ) {
       var prev = null;
       for (var key in initialData) {

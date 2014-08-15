@@ -224,17 +224,20 @@
             angular.extend(rec, data);
             rec.$priority = snap.getPriority();
 
-            if( angular.isObject(rec.$$defaults) ) {
-              angular.forEach(rec.$$defaults, function(v,k) {
+            return !angular.equals(oldData, rec) ||
+              oldData.$value !== rec.$value ||
+              oldData.$priority !== rec.$priority;
+          },
+
+          applyDefaults: function(rec, defaults) {
+            if( angular.isObject(defaults) ) {
+              angular.forEach(defaults, function(v,k) {
                 if( !rec.hasOwnProperty(k) ) {
                   rec[k] = v;
                 }
               });
             }
-
-            return !angular.equals(oldData, rec) ||
-              oldData.$value !== rec.$value ||
-              oldData.$priority !== rec.$priority;
+            return rec;
           },
 
           dataKeys: function(obj) {

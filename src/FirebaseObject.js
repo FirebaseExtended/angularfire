@@ -66,6 +66,8 @@
 
         self.$id = $firebase.$ref().ref().name();
         self.$priority = null;
+
+        $firebaseUtils.applyDefaults(self, self.$$defaults);
       }
 
       FirebaseObject.prototype = {
@@ -222,6 +224,7 @@
         $$updated: function (snap) {
           // applies new data to this object
           var changed = $firebaseUtils.updateRec(this, snap);
+          $firebaseUtils.applyDefaults(this, this.$$defaults);
           if( changed ) {
             // notifies $watch listeners and
             // updates $scope if bound to a variable
