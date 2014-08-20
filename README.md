@@ -45,9 +45,9 @@ AngularFire requires Firebase in order to sync data. You can [sign up here](http
 
 ## Documentation
 
-The Firebase docs have a [quickstart](https://www.firebase.com/docs/web/bindings/angular/quickstart.html), [guide](https://www.firebase.com/docs/web/bindings/angular/guide.html), and [full API reference](https://www.firebase.com/docs/web/bindings/angular/api.html) for AngularFire.
+The Firebase docs have a [quickstart](https://www.firebase.com/docs/web/bindings/angular/quickstart.html?utm_medium=web&utm_source=angularfire), [guide](https://www.firebase.com/docs/web/bindings/angular/guide.html?utm_medium=web&utm_source=angularfire), and [full API reference](https://www.firebase.com/docs/web/bindings/angular/api.html?utm_medium=web&utm_source=angularfire) for AngularFire.
 
-We also have a [tutorial](https://www.firebase.com/tutorial/#tutorial/angular/0) to help you get started with AngularFire.
+We also have a [tutorial](https://www.firebase.com/tutorial/#tutorial/angular/0?utm_medium=web&utm_source=angularfire) to help you get started with AngularFire.
 
 Join our [Firebase + Angular Google Group](https://groups.google.com/forum/#!forum/firebase-angular) to ask questions, provide feedback, and share apps you've built with Firebase and Angular.
 
