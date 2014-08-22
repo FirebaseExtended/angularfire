@@ -23,7 +23,7 @@
     "firebase",
     "realtime"
   ],
-  "main": "dist/angularfire.min.js",
+  "main": "dist/angularfire.js",
   "files": [
     "dist/**",
     "LICENSE",
