@@ -5,10 +5,17 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     meta: {
-      banner: '/*!\n * <%= pkg.title || pkg.name %> <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %>\n' +
-        '<%= pkg.homepage ? " * " + pkg.homepage + "\\n" : "" %>' +
-        ' * Copyright (c) <%= grunt.template.today("yyyy") %> Firebase, Inc.\n' +
-        ' * MIT LICENSE: http://firebase.mit-license.org/\n */\n\n'
+      banner: '/*!\n' +
+              ' * AngularFire is the officially supported AngularJS binding for Firebase. Firebase\n' +
+              ' * is a full backend so you don\'t need servers to build your Angular app. AngularFire\n' +
+              ' * provides you with the $firebase service which allows you to easily keep your $scope\n' +
+              ' * variables in sync with your Firebase backend.\n' +
+              ' *\n' +
+              ' * AngularFire 0.0.0\n' +
+              ' * https://github.com/firebase/angularfire/\n' +
+              ' * Date: <%= grunt.template.today("mm/dd/yyyy") %>\n' +
+              ' * License: MIT\n' +
+              ' */\n'
     },
 
     // merge files from src/ into angularfire.js
