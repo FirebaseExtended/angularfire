@@ -1,5 +1,5 @@
 grunt build
-grunt test
+grunt test:unit
 if [ $SAUCE_ACCESS_KEY ]; then
   grunt sauce:unit
   #grunt sauce:e2e
