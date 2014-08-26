@@ -1,7 +1,7 @@
 {
   "name": "angularfire",
   "description": "The officially supported AngularJS binding for Firebase",
-  "version": "0.8.0",
+  "version": "0.0.0",
   "authors": [
     "Firebase <support@firebase.com> (https://www.firebase.com/)"
   ],
@@ -27,7 +27,7 @@
     "firebase.json",
     "package.json",
     "Gruntfile.js",
-    "release.sh"
+    "changelog.txt"
   ],
   "dependencies": {
     "angular": "1.2.x || 1.3.x",
