@@ -12,8 +12,18 @@ module.exports = function(config) {
     preprocessors: {
       "../src/**/*.js": "coverage"
     },
+
     coverageReporter: {
-      type: "html"
+      reporters: [
+        {
+          type: "lcovonly",
+          dir: "coverage",
+          subdir: "."
+        },
+        {
+          type: "text-summary"
+        }
+      ]
     },
 
     files: [
