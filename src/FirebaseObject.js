@@ -38,34 +38,18 @@
        * @constructor
        */
       function FirebaseObject($firebase, destroyFn, readyPromise) {
-        var self = this;
-
         // These are private config props and functions used internally
-        // they are collected here to reduce clutter on the prototype
-        // and instance signatures.
-        self.$$conf = {
+        // they are collected here to reduce clutter in console.log and forEach
+        this.$$conf = {
           promise: readyPromise,
           inst: $firebase,
-          bound: null,
+          binding: new ThreeWayBinding(this),
           destroyFn: destroyFn,
-          listeners: [],
-          /**
-           * Updates any bound scope variables and notifies listeners registered
-           * with $watch any time there is a change to data
-           */
-          notify: function() {
-            if( self.$$conf.bound ) {
-              self.$$conf.bound.update();
-            }
-            // be sure to do this after setting up data and init state
-            angular.forEach(self.$$conf.listeners, function (parts) {
-              parts[0].call(parts[1], {event: 'value', key: self.$id});
-            });
-          }
+          listeners: []
         };
 
-        self.$id = $firebase.$ref().ref().name();
-        self.$priority = null;
+        this.$id = $firebase.$ref().ref().name();
+        this.$priority = null;
       }
 
       FirebaseObject.prototype = {
@@ -74,10 +58,10 @@
          * @returns a promise which will resolve after the save is completed.
          */
         $save: function () {
-          var notify = this.$$conf.notify;
-          return this.$inst().$set($firebaseUtils.toJSON(this))
+          var self = this;
+          return self.$inst().$set($firebaseUtils.toJSON(self))
             .then(function(ref) {
-              notify();
+              self.$$notify();
               return ref;
             });
         },
@@ -130,43 +114,7 @@
         $bindTo: function (scope, varName) {
           var self = this;
           return self.$loaded().then(function () {
-            //todo split this into a subclass and shorten this method
-            //todo add comments and explanations
-            if (self.$$conf.bound) {
-              $log.error('Can only bind to one scope variable at a time');
-              return $firebaseUtils.reject('Can only bind to one scope variable at a time');
-            }
-
-            var unbind = function () {
-              if (self.$$conf.bound) {
-                self.$$conf.bound = null;
-                off();
-              }
-            };
-
-            // expose a few useful methods to other methods
-            var parsed = $parse(varName);
-            var $bound = self.$$conf.bound = {
-              update: function() {
-                var curr = $firebaseUtils.parseScopeData(self);
-                parsed.assign(scope, curr);
-              },
-              get: function () {
-                return parsed(scope);
-              },
-              unbind: unbind
-            };
-
-            $bound.update();
-            scope.$on('$destroy', $bound.unbind);
-
-            // monitor scope for any changes
-            var off = scope.$watch(varName, function () {
-              var newData = $firebaseUtils.toJSON($bound.get());
-              self.$inst().$set(newData);
-            }, true);
-
-            return unbind;
+            return self.$$conf.binding.bindTo(scope, varName);
           });
         },
 
@@ -203,9 +151,7 @@
           var self = this;
           if (!self.$isDestroyed) {
             self.$isDestroyed = true;
-            if (self.$$conf.bound) {
-              self.$$conf.bound.unbind();
-            }
+            self.$$conf.binding.destroy();
             $firebaseUtils.each(self, function (v, k) {
               delete self[k];
             });
@@ -220,12 +166,13 @@
          * @param snap
          */
         $$updated: function (snap) {
+          console.log('$$updated'); //debug
           // applies new data to this object
           var changed = $firebaseUtils.updateRec(this, snap);
           if( changed ) {
             // notifies $watch listeners and
             // updates $scope if bound to a variable
-            this.$$conf.notify();
+            this.$$notify();
           }
         },
 
@@ -239,6 +186,34 @@
           $log.error(err);
           // frees memory and cancels any remaining listeners
           this.$destroy(err);
+        },
+
+        /**
+         * Called internally by $bindTo when data is changed in $scope.
+         * Should apply updates to this record but should not call
+         * notify().
+         */
+        $$scopeUpdated: function(newData) {
+          console.log('$$scopeUpdated'); //debug
+          $firebaseUtils.trimKeys(this, newData);
+          $firebaseUtils.extendData(this, newData);
+          this.$priority = newData.$priority;
+          if( newData.hasOwnProperty('$value') ) {
+            this.$value = newData.$value;
+          }
+          this.$save();
+        },
+
+        /**
+         * Updates any bound scope variables and notifies listeners registered
+         * with $watch any time there is a change to data
+         */
+        $$notify: function() {
+          var self = this, list = this.$$conf.listeners.slice();
+          // be sure to do this after setting up data and init state
+          angular.forEach(list, function (parts) {
+            parts[0].call(parts[1], {event: 'value', key: self.$id});
+          });
         }
       };
 
@@ -257,11 +232,11 @@
        *
        * <pre><code>
        * var MyFactory = $FirebaseObject.$extendFactory({
-       *    // add a method onto the prototype that prints a greeting
-       *    getGreeting: function() {
-       *       return 'Hello ' + this.first_name + ' ' + this.last_name + '!';
-       *    }
-       * });
+         *    // add a method onto the prototype that prints a greeting
+         *    getGreeting: function() {
+         *       return 'Hello ' + this.first_name + ' ' + this.last_name + '!';
+         *    }
+         * });
        *
        * // use our new factory in place of $FirebaseObject
        * var obj = $firebase(ref, {objectFactory: MyFactory}).$asObject();
@@ -277,6 +252,100 @@
           ChildClass = function() { FirebaseObject.apply(this, arguments); };
         }
         return $firebaseUtils.inherit(ChildClass, FirebaseObject, methods);
+      };
+
+      /**
+       * Creates a three-way data binding on a scope variable.
+       *
+       * @param {FirebaseObject} rec
+       * @returns {*}
+       * @constructor
+       */
+      function ThreeWayBinding(rec) {
+        this.subs = [];
+        this.scope = null;
+        this.name = null;
+        this.rec = rec;
+      }
+
+      ThreeWayBinding.prototype = {
+        assertNotBound: function(varName) {
+          if( this.scope ) {
+            var msg = 'Cannot bind to ' + varName + ' because this instance is already bound to ' +
+              this.name + '; one binding per instance ' +
+              '(call unbind method or create another $firebase instance)';
+            $log.error(msg);
+            return $firebaseUtils.reject(msg);
+          }
+        },
+
+        bindTo: function(scope, varName) {
+          function _bind(self) {
+            var parsed = $parse(varName);
+            var rec = self.rec;
+            self.scope = scope;
+            self.varName = varName;
+
+            function equals(rec) {
+              var parsed = getScope();
+              var myData = $firebaseUtils.extendData({}, parsed);
+              var newData = $firebaseUtils.extendData({}, rec);
+              return angular.equals(myData, newData) &&
+                parsed._id === rec.$id &&
+                parsed._priority === rec.$priority &&
+                parsed._value === rec.$value;
+            }
+
+            function getScope() {
+              return parsed(scope);
+            }
+            function setScope(data) {
+              parsed.assign(scope, data);
+            }
+
+            function update() {
+              console.log('update', getScope(), rec); //debug
+              if( !equals(rec) ) {
+                rec.$$scopeUpdated($firebaseUtils.fromScopeData(getScope()));
+              }
+            }
+
+            setScope($firebaseUtils.toScopeData(rec));
+            self.subs.push(scope.$on('$destroy', self.unbind.bind(self)));
+
+            // monitor scope for any changes
+            self.subs.push(scope.$watch(varName, update, true));
+
+            // monitor the object for changes
+            self.subs.push(rec.$watch(function() {
+              console.log('rec.$watch', getScope(), rec); //debug
+              if( !equals(rec) ) {
+                var dat = $firebaseUtils.toScopeData(rec);
+                setScope(dat);
+              }
+            }));
+
+            return self.unbind.bind(self);
+          }
+
+          return this.assertNotBound(varName) || _bind(this);
+        },
+
+        unbind: function() {
+          if( this.scope ) {
+            angular.forEach(this.subs, function(unbind) {
+              unbind();
+            });
+            this.subs = [];
+            this.scope = null;
+            this.name = null;
+          }
+        },
+
+        destroy: function() {
+          this.unbind();
+          this.rec = null;
+        }
       };
 
       return FirebaseObject;

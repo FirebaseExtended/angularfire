@@ -187,17 +187,44 @@
             return newCopy;
           },
 
-          parseScopeData: function(rec) {
-            var out = {};
-            utils.each(rec, function(v,k) {
-              out[k] = utils.deepCopy(v);
+          trimKeys: function(dest, source) {
+            utils.each(dest, function(v,k) {
+              if( !source.hasOwnProperty(k) ) {
+                delete dest[k];
+              }
             });
-            out.$id = rec.$id;
-            out.$priority = rec.$priority;
-            if( rec.hasOwnProperty('$value') ) {
-              out.$value = rec.$value;
+          },
+
+          extendData: function(dest, source) {
+            utils.each(source, function(v,k) {
+              dest[k] = v;
+            });
+            return dest;
+          },
+
+          fromScopeData: function(scopeData) {
+            if( !angular.isObject(scopeData) ) {
+              scopeData = { '_value': typeof(scopeData) === 'undefined'? null : scopeData };
             }
-            return out;
+            var data = {
+              $id: scopeData._id,
+              $priority: scopeData._priority
+            };
+            if( scopeData.hasOwnProperty('_value') ) {
+              data.$value = scopeData._value;
+            }
+            return utils.extendData(data, scopeData);
+          },
+
+          toScopeData: function(rec) {
+            var data = {
+              _id: rec.$id,
+              _priority: rec.$priority
+            };
+            if( rec.hasOwnProperty('$value') ) {
+              data._value = rec.$value;
+            }
+            return utils.extendData(data, rec);
           },
 
           updateRec: function(rec, snap) {
@@ -213,14 +240,8 @@
               delete rec.$value;
             }
 
-            // remove keys that don't exist anymore
-            utils.each(rec, function(val, key) {
-              if( !data.hasOwnProperty(key) ) {
-                delete rec[key];
-              }
-            });
-
-            // apply new values
+            // apply changes: remove old keys, insert new data, set priority
+            utils.trimKeys(rec, data);
             angular.extend(rec, data);
             rec.$priority = snap.getPriority();
 
@@ -248,6 +269,7 @@
           each: function(obj, iterator, context) {
             angular.forEach(obj, function(v,k) {
               var c = k.charAt(0);
+              //todo does _ belong here? it's a valid char in firebase keys
               if( c !== '_' && c !== '$' && c !== '.' ) {
                 iterator.call(context, v, k, obj);
               }
