@@ -2,6 +2,7 @@
 # AngularFire
 
 [![Build Status](https://travis-ci.org/firebase/angularfire.svg?branch=master)](https://travis-ci.org/firebase/angularfire)
+[![Coverage Status](https://img.shields.io/coveralls/firebase/angularfire.svg)](https://coveralls.io/r/firebase/angularfire)
 [![Version](https://badge.fury.io/gh/firebase%2Fangularfire.svg)](http://badge.fury.io/gh/firebase%2Fangularfire)
 
 AngularFire is the officially supported [AngularJS](http://angularjs.org/) binding for
