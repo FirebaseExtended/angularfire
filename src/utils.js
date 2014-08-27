@@ -106,6 +106,63 @@
             return createBatchFn;
           },
 
+          /**
+           * A rudimentary debounce method
+           * @param {function} fn the function to debounce
+           * @param {object} [ctx] the `this` context to set in fn
+           * @param {int} wait number of milliseconds to pause before sending out after each invocation
+           * @param {int} [maxWait] max milliseconds to wait before sending out, defaults to wait * 10 or 100
+           */
+          debounce: function(fn, ctx, wait, maxWait) {
+            var start, timer, args;
+            if( typeof(ctx) === 'number' ) {
+              maxWait = wait;
+              wait = ctx;
+              ctx = null;
+            }
+
+            if( typeof wait !== 'number' ) {
+              throw new Error('Must provide a valid integer for wait. Try 0 for a default');
+            }
+            if( typeof(fn) !== 'function' ) {
+              throw new Error('Must provide a valid function to debounce');
+            }
+            if( !maxWait ) { maxWait = wait*10 || 100; }
+
+            // clears the current wait timer and creates a new one
+            // however, if maxWait is exceeded, calles runNow() immediately
+            function resetTimer() {
+              if( timer ) {
+                $timeout.cancel(timer);
+                timer = null;
+              }
+              if( start && Date.now() - start > maxWait ) {
+                utils.compile(runNow);
+              }
+              else {
+                if( !start ) { start = Date.now(); }
+                timer = utils.compile(runNow, wait);
+              }
+            }
+
+            // Clears the queue and invokes all of the functions awaiting notification
+            function runNow() {
+              timer = null;
+              start = null;
+              fn.apply(ctx, args);
+            }
+
+            function debounced() {
+              args = Array.prototype.slice.call(arguments, 0);
+              resetTimer();
+            }
+            debounced.running = function() {
+              return start > 0;
+            };
+
+            return debounced;
+          },
+
           assertValidRef: function(ref, msg) {
             if( !angular.isObject(ref) ||
               typeof(ref.ref) !== 'function' ||

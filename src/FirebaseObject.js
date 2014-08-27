@@ -166,7 +166,6 @@
          * @param snap
          */
         $$updated: function (snap) {
-          console.log('$$updated'); //debug
           // applies new data to this object
           var changed = $firebaseUtils.updateRec(this, snap);
           if( changed ) {
@@ -194,14 +193,9 @@
          * notify().
          */
         $$scopeUpdated: function(newData) {
-          console.log('$$scopeUpdated'); //debug
-          $firebaseUtils.trimKeys(this, newData);
-          $firebaseUtils.extendData(this, newData);
-          this.$priority = newData.$priority;
-          if( newData.hasOwnProperty('$value') ) {
-            this.$value = newData.$value;
-          }
-          this.$save();
+          // we use a one-directional loop to avoid feedback with 3-way bindings
+          // since set() is applied locally anyway, this is still performant
+          return this.$inst().$set($firebaseUtils.toJSON(newData));
         },
 
         /**
@@ -232,11 +226,11 @@
        *
        * <pre><code>
        * var MyFactory = $FirebaseObject.$extendFactory({
-         *    // add a method onto the prototype that prints a greeting
-         *    getGreeting: function() {
-         *       return 'Hello ' + this.first_name + ' ' + this.last_name + '!';
-         *    }
-         * });
+       *    // add a method onto the prototype that prints a greeting
+       *    getGreeting: function() {
+       *       return 'Hello ' + this.first_name + ' ' + this.last_name + '!';
+       *    }
+       * });
        *
        * // use our new factory in place of $FirebaseObject
        * var obj = $firebase(ref, {objectFactory: MyFactory}).$asObject();
@@ -281,6 +275,7 @@
 
         bindTo: function(scope, varName) {
           function _bind(self) {
+            var sending = false;
             var parsed = $parse(varName);
             var rec = self.rec;
             self.scope = scope;
@@ -303,27 +298,29 @@
               parsed.assign(scope, data);
             }
 
-            function update() {
-              console.log('update', getScope(), rec); //debug
+            var scopeUpdated = $firebaseUtils.debounce(function update() {
               if( !equals(rec) ) {
-                rec.$$scopeUpdated($firebaseUtils.fromScopeData(getScope()));
+                sending = true;
+                rec.$$scopeUpdated($firebaseUtils.fromScopeData(getScope()))
+                  ['finally'](function() { sending = false; });
               }
-            }
+            }, 100);
+
+            var recUpdated = function() {
+              if( !sending && !scopeUpdated.running() && !equals(rec) ) {
+                var dat = $firebaseUtils.toScopeData(rec);
+                setScope(dat);
+              }
+            };
 
             setScope($firebaseUtils.toScopeData(rec));
             self.subs.push(scope.$on('$destroy', self.unbind.bind(self)));
 
             // monitor scope for any changes
-            self.subs.push(scope.$watch(varName, update, true));
+            self.subs.push(scope.$watch(varName, scopeUpdated, true));
 
             // monitor the object for changes
-            self.subs.push(rec.$watch(function() {
-              console.log('rec.$watch', getScope(), rec); //debug
-              if( !equals(rec) ) {
-                var dat = $firebaseUtils.toScopeData(rec);
-                setScope(dat);
-              }
-            }));
+            self.subs.push(rec.$watch(recUpdated));
 
             return self.unbind.bind(self);
           }
