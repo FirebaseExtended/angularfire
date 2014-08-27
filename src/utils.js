@@ -259,29 +259,15 @@
             return dest;
           },
 
-          fromScopeData: function(scopeData) {
-            if( !angular.isObject(scopeData) ) {
-              scopeData = { '_value': typeof(scopeData) === 'undefined'? null : scopeData };
-            }
+          scopeData: function(dataOrRec) {
             var data = {
-              $id: scopeData._id,
-              $priority: scopeData._priority
+              $id: dataOrRec.$id,
+              $priority: dataOrRec.$priority
             };
-            if( scopeData.hasOwnProperty('_value') ) {
-              data.$value = scopeData._value;
+            if( dataOrRec.hasOwnProperty('$value') ) {
+              data.$value = dataOrRec.$value;
             }
-            return utils.extendData(data, scopeData);
-          },
-
-          toScopeData: function(rec) {
-            var data = {
-              _id: rec.$id,
-              _priority: rec.$priority
-            };
-            if( rec.hasOwnProperty('$value') ) {
-              data._value = rec.$value;
-            }
-            return utils.extendData(data, rec);
+            return utils.extendData(data, dataOrRec);
           },
 
           updateRec: function(rec, snap) {

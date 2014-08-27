@@ -24,8 +24,8 @@
    * <code>$firebase( firebaseRef, {objectFactory: NewFactory}).$asObject();</code>
    */
   angular.module('firebase').factory('$FirebaseObject', [
-    '$parse', '$firebaseUtils', '$log',
-    function($parse, $firebaseUtils, $log) {
+    '$parse', '$firebaseUtils', '$log', '$interval',
+    function($parse, $firebaseUtils, $log, $interval) {
       /**
        * This constructor should probably never be called manually. It is used internally by
        * <code>$firebase.$asObject()</code>.
@@ -283,37 +283,69 @@
 
             function equals(rec) {
               var parsed = getScope();
-              var myData = $firebaseUtils.extendData({}, parsed);
-              var newData = $firebaseUtils.extendData({}, rec);
-              return angular.equals(myData, newData) &&
-                parsed._id === rec.$id &&
-                parsed._priority === rec.$priority &&
-                parsed._value === rec.$value;
+              var newData = $firebaseUtils.scopeData(rec);
+              return angular.equals(parsed, newData) &&
+                parsed.$priority === rec.$priority &&
+                parsed.$value === rec.$value;
             }
 
             function getScope() {
-              return parsed(scope);
-            }
-            function setScope(data) {
-              parsed.assign(scope, data);
+              return $firebaseUtils.scopeData(parsed(scope));
             }
 
-            var scopeUpdated = $firebaseUtils.debounce(function update() {
+            function setScope(rec) {
+              parsed.assign(scope, $firebaseUtils.scopeData(rec));
+            }
+
+            var scopeUpdated = function() {
+              var send = $firebaseUtils.debounce(function() {
+                rec.$$scopeUpdated(getScope())
+                  ['finally'](function() { sending = false; });
+              }, 100, 500);
               if( !equals(rec) ) {
                 sending = true;
-                rec.$$scopeUpdated($firebaseUtils.fromScopeData(getScope()))
-                  ['finally'](function() { sending = false; });
-              }
-            }, 100);
-
-            var recUpdated = function() {
-              if( !sending && !scopeUpdated.running() && !equals(rec) ) {
-                var dat = $firebaseUtils.toScopeData(rec);
-                setScope(dat);
+                send();
               }
             };
 
-            setScope($firebaseUtils.toScopeData(rec));
+            var recUpdated = function() {
+              if( !sending && !equals(rec) ) {
+                setScope(rec);
+              }
+            };
+
+            // $watch will not check any vars prefixed with $, so we
+            // manually check $priority and $value using this method
+            function checkMetaVars() {
+              var dat = parsed(scope);
+              if( dat.$value !== rec.$value || dat.$priority !== rec.$priority ) {
+                scopeUpdated();
+              }
+            }
+
+            // Okay, so this magic hack is um... magic. It increments a
+            // variable every 50 seconds (counterKey) so that whenever $digest
+            // is run, the variable will be dirty. This allows us to determine
+            // when $digest is invoked, manually check the meta vars, and
+            // manually invoke our watcher if the $ prefixed data has changed
+            (function() {
+              // create a counter and store it in scope
+              var counterKey = '_firebaseCounterForVar'+varName;
+              scope[counterKey] = 0;
+              // update the counter every 50ms
+              var to = $interval(function() {
+                scope[counterKey]++;
+              }, 50, 0, false);
+              // watch the counter for changes (which means $digest ran)
+              self.subs.push(scope.$watch(counterKey, checkMetaVars));
+              // cancel our interval and clear var from scope if unbound
+              self.subs.push(function() {
+                $interval.cancel(to);
+                delete scope[counterKey];
+              });
+            })();
+
+            setScope(rec);
             self.subs.push(scope.$on('$destroy', self.unbind.bind(self)));
 
             // monitor scope for any changes
