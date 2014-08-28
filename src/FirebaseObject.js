@@ -24,8 +24,8 @@
    * <code>$firebase( firebaseRef, {objectFactory: NewFactory}).$asObject();</code>
    */
   angular.module('firebase').factory('$FirebaseObject', [
-    '$parse', '$firebaseUtils', '$log',
-    function($parse, $firebaseUtils, $log) {
+    '$parse', '$firebaseUtils', '$log', '$interval',
+    function($parse, $firebaseUtils, $log, $interval) {
       /**
        * This constructor should probably never be called manually. It is used internally by
        * <code>$firebase.$asObject()</code>.
@@ -38,18 +38,19 @@
        * @constructor
        */
       function FirebaseObject($firebase, destroyFn, readyPromise) {
-        // IDE does not understand defineProperty so declare traditionally
-        // to avoid lots of IDE warnings about invalid properties
+        // These are private config props and functions used internally
+        // they are collected here to reduce clutter in console.log and forEach
         this.$$conf = {
           promise: readyPromise,
           inst: $firebase,
-          bound: null,
+          binding: new ThreeWayBinding(this),
           destroyFn: destroyFn,
           listeners: []
         };
 
         // this bit of magic makes $$conf non-enumerable and non-configurable
         // and non-writable (its properties are still writable but the ref cannot be replaced)
+        // we declare it above so the IDE can relax
         Object.defineProperty(this, '$$conf', {
           value: this.$$conf
         });
@@ -66,10 +67,10 @@
          * @returns a promise which will resolve after the save is completed.
          */
         $save: function () {
-          var notify = this.$$notify.bind(this);
-          return this.$inst().$set($firebaseUtils.toJSON(this))
+          var self = this;
+          return self.$inst().$set($firebaseUtils.toJSON(self))
             .then(function(ref) {
-              notify();
+              self.$$notify();
               return ref;
             });
         },
@@ -122,43 +123,7 @@
         $bindTo: function (scope, varName) {
           var self = this;
           return self.$loaded().then(function () {
-            //todo split this into a subclass and shorten this method
-            //todo add comments and explanations
-            if (self.$$conf.bound) {
-              $log.error('Can only bind to one scope variable at a time');
-              return $firebaseUtils.reject('Can only bind to one scope variable at a time');
-            }
-
-            var unbind = function () {
-              if (self.$$conf.bound) {
-                self.$$conf.bound = null;
-                off();
-              }
-            };
-
-            // expose a few useful methods to other methods
-            var parsed = $parse(varName);
-            var $bound = self.$$conf.bound = {
-              update: function() {
-                var curr = $firebaseUtils.parseScopeData(self);
-                parsed.assign(scope, curr);
-              },
-              get: function () {
-                return parsed(scope);
-              },
-              unbind: unbind
-            };
-
-            $bound.update();
-            scope.$on('$destroy', $bound.unbind);
-
-            // monitor scope for any changes
-            var off = scope.$watch(varName, function () {
-              var newData = $firebaseUtils.toJSON($bound.get());
-              self.$inst().$set(newData);
-            }, true);
-
-            return unbind;
+            return self.$$conf.binding.bindTo(scope, varName);
           });
         },
 
@@ -195,9 +160,7 @@
           var self = this;
           if (!self.$isDestroyed) {
             self.$isDestroyed = true;
-            if (self.$$conf.bound) {
-              self.$$conf.bound.unbind();
-            }
+            self.$$conf.binding.destroy();
             $firebaseUtils.each(self, function (v, k) {
               delete self[k];
             });
@@ -235,16 +198,24 @@
         },
 
         /**
+         * Called internally by $bindTo when data is changed in $scope.
+         * Should apply updates to this record but should not call
+         * notify().
+         */
+        $$scopeUpdated: function(newData) {
+          // we use a one-directional loop to avoid feedback with 3-way bindings
+          // since set() is applied locally anyway, this is still performant
+          return this.$inst().$set($firebaseUtils.toJSON(newData));
+        },
+
+        /**
          * Updates any bound scope variables and notifies listeners registered
          * with $watch any time there is a change to data
          */
         $$notify: function() {
-          var self = this;
-          if( self.$$conf.bound ) {
-            self.$$conf.bound.update();
-          }
+          var self = this, list = this.$$conf.listeners.slice();
           // be sure to do this after setting up data and init state
-          angular.forEach(self.$$conf.listeners, function (parts) {
+          angular.forEach(list, function (parts) {
             parts[0].call(parts[1], {event: 'value', key: self.$id});
           });
         },
@@ -294,6 +265,137 @@
           ChildClass = function() { FirebaseObject.apply(this, arguments); };
         }
         return $firebaseUtils.inherit(ChildClass, FirebaseObject, methods);
+      };
+
+      /**
+       * Creates a three-way data binding on a scope variable.
+       *
+       * @param {FirebaseObject} rec
+       * @returns {*}
+       * @constructor
+       */
+      function ThreeWayBinding(rec) {
+        this.subs = [];
+        this.scope = null;
+        this.name = null;
+        this.rec = rec;
+      }
+
+      ThreeWayBinding.prototype = {
+        assertNotBound: function(varName) {
+          if( this.scope ) {
+            var msg = 'Cannot bind to ' + varName + ' because this instance is already bound to ' +
+              this.name + '; one binding per instance ' +
+              '(call unbind method or create another $firebase instance)';
+            $log.error(msg);
+            return $firebaseUtils.reject(msg);
+          }
+        },
+
+        bindTo: function(scope, varName) {
+          function _bind(self) {
+            var sending = false;
+            var parsed = $parse(varName);
+            var rec = self.rec;
+            self.scope = scope;
+            self.varName = varName;
+
+            function equals(rec) {
+              var parsed = getScope();
+              var newData = $firebaseUtils.scopeData(rec);
+              return angular.equals(parsed, newData) &&
+                parsed.$priority === rec.$priority &&
+                parsed.$value === rec.$value;
+            }
+
+            function getScope() {
+              return $firebaseUtils.scopeData(parsed(scope));
+            }
+
+            function setScope(rec) {
+              parsed.assign(scope, $firebaseUtils.scopeData(rec));
+            }
+
+            var scopeUpdated = function() {
+              var send = $firebaseUtils.debounce(function() {
+                rec.$$scopeUpdated(getScope())
+                  ['finally'](function() { sending = false; });
+              }, 50, 500);
+              if( !equals(rec) ) {
+                sending = true;
+                send();
+              }
+            };
+
+            var recUpdated = function() {
+              if( !sending && !equals(rec) ) {
+                setScope(rec);
+              }
+            };
+
+            // $watch will not check any vars prefixed with $, so we
+            // manually check $priority and $value using this method
+            function checkMetaVars() {
+              var dat = parsed(scope);
+              if( dat.$value !== rec.$value || dat.$priority !== rec.$priority ) {
+                scopeUpdated();
+              }
+            }
+
+            // Okay, so this magic hack is um... magic. It increments a
+            // variable every 50 seconds (counterKey) so that whenever $digest
+            // is run, the variable will be dirty. This allows us to determine
+            // when $digest is invoked, manually check the meta vars, and
+            // manually invoke our watcher if the $ prefixed data has changed
+            (function() {
+              // create a counter and store it in scope
+              var counterKey = '_firebaseCounterForVar'+varName;
+              scope[counterKey] = 0;
+              // update the counter every 51ms
+              // why 51? because it must be greater than scopeUpdated's debounce
+              // or protractor has a conniption
+              var to = $interval(function() {
+                scope[counterKey]++;
+              }, 51, 0, false);
+              // watch the counter for changes (which means $digest ran)
+              self.subs.push(scope.$watch(counterKey, checkMetaVars));
+              // cancel our interval and clear var from scope if unbound
+              self.subs.push(function() {
+                $interval.cancel(to);
+                delete scope[counterKey];
+              });
+            })();
+
+            setScope(rec);
+            self.subs.push(scope.$on('$destroy', self.unbind.bind(self)));
+
+            // monitor scope for any changes
+            self.subs.push(scope.$watch(varName, scopeUpdated, true));
+
+            // monitor the object for changes
+            self.subs.push(rec.$watch(recUpdated));
+
+            return self.unbind.bind(self);
+          }
+
+          return this.assertNotBound(varName) || _bind(this);
+        },
+
+        unbind: function() {
+          if( this.scope ) {
+            angular.forEach(this.subs, function(unbind) {
+              unbind();
+            });
+            this.subs = [];
+            this.scope = null;
+            this.name = null;
+          }
+        },
+
+        destroy: function() {
+          this.unbind();
+          this.rec = null;
+        }
       };
 
       return FirebaseObject;

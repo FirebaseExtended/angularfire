@@ -1,6 +1,6 @@
 describe('$FirebaseObject', function() {
   'use strict';
-  var $firebase, $FirebaseObject, $utils, $rootScope, $timeout, obj, $fb, testutils;
+  var $firebase, $FirebaseObject, $utils, $rootScope, $timeout, obj, $fb, testutils, $interval;
 
   var DEFAULT_ID = 'recc';
   var FIXTURE_DATA = {
@@ -14,10 +14,11 @@ describe('$FirebaseObject', function() {
     module('mock.firebase');
     module('firebase');
     module('testutils');
-    inject(function (_$firebase_, _$FirebaseObject_, _$timeout_, $firebaseUtils, _$rootScope_, _testutils_) {
+    inject(function (_$firebase_, _$interval_, _$FirebaseObject_, _$timeout_, $firebaseUtils, _$rootScope_, _testutils_) {
       $firebase = _$firebase_;
       $FirebaseObject = _$FirebaseObject_;
       $timeout = _$timeout_;
+      $interval = _$interval_;
       $utils = $firebaseUtils;
       $rootScope = _$rootScope_;
       testutils = _testutils_;
@@ -190,7 +191,7 @@ describe('$FirebaseObject', function() {
       var spy = jasmine.createSpy('resolve').and.callFake(function (off) {
         expect(off).toBeA('function');
       });
-      obj.$bindTo($rootScope.$new(), 'test').then(spy);
+      obj.$bindTo($rootScope.$new(), 'test').then(spy, function() { console.error(arguments); });
       flushAll();
       expect(spy).toHaveBeenCalled();
     });
@@ -223,6 +224,7 @@ describe('$FirebaseObject', function() {
       $scope.$apply(function () {
         $scope.test.bar = 'baz';
       });
+      $timeout.flush();
       expect($fb.$set).toHaveBeenCalledWith(jasmine.objectContaining({bar: 'baz'}));
     });
 
@@ -233,7 +235,8 @@ describe('$FirebaseObject', function() {
         $scope.test = newData;
       });
       obj.$bindTo($scope, 'test').then(spy);
-      flushAll();
+      flushAll(); // for $loaded
+      flushAll(); // for $watch timeout
       expect(spy).toHaveBeenCalled();
       expect($scope.test).toEqual(jasmine.objectContaining(newData));
       expect($fb.$set).toHaveBeenCalledWith(newData);
@@ -250,7 +253,7 @@ describe('$FirebaseObject', function() {
     });
 
     it('should stop binding when off function is called', function () {
-      var origData = $utils.parseScopeData(obj);
+      var origData = $utils.scopeData(obj);
       var $scope = $rootScope.$new();
       var spy = jasmine.createSpy('$bindTo').and.callFake(function (off) {
         expect($scope.obj).toEqual(origData);
@@ -265,12 +268,12 @@ describe('$FirebaseObject', function() {
     });
 
     it('should not destroy remote data if local is pre-set', function () {
-      var origValue = $utils.parseScopeData(obj);
+      var origValue = $utils.scopeData(obj);
       var $scope = $rootScope.$new();
       $scope.test = {foo: true};
       obj.$bindTo($scope, 'test');
       flushAll();
-      expect($utils.parseScopeData(obj)).toEqual(origValue);
+      expect($utils.scopeData(obj)).toEqual(origValue);
     });
 
     it('should not fail if remote data is null', function () {
@@ -281,28 +284,34 @@ describe('$FirebaseObject', function() {
       expect($scope.test).toEqual({$value: null, $id: obj.$id, $priority: obj.$priority});
     });
 
-    //todo-test https://github.com/firebase/angularFire/issues/333
-    xit('should update priority if $priority changed in $scope', function () {
+    it('should update $priority if $priority changed in $scope', function () {
       var $scope = $rootScope.$new();
-      var spy = spyOn(obj.$inst(), '$set');
+      var spy = obj.$inst().$set;
       obj.$bindTo($scope, 'test');
       $timeout.flush();
-      $scope.test.$priority = 999;
-      $scope.$digest();
+      $scope.$apply(function() {
+        $scope.test.$priority = 999;
+      });
+      $interval.flush(500);
+      $timeout.flush(); // for $interval
+      $timeout.flush(); // for $watch
       expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({'.priority': 999}));
     });
 
-    //todo-test https://github.com/firebase/angularFire/issues/333
-    xit('should update value if $value changed in $scope', function () {
+    it('should update $value if $value changed in $scope', function () {
       var $scope = $rootScope.$new();
       var obj = new $FirebaseObject($fb, noop, $utils.resolve());
       obj.$$updated(testutils.refSnap($fb.$ref(), 'foo', null));
       expect(obj.$value).toBe('foo');
-      var spy = spyOn(obj.$inst(), '$set');
+      var spy = obj.$inst().$set;
       obj.$bindTo($scope, 'test');
-      $timeout.flush();
-      $scope.test.$value = 'bar';
-      $scope.$digest();
+      $timeout.flush(); // for $loaded
+      $scope.$apply(function() {
+        $scope.test.$value = 'bar';
+      });
+      $interval.flush(500);
+      $timeout.flush(); // for $interval
+      $timeout.flush(); // for $watch
       expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({'.value': 'bar'}));
     });
 
@@ -464,9 +473,9 @@ describe('$FirebaseObject', function() {
     Array.prototype.slice.call(arguments, 0).forEach(function (o) {
       angular.isFunction(o.resolve) ? o.resolve() : o.flush();
     });
-    try {
-      $timeout.flush();
-    }
+    try { $interval.flush(100); }
+    catch(e) {}
+    try { $timeout.flush(); }
     catch (e) {}
   }
 

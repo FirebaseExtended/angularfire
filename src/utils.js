@@ -61,7 +61,7 @@
             if( !maxWait ) { maxWait = wait*10 || 100; }
             var queue = [];
             var start;
-            var timer;
+            var cancelTimer;
 
             // returns `fn` wrapped in a function that queues up each call event to be
             // invoked later inside fo runNow()
@@ -79,22 +79,22 @@
             // clears the current wait timer and creates a new one
             // however, if maxWait is exceeded, calles runNow() immediately
             function resetTimer() {
-              if( timer ) {
-                $timeout.cancel(timer);
-                timer = null;
+              if( cancelTimer ) {
+                cancelTimer();
+                cancelTimer = null;
               }
               if( start && Date.now() - start > maxWait ) {
                 utils.compile(runNow);
               }
               else {
                 if( !start ) { start = Date.now(); }
-                timer = utils.compile(runNow, wait);
+                cancelTimer = utils.wait(runNow, wait);
               }
             }
 
             // Clears the queue and invokes all of the functions awaiting notification
             function runNow() {
-              timer = null;
+              cancelTimer = null;
               start = null;
               var copyList = queue.slice(0);
               queue = [];
@@ -104,6 +104,63 @@
             }
 
             return createBatchFn;
+          },
+
+          /**
+           * A rudimentary debounce method
+           * @param {function} fn the function to debounce
+           * @param {object} [ctx] the `this` context to set in fn
+           * @param {int} wait number of milliseconds to pause before sending out after each invocation
+           * @param {int} [maxWait] max milliseconds to wait before sending out, defaults to wait * 10 or 100
+           */
+          debounce: function(fn, ctx, wait, maxWait) {
+            var start, cancelTimer, args;
+            if( typeof(ctx) === 'number' ) {
+              maxWait = wait;
+              wait = ctx;
+              ctx = null;
+            }
+
+            if( typeof wait !== 'number' ) {
+              throw new Error('Must provide a valid integer for wait. Try 0 for a default');
+            }
+            if( typeof(fn) !== 'function' ) {
+              throw new Error('Must provide a valid function to debounce');
+            }
+            if( !maxWait ) { maxWait = wait*10 || 100; }
+
+            // clears the current wait timer and creates a new one
+            // however, if maxWait is exceeded, calles runNow() immediately
+            function resetTimer() {
+              if( cancelTimer ) {
+                cancelTimer();
+                cancelTimer = null;
+              }
+              if( start && Date.now() - start > maxWait ) {
+                utils.compile(runNow);
+              }
+              else {
+                if( !start ) { start = Date.now(); }
+                cancelTimer = utils.wait(runNow, wait);
+              }
+            }
+
+            // Clears the queue and invokes all of the functions awaiting notification
+            function runNow() {
+              cancelTimer = null;
+              start = null;
+              fn.apply(ctx, args);
+            }
+
+            function debounced() {
+              args = Array.prototype.slice.call(arguments, 0);
+              resetTimer();
+            }
+            debounced.running = function() {
+              return start > 0;
+            };
+
+            return debounced;
           },
 
           assertValidRef: function(ref, msg) {
@@ -170,8 +227,18 @@
             return def.promise;
           },
 
-          compile: function(fn, wait) {
-            return $timeout(fn||function() {}, wait||0);
+          wait: function(fn, wait) {
+            var to = $timeout(fn, wait||0);
+            return function() {
+              if( to ) {
+                $timeout.cancel(to);
+                to = null;
+              }
+            };
+          },
+
+          compile: function(fn) {
+            return $timeout(fn||function() {});
           },
 
           deepCopy: function(obj) {
@@ -187,17 +254,30 @@
             return newCopy;
           },
 
-          parseScopeData: function(rec) {
-            var out = {};
-            utils.each(rec, function(v,k) {
-              out[k] = utils.deepCopy(v);
+          trimKeys: function(dest, source) {
+            utils.each(dest, function(v,k) {
+              if( !source.hasOwnProperty(k) ) {
+                delete dest[k];
+              }
             });
-            out.$id = rec.$id;
-            out.$priority = rec.$priority;
-            if( rec.hasOwnProperty('$value') ) {
-              out.$value = rec.$value;
+          },
+
+          extendData: function(dest, source) {
+            utils.each(source, function(v,k) {
+              dest[k] = utils.deepCopy(v);
+            });
+            return dest;
+          },
+
+          scopeData: function(dataOrRec) {
+            var data = {
+              $id: dataOrRec.$id,
+              $priority: dataOrRec.$priority
+            };
+            if( dataOrRec.hasOwnProperty('$value') ) {
+              data.$value = dataOrRec.$value;
             }
-            return out;
+            return utils.extendData(data, dataOrRec);
           },
 
           updateRec: function(rec, snap) {
@@ -213,14 +293,8 @@
               delete rec.$value;
             }
 
-            // remove keys that don't exist anymore
-            utils.each(rec, function(val, key) {
-              if( !data.hasOwnProperty(key) ) {
-                delete rec[key];
-              }
-            });
-
-            // apply new values
+            // apply changes: remove old keys, insert new data, set priority
+            utils.trimKeys(rec, data);
             angular.extend(rec, data);
             rec.$priority = snap.getPriority();
 

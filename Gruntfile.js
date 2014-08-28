@@ -72,7 +72,7 @@ module.exports = function(grunt) {
     jshint : {
       options : {
         jshintrc: '.jshintrc',
-        ignores: ['src/polyfills.js'],
+        ignores: ['src/lib/polyfills.js']
       },
       all : ['src/**/*.js']
     },
