@@ -170,7 +170,7 @@
               throw new Error('config.arrayFactory must be a valid function');
             }
             if (!angular.isFunction(cnf.objectFactory)) {
-              throw new Error('config.arrayFactory must be a valid function');
+              throw new Error('config.objectFactory must be a valid function');
             }
           }
         };
