@@ -1,9 +1,3 @@
-// AngularFire is an officially supported AngularJS binding for Firebase.
-// The bindings let you associate a Firebase URL with a model (or set of
-// models), and they will be transparently kept in sync across all clients
-// currently using your app. The 2-way data binding offered by AngularJS works
-// as normal, except that the changes are also sent to all other clients
-// instead of just a server.
 (function(exports) {
   "use strict";
 
