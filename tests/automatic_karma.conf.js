@@ -10,10 +10,20 @@ module.exports = function(config) {
     singleRun: true,
 
     preprocessors: {
-      "../src/**/*.js": "coverage"
+      "../src/*.js": "coverage"
     },
+
     coverageReporter: {
-      type: "html"
+      reporters: [
+        {
+          type: "lcovonly",
+          dir: "coverage",
+          subdir: "."
+        },
+        {
+          type: "text-summary"
+        }
+      ]
     },
 
     files: [

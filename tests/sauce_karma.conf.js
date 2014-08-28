@@ -32,7 +32,7 @@ module.exports = function(config) {
     transports: ['xhr-polling'],
 
     sauceLabs: {
-      testName: 'angularFire Unit Tests',
+      testName: 'AngularFire Unit Tests',
       startConnect: false,
       tunnelIdentifier: process.env.TRAVIS_JOB_NUMBER
     },
