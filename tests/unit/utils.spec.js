@@ -121,6 +121,30 @@ describe('$firebaseUtils', function () {
       expect($utils.toJSON(json)).toEqual({foo: json.foo});
     });
 
+    it('should remove any deeply nested variables prefixed with $', function() {
+      var json = {
+        arr: [[
+            {$$hashKey: false, $key: 1, alpha: 'alpha', bravo: {$$private: '$$private', $key: '$key', bravo: 'bravo'}},
+            {$$hashKey: false, $key: 1, alpha: 'alpha', bravo: {$$private: '$$private', $key: '$key', bravo: 'bravo'}}
+
+        ], ["a", "b", {$$key: '$$key'}]],
+        obj: {
+          nest: {$$hashKey: false, $key: 1, alpha: 'alpha', bravo: {$$private: '$$private', $key: '$key', bravo: 'bravo'} }
+        }
+      };
+
+      expect($utils.toJSON(json)).toEqual({
+        arr: [[
+          {alpha: 'alpha', bravo: {bravo: 'bravo'}},
+          {alpha: 'alpha', bravo: {bravo: 'bravo'}}
+
+        ], ["a", "b", {}]],
+        obj: {
+          nest: {alpha: 'alpha', bravo: {bravo: 'bravo'} }
+        }
+      });
+    });
+
     it('should throw error if an invalid character in key', function() {
       expect(function() {
         $utils.toJSON({'foo.bar': 'foo.bar'});

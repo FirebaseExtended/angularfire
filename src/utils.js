@@ -290,7 +290,7 @@
             else {
               dat = {};
               utils.each(rec, function (v, k) {
-                dat[k] = v;
+                dat[k] = stripDollarPrefixedKeys(v);
               });
             }
             if( angular.isDefined(rec.$value) && Object.keys(dat).length === 0 && rec.$value !== null ) {
@@ -316,4 +316,15 @@
         return utils;
       }
     ]);
+
+    function stripDollarPrefixedKeys(data) {
+      if( !angular.isObject(data) ) { return data; }
+      var out = angular.isArray(data)? [] : {};
+      angular.forEach(data, function(v,k) {
+        if(typeof k !== 'string' || k.charAt(0) !== '$') {
+          out[k] = stripDollarPrefixedKeys(v);
+        }
+      });
+      return out;
+    }
 })();
