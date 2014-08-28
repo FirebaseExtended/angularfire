@@ -40,6 +40,14 @@ describe('$FirebaseObject', function() {
       flushAll();
       expect(obj).toEqual(jasmine.objectContaining({foo: 'bar'}));
     });
+
+    it('should apply $$defaults if they exist', function() {
+      var F = $FirebaseObject.$extendFactory({
+        $$defaults: {aNum: 0, aStr: 'foo', aBool: false}
+      });
+      var obj = new F($fb, noop, $utils.resolve());
+      expect(obj).toEqual(jasmine.objectContaining({aNum: 0, aStr: 'foo', aBool: false}));
+    })
   });
 
   describe('$save', function () {
@@ -448,6 +456,16 @@ describe('$FirebaseObject', function() {
       obj.$priority = false;
       obj.$$updated(fakeSnap(null, true));
       expect(obj.$priority).toBe(true);
+    });
+
+    it('should apply $$defaults if they exist', function() {
+      var F = $FirebaseObject.$extendFactory({
+        $$defaults: {baz: 'baz', aString: 'bravo'}
+      });
+      var obj = new F($fb, noop, $utils.resolve());
+      obj.$$updated(fakeSnap(FIXTURE_DATA));
+      expect(obj.aString).toBe(FIXTURE_DATA.aString);
+      expect(obj.baz).toBe('baz');
     });
   });
 

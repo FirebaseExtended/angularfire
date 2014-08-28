@@ -48,8 +48,17 @@
           listeners: []
         };
 
+        // this bit of magic makes $$conf non-enumerable and non-configurable
+        // and non-writable (its properties are still writable but the ref cannot be replaced)
+        // we declare it above so the IDE can relax
+        Object.defineProperty(this, '$$conf', {
+          value: this.$$conf
+        });
+
         this.$id = $firebase.$ref().ref().name();
         this.$priority = null;
+
+        $firebaseUtils.applyDefaults(this, this.$$defaults);
       }
 
       FirebaseObject.prototype = {
@@ -168,6 +177,7 @@
         $$updated: function (snap) {
           // applies new data to this object
           var changed = $firebaseUtils.updateRec(this, snap);
+          $firebaseUtils.applyDefaults(this, this.$$defaults);
           if( changed ) {
             // notifies $watch listeners and
             // updates $scope if bound to a variable
@@ -208,6 +218,15 @@
           angular.forEach(list, function (parts) {
             parts[0].call(parts[1], {event: 'value', key: self.$id});
           });
+        },
+
+        /**
+         * Overrides how Angular.forEach iterates records on this object so that only
+         * fields stored in Firebase are part of the iteration. To include meta fields like
+         * $id and $priority in the iteration, utilize for(key in obj) instead.
+         */
+        forEach: function(iterator, context) {
+          return $firebaseUtils.each(this, iterator, context);
         }
       };
 

@@ -238,7 +238,7 @@
           },
 
           compile: function(fn) {
-            return $timeout(fn||function() {}, wait||0);
+            return $timeout(fn||function() {});
           },
 
           deepCopy: function(obj) {
@@ -298,17 +298,20 @@
             angular.extend(rec, data);
             rec.$priority = snap.getPriority();
 
-            if( angular.isObject(rec.$$defaults) ) {
-              angular.forEach(rec.$$defaults, function(v,k) {
+            return !angular.equals(oldData, rec) ||
+              oldData.$value !== rec.$value ||
+              oldData.$priority !== rec.$priority;
+          },
+
+          applyDefaults: function(rec, defaults) {
+            if( angular.isObject(defaults) ) {
+              angular.forEach(defaults, function(v,k) {
                 if( !rec.hasOwnProperty(k) ) {
                   rec[k] = v;
                 }
               });
             }
-
-            return !angular.equals(oldData, rec) ||
-              oldData.$value !== rec.$value ||
-              oldData.$priority !== rec.$priority;
+            return rec;
           },
 
           dataKeys: function(obj) {
@@ -320,13 +323,22 @@
           },
 
           each: function(obj, iterator, context) {
-            angular.forEach(obj, function(v,k) {
-              var c = k.charAt(0);
-              //todo does _ belong here? it's a valid char in firebase keys
-              if( c !== '_' && c !== '$' && c !== '.' ) {
-                iterator.call(context, v, k, obj);
+            if(angular.isObject(obj)) {
+              for (var k in obj) {
+                if (obj.hasOwnProperty(k)) {
+                  var c = k.charAt(0);
+                  if( c !== '_' && c !== '$' && c !== '.' ) {
+                    iterator.call(context, obj[k], k, obj);
+                  }
+                }
               }
-            });
+            }
+            else if(angular.isArray(obj)) {
+              for(var i = 0, len = obj.length; i < len; i++) {
+                iterator.call(context, obj[i], i, obj);
+              }
+            }
+            return obj;
           },
 
           /**
