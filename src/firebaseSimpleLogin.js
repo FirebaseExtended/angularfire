@@ -1,3 +1,4 @@
+/* istanbul ignore next */
 (function() {
   'use strict';
   var AngularFireAuth;

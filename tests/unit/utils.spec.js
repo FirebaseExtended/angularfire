@@ -62,17 +62,30 @@ describe('$firebaseUtils', function () {
       expect($utils.updateRec(rec, testutils.snap({foo: 'bar'}, 'foo'))).toBe(false);
     });
 
-    it('should add $$defaults if they exist', function() {
-      var rec = { foo: 'bar' };
-      rec.$$defaults = { baz: 'not_applied', bar: 'foo' };
-      $utils.updateRec(rec, testutils.snap({baz: 'bar'}));
-      expect(rec).toEqual(jasmine.objectContaining({bar: 'foo', baz: 'bar'}));
-    });
-
     it('should apply changes to record', function() {
       var rec = {foo: 'bar',  bar: 'foo', $id: 'foo', $priority: null};
       $utils.updateRec(rec, testutils.snap({bar: 'baz', baz: 'foo'}));
       expect(rec).toEqual({bar: 'baz', baz: 'foo', $id: 'foo', $priority: null})
+    });
+  });
+
+  describe('#applyDefaults', function() {
+    it('should return rec', function() {
+      var rec = {foo: 'bar'};
+      expect($utils.applyDefaults(rec), {bar: 'baz'}).toBe(rec);
+    });
+
+    it('should do nothing if no defaults exist', function() {
+      var rec = {foo: 'bar'};
+      $utils.applyDefaults(rec, null);
+      expect(rec).toEqual({foo: 'bar'});
+    });
+
+    it('should add $$defaults if they exist', function() {
+      var rec = {foo: 'foo',  bar: 'bar', $id: 'foo', $priority: null};
+      var defaults = { baz: 'baz', bar: 'not_applied' };
+      $utils.applyDefaults(rec, defaults);
+      expect(rec).toEqual({foo: 'foo',  bar: 'bar', $id: 'foo', $priority: null, baz: 'baz'});
     });
   });
 
