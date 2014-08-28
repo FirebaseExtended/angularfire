@@ -61,7 +61,7 @@
             if( !maxWait ) { maxWait = wait*10 || 100; }
             var queue = [];
             var start;
-            var timer;
+            var cancelTimer;
 
             // returns `fn` wrapped in a function that queues up each call event to be
             // invoked later inside fo runNow()
@@ -79,22 +79,22 @@
             // clears the current wait timer and creates a new one
             // however, if maxWait is exceeded, calles runNow() immediately
             function resetTimer() {
-              if( timer ) {
-                $timeout.cancel(timer);
-                timer = null;
+              if( cancelTimer ) {
+                cancelTimer();
+                cancelTimer = null;
               }
               if( start && Date.now() - start > maxWait ) {
                 utils.compile(runNow);
               }
               else {
                 if( !start ) { start = Date.now(); }
-                timer = utils.compile(runNow, wait);
+                cancelTimer = utils.wait(runNow, wait);
               }
             }
 
             // Clears the queue and invokes all of the functions awaiting notification
             function runNow() {
-              timer = null;
+              cancelTimer = null;
               start = null;
               var copyList = queue.slice(0);
               queue = [];
@@ -114,7 +114,7 @@
            * @param {int} [maxWait] max milliseconds to wait before sending out, defaults to wait * 10 or 100
            */
           debounce: function(fn, ctx, wait, maxWait) {
-            var start, timer, args;
+            var start, cancelTimer, args;
             if( typeof(ctx) === 'number' ) {
               maxWait = wait;
               wait = ctx;
@@ -132,22 +132,22 @@
             // clears the current wait timer and creates a new one
             // however, if maxWait is exceeded, calles runNow() immediately
             function resetTimer() {
-              if( timer ) {
-                $timeout.cancel(timer);
-                timer = null;
+              if( cancelTimer ) {
+                cancelTimer();
+                cancelTimer = null;
               }
               if( start && Date.now() - start > maxWait ) {
                 utils.compile(runNow);
               }
               else {
                 if( !start ) { start = Date.now(); }
-                timer = utils.compile(runNow, wait);
+                cancelTimer = utils.wait(runNow, wait);
               }
             }
 
             // Clears the queue and invokes all of the functions awaiting notification
             function runNow() {
-              timer = null;
+              cancelTimer = null;
               start = null;
               fn.apply(ctx, args);
             }
@@ -227,7 +227,17 @@
             return def.promise;
           },
 
-          compile: function(fn, wait) {
+          wait: function(fn, wait) {
+            var to = $timeout(fn, wait||0);
+            return function() {
+              if( to ) {
+                $timeout.cancel(to);
+                to = null;
+              }
+            };
+          },
+
+          compile: function(fn) {
             return $timeout(fn||function() {}, wait||0);
           },
 
@@ -254,7 +264,7 @@
 
           extendData: function(dest, source) {
             utils.each(source, function(v,k) {
-              dest[k] = v;
+              dest[k] = utils.deepCopy(v);
             });
             return dest;
           },

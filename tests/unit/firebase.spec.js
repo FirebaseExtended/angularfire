@@ -558,23 +558,23 @@ describe('$firebase', function () {
       $fb.$asObject(); // creates the listeners
       var ref = $fb.$ref();
       flushAll();
-      $utils.compile.completed.calls.reset();
+      $utils.wait.completed.calls.reset();
       ref.push({newa: 'newa'});
       flushAll();
-      expect($utils.compile.completed).toHaveBeenCalled();
+      expect($utils.wait.completed).toHaveBeenCalled();
     });
 
     it('should batch requests', function() {
       $fb.$asArray(); // creates listeners
       flushAll();
-      $utils.compile.completed.calls.reset();
+      $utils.wait.completed.calls.reset();
       var ref = $fb.$ref();
       ref.push({newa: 'newa'});
       ref.push({newb: 'newb'});
       ref.push({newc: 'newc'});
       ref.push({newd: 'newd'});
       flushAll();
-      expect($utils.compile.completed.calls.count()).toBe(1);
+      expect($utils.wait.completed.calls.count()).toBe(1);
     });
   });
 
@@ -663,23 +663,23 @@ describe('$firebase', function () {
       $fb.$asObject(); // creates the listeners
       var ref = $fb.$ref();
       flushAll();
-      $utils.compile.completed.calls.reset();
+      $utils.wait.completed.calls.reset();
       ref.push({newa: 'newa'});
       flushAll();
-      expect($utils.compile.completed).toHaveBeenCalled();
+      expect($utils.wait.completed).toHaveBeenCalled();
     });
 
     it('should batch requests', function() {
       var obj = $fb.$asObject(); // creates listeners
       flushAll();
-      $utils.compile.completed.calls.reset();
+      $utils.wait.completed.calls.reset();
       var ref = $fb.$ref();
       ref.push({newa: 'newa'});
       ref.push({newb: 'newb'});
       ref.push({newc: 'newc'});
       ref.push({newd: 'newd'});
       flushAll();
-      expect($utils.compile.completed.calls.count()).toBe(1);
+      expect($utils.wait.completed.calls.count()).toBe(1);
     });
   });
 
