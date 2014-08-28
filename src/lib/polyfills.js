@@ -1,6 +1,5 @@
 'use strict';
 
-/* istanbul ignore next */
 // Shim Array.indexOf for IE compatibility.
 if (!Array.prototype.indexOf) {
   Array.prototype.indexOf = function (searchElement, fromIndex) {
@@ -34,7 +33,6 @@ if (!Array.prototype.indexOf) {
   };
 }
 
-/* istanbul ignore next */
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind
 if (!Function.prototype.bind) {
   Function.prototype.bind = function (oThis) {
@@ -61,7 +59,6 @@ if (!Function.prototype.bind) {
   };
 }
 
-/* istanbul ignore next */
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findIndex
 if (!Array.prototype.findIndex) {
   Object.defineProperty(Array.prototype, 'findIndex', {
@@ -93,7 +90,6 @@ if (!Array.prototype.findIndex) {
   });
 }
 
-/* istanbul ignore next */
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
 if (typeof Object.create != 'function') {
   (function () {
@@ -114,7 +110,6 @@ if (typeof Object.create != 'function') {
   })();
 }
 
-/* istanbul ignore next */
 // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
 if (!Object.keys) {
   Object.keys = (function () {
@@ -157,7 +152,6 @@ if (!Object.keys) {
   }());
 }
 
-/* istanbul ignore next */
 // http://ejohn.org/blog/objectgetprototypeof/
 if ( typeof Object.getPrototypeOf !== "function" ) {
   if ( typeof "test".__proto__ === "object" ) {
