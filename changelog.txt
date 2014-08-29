@@ -1,8 +1,0 @@
-feature - Optimized our `$bindTo()` code base.
-feature - Improved handling of saving deeply nested data structures to Firebase (resolved invalid `$$hashKey` errors in `ng-repeat`).
-feature - Can use `$$defaults` to set local, default values on synchronized objects.
-fixed - Fixed bug which caused `$bindTo()` to not work with inputs (cursor jumped to end).
-fixed - Changing `$priority` and `$value` when using `$bindTo()` now cause the server properly update (they are now stored as `_id`, `_value`, and `_priority`, which trigger updates for `$watch`).
-fixed - `$` fields no longer show up when looping over `$asObject()`.
-fixed - Modified `$add()` to accept `$priority` and `$value` meta fields.
-fixed - `$save()` method now notifies listeners registered with `$watch()`.
