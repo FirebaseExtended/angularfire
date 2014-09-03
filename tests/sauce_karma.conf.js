@@ -20,7 +20,7 @@ module.exports = function(config) {
     files: [
       '../bower_components/angular/angular.js',
       '../bower_components/angular-mocks/angular-mocks.js',
-      '../bower_components/mockfirebase/dist/mockfirebase.js',
+      '../bower_components/mockfirebase/browser/mockfirebase.js',
       'lib/**/*.js',
       '../dist/angularfire.js',
       'mocks/**/*.js',
