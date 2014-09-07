@@ -141,6 +141,41 @@
             return $firebaseUtils.reject('Invalid record; could not find key: '+indexOrItem);
           }
         },
+        
+          /**
+        * With many instances I create userobjects that are tied to user accounts using firebaseSimpleLogin. I often find that I want to assign those user objects to another object. 
+        * Example:
+        *   Lets say I have a list of userObjects called Teachers
+        *   I also have a seperate list of userObjects called Students
+        *   now I want to assign my teachers a list of students that I can add and remove easily using an ng-repeat for studentObj in students
+        *   so I set $scope.teacher.students to be a firebase Array.
+        *
+        *   I should then be able to use something like $scope.teacher.$Add(studentObj) and $scope.teacher.$remove(studentObj)
+        *   however I was running into a problem that would allow me to add students but would not be able to remove the students
+        *   because I did not have a reference to their unique $id after they are added to the teacher.students array.
+        *           
+        *   my solution to this problem was to check my teacher.students array for the correct email as it is the one constant between userObjects 
+        *   if that email was found I created a reference to the array object from which I could get the unique $id and have it passed to the normal firebase $remove method.
+        *   this method is of course specfic to removing userObjects alone. 
+        */
+        
+        $removeUserObject: function (arr, object) {
+            var found = false;
+            var ref = {};
+            this._assertNotDestroyed('$remove');
+            for (var i = 0; i < arr.length; i++) {
+                if (arr[i].email === object.email) {
+                    ref = arr[i];
+                    found = true;
+                    break;
+                }
+            }
+            if (found) {
+                return this.$inst().$remove(ref.$id);
+            } else {
+                return $firebaseUtils.reject('Invalid record; could not find userObject: ' + object);
+            }
+        },
 
         /**
          * Given an item in this array or the index of an item in the array, this returns the
