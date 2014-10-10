@@ -94,14 +94,13 @@
 
     // Unauthenticate the Firebase reference.
     logout: function() {
-      if (this._currentUserData) {
-        // Tell the simple login client to log us out.
-        this._authClient.logout();
+      // Tell the simple login client to log us out.
+      this._authClient.logout();
 
-        // Forget who we were, so that any getCurrentUser calls will wait for
-        // another user event.
-        delete this._currentUserData;
-      }
+      // Forget who we were immediately, so that any getCurrentUser() calls
+      // will resolve the user as logged out even before the _onLoginEvent()
+      // fires and resets this._currentUserData to null again.
+      this._currentUserData = null;
     },
 
     // Creates a user for Firebase Simple Login. Function 'cb' receives an
