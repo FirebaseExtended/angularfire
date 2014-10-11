@@ -89,7 +89,7 @@ describe('$FirebaseArray', function () {
     it('should reject promise on fail', function() {
       var successSpy = jasmine.createSpy('resolve spy');
       var errSpy = jasmine.createSpy('reject spy');
-      $fb.$ref().push.and.returnValue($utils.reject('fail_push'));
+      spyOn($fb.$ref(), 'push').and.returnValue($utils.reject('fail_push'));
       arr.$add('its deed').then(successSpy, errSpy);
       flushAll();
       expect(successSpy).not.toHaveBeenCalled();
