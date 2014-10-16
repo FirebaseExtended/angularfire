@@ -94,13 +94,11 @@
 
     // Unauthenticate the Firebase reference.
     logout: function() {
-      // Tell the simple login client to log us out.
-      this._authClient.logout();
-
-      // Forget who we were immediately, so that any getCurrentUser() calls
-      // will resolve the user as logged out even before the _onLoginEvent()
-      // fires and resets this._currentUserData to null again.
-      this._currentUserData = null;
+      // Simple Login fires _onLoginEvent() even if no user is logged in. We don't care about
+      // firing this logout event multiple times, so explicitly check if a user is defined.
+      if (this._currentUserData) {
+        this._authClient.logout();
+      }
     },
 
     // Creates a user for Firebase Simple Login. Function 'cb' receives an
@@ -195,14 +193,6 @@
 
     // Internal callback for any Simple Login event.
     _onLoginEvent: function(err, user) {
-      // HACK -- calls to logout() trigger events even if we're not logged in,
-      // making us get extra events. Throw them away. This should be fixed by
-      // changing Simple Login so that its callbacks refer directly to the
-      // action that caused them.
-      if (this._currentUserData === user && err === null) {
-        return;
-      }
-
       var self = this;
       if (err) {
         if (self._loginDeferred) {
