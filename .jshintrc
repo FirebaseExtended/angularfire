@@ -10,7 +10,6 @@
   "forin": true,
   "indent": 2,
   "latedef": true,
-  "maxlen": 115,
   "noempty": true,
   "nonbsp": true,
   "strict": true,

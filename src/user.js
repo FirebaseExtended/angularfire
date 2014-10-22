@@ -1,11 +1,11 @@
 /* istanbul ignore next */
 (function() {
   'use strict';
-  var AngularFireAuth;
+  var AngularFireUser;
 
-  // Defines the `$firebaseSimpleLogin` service that provides simple
+  // Defines the `$angularFireUser` service that provides simple
   // user authentication support for AngularFire.
-  angular.module("firebase").factory("$firebaseSimpleLogin", [
+  angular.module("firebase").factory("$angularFireUser", [
     "$q", "$timeout", "$rootScope", function($q, $t, $rs) {
       // The factory returns an object containing the authentication state
       // of the current user. This service takes one argument:
@@ -14,29 +14,36 @@
       //
       // The returned object has the following properties:
       //
-      //  * `user`: Set to "null" if the user is currently logged out. This
+      //  * `authData`: Set to "null" if the user is currently logged out. This
       //    value will be changed to an object when the user successfully logs
-      //    in. This object will contain details of the logged in user. The
+      //    in. This object will contain details about the logged in user. The
       //    exact properties will vary based on the method used to login, but
-      //    will at a minimum contain the `id` and `provider` properties.
+      //    will at a minimum contain the `uid` and `provider` properties.
       //
       // The returned object will also have the following methods available:
       // $login(), $logout(), $createUser(), $changePassword(), $removeUser(),
       // and $getCurrentUser().
       return function(ref) {
-        var auth = new AngularFireAuth($q, $t, $rs, ref);
+        var auth = new AngularFireUser($q, $t, $rs, ref);
         return auth.construct();
       };
     }
   ]);
 
-  AngularFireAuth = function($q, $t, $rs, ref) {
+  AngularFireUser = function($q, $t, $rs, ref) {
     this._q = $q;
     this._timeout = $t;
     this._rootScope = $rs;
     this._loginDeferred = null;
     this._getCurrentUserDeferred = [];
-    this._currentUserData = undefined;
+    this._currentAuthData = ref.getAuth();
+
+    // TODO: these events don't seem to fire upon page reload
+    if (this._currentAuthData) {
+      this._rootScope.$broadcast("$angularFireUser:login", this._currentAuthData);
+    } else {
+      this._rootScope.$broadcast("$angularFireUser:logout");
+    }
 
     if (typeof ref == "string") {
       throw new Error("Please provide a Firebase reference instead " +
@@ -45,62 +52,153 @@
     this._fRef = ref;
   };
 
-  AngularFireAuth.prototype = {
+  AngularFireUser.prototype = {
     construct: function() {
-      var object = {
-        user: null,
+      this._object = {
+        authData: null,
+        // Authentication
+        $auth: this.auth.bind(this),
+        $authWithPassword: this.authWithPassword.bind(this),
+        $authAnonymously: this.authAnonymously.bind(this),
+        $authWithOAuthPopup: this.authWithOAuthPopup.bind(this),
+        $authWithOAuthRedirect: this.authWithOAuthRedirect.bind(this),
+        $authWithOAuthToken: this.authWithOAuthToken.bind(this),
+        $unauth: this.unauth.bind(this),
         $login: this.login.bind(this),
         $logout: this.logout.bind(this),
+
+        // Authentication state
+        $getCurrentUser: this.getCurrentUser.bind(this),
+        $requireUser: this.requireUser.bind(this),
+
+        // User management
         $createUser: this.createUser.bind(this),
         $changePassword: this.changePassword.bind(this),
         $removeUser: this.removeUser.bind(this),
-        $getCurrentUser: this.getCurrentUser.bind(this),
         $sendPasswordResetEmail: this.sendPasswordResetEmail.bind(this)
       };
-      this._object = object;
 
-      // Initialize Simple Login.
-      if (!window.FirebaseSimpleLogin) {
-        var err = new Error("FirebaseSimpleLogin is undefined. " +
-          "Did you forget to include firebase-simple-login.js?");
-        this._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
-        throw err;
-      }
-
-      var client = new FirebaseSimpleLogin(this._fRef,
-        this._onLoginEvent.bind(this));
-      this._authClient = client;
       return this._object;
     },
 
-    // The login method takes a provider (for Simple Login) and authenticates
-    // the Firebase reference with which the service was initialized. This
-    // method returns a promise, which will be resolved when the login succeeds
-    // (and rejected when an error occurs).
-    login: function(provider, options) {
+    // TODO: remove the promise?
+    // Synchronously retrieves the current auth data.
+    getCurrentUser: function() {
+      var deferred = this._q.defer();
+
+      deferred.resolve(this._currentAuthData);
+
+      return deferred.promise;
+    },
+
+    // Returns a promise which is resolved if a user is authenticated and rejects the promise if
+    // the user does not exist. This can be used in routers to require routes to have a user
+    // logged in.
+    requireUser: function() {
+      var deferred = this._q.defer();
+
+      if (this._currentAuthData) {
+        deferred.resolve(this._currentAuthData);
+      } else {
+        deferred.reject();
+      }
+
+      return deferred.promise;
+    },
+
+    _updateAuthData: function(authData) {
+      var self = this;
+      this._timeout(function() {
+        self._object.authData = authData;
+        self._currentAuthData = authData;
+      });
+    },
+
+    _onCompletionHandler: function(deferred, error, authData) {
+      if (error !== null) {
+        this._rootScope.$broadcast("$angularFireUser:error", error);
+        deferred.reject(error);
+      } else {
+        this._rootScope.$broadcast("$angularFireUser:login", authData);
+        this._updateAuthData(authData);
+        deferred.resolve(authData);
+      }
+    },
+
+    auth: function(authToken) {
       var deferred = this._q.defer();
       var self = this;
-
-      // To avoid the promise from being fulfilled by our initial login state,
-      // make sure we have it before triggering the login and creating a new
-      // promise.
-      this.getCurrentUser().then(function() {
-        self._loginDeferred = deferred;
-        self._authClient.login(provider, options);
+      this._fRef.authWithPassword(authToken, this._onCompletionHandler.bind(this, deferred), function(error) {
+        self._rootScope.$broadcast("$angularFireUser:error", error);
       });
+      return deferred.promise;
+    },
+
+    authWithPassword: function(credentials, options) {
+      var deferred = this._q.defer();
+      this._fRef.authWithPassword(credentials, this._onCompletionHandler.bind(this, deferred), options);
+      return deferred.promise;
+    },
+
+    authAnonymously: function(options) {
+      var deferred = this._q.defer();
+      this._fRef.authAnonymously(this._onCompletionHandler.bind(this, deferred), options);
+      return deferred.promise;
+    },
+
+    authWithOAuthPopup: function(provider, options) {
+      var deferred = this._q.defer();
+      this._fRef.authWithOAuthPopup(provider, this._onCompletionHandler.bind(this, deferred), options);
+      return deferred.promise;
+    },
+
+    authWithOAuthRedirect: function(provider, options) {
+      var deferred = this._q.defer();
+      this._fRef.authWithOAuthRedirect(provider, this._onCompletionHandler.bind(this, deferred), options);
+      return deferred.promise;
+    },
+
+    authWithOAuthToken: function(provider, credentials, options) {
+      var deferred = this._q.defer();
+      this._fRef.authWithOAuthToken(provider, credentials, this._onCompletionHandler.bind(this, deferred), options);
+      return deferred.promise;
+    },
+
+    unauth: function() {
+      if (this._currentAuthData) {
+        this._fRef.unauth();
+        this._updateAuthData(null);
+        this._rootScope.$broadcast("$angularFireUser:logout");
+      }
+    },
+
+    // The login method takes a provider and authenticates the Firebase reference
+    // with which the service was initialized. This method returns a promise, which
+    // will be resolved when the login succeeds (and rejected when an error occurs).
+    login: function(provider, options) {
+      var deferred = this._q.defer();
+
+      if (provider === 'anonymous') {
+        this._fRef.authAnonymously(this._onCompletionHandler.bind(this, deferred), options);
+      } else if (provider === 'password') {
+        this._fRef.authWithPassword(options, this._onCompletionHandler.bind(this, deferred));
+      } else {
+        this._fRef.authWithOAuthPopup(provider, this._onCompletionHandler.bind(this, deferred), options);
+      }
 
       return deferred.promise;
     },
 
     // Unauthenticate the Firebase reference.
     logout: function() {
-      // Tell the simple login client to log us out.
-      this._authClient.logout();
-
-      // Forget who we were immediately, so that any getCurrentUser() calls
-      // will resolve the user as logged out even before the _onLoginEvent()
-      // fires and resets this._currentUserData to null again.
-      this._currentUserData = null;
+      // TODO: update comment?
+      // Simple Login fires _onLoginEvent() even if no user is logged in. We don't care about
+      // firing this logout event multiple times, so explicitly check if a user is defined.
+      if (this._currentAuthData) {
+        this._fRef.unauth();
+        this._updateAuthData(null);
+        this._rootScope.$broadcast("$angularFireUser:logout");
+      }
     },
 
     // Creates a user for Firebase Simple Login. Function 'cb' receives an
@@ -112,12 +210,15 @@
       var self = this;
       var deferred = this._q.defer();
 
-      self._authClient.createUser(email, password, function(err, user) {
-        if (err) {
-          self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
-          deferred.reject(err);
+      this._fRef.createUser({
+        email: email,
+        password: password
+      }, function(error) {
+        if (error !== null) {
+          self._rootScope.$broadcast("$angularFireUser:error", error);
+          deferred.reject(error);
         } else {
-          deferred.resolve(user);
+          deferred.resolve();
         }
       });
 
@@ -131,11 +232,15 @@
       var self = this;
       var deferred = this._q.defer();
 
-      self._authClient.changePassword(email, oldPassword, newPassword,
-        function(err) {
-          if (err) {
-            self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
-            deferred.reject(err);
+      self._fRef.changePassword({
+        email: email,
+        oldPassword: oldPassword,
+        newPassword: newPassword
+      }, function(error) {
+          if (error !== null) {
+            // TODO: do we want to send the error code as well?
+            self._rootScope.$broadcast("$angularFireUser:error", error);
+            deferred.reject(error);
           } else {
             deferred.resolve();
           }
@@ -145,29 +250,19 @@
       return deferred.promise;
     },
 
-    // Gets a promise for the current user info.
-    getCurrentUser: function() {
-      var self = this;
-      var deferred = this._q.defer();
-
-      if (self._currentUserData !== undefined) {
-        deferred.resolve(self._currentUserData);
-      } else {
-        self._getCurrentUserDeferred.push(deferred);
-      }
-
-      return deferred.promise;
-    },
-
     // Remove a user for the listed email address. Returns a promise.
     removeUser: function(email, password) {
       var self = this;
       var deferred = this._q.defer();
 
-      self._authClient.removeUser(email, password, function(err) {
-        if (err) {
-          self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
-          deferred.reject(err);
+      self._fRef.removeUser({
+        email: email,
+        password: password
+      }, function(error) {
+        if (error !== null) {
+          // TODO: do we want to send the error code as well?
+          self._rootScope.$broadcast("$angularFireUser:error", error);
+          deferred.reject(error);
         } else {
           deferred.resolve();
         }
@@ -181,55 +276,19 @@
       var self = this;
       var deferred = this._q.defer();
 
-      self._authClient.sendPasswordResetEmail(email, function(err) {
-        if (err) {
-          self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
-          deferred.reject(err);
+      self._fRef.resetPassword({
+        email: email
+      }, function(error) {
+        if (error !== null) {
+          // TODO: do we want to send the error code as well?
+          self._rootScope.$broadcast("$angularFireUser:error", error);
+          deferred.reject(error);
         } else {
           deferred.resolve();
         }
       });
 
       return deferred.promise;
-    },
-
-    // Internal callback for any Simple Login event.
-    _onLoginEvent: function(err, user) {
-      // HACK -- calls to logout() trigger events even if we're not logged in,
-      // making us get extra events. Throw them away. This should be fixed by
-      // changing Simple Login so that its callbacks refer directly to the
-      // action that caused them.
-      if (this._currentUserData === user && err === null) {
-        return;
-      }
-
-      var self = this;
-      if (err) {
-        if (self._loginDeferred) {
-          self._loginDeferred.reject(err);
-          self._loginDeferred = null;
-        }
-        self._rootScope.$broadcast("$firebaseSimpleLogin:error", err);
-      } else {
-        this._currentUserData = user;
-
-        self._timeout(function() {
-          self._object.user = user;
-          if (user) {
-            self._rootScope.$broadcast("$firebaseSimpleLogin:login", user);
-          } else {
-            self._rootScope.$broadcast("$firebaseSimpleLogin:logout");
-          }
-          if (self._loginDeferred) {
-            self._loginDeferred.resolve(user);
-            self._loginDeferred = null;
-          }
-          while (self._getCurrentUserDeferred.length > 0) {
-            var def = self._getCurrentUserDeferred.pop();
-            def.resolve(user);
-          }
-        });
-      }
     }
   };
 })();
