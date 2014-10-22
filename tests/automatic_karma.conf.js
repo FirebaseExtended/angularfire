@@ -34,7 +34,7 @@ module.exports = function(config) {
       '../src/module.js',
       '../src/**/*.js',
       'mocks/**/*.js',
-      'unit/**/*.spec.js'
+      'unit/Authentication.spec.js'
     ]
   });
 };
