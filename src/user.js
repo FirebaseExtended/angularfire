@@ -39,7 +39,7 @@
     if (typeof ref === "string") {
       throw new Error("Please provide a Firebase reference instead of a URL when calling `new Firebase()`.");
     }
-    this._fRef = ref;
+    this._ref = ref;
   };
 
   FirebaseUser.prototype = {
@@ -98,7 +98,7 @@
     // TODO: do we even want this method here?
     auth: function(authToken) {
       var deferred = this._q.defer();
-      this._fRef.authWithPassword(authToken, this._onCompletionHandler.bind(this, deferred), function(error) {
+      this._ref.authWithPassword(authToken, this._onCompletionHandler.bind(this, deferred), function(error) {
         // TODO: what do we do here?
       });
       return deferred.promise;
@@ -106,37 +106,37 @@
 
     authWithPassword: function(credentials, options) {
       var deferred = this._q.defer();
-      this._fRef.authWithPassword(credentials, this._onCompletionHandler.bind(this, deferred), options);
+      this._ref.authWithPassword(credentials, this._onCompletionHandler.bind(this, deferred), options);
       return deferred.promise;
     },
 
     authAnonymously: function(options) {
       var deferred = this._q.defer();
-      this._fRef.authAnonymously(this._onCompletionHandler.bind(this, deferred), options);
+      this._ref.authAnonymously(this._onCompletionHandler.bind(this, deferred), options);
       return deferred.promise;
     },
 
     authWithOAuthPopup: function(provider, options) {
       var deferred = this._q.defer();
-      this._fRef.authWithOAuthPopup(provider, this._onCompletionHandler.bind(this, deferred), options);
+      this._ref.authWithOAuthPopup(provider, this._onCompletionHandler.bind(this, deferred), options);
       return deferred.promise;
     },
 
     authWithOAuthRedirect: function(provider, options) {
       var deferred = this._q.defer();
-      this._fRef.authWithOAuthRedirect(provider, this._onCompletionHandler.bind(this, deferred), options);
+      this._ref.authWithOAuthRedirect(provider, this._onCompletionHandler.bind(this, deferred), options);
       return deferred.promise;
     },
 
     authWithOAuthToken: function(provider, credentials, options) {
       var deferred = this._q.defer();
-      this._fRef.authWithOAuthToken(provider, credentials, this._onCompletionHandler.bind(this, deferred), options);
+      this._ref.authWithOAuthToken(provider, credentials, this._onCompletionHandler.bind(this, deferred), options);
       return deferred.promise;
     },
 
     unauth: function() {
       if (this._currentAuthData) {
-        this._fRef.unauth();
+        this._ref.unauth();
         this._updateAuthData(null);
       }
     },
@@ -148,11 +148,11 @@
       var deferred = this._q.defer();
 
       if (provider === 'anonymous') {
-        this._fRef.authAnonymously(this._onCompletionHandler.bind(this, deferred), options);
+        this._ref.authAnonymously(this._onCompletionHandler.bind(this, deferred), options);
       } else if (provider === 'password') {
-        this._fRef.authWithPassword(options, this._onCompletionHandler.bind(this, deferred));
+        this._ref.authWithPassword(options, this._onCompletionHandler.bind(this, deferred));
       } else {
-        this._fRef.authWithOAuthPopup(provider, this._onCompletionHandler.bind(this, deferred), options);
+        this._ref.authWithOAuthPopup(provider, this._onCompletionHandler.bind(this, deferred), options);
       }
 
       return deferred.promise;
@@ -164,7 +164,7 @@
       // Simple Login fires _onLoginEvent() even if no user is logged in. We don't care about
       // firing this logout event multiple times, so explicitly check if a user is defined.
       if (this._currentAuthData) {
-        this._fRef.unauth();
+        this._ref.unauth();
         this._updateAuthData(null);
       }
     },
@@ -178,12 +178,12 @@
     // retrieved from the server.
     onAuth: function(callback) {
       this._onAuthCallback = callback;
-      this._fRef.onAuth(callback);
+      this._ref.onAuth(callback);
     },
 
     // Detaches the callback previously attached with onAuth().
     offAuth: function() {
-      this._fRef.offAuth(this._onAuthCallback);
+      this._ref.offAuth(this._onAuthCallback);
     },
 
     // Synchronously retrieves the current authentication data.
@@ -219,7 +219,7 @@
     createUser: function(email, password) {
       var deferred = this._q.defer();
 
-      this._fRef.createUser({
+      this._ref.createUser({
         email: email,
         password: password
       }, function(error) {
@@ -240,7 +240,7 @@
       var self = this;
       var deferred = this._q.defer();
 
-      self._fRef.changePassword({
+      self._ref.changePassword({
         email: email,
         oldPassword: oldPassword,
         newPassword: newPassword
@@ -261,7 +261,7 @@
       var self = this;
       var deferred = this._q.defer();
 
-      self._fRef.removeUser({
+      self._ref.removeUser({
         email: email,
         password: password
       }, function(error) {
@@ -280,7 +280,7 @@
       var self = this;
       var deferred = this._q.defer();
 
-      self._fRef.resetPassword({
+      self._ref.resetPassword({
         email: email
       }, function(error) {
         if (error !== null) {
