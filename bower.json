@@ -37,6 +37,6 @@
   "devDependencies": {
     "lodash": "~2.4.1",
     "angular-mocks": "~1.2.18",
-    "mockfirebase": "0.3"
+    "mockfirebase": "~0.4.0"
   }
 }
