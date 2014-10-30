@@ -1,11 +1,11 @@
 /* istanbul ignore next */
 (function() {
-  "use strict";
+  'use strict';
   var FirebaseUser;
 
   // Define a service which provides user authentication and management.
-  angular.module("firebase").factory("$firebaseUser", [
-    "$q", "$timeout", function($q, $t) {
+  angular.module('firebase').factory('$firebaseUser', [
+    '$q', '$timeout', function($q, $t) {
       // This factory returns an object containing the current authentication state of the client.
       // This service takes one argument:
       //
@@ -13,7 +13,7 @@
       //
       // The returned object has the following properties:
       //
-      //  * `authData`: Set to "null" if the client is not currently authenticated. This value will
+      //  * `authData`: Set to 'null' if the client is not currently authenticated. This value will
       //    be changed to an object when the client is authenticated. This object will contain
       //    details about the authentication state. The exact properties will vary based on the
       //    method used to authenticate, but will at a minimum contain `uid` and `provider`.
@@ -28,8 +28,8 @@
     this._q = $q;
     this._timeout = $t;
 
-    if (typeof ref === "string") {
-      throw new Error("Please provide a Firebase reference instead of a URL when calling `new Firebase()`.");
+    if (typeof ref === 'string') {
+      throw new Error('Please provide a Firebase reference instead of a URL when calling `new Firebase()`.');
     }
     this._ref = ref;
   };
@@ -178,7 +178,7 @@
     // Helper callback method which returns a promise which is resolved if a user is authenticated
     // and rejects otherwise. This can be used to require that routes have a logged in user.
     _requireUserOnAuthCallback: function(deferred, authData) {
-      console.log("_requireUserOnAuthCallback() fired with ", authData);
+      console.log('_requireUserOnAuthCallback() fired with:', authData);
       if (authData) {
         deferred.resolve(authData);
       } else {
