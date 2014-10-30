@@ -11,12 +11,8 @@
       //
       //   * `ref`: A Firebase reference.
       //
-      // The returned object has the following properties:
-      //
-      //  * `authData`: Set to 'null' if the client is not currently authenticated. This value will
-      //    be changed to an object when the client is authenticated. This object will contain
-      //    details about the authentication state. The exact properties will vary based on the
-      //    method used to authenticate, but will at a minimum contain `uid` and `provider`.
+      // The returned object contains methods for authenticating clients, retrieving authentication
+      // state, and managing users.
       return function(ref) {
         var auth = new FirebaseUser($q, $t, ref);
         return auth.construct();
@@ -37,9 +33,6 @@
   FirebaseUser.prototype = {
     construct: function() {
       this._object = {
-        // The client's current authentication state
-        authData: null,
-
         // Authentication methods
         $authWithCustomToken: this.authWithCustomToken.bind(this),
         $authAnonymously: this.authAnonymously.bind(this),
@@ -70,21 +63,11 @@
     /********************/
     /*  Authentication  */
     /********************/
-    // Updates the authentication state of the client.
-    _updateAuthData: function(authData) {
-      var self = this;
-      // TODO: Is the _timeout here needed?
-      this._timeout(function() {
-        self._object.authData = authData;
-      });
-    },
-
     // Common login completion handler for all authentication methods.
     _onLoginHandler: function(deferred, error, authData) {
       if (error !== null) {
         deferred.reject(error);
       } else {
-        this._updateAuthData(authData);
         deferred.resolve(authData);
       }
     },
@@ -148,7 +131,6 @@
     unauth: function() {
       if (this.getAuth() !== null) {
         this._ref.unauth();
-        this._updateAuthData(null);
       }
     },
 
