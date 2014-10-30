@@ -28,9 +28,6 @@
     this._q = $q;
     this._timeout = $t;
 
-    // TODO: do I even need this._currentAuthData? Can I always just use ref.getAuth() since it's synchronous?
-    this._currentAuthData = ref.getAuth();
-
     if (typeof ref === "string") {
       throw new Error("Please provide a Firebase reference instead of a URL when calling `new Firebase()`.");
     }
@@ -44,20 +41,18 @@
         authData: null,
 
         // Authentication methods
-        $auth: this.auth.bind(this),
+        $authWithCustomToken: this.authWithCustomToken.bind(this),
         $authAnonymously: this.authAnonymously.bind(this),
         $authWithPassword: this.authWithPassword.bind(this),
         $authWithOAuthPopup: this.authWithOAuthPopup.bind(this),
         $authWithOAuthRedirect: this.authWithOAuthRedirect.bind(this),
         $authWithOAuthToken: this.authWithOAuthToken.bind(this),
         $unauth: this.unauth.bind(this),
-        $login: this.login.bind(this),
-        $logout: this.logout.bind(this),
 
         // Authentication state methods
         $onAuth: this.onAuth.bind(this),
         $offAuth: this.offAuth.bind(this),
-        $getAuth: this.getCurrentUser.bind(this),
+        $getAuth: this.getAuth.bind(this),
         $requireUser: this.requireUser.bind(this),
 
         // User management methods
@@ -80,7 +75,6 @@
       // TODO: Is the _timeout here needed?
       this._timeout(function() {
         self._object.authData = authData;
-        self._currentAuthData = authData;
       });
     },
 
@@ -153,7 +147,7 @@
 
     // Unauthenticates the Firebase reference.
     unauth: function() {
-      if (this._currentAuthData) {
+      if (this.getAuth() !== null) {
         this._ref.unauth();
         this._updateAuthData(null);
       }
@@ -178,7 +172,7 @@
 
     // Synchronously retrieves the current authentication data.
     getAuth: function() {
-      return this._currentAuthData;
+      return this._ref.getAuth();
     },
 
     // Helper callback method which returns a promise which is resolved if a user is authenticated
