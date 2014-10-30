@@ -53,7 +53,8 @@
         $onAuth: this.onAuth.bind(this),
         $offAuth: this.offAuth.bind(this),
         $getAuth: this.getAuth.bind(this),
-        $requireUser: this.requireUser.bind(this),
+        $requireAuth: this.requireAuth.bind(this),
+        $waitForAuth: this.waitForAuth.bind(this),
 
         // User management methods
         $createUser: this.createUser.bind(this),
@@ -93,9 +94,7 @@
     authWithCustomToken: function(authToken) {
       var deferred = this._q.defer();
 
-      this._ref.authWithCustomToken(authToken, this._onLoginHandler.bind(this, deferred), function(error) {
-        // TODO: what do we do here?
-      });
+      this._ref.authWithCustomToken(authToken, this._onLoginHandler.bind(this, deferred));
 
       return deferred.promise;
     },
@@ -175,27 +174,36 @@
       return this._ref.getAuth();
     },
 
-    // Helper callback method which returns a promise which is resolved if a user is authenticated
-    // and rejects otherwise. This can be used to require that routes have a logged in user.
-    _requireUserOnAuthCallback: function(deferred, authData) {
-      console.log('_requireUserOnAuthCallback() fired with:', authData);
-      if (authData) {
+    // Helper onAuth() callback method for the two router-related methods.
+    _routerMethodOnAuthCallback: function(deferred, rejectIfAuthDataIsNull, authData) {
+      if (authData !== null) {
         deferred.resolve(authData);
-      } else {
+      } else if (rejectIfAuthDataIsNull) {
         deferred.reject();
+      } else {
+        deferred.resolve(null);
       }
 
-      // Turn off this onAuth() callback since we just needed to get the authentication state once.
-      this._ref.offAuth(this._requireUserOnAuthCallback);
+      // Turn off this onAuth() callback since we just needed to get the authentication data once.
+      this._ref.offAuth(this._routerMethodOnAuthCallback);
     },
 
-    // Returns a promise which is resolved if a user is authenticated and rejects otherwise. This
-    // can be used to require that routes have a logged in user.
-    requireUser: function() {
+    // Returns a promise which is resolved if the client is authenticated and rejects otherwise.
+    // This can be used to require that a route has a logged in user.
+    requireAuth: function() {
       var deferred = this._q.defer();
 
-      // TODO: this should not fire until after onAuth has been called at least once...
-      this._ref.onAuth(this._requireUserOnAuthCallback.bind(this, deferred));
+      this._ref.onAuth(this._routerMethodOnAuthCallback.bind(this, deferred, /* rejectIfAuthDataIsNull */ true));
+
+      return deferred.promise;
+    },
+
+    // Returns a promise which is resolved with the client's current authenticated data. This can
+    // be used in a route's resolve() method to grab the current authentication data.
+    waitForAuth: function() {
+      var deferred = this._q.defer();
+
+      this._ref.onAuth(this._routerMethodOnAuthCallback.bind(this, deferred, /* rejectIfAuthDataIsNull */ false));
 
       return deferred.promise;
     },
