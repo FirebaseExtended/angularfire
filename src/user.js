@@ -3,26 +3,20 @@
   "use strict";
   var FirebaseUser;
 
-  // Defines the `$firebaseUser` service that provides simple
-  // user authentication support for AngularFire.
+  // Define a service which provides user authentication and management.
   angular.module("firebase").factory("$firebaseUser", [
     "$q", "$timeout", function($q, $t) {
-      // The factory returns an object containing the authentication state
-      // of the current user. This service takes one argument:
+      // This factory returns an object containing the current authentication state of the client.
+      // This service takes one argument:
       //
-      //   * `ref`     : A Firebase reference.
+      //   * `ref`: A Firebase reference.
       //
       // The returned object has the following properties:
       //
-      //  * `authData`: Set to "null" if the user is currently logged out. This
-      //    value will be changed to an object when the user successfully logs
-      //    in. This object will contain details about the logged in user. The
-      //    exact properties will vary based on the method used to login, but
-      //    will at a minimum contain the `uid` and `provider` properties.
-      //
-      // The returned object will also have the following methods available:
-      // $login(), $logout(), $createUser(), $changePassword(), $removeUser(),
-      // and $getCurrentUser().
+      //  * `authData`: Set to "null" if the client is not currently authenticated. This value will
+      //    be changed to an object when the client is authenticated. This object will contain
+      //    details about the authentication state. The exact properties will vary based on the
+      //    method used to authenticate, but will at a minimum contain `uid` and `provider`.
       return function(ref) {
         var auth = new FirebaseUser($q, $t, ref);
         return auth.construct();
@@ -33,6 +27,7 @@
   FirebaseUser = function($q, $t, ref) {
     this._q = $q;
     this._timeout = $t;
+
     // TODO: do I even need this._currentAuthData? Can I always just use ref.getAuth() since it's synchronous?
     this._currentAuthData = ref.getAuth();
 
@@ -45,11 +40,13 @@
   FirebaseUser.prototype = {
     construct: function() {
       this._object = {
+        // The client's current authentication state
         authData: null,
-        // Authentication
+
+        // Authentication methods
         $auth: this.auth.bind(this),
-        $authWithPassword: this.authWithPassword.bind(this),
         $authAnonymously: this.authAnonymously.bind(this),
+        $authWithPassword: this.authWithPassword.bind(this),
         $authWithOAuthPopup: this.authWithOAuthPopup.bind(this),
         $authWithOAuthRedirect: this.authWithOAuthRedirect.bind(this),
         $authWithOAuthToken: this.authWithOAuthToken.bind(this),
@@ -57,13 +54,13 @@
         $login: this.login.bind(this),
         $logout: this.logout.bind(this),
 
-        // Authentication state
+        // Authentication state methods
         $onAuth: this.onAuth.bind(this),
         $offAuth: this.offAuth.bind(this),
         $getAuth: this.getCurrentUser.bind(this),
         $requireUser: this.requireUser.bind(this),
 
-        // User management
+        // User management methods
         $createUser: this.createUser.bind(this),
         $changePassword: this.changePassword.bind(this),
         $removeUser: this.removeUser.bind(this),
@@ -77,6 +74,7 @@
     /********************/
     /*  Authentication  */
     /********************/
+    // Updates the authentication state of the client.
     _updateAuthData: function(authData) {
       var self = this;
       // TODO: Is the _timeout here needed?
@@ -86,7 +84,8 @@
       });
     },
 
-    _onCompletionHandler: function(deferred, error, authData) {
+    // Common login completion handler for all authentication methods.
+    _onLoginHandler: function(deferred, error, authData) {
       if (error !== null) {
         deferred.reject(error);
       } else {
@@ -96,73 +95,64 @@
     },
 
     // TODO: do we even want this method here?
-    auth: function(authToken) {
+    // Authenticates the Firebase reference with a custom authentication token.
+    authWithCustomToken: function(authToken) {
       var deferred = this._q.defer();
-      this._ref.authWithPassword(authToken, this._onCompletionHandler.bind(this, deferred), function(error) {
+
+      this._ref.authWithCustomToken(authToken, this._onLoginHandler.bind(this, deferred), function(error) {
         // TODO: what do we do here?
       });
+
       return deferred.promise;
     },
 
-    authWithPassword: function(credentials, options) {
-      var deferred = this._q.defer();
-      this._ref.authWithPassword(credentials, this._onCompletionHandler.bind(this, deferred), options);
-      return deferred.promise;
-    },
-
+    // Authenticates the Firebase reference anonymously.
     authAnonymously: function(options) {
       var deferred = this._q.defer();
-      this._ref.authAnonymously(this._onCompletionHandler.bind(this, deferred), options);
+
+      this._ref.authAnonymously(this._onLoginHandler.bind(this, deferred), options);
+
       return deferred.promise;
     },
 
+    // Authenticates the Firebase reference with an email/password user.
+    authWithPassword: function(credentials, options) {
+      var deferred = this._q.defer();
+
+      this._ref.authWithPassword(credentials, this._onLoginHandler.bind(this, deferred), options);
+
+      return deferred.promise;
+    },
+
+    // Authenticates the Firebase reference with the OAuth popup flow.
     authWithOAuthPopup: function(provider, options) {
       var deferred = this._q.defer();
-      this._ref.authWithOAuthPopup(provider, this._onCompletionHandler.bind(this, deferred), options);
+
+      this._ref.authWithOAuthPopup(provider, this._onLoginHandler.bind(this, deferred), options);
+
       return deferred.promise;
     },
 
+    // Authenticates the Firebase reference with the OAuth redirect flow.
     authWithOAuthRedirect: function(provider, options) {
       var deferred = this._q.defer();
-      this._ref.authWithOAuthRedirect(provider, this._onCompletionHandler.bind(this, deferred), options);
+
+      this._ref.authWithOAuthRedirect(provider, this._onLoginHandler.bind(this, deferred), options);
+
       return deferred.promise;
     },
 
+    // Authenticates the Firebase reference with an OAuth token.
     authWithOAuthToken: function(provider, credentials, options) {
       var deferred = this._q.defer();
-      this._ref.authWithOAuthToken(provider, credentials, this._onCompletionHandler.bind(this, deferred), options);
+
+      this._ref.authWithOAuthToken(provider, credentials, this._onLoginHandler.bind(this, deferred), options);
+
       return deferred.promise;
     },
 
+    // Unauthenticates the Firebase reference.
     unauth: function() {
-      if (this._currentAuthData) {
-        this._ref.unauth();
-        this._updateAuthData(null);
-      }
-    },
-
-    // The login method takes a provider and authenticates the Firebase reference
-    // with which the service was initialized. This method returns a promise, which
-    // will be resolved when the login succeeds (and rejected when an error occurs).
-    login: function(provider, options) {
-      var deferred = this._q.defer();
-
-      if (provider === 'anonymous') {
-        this._ref.authAnonymously(this._onCompletionHandler.bind(this, deferred), options);
-      } else if (provider === 'password') {
-        this._ref.authWithPassword(options, this._onCompletionHandler.bind(this, deferred));
-      } else {
-        this._ref.authWithOAuthPopup(provider, this._onCompletionHandler.bind(this, deferred), options);
-      }
-
-      return deferred.promise;
-    },
-
-    // Unauthenticate the Firebase reference.
-    logout: function() {
-      // TODO: update comment?
-      // Simple Login fires _onLoginEvent() even if no user is logged in. We don't care about
-      // firing this logout event multiple times, so explicitly check if a user is defined.
       if (this._currentAuthData) {
         this._ref.unauth();
         this._updateAuthData(null);
@@ -191,18 +181,27 @@
       return this._currentAuthData;
     },
 
-    // Returns a promise which is resolved if a user is authenticated and rejects otherwise. This
-    // can be used to require routes to have a logged in user.
-    requireUser: function() {
-      // TODO: this should not fire until after onAuth has been called at least once...
-
-      var deferred = this._q.defer();
-
-      if (this._currentAuthData) {
-        deferred.resolve(this._currentAuthData);
+    // Helper callback method which returns a promise which is resolved if a user is authenticated
+    // and rejects otherwise. This can be used to require that routes have a logged in user.
+    _requireUserOnAuthCallback: function(deferred, authData) {
+      console.log("_requireUserOnAuthCallback() fired with ", authData);
+      if (authData) {
+        deferred.resolve(authData);
       } else {
         deferred.reject();
       }
+
+      // Turn off this onAuth() callback since we just needed to get the authentication state once.
+      this._ref.offAuth(this._requireUserOnAuthCallback);
+    },
+
+    // Returns a promise which is resolved if a user is authenticated and rejects otherwise. This
+    // can be used to require that routes have a logged in user.
+    requireUser: function() {
+      var deferred = this._q.defer();
+
+      // TODO: this should not fire until after onAuth has been called at least once...
+      this._ref.onAuth(this._requireUserOnAuthCallback.bind(this, deferred));
 
       return deferred.promise;
     },
@@ -211,11 +210,9 @@
     /*********************/
     /*  User Management  */
     /*********************/
-    // Creates a user for Firebase Simple Login. Function 'cb' receives an
-    // error as the first argument and a Simple Login user object as the second
-    // argument. Note that this function only creates the user, if you wish to
-    // log in as the newly created user, call $login() after the promise for
-    // this method has been fulfilled.
+    // Creates a new email/password user. Note that this function only creates the user, if you
+    // wish to log in as the newly created user, call $authWithPassword() after the promise for
+    // this method has been resolved.
     createUser: function(email, password) {
       var deferred = this._q.defer();
 
@@ -233,14 +230,11 @@
       return deferred.promise;
     },
 
-    // Changes the password for a Firebase Simple Login user. Take an email,
-    // old password and new password as three mandatory arguments. Returns a
-    // promise.
+    // Changes the password for an email/password user.
     changePassword: function(email, oldPassword, newPassword) {
-      var self = this;
       var deferred = this._q.defer();
 
-      self._ref.changePassword({
+      this._ref.changePassword({
         email: email,
         oldPassword: oldPassword,
         newPassword: newPassword
@@ -256,12 +250,11 @@
       return deferred.promise;
     },
 
-    // Remove a user for the listed email address. Returns a promise.
+    // Removes an email/password user.
     removeUser: function(email, password) {
-      var self = this;
       var deferred = this._q.defer();
 
-      self._ref.removeUser({
+      this._ref.removeUser({
         email: email,
         password: password
       }, function(error) {
@@ -275,12 +268,11 @@
       return deferred.promise;
     },
 
-    // Send a password reset email to the user for an email + password account.
+    // Sends a password reset email to an email/password user.
     sendPasswordResetEmail: function(email) {
-      var self = this;
       var deferred = this._q.defer();
 
-      self._ref.resetPassword({
+      this._ref.resetPassword({
         email: email
       }, function(error) {
         if (error !== null) {
