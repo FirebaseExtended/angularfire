@@ -72,7 +72,6 @@
       }
     },
 
-    // TODO: do we even want this method here?
     // Authenticates the Firebase reference with a custom authentication token.
     authWithCustomToken: function(authToken) {
       var deferred = this._q.defer();

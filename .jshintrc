@@ -1,8 +1,7 @@
 {
   "predef": [
     "angular",
-    "Firebase",
-    "FirebaseSimpleLogin"
+    "Firebase"
   ],
   "bitwise": true,
   "browser": true,
