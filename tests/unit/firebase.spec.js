@@ -138,6 +138,7 @@ describe('$firebase', function () {
     it('should work on a query', function() {
       var ref = new Firebase('Mock://').child('ordered').limit(5);
       var $fb = $firebase(ref);
+      spyOn(ref.ref(), 'push').and.callThrough();
       flushAll();
       expect(ref.ref().push).not.toHaveBeenCalled();
       $fb.$push({foo: 'querytest'});
@@ -202,6 +203,7 @@ describe('$firebase', function () {
     it('should affect query keys only if query used', function() {
       var ref = new Firebase('Mock://').child('ordered').limit(1);
       var $fb = $firebase(ref);
+      spyOn(ref.ref(), 'update');
       ref.flush();
       var expKeys = ref.slice().keys;
       $fb.$set({hello: 'world'});
@@ -276,6 +278,7 @@ describe('$firebase', function () {
     });
 
     it('should remove data in Firebase', function() {
+      spyOn($fb.$ref(), 'remove');
       $fb.$remove();
       flushAll();
       expect($fb.$ref().remove).toHaveBeenCalled();
@@ -291,6 +294,9 @@ describe('$firebase', function () {
       expect(origKeys.length).toBeGreaterThan(keys.length);
       var $fb = $firebase(ref);
       flushAll(ref);
+      origKeys.forEach(function (key) {
+        spyOn(ref.ref().child(key), 'remove');
+      });
       $fb.$remove();
       flushAll(ref);
       keys.forEach(function(key) {
@@ -546,8 +552,10 @@ describe('$firebase', function () {
     });
 
     it('should cancel listeners if destroyFn is invoked', function() {
-      var arr = $fb.$asArray();
       var ref = $fb.$ref();
+      spyOn(ref, 'on').and.callThrough();
+      spyOn(ref, 'off').and.callThrough();
+      var arr = $fb.$asArray();
       flushAll();
       expect(ref.on).toHaveBeenCalled();
       arr.$$$destroyFn();
@@ -651,8 +659,10 @@ describe('$firebase', function () {
     });
 
     it('should cancel listeners if destroyFn is invoked', function() {
-      var obj = $fb.$asObject();
       var ref = $fb.$ref();
+      spyOn(ref, 'on').and.callThrough();
+      spyOn(ref, 'off').and.callThrough();
+      var obj = $fb.$asObject();
       flushAll();
       expect(ref.on).toHaveBeenCalled();
       obj.$$$destroyFn();
