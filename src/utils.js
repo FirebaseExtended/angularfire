@@ -343,8 +343,8 @@
 
           /**
            * A utility for retrieving a DataSnapshot's key name. This
-           * is backwards-compatible with .name() from Firebase 1.x.x
-           * and .key() from Firebase 2.0.0+. Once support for Firebase
+           * is backwards-compatible with `name()` from Firebase 1.x.x
+           * and `key()` from Firebase 2.0.0+. Once support for Firebase
            * 1.x.x is dropped in AngularFire, this helper can be removed.
            */
           getSnapshotKey: function(snapshot) {
