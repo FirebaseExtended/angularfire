@@ -256,14 +256,14 @@
          */
         $$added: function(snap, prevChild) {
           // check to make sure record does not exist
-          var i = this.$indexFor(snap.name());
+          var i = this.$indexFor(this._getSnapshotKey(snap));
           if( i === -1 ) {
             // parse data and create record
             var rec = snap.val();
             if( !angular.isObject(rec) ) {
               rec = { $value: rec };
             }
-            rec.$id = snap.name();
+            rec.$id = this._getSnapshotKey(snap);
             rec.$priority = snap.getPriority();
             $firebaseUtils.applyDefaults(rec, this.$$defaults);
 
@@ -279,7 +279,7 @@
          * @param snap
          */
         $$removed: function(snap) {
-          var rec = this.$getRecord(snap.name());
+          var rec = this.$getRecord(this._getSnapshotKey(snap));
           if( angular.isObject(rec) ) {
             this._process('child_removed', rec);
           }
@@ -292,7 +292,7 @@
          * @param snap
          */
         $$updated: function(snap) {
-          var rec = this.$getRecord(snap.name());
+          var rec = this.$getRecord(this._getSnapshotKey(snap));
           if( angular.isObject(rec) ) {
             // apply changes to the record
             var changed = $firebaseUtils.updateRec(rec, snap);
@@ -311,7 +311,7 @@
          * @param {string} prevChild
          */
         $$moved: function(snap, prevChild) {
-          var rec = this.$getRecord(snap.name());
+          var rec = this.$getRecord(this._getSnapshotKey(snap));
           if( angular.isObject(rec) ) {
             rec.$priority = snap.getPriority();
             this._process('child_moved', rec, prevChild);
@@ -469,6 +469,10 @@
           if( this._isDestroyed ) {
             throw new Error('Cannot call ' + method + ' method on a destroyed $FirebaseArray object');
           }
+        },
+
+        _getSnapshotKey: function(snapshot) {
+          return (typeof snapshot.key === 'function') ? snapshot.key() : snapshot.name();
         }
       };
 

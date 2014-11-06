@@ -42,6 +42,7 @@
           },
 
           $set: function (key, data) {
+            var self = this;
             var ref = this._ref;
             var def = $firebaseUtils.defer();
             if (arguments.length > 1) {
@@ -61,8 +62,8 @@
               // the entire Firebase path
               ref.once('value', function(snap) {
                 snap.forEach(function(ss) {
-                  if( !dataCopy.hasOwnProperty(ss.name()) ) {
-                    dataCopy[ss.name()] = null;
+                  if( !dataCopy.hasOwnProperty(self._getSnapshotKey(ss)) ) {
+                    dataCopy[self._getSnapshotKey(ss)] = null;
                   }
                 });
                 ref.ref().update(dataCopy, this._handle(def, ref));
@@ -172,6 +173,10 @@
             if (!angular.isFunction(cnf.objectFactory)) {
               throw new Error('config.objectFactory must be a valid function');
             }
+          },
+
+          _getSnapshotKey: function(snapshot) {
+            return (typeof snapshot.key === 'function') ? snapshot.key() : snapshot.name();
           }
         };
 
