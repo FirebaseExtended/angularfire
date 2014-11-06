@@ -31,7 +31,7 @@
     "package.json"
   ],
   "dependencies": {
-    "firebase": "1.1.x"
+    "firebase": "2.0.x"
   },
   "devDependencies": {
     "coveralls": "^2.11.1",
