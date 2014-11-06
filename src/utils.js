@@ -342,6 +342,16 @@
           },
 
           /**
+           * A utility for retrieving a DataSnapshot's key name. This
+           * is backwards-compatible with `name()` from Firebase 1.x.x
+           * and `key()` from Firebase 2.0.0+. Once support for Firebase
+           * 1.x.x is dropped in AngularFire, this helper can be removed.
+           */
+          getSnapshotKey: function(snapshot) {
+            return (typeof snapshot.key === 'function') ? snapshot.key() : snapshot.name();
+          },
+
+          /**
            * A utility for converting records to JSON objects
            * which we can save into Firebase. It asserts valid
            * keys and strips off any items prefixed with $.

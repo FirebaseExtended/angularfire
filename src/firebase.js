@@ -61,8 +61,8 @@
               // the entire Firebase path
               ref.once('value', function(snap) {
                 snap.forEach(function(ss) {
-                  if( !dataCopy.hasOwnProperty(ss.name()) ) {
-                    dataCopy[ss.name()] = null;
+                  if( !dataCopy.hasOwnProperty($firebaseUtils.getSnapshotKey(ss)) ) {
+                    dataCopy[$firebaseUtils.getSnapshotKey(ss)] = null;
                   }
                 });
                 ref.ref().update(dataCopy, this._handle(def, ref));
