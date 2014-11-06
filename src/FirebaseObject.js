@@ -55,7 +55,7 @@
           value: this.$$conf
         });
 
-        this.$id = this._getSnapshotKey($firebase.$ref().ref());
+        this.$id = $firebaseUtils.getSnapshotKey($firebase.$ref().ref());
         this.$priority = null;
 
         $firebaseUtils.applyDefaults(this, this.$$defaults);
@@ -227,10 +227,6 @@
          */
         forEach: function(iterator, context) {
           return $firebaseUtils.each(this, iterator, context);
-        },
-
-        _getSnapshotKey: function(snapshot) {
-          return (typeof snapshot.key === 'function') ? snapshot.key() : snapshot.name();
         }
       };
 

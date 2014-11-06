@@ -174,4 +174,12 @@ describe('$firebaseUtils', function () {
     });
   });
 
+  describe('#getSnapshotKey', function() {
+    it('should return the key name given a DataSnapshot', function() {
+      var snapshot = testutils.snap('data', 'foo');
+
+      expect($utils.getSnapshotKey(snapshot)).toEqual('foo');
+    });
+  });
+
 });
