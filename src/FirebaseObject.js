@@ -55,7 +55,7 @@
           value: this.$$conf
         });
 
-        this.$id = $firebaseUtils.getSnapshotKey($firebase.$ref().ref());
+        this.$id = $firebaseUtils.getKey($firebase.$ref().ref());
         this.$priority = null;
 
         $firebaseUtils.applyDefaults(this, this.$$defaults);
