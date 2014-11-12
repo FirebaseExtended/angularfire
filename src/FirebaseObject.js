@@ -55,7 +55,7 @@
           value: this.$$conf
         });
 
-        this.$id = $firebase.$ref().ref().name();
+        this.$id = $firebaseUtils.getKey($firebase.$ref().ref());
         this.$priority = null;
 
         $firebaseUtils.applyDefaults(this, this.$$defaults);
@@ -277,7 +277,7 @@
       function ThreeWayBinding(rec) {
         this.subs = [];
         this.scope = null;
-        this.name = null;
+        this.key = null;
         this.rec = rec;
       }
 
@@ -285,7 +285,7 @@
         assertNotBound: function(varName) {
           if( this.scope ) {
             var msg = 'Cannot bind to ' + varName + ' because this instance is already bound to ' +
-              this.name + '; one binding per instance ' +
+              this.key + '; one binding per instance ' +
               '(call unbind method or create another $firebase instance)';
             $log.error(msg);
             return $firebaseUtils.reject(msg);
@@ -388,7 +388,7 @@
             });
             this.subs = [];
             this.scope = null;
-            this.name = null;
+            this.key = null;
           }
         },
 
