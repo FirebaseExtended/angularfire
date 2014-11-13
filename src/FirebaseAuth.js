@@ -24,7 +24,7 @@
     this._q = $q;
 
     if (typeof ref === 'string') {
-      throw new Error('Please provide a Firebase reference instead of a URL when calling `new Firebase()`.');
+      throw new Error('Please provide a Firebase reference instead of a URL when creating a `$firebaseAuth` object.');
     }
     this._ref = ref;
   };
