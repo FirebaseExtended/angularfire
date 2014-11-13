@@ -1,10 +1,10 @@
 /* istanbul ignore next */
 (function() {
   'use strict';
-  var FirebaseUser;
+  var FirebaseAuth;
 
   // Define a service which provides user authentication and management.
-  angular.module('firebase').factory('$firebaseUser', [
+  angular.module('firebase').factory('$firebaseAuth', [
     '$q', '$timeout', function($q, $t) {
       // This factory returns an object containing the current authentication state of the client.
       // This service takes one argument:
@@ -14,13 +14,13 @@
       // The returned object contains methods for authenticating clients, retrieving authentication
       // state, and managing users.
       return function(ref) {
-        var auth = new FirebaseUser($q, $t, ref);
+        var auth = new FirebaseAuth($q, $t, ref);
         return auth.construct();
       };
     }
   ]);
 
-  FirebaseUser = function($q, $t, ref) {
+  FirebaseAuth = function($q, $t, ref) {
     this._q = $q;
     this._timeout = $t;
 
@@ -30,7 +30,7 @@
     this._ref = ref;
   };
 
-  FirebaseUser.prototype = {
+  FirebaseAuth.prototype = {
     construct: function() {
       this._object = {
         // Authentication methods
