@@ -44,7 +44,6 @@
 
         // Authentication state methods
         $onAuth: this.onAuth.bind(this),
-        $offAuth: this.offAuth.bind(this),
         $getAuth: this.getAuth.bind(this),
         $requireAuth: this.requireAuth.bind(this),
         $waitForAuth: this.waitForAuth.bind(this),
@@ -161,7 +160,7 @@
       if (authData !== null) {
         deferred.resolve(authData);
       } else if (rejectIfAuthDataIsNull) {
-        deferred.reject();
+        deferred.reject("AUTH_REQUIRED");
       } else {
         deferred.resolve(null);
       }
