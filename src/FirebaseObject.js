@@ -76,6 +76,22 @@
         },
 
         /**
+         * Removes all keys from the FirebaseObject and also removes
+         * the remote data from the server.
+         *
+         * @returns a promise which will resolve after the op completes
+         */
+        $remove: function() {
+          var self = this;
+          $firebaseUtils.trimKeys(this, {});
+          this.$value = null;
+          return self.$inst().$remove(self.$id).then(function(ref) {
+            self.$$notify();
+            return ref;
+          });
+        },
+
+        /**
          * The loaded method is invoked after the initial batch of data arrives from the server.
          * When this resolves, all data which existed prior to calling $asObject() is now cached
          * locally in the object.

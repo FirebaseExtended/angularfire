@@ -346,6 +346,44 @@ describe('$FirebaseObject', function() {
     });
   });
 
+  describe('$remove', function() {
+    it('should return a promise', function() {
+      expect(obj.$remove()).toBeAPromise();
+    });
+
+    it('should set $value to null and remove any local keys', function() {
+      expect($utils.dataKeys(obj)).toEqual($utils.dataKeys(FIXTURE_DATA));
+      obj.$remove();
+      flushAll();
+      expect($utils.dataKeys(obj)).toEqual([]);
+    });
+
+    it('should call $remove on the Firebase ref', function() {
+      expect(obj.$inst().$remove).not.toHaveBeenCalled();
+      obj.$remove();
+      flushAll();
+      expect(obj.$inst().$remove).toHaveBeenCalled();
+    });
+
+    it('should delete a primitive value', function() {
+      var snap = fakeSnap('foo');
+      obj.$$updated(snap);
+      flushAll();
+      expect(obj.$value).toBe('foo');
+      obj.$remove();
+      flushAll();
+      expect(obj.$value).toBe(null);
+    });
+
+    it('should trigger a value event for $watch listeners', function() {
+      var spy = jasmine.createSpy('$watch listener');
+      obj.$watch(spy);
+      obj.$remove();
+      flushAll();
+      expect(spy).toHaveBeenCalledWith({ event: 'value', key: obj.$id });
+    });
+  });
+
   describe('$destroy', function () {
     it('should invoke destroyFn', function () {
       obj.$destroy();
