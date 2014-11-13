@@ -96,6 +96,6 @@ tests, run `grunt test:unit`. To only run the end-to-end [Protractor](https://gi
 tests, run `grunt test:e2e`.
 
 In addition to the automated test suite, there is an additional manual test suite that ensures that
-the `$firebaseSimpleLogin` service is working properly with the authentication providers. These tests
-can be run with `grunt test:manual`. Note that you must click "Close this window", login to Twitter,
+the `$firebaseUser` service is working properly with the authentication providers. These tests can
+be run with `grunt test:manual`. Note that you must click "Close this window", login to Twitter,
 etc. when prompted in order for these tests to complete successfully.
