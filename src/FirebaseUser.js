@@ -141,13 +141,15 @@
     // the authentication data changes. It also fires as soon as the authentication data is
     // retrieved from the server.
     onAuth: function(callback) {
+      var self = this;
+
       this._onAuthCallback = callback;
       this._ref.onAuth(callback);
-    },
 
-    // Detaches the callback previously attached with onAuth().
-    offAuth: function() {
-      this._ref.offAuth(this._onAuthCallback);
+      // Return a method to detach the `onAuth()` callback.
+      return function() {
+        self._ref.offAuth(callback);
+      };
     },
 
     // Synchronously retrieves the current authentication data.
