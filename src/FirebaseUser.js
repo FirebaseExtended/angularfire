@@ -143,7 +143,6 @@
     onAuth: function(callback) {
       var self = this;
 
-      this._onAuthCallback = callback;
       this._ref.onAuth(callback);
 
       // Return a method to detach the `onAuth()` callback.
