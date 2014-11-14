@@ -34,7 +34,7 @@
    *
    *    // change how records are updated
    *    $$updated: function(snap) {
-   *      return this.$getRecord(snap.name()).update(snap);
+   *      return this.$getRecord(snap.key()).update(snap);
    *    }
    * });
    * </code></pre>
