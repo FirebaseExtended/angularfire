@@ -111,11 +111,11 @@ describe('$FirebaseArray', function () {
 
     it('should store priorities', function() {
       var arr = stubArray();
-      arr.$$added(testutils.snap('one', 'b', 1), null);
-      arr.$$added(testutils.snap('two', 'a', 2), 'b');
-      arr.$$added(testutils.snap('three', 'd', 3), 'd');
-      arr.$$added(testutils.snap('four', 'c', 4), 'c');
-      arr.$$added(testutils.snap('five', 'e', 5), 'e');
+      addAndProcess(arr, testutils.snap('one', 'b', 1), null);
+      addAndProcess(arr, testutils.snap('two', 'a', 2), 'b');
+      addAndProcess(arr, testutils.snap('three', 'd', 3), 'd');
+      addAndProcess(arr, testutils.snap('four', 'c', 4), 'c');
+      addAndProcess(arr, testutils.snap('five', 'e', 5), 'e');
       expect(arr.length).toBe(5);
       for(var i=1; i <= 5; i++) {
         expect(arr[i-1].$priority).toBe(i);
@@ -235,7 +235,7 @@ describe('$FirebaseArray', function () {
       var resRef = whiteSpy.calls.argsFor(0)[0];
       expect(whiteSpy).toHaveBeenCalled();
       expect(resRef).toBeAFirebaseRef();
-      expect(resRef.name()).toBe(expName);
+      expect(resRef.key()).toBe(expName);
       expect(blackSpy).not.toHaveBeenCalled();
     });
 
@@ -303,8 +303,10 @@ describe('$FirebaseArray', function () {
     });
 
     it('should not show up after removing the item', function() {
-      expect(arr.$indexFor('b')).toBe(1);
+      var rec = arr.$getRecord('b');
+      expect(rec).not.toBe(null);
       arr.$$removed(testutils.refSnap(testutils.ref('b')));
+      arr.$$process('child_removed', rec);
       expect(arr.$indexFor('b')).toBe(-1);
     });
   });
@@ -371,36 +373,23 @@ describe('$FirebaseArray', function () {
   });
 
   describe('$watch', function() {
-    it('should get notified on an add', function() {
+    it('should get notified when $$notify is called', function() {
       var spy = jasmine.createSpy('$watch');
       arr.$watch(spy);
-      arr.$$added(testutils.snap({foo: 'bar'}, 'new_add'), null);
-      flushAll();
-      expect(spy).toHaveBeenCalledWith({event: 'child_added', key: 'new_add', prevChild: null});
+      arr.$$notify('child_removed', 'removedkey123', 'prevkey456');
+      expect(spy).toHaveBeenCalledWith({event: 'child_removed', key: 'removedkey123', prevChild: 'prevkey456'});
     });
 
-    it('should get notified on a delete', function() {
-      var spy = jasmine.createSpy('$watch');
-      arr.$watch(spy);
-      arr.$$removed(testutils.snap({foo: 'bar'}, 'b'));
-      flushAll();
-      expect(spy).toHaveBeenCalledWith({event: 'child_removed', key: 'b'});
+    it('should return a dispose function', function() {
+      expect(arr.$watch(function() {})).toBeA('function');
     });
 
-    it('should get notified on a change', function() {
+    it('should not get notified after dispose function is called', function() {
       var spy = jasmine.createSpy('$watch');
-      arr.$watch(spy);
-      arr.$$updated(testutils.snap({foo: 'bar'}, 'c'));
-      flushAll();
-      expect(spy).toHaveBeenCalledWith({event: 'child_changed', key: 'c'});
-    });
-
-    it('should get notified on a move', function() {
-      var spy = jasmine.createSpy('$watch');
-      arr.$watch(spy);
-      arr.$$moved(testutils.snap({foo: 'bar'}, 'b'), 'c');
-      flushAll();
-      expect(spy).toHaveBeenCalledWith({event: 'child_moved', key: 'b', prevChild: 'c'});
+      var off = arr.$watch(spy);
+      off();
+      arr.$$notify('child_removed', 'removedkey123', 'prevkey456');
+      expect(spy).not.toHaveBeenCalled();
     });
   });
 
@@ -430,70 +419,45 @@ describe('$FirebaseArray', function () {
   });
 
   describe('$$added', function() {
-    it('should add to local array', function() {
-      var len = arr.length;
-      arr.$$added(testutils.snap({hello: 'world'}, 'addz'), 'b');
-      expect(arr.length).toBe(len+1);
+    it('should return an object', function() {
+      var snap = testutils.snap({foo: 'bar'}, 'newObj');
+      var res = arr.$$added(snap);
+      expect(res).toEqual(jasmine.objectContaining({foo: 'bar'}));
     });
 
-    it('should position after prev child', function() {
-      var pos = arr.$indexFor('b');
-      expect(pos).toBeGreaterThan(-1);
-      arr.$$added(testutils.snap({hello: 'world'}, 'addAfterB'), 'b');
-      expect(arr.$keyAt(pos+1)).toBe('addAfterB');
-    });
-
-    it('should position first if prevChild is null', function() {
-      arr.$$added(testutils.snap({hello: 'world'}, 'addFirst'), null);
-      expect(arr.$keyAt(0)).toBe('addFirst');
-    });
-
-    it('should position last if prevChild not found', function() {
-      var len = arr.length;
-      arr.$$added(testutils.snap({hello: 'world'}, 'addLast'), 'notarealkeyinarray');
-      expect(arr.$keyAt(len)).toBe('addLast');
-    });
-
-    it('should not re-add if already exists', function() {
-      var len = arr.length;
-      arr.$$added(testutils.snap({hello: 'world'}, 'b'), 'a');
-      expect(arr.length).toBe(len);
+    it('should return false if key already exists', function() {
+      var snap = testutils.snap({foo: 'bar'}, 'a');
+      var res = arr.$$added(snap);
+      expect(res).toBe(false);
     });
 
     it('should accept a primitive', function() {
-      arr.$$added(testutils.snap(true, 'newPrimitive'), null);
-      expect(arr.$indexFor('newPrimitive')).toBe(0);
-      expect(arr[0].$value).toBe(true);
-    });
-
-    it('should notify $watch listeners', function() {
-      var spy = jasmine.createSpy('$watch');
-      arr.$watch(spy);
-      arr.$$added(testutils.snap(false, 'watchKey'), null);
-      var expectEvent = {event: 'child_added', key: 'watchKey', prevChild: null};
-      expect(spy).toHaveBeenCalledWith(jasmine.objectContaining(expectEvent));
-    });
-
-    it('should not notify $watch listener if exists', function() {
-      var spy = jasmine.createSpy('$watch');
-      var pos = arr.$indexFor('a');
-      expect(pos).toBeGreaterThan(-1);
-      arr.$watch(spy);
-      arr.$$added(testutils.snap($utils.toJSON(arr[pos]), 'a'));
-      expect(spy).not.toHaveBeenCalled();
+      var res = arr.$$added(testutils.snap(true, 'newPrimitive'), null);
+      expect(res.$value).toBe(true);
     });
 
     it('should apply $$defaults if they exist', function() {
-      var arr = stubArray(STUB_DATA, $FirebaseArray.$extendFactory({
+      var arr = stubArray(null, $FirebaseArray.$extendFactory({
         $$defaults: {aString: 'not_applied', foo: 'foo'}
       }));
-      var rec = arr.$getRecord('a');
-      expect(rec.aString).toBe(STUB_DATA.a.aString);
-      expect(rec.foo).toBe('foo');
+      var res = arr.$$added(testutils.snap(STUB_DATA.a));
+      expect(res.aString).toBe(STUB_DATA.a.aString);
+      expect(res.foo).toBe('foo');
     });
   });
 
   describe('$$updated', function() {
+    it('should return true if data changes', function() {
+      var res = arr.$$updated(testutils.snap('foo', 'b'));
+      expect(res).toBe(true);
+    });
+
+    it('should return false if data does not change', function() {
+      var i = arr.$indexFor('b');
+      var res = arr.$$updated(testutils.snap(arr[i], 'b'));
+      expect(res).toBe(false);
+    });
+
     it('should update local data', function() {
       var i = arr.$indexFor('b');
       expect(i).toBeGreaterThan(-1);
@@ -523,23 +487,6 @@ describe('$FirebaseArray', function () {
       expect(arr[pos].$priority).toBe(250);
     });
 
-    it('should notify $watch listeners', function() {
-      var spy = jasmine.createSpy('$watch');
-      arr.$watch(spy);
-      arr.$$updated(testutils.snap({foo: 'bar'}, 'b'));
-      flushAll();
-      var expEvent = {event: 'child_changed', key: 'b'};
-      expect(spy).toHaveBeenCalledWith(expEvent);
-    });
-
-    it('should not notify $watch listener if unchanged', function() {
-      var spy = jasmine.createSpy('$watch');
-      var pos = arr.$indexFor('a');
-      arr.$watch(spy);
-      arr.$$updated(testutils.snap($utils.toJSON(arr[pos]), 'a'), null);
-      expect(spy).not.toHaveBeenCalled();
-    });
-
     it('should apply $$defaults if they exist', function() {
       var arr = stubArray(STUB_DATA, $FirebaseArray.$extendFactory({
         $$defaults: {aString: 'not_applied', foo: 'foo'}
@@ -555,10 +502,123 @@ describe('$FirebaseArray', function () {
   });
 
   describe('$$moved', function() {
+    it('should set $priority', function() {
+      var rec = arr.$getRecord('c');
+      expect(rec.$priority).not.toBe(999);
+      arr.$$moved(testutils.snap($utils.toJSON(rec), 'c', 999), 'd');
+      expect(rec.$priority).toBe(999);
+    });
+
+    it('should return true if record exists', function() {
+      var rec = arr.$getRecord('a');
+      var res = arr.$$moved(testutils.snap($utils.toJSON(rec), 'a'), 'c');
+      expect(res).toBe(true);
+    });
+
+    it('should return false record not found', function() {
+      var res = arr.$$moved(testutils.snap(true, 'notarecord'), 'c');
+      expect(res).toBe(false);
+    });
+  });
+
+  describe('$$removed', function() {
+    it('should return true if exists in data', function() {
+      var res = arr.$$removed(testutils.snap(null, 'e'));
+      expect(res).toBe(true);
+    });
+
+    it('should return false if does not exist in data', function() {
+      var res = arr.$$removed(testutils.snap(null, 'notarecord'));
+      expect(res).toBe(false);
+    });
+  });
+
+  describe('$$error', function() {
+    it('should call $destroy', function() {
+      var spy = jasmine.createSpy('$destroy');
+      var arr = stubArray(STUB_DATA, $FirebaseArray.$extendFactory({ $destroy: spy }));
+      spy.calls.reset();
+      arr.$$error('test_err');
+      expect(spy).toHaveBeenCalled();
+    });
+  });
+
+  describe('$$notify', function() {
+    it('should notify $watch listeners', function() {
+      var spy1 = jasmine.createSpy('$watch1');
+      var spy2 = jasmine.createSpy('$watch2');
+      arr.$watch(spy1);
+      arr.$watch(spy2);
+      arr.$$notify('added', 'e', 'd');
+      expect(spy1).toHaveBeenCalled();
+      expect(spy2).toHaveBeenCalled();
+    });
+
+    it('should pass an object containing key, event, and prevChild if present', function() {
+      var spy = jasmine.createSpy('$watch1');
+      arr.$watch(spy);
+      arr.$$notify('child_added', 'e', 'd');
+      expect(spy).toHaveBeenCalledWith({event: 'child_added', key: 'e', prevChild: 'd'});
+    });
+  });
+
+  describe('$$process', function() {
+
+    /////////////// ADD
+    it('should add to local array', function() {
+      var len = arr.length;
+      var rec = arr.$$added(testutils.snap({hello: 'world'}, 'addz'), 'b');
+      arr.$$process('child_added', rec, 'b');
+      expect(arr.length).toBe(len+1);
+    });
+
+    it('should position after prev child', function() {
+      var pos = arr.$indexFor('b');
+      expect(pos).toBeGreaterThan(-1);
+      var rec = arr.$$added(testutils.snap({hello: 'world'}, 'addAfterB'), 'b');
+      arr.$$process('child_added', rec, 'b');
+      expect(arr.$keyAt(pos+1)).toBe('addAfterB');
+    });
+
+    it('should position first if prevChild is null', function() {
+      var rec = arr.$$added(testutils.snap({hello: 'world'}, 'addFirst'), null);
+      arr.$$process('child_added', rec, null);
+      expect(arr.$keyAt(0)).toBe('addFirst');
+    });
+
+    it('should position last if prevChild not found', function() {
+      var len = arr.length;
+      var rec = arr.$$added(testutils.snap({hello: 'world'}, 'addLast'), 'notarealkeyinarray');
+      arr.$$process('child_added', rec, 'notrealkeyinarray');
+      expect(arr.$keyAt(len)).toBe('addLast');
+    });
+
+    it('should invoke $$notify with "child_added" event', function() {
+      var spy = jasmine.createSpy('$$notify');
+      var arr = stubArray(STUB_DATA, $FirebaseArray.$extendFactory({ $$notify: spy }));
+      spy.calls.reset();
+      var rec = arr.$$added(testutils.snap({hello: 'world'}, 'addFirst'), null);
+      arr.$$process('child_added', rec, null);
+      expect(spy).toHaveBeenCalled();
+    });
+
+    ///////////////// UPDATE
+
+    it('should invoke $$notify with "child_changed" event', function() {
+      var spy = jasmine.createSpy('$$notify');
+      var arr = stubArray(STUB_DATA, $FirebaseArray.$extendFactory({ $$notify: spy }));
+      spy.calls.reset();
+      arr.$$updated(testutils.snap({hello: 'world'}, 'a'));
+      arr.$$process('child_changed', arr.$getRecord('a'));
+      expect(spy).toHaveBeenCalled();
+    });
+
+    ///////////////// MOVE
     it('should move local record', function() {
       var b = arr.$indexFor('b');
       var c = arr.$indexFor('c');
       arr.$$moved(testutils.refSnap(testutils.ref('b')), 'c');
+      arr.$$process('child_moved', arr.$getRecord('b'), 'c');
       expect(arr.$indexFor('c')).toBe(b);
       expect(arr.$indexFor('b')).toBe(c);
     });
@@ -567,6 +627,7 @@ describe('$FirebaseArray', function () {
       var b = arr.$indexFor('b');
       expect(b).toBeGreaterThan(0);
       arr.$$moved(testutils.snap(null, 'b'), null);
+      arr.$$process('child_moved', arr.$getRecord('b'), null);
       expect(arr.$indexFor('b')).toBe(0);
     });
 
@@ -574,75 +635,36 @@ describe('$FirebaseArray', function () {
       var b = arr.$indexFor('b');
       expect(b).toBeLessThan(arr.length-1);
       arr.$$moved(testutils.refSnap(testutils.ref('b')), 'notarealkey');
+      arr.$$process('child_moved', arr.$getRecord('b'), 'notarealkey');
       expect(arr.$indexFor('b')).toBe(arr.length-1);
     });
 
-    it('should do nothing if record not found', function() {
-      var copy = testutils.deepCopyObject(arr);
-      arr.$$moved(testutils.snap('a', 'notarealkey'));
-      expect(arr).toEqual(copy);
-    });
-
-    it('should notify $watch listeners', function() {
-      var spy = jasmine.createSpy('$watch');
-      var pos = arr.$indexFor('a');
-      expect(pos).toBeGreaterThan(-1);
-      arr.$watch(spy);
-      arr.$$moved(testutils.snap($utils.toJSON(arr[pos]), 'c'), 'a');
+    it('should invoke $$notify with "child_moved" event', function() {
+      var spy = jasmine.createSpy('$$notify');
+      var arr = stubArray(STUB_DATA, $FirebaseArray.$extendFactory({ $$notify: spy }));
+      spy.calls.reset();
+      arr.$$moved(testutils.refSnap(testutils.ref('b')), 'notarealkey');
+      arr.$$process('child_moved', arr.$getRecord('b'), 'notarealkey');
       expect(spy).toHaveBeenCalled();
     });
 
-    it('should not notify $watch listener if unmoved', function() {
-      var spy = jasmine.createSpy('$watch');
-      var pos = arr.$indexFor('a');
-      expect(pos).toBe(0);
-      arr.$watch(spy);
-      arr.$$moved(testutils.snap($utils.toJSON(arr[pos])), 'a');
-      expect(spy).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('$$removed', function() {
+    ///////////////// REMOVE
     it('should remove from local array', function() {
       var len = arr.length;
       expect(arr.$indexFor('b')).toBe(1);
       arr.$$removed(testutils.refSnap(testutils.ref('b')));
+      arr.$$process('child_removed', arr.$getRecord('b'));
       expect(arr.length).toBe(len-1);
       expect(arr.$indexFor('b')).toBe(-1);
     });
 
-
-    it('should do nothing if record not found', function() {
-      var copy = testutils.deepCopyObject(arr);
-      arr.$$removed(testutils.refSnap(testutils.ref('notarealrecord')));
-      expect(arr).toEqual(copy);
-    });
-
-    it('should notify $watch listeners', function() {
-      var spy = jasmine.createSpy('$watch');
-      arr.$watch(spy);
-      expect(arr.$indexFor('e')).toBeGreaterThan(-1);
+    it('should trigger $$notify with "child_removed" event', function() {
+      var spy = jasmine.createSpy('$$notify');
+      var arr = stubArray(STUB_DATA, $FirebaseArray.$extendFactory({ $$notify: spy }));
+      spy.calls.reset();
       arr.$$removed(testutils.refSnap(testutils.ref('e')));
+      arr.$$process('child_removed', arr.$getRecord('e'));
       expect(spy).toHaveBeenCalled();
-    });
-
-    it('should not notify watch listeners if not found', function() {
-      var spy = jasmine.createSpy('$watch');
-      arr.$watch(spy);
-      expect(arr.$indexFor('notarealrecord')).toBe(-1);
-      arr.$$removed(testutils.refSnap(testutils.ref('notarealrecord')));
-      expect(spy).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('$$error', function() {
-    it('should call $destroy', function() {
-      //var spy = spyOn(arr, '$destroy');
-      arr.$$error('test_err');
-      //todo-test for some reason this spy does not trigger even though method is called
-      //todo-test worked around for now by just checking the destroyFn
-      //expect(spy).toHaveBeenCalled();
-      expect(arr.$$$destroyFn).toHaveBeenCalled();
     });
   });
 
@@ -735,7 +757,8 @@ describe('$FirebaseArray', function () {
       for (var key in initialData) {
         if (initialData.hasOwnProperty(key)) {
           var pri = extractPri(initialData[key]);
-          arr.$$added(testutils.snap(testutils.deepCopyObject(initialData[key]), key, pri), prev);
+          var rec = arr.$$added(testutils.snap(testutils.deepCopyObject(initialData[key]), key, pri), prev);
+          arr.$$process('child_added', rec, prev);
           prev = key;
         }
       }
@@ -753,6 +776,10 @@ describe('$FirebaseArray', function () {
       return dat['.priority'];
     }
     return null;
+  }
+
+  function addAndProcess(arr, snap, prevChild) {
+    arr.$$process('child_added', arr.$$added(snap, prevChild), prevChild);
   }
 
   function noop() {}

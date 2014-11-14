@@ -220,10 +220,39 @@
           var def     = $firebaseUtils.defer();
           var array   = new ArrayFactory($inst, destroy, def.promise);
           var batch   = $firebaseUtils.batch();
-          var created = batch(array.$$added, array);
-          var updated = batch(array.$$updated, array);
-          var moved   = batch(array.$$moved, array);
-          var removed = batch(array.$$removed, array);
+          var created = batch(function(snap, prevChild) {
+            var rec = array.$$added(snap, prevChild);
+            if( rec ) {
+              array.$$process('child_added', rec, prevChild);
+            }
+          });
+          var updated = batch(function(snap) {
+            var rec = array.$getRecord($firebaseUtils.getKey(snap));
+            if( rec ) {
+              var changed = array.$$updated(snap);
+              if( changed ) {
+                array.$$process('child_changed', rec);
+              }
+            }
+          });
+          var moved   = batch(function(snap, prevChild) {
+            var rec = array.$getRecord($firebaseUtils.getKey(snap));
+            if( rec ) {
+              var confirmed = array.$$moved(snap, prevChild);
+              if( confirmed ) {
+                array.$$process('child_moved', rec, prevChild);
+              }
+            }
+          });
+          var removed = batch(function(snap) {
+            var rec = array.$getRecord($firebaseUtils.getKey(snap));
+            if( rec ) {
+              var confirmed = array.$$removed(snap);
+              if( confirmed ) {
+                array.$$process('child_removed', rec);
+              }
+            }
+          });
           var error   = batch(array.$$error, array);
           var resolve = batch(_resolveFn);
 

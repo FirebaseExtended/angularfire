@@ -35,8 +35,11 @@ angular.module('testutils', ['firebase'])
           getPriority: function () {
             return angular.isDefined(pri) ? pri : null;
           },
+          key: function() {
+            return ref.ref().key();
+          },
           name: function () {
-            return ref.ref().name();
+            return ref.ref().key();
           },
           child: function (key) {
             var childData = angular.isObject(data) && data.hasOwnProperty(key) ? data[key] : null;
