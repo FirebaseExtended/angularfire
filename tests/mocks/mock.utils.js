@@ -17,7 +17,7 @@ angular.module('mock.utils', [])
       $delegate[method]._super = origMethod;
     }
 
-    $provide.decorator('$firebaseUtils', function($delegate, $timeout) {
+    $provide.decorator('$firebaseUtils', function($delegate) {
       spyOnCallback($delegate, 'compile');
       spyOnCallback($delegate, 'wait');
       return $delegate;
