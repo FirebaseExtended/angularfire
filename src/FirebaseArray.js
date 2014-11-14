@@ -12,9 +12,15 @@
    *    $$moved - called whenever a child_moved event occurs
    *    $$removed - called whenever a child_removed event occurs
    *    $$error - called when listeners are canceled due to a security error
+   *    $$process - called immediately after $$added/$$updated/$$moved/$$removed
+   *                to splice/manipulate the array and invokes $$notify
+   *
+   * Additionally, there is one more method of interest to devs extending this class:
+   *    $$notify - triggers notifications to any $watch listeners, called by $$process
    *
    * Instead of directly modifying this class, one should generally use the $extendFactory
-   * method to add or change how methods behave:
+   * method to add or change how methods behave. $extendFactory modifies the prototype of
+   * the array class by returning a clone of $FirebaseArray.
    *
    * <pre><code>
    * var NewFactory = $FirebaseArray.$extendFactory({
@@ -22,14 +28,18 @@
    *    foo: function() { return 'bar'; },
    *
    *    // change how records are created
-   *    $$added: function(snap) {
-   *       var rec = new Widget(snap);
-   *       this._process('child_added', rec);
+   *    $$added: function(snap, prevChild) {
+   *       return new Widget(snap, prevChild);
+   *    },
+   *
+   *    // change how records are updated
+   *    $$updated: function(snap) {
+   *      return this.$getRecord(snap.name()).update(snap);
    *    }
    * });
    * </code></pre>
    *
-   * And then the new factory can be used by passing it as an argument:
+   * And then the new factory can be passed as an argument:
    * <code>$firebase( firebaseRef, {arrayFactory: NewFactory}).$asArray();</code>
    */
   angular.module('firebase').factory('$FirebaseArray', ["$log", "$firebaseUtils",
@@ -52,6 +62,13 @@
         this._inst = $firebase;
         this._promise = readyPromise;
         this._destroyFn = destroyFn;
+
+        // indexCache is a weak hashmap (a lazy list) of keys to array indices,
+        // items are not guaranteed to stay up to date in this list (since the list
+        // can be manually edited without calling the $ methods) and it should
+        // always be used with skepticism regarding whether it is accurate
+        // (see $indexFor() below for proper usage)
+        this._indexCache = {};
 
         // Array.isArray will not work on objects which extend the Array class.
         // So instead of extending the Array class, we just return an actual array.
@@ -108,7 +125,7 @@
           if( key !== null ) {
             return self.$inst().$set(key, $firebaseUtils.toJSON(item))
               .then(function(ref) {
-                self._notify('child_changed', key);
+                self.$$notify('child_changed', key);
                 return ref;
               });
           }
@@ -165,8 +182,16 @@
          */
         $indexFor: function(key) {
           var self = this;
-          // todo optimize and/or cache these? they wouldn't need to be perfect
-          return this.$list.findIndex(function(rec) { return self._getKey(rec) === key; });
+          var cache = self._indexCache;
+          // evaluate whether our key is cached and, if so, whether it is up to date
+          if( !cache.hasOwnProperty(key) || self.$keyAt(cache[key]) !== key ) {
+            // update the hashmap
+            var pos = self.$list.findIndex(function(rec) { return self._getKey(rec) === key; });
+            if( pos !== -1 ) {
+              cache[key] = pos;
+            }
+          }
+          return cache.hasOwnProperty(key)? cache[key] : -1;
         },
 
         /**
@@ -251,10 +276,11 @@
          * Called by $firebase to inform the array when a new item has been added at the server.
          * This method must exist on any array factory used by $firebase.
          *
-         * @param snap
+         * @param {object} snap a Firebase snapshot
          * @param {string} prevChild
+         * @return {object} the record to be inserted into the array
          */
-        $$added: function(snap, prevChild) {
+        $$added: function(snap/*, prevChild*/) {
           // check to make sure record does not exist
           var i = this.$indexFor($firebaseUtils.getKey(snap));
           if( i === -1 ) {
@@ -267,55 +293,59 @@
             rec.$priority = snap.getPriority();
             $firebaseUtils.applyDefaults(rec, this.$$defaults);
 
-            // add it to array and send notifications
-            this._process('child_added', rec, prevChild);
+            return rec;
           }
+          return false;
         },
 
         /**
          * Called by $firebase whenever an item is removed at the server.
-         * This method must exist on any arrayFactory passed into $firebase
+         * This method does not physically remove the objects, but instead
+         * returns a boolean indicating whether it should be removed (and
+         * taking any other desired actions before the remove completes).
          *
-         * @param snap
+         * @param {object} snap a Firebase snapshot
+         * @return {boolean} true if item should be removed
          */
         $$removed: function(snap) {
-          var rec = this.$getRecord($firebaseUtils.getKey(snap));
-          if( angular.isObject(rec) ) {
-            this._process('child_removed', rec);
-          }
+          return this.$indexFor($firebaseUtils.getKey(snap)) > -1;
         },
 
         /**
          * Called by $firebase whenever an item is changed at the server.
-         * This method must exist on any arrayFactory passed into $firebase
+         * This method should apply the changes, including changes to data
+         * and to $priority, and then return true if any changes were made.
          *
-         * @param snap
+         * @param {object} snap a Firebase snapshot
+         * @return {boolean} true if any data changed
          */
         $$updated: function(snap) {
+          var changed = false;
           var rec = this.$getRecord($firebaseUtils.getKey(snap));
           if( angular.isObject(rec) ) {
             // apply changes to the record
-            var changed = $firebaseUtils.updateRec(rec, snap);
+            changed = $firebaseUtils.updateRec(rec, snap);
             $firebaseUtils.applyDefaults(rec, this.$$defaults);
-            if( changed ) {
-              this._process('child_changed', rec);
-            }
           }
+          return changed;
         },
 
         /**
          * Called by $firebase whenever an item changes order (moves) on the server.
-         * This method must exist on any arrayFactory passed into $firebase
+         * This method should set $priority to the updated value and return true if
+         * the record should actually be moved. It should not actually apply the move
+         * operation.
          *
-         * @param snap
+         * @param {object} snap a Firebase snapshot
          * @param {string} prevChild
          */
-        $$moved: function(snap, prevChild) {
+        $$moved: function(snap/*, prevChild*/) {
           var rec = this.$getRecord($firebaseUtils.getKey(snap));
           if( angular.isObject(rec) ) {
             rec.$priority = snap.getPriority();
-            this._process('child_moved', rec, prevChild);
+            return true;
           }
+          return false;
         },
 
         /**
@@ -334,29 +364,30 @@
          * @returns {string||null}
          * @private
          */
-        _getKey: function(rec) {
+        _getKey: function(rec) { //todo rename this to $$getId
           return angular.isObject(rec)? rec.$id : null;
         },
 
         /**
          * Handles placement of recs in the array, sending notifications,
-         * and other internals.
+         * and other internals. Called by the $firebase synchronization process
+         * after $$added, $$updated, $$moved, and $$removed
          *
          * @param {string} event one of child_added, child_removed, child_moved, or child_changed
          * @param {object} rec
          * @param {string} [prevChild]
          * @private
          */
-        _process: function(event, rec, prevChild) {
+        $$process: function(event, rec, prevChild) {
           var key = this._getKey(rec);
           var changed = false;
-          var pos;
+          var curPos;
           switch(event) {
             case 'child_added':
-              pos = this.$indexFor(key);
+              curPos = this.$indexFor(key);
               break;
             case 'child_moved':
-              pos = this.$indexFor(key);
+              curPos = this.$indexFor(key);
               this._spliceOut(key);
               break;
             case 'child_removed':
@@ -367,27 +398,28 @@
               changed = true;
               break;
             default:
-              // nothing to do
+              throw new Error('Invalid event type ' + event);
           }
-          if( angular.isDefined(pos) ) {
+          if( angular.isDefined(curPos) ) {
             // add it to the array
-            changed = this._addAfter(rec, prevChild) !== pos;
+            changed = this._addAfter(rec, prevChild) !== curPos;
           }
           if( changed ) {
             // send notifications to anybody monitoring $watch
-            this._notify(event, key, prevChild);
+            this.$$notify(event, key, prevChild);
           }
           return changed;
         },
 
         /**
          * Used to trigger notifications for listeners registered using $watch
+         *
          * @param {string} event
          * @param {string} key
          * @param {string} [prevChild]
          * @private
          */
-        _notify: function(event, key, prevChild) {
+        $$notify: function(event, key, prevChild) {
           var eventData = {event: event, key: key};
           if( angular.isDefined(prevChild) ) {
             eventData.prevChild = prevChild;
@@ -416,6 +448,7 @@
             if( i === 0 ) { i = this.$list.length; }
           }
           this.$list.splice(i, 0, rec);
+          this._indexCache[this._getKey(rec)] = i;
           return i;
         },
 
@@ -430,6 +463,7 @@
         _spliceOut: function(key) {
           var i = this.$indexFor(key);
           if( i > -1 ) {
+            delete this._indexCache[key];
             return this.$list.splice(i, 1)[0];
           }
           return null;
@@ -449,12 +483,13 @@
             return list[indexOrItem];
           }
           else if( angular.isObject(indexOrItem) ) {
-            var i = list.length;
-            while(i--) {
-              if( list[i] === indexOrItem ) {
-                return indexOrItem;
-              }
-            }
+            // it must be an item in this array; it's not sufficient for it just to have
+            // a $id or even a $id that is in the array, it must be an actual record
+            // the fastest way to determine this is to use $getRecord (to avoid iterating all recs)
+            // and compare the two
+            var key = this._getKey(indexOrItem);
+            var rec = this.$getRecord(key);
+            return rec === indexOrItem? rec : null;
           }
           return null;
         },

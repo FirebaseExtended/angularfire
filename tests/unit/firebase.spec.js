@@ -46,7 +46,6 @@ describe('$firebase', function () {
 
     it('should accept a factory name for arrayFactory', function() {
       var ref = new Firebase('Mock://');
-      var app = angular.module('firebase');
       // if this does not throw an error we are fine
       expect($firebase(ref, {arrayFactory: 'TestArrayFactory'})).toBeAn('object');
     });
@@ -284,12 +283,10 @@ describe('$firebase', function () {
       expect($fb.$ref().remove).toHaveBeenCalled();
     });
 
-    //todo-test https://github.com/katowulf/mockfirebase/issues/9
     it('should only remove keys in query if used on a query', function() {
       var ref = new Firebase('Mock://').child('ordered').limit(2);
       var keys = ref.slice().keys;
       var origKeys = ref.ref().getKeys();
-      var expLength = origKeys.length - keys.length;
       expect(keys.length).toBeGreaterThan(0);
       expect(origKeys.length).toBeGreaterThan(keys.length);
       var $fb = $firebase(ref);
@@ -460,7 +457,7 @@ describe('$firebase', function () {
       expect(count).toBeGreaterThan(1);
       var arr = $fb.$asArray();
       flushAll();
-      expect(arr.$$added.calls.count()).toBe(count);
+      expect(arr.$$added).toHaveCallCount(count);
     });
 
     it('should return same instance if called multiple times', function() {
@@ -479,7 +476,7 @@ describe('$firebase', function () {
       var ref = $fb.$ref().limit(2);
       var arr = $firebase(ref, {arrayFactory: $ArrayFactory}).$asArray();
       flushAll();
-      expect(arr.$$added.calls.count()).toBe(2);
+      expect(arr.$$added).toHaveCallCount(2);
     });
 
     it('should return new instance if old one is destroyed', function() {
@@ -497,37 +494,73 @@ describe('$firebase', function () {
       // now add a new record and see if it sticks
       $fb.$ref().push({hello: 'world'});
       flushAll();
-      expect(arr.$$added.calls.count()).toBe(1);
+      expect(arr.$$added).toHaveCallCount(1);
     });
 
     it('should call $$updated if child_changed event is received', function() {
       var arr = $fb.$asArray();
       // flush all the existing data through
       flushAll();
+      arr.$getRecord.and.returnValue({$id: 'c'});
       // now change a new record and see if it sticks
       $fb.$ref().child('c').set({hello: 'world'});
       flushAll();
-      expect(arr.$$updated.calls.count()).toBe(1);
+      expect(arr.$$updated).toHaveCallCount(1);
+    });
+
+    it('should not call $$updated if rec does not exist', function() {
+      var arr = $fb.$asArray();
+      // flush all the existing data through
+      flushAll();
+      arr.$getRecord.and.returnValue(null);
+      // now change a new record and see if it sticks
+      $fb.$ref().child('c').set({hello: 'world'});
+      flushAll();
+      expect(arr.$$updated).not.toHaveBeenCalled();
     });
 
     it('should call $$moved if child_moved event is received', function() {
       var arr = $fb.$asArray();
       // flush all the existing data through
       flushAll();
+      arr.$getRecord.and.returnValue({$id: 'c'});
       // now change a new record and see if it sticks
       $fb.$ref().child('c').setPriority(299);
       flushAll();
-      expect(arr.$$moved.calls.count()).toBe(1);
+      expect(arr.$$moved).toHaveCallCount(1);
+    });
+
+    it('should not call $$moved if rec does not exist', function() {
+      var arr = $fb.$asArray();
+      // flush all the existing data through
+      flushAll();
+      arr.$getRecord.and.returnValue(null);
+      // now change a new record and see if it sticks
+      $fb.$ref().child('c').setPriority(299);
+      flushAll();
+      expect(arr.$$moved).not.toHaveBeenCalled();
     });
 
     it('should call $$removed if child_removed event is received', function() {
       var arr = $fb.$asArray();
       // flush all the existing data through
       flushAll();
+      arr.$getRecord.and.returnValue({$id: 'a'});
       // now change a new record and see if it sticks
       $fb.$ref().child('a').remove();
       flushAll();
-      expect(arr.$$removed.calls.count()).toBe(1);
+      expect(arr.$$removed).toHaveCallCount(1);
+    });
+
+    it('should not call $$removed if rec does not exist', function() {
+      var arr = $fb.$asArray();
+      // flush all the existing data through
+      flushAll();
+      arr.$getRecord.and.returnValue(null);
+      // now change a new record and see if it sticks
+      $fb.$ref().child('a').remove();
+      flushAll();
+      expect(arr.$$removed).not.toHaveBeenCalled();
     });
 
     it('should call $$error if an error event occurs', function() {
@@ -542,8 +575,7 @@ describe('$firebase', function () {
     it('should resolve readyPromise after initial data loaded', function() {
       var arr = $fb.$asArray();
       var spy = jasmine.createSpy('resolved').and.callFake(function(arrRes) {
-        var count = arrRes.$$added.calls.count();
-        expect(count).toBe($fb.$ref().getKeys().length);
+        expect(arrRes.$$added).toHaveCallCount($fb.$ref().getKeys().length);
       });
       arr.$$$readyPromise.then(spy);
       expect(spy).not.toHaveBeenCalled();
@@ -559,7 +591,7 @@ describe('$firebase', function () {
       flushAll();
       expect(ref.on).toHaveBeenCalled();
       arr.$$$destroyFn();
-      expect(ref.off.calls.count()).toBe(ref.on.calls.count());
+      expect(ref.off).toHaveCallCount(ref.on.calls.count());
     });
 
     it('should trigger an angular compile', function() {
@@ -582,7 +614,7 @@ describe('$firebase', function () {
       ref.push({newc: 'newc'});
       ref.push({newd: 'newd'});
       flushAll();
-      expect($utils.wait.completed.calls.count()).toBe(1);
+      expect($utils.wait.completed).toHaveCallCount(1);
     });
   });
 
@@ -666,7 +698,7 @@ describe('$firebase', function () {
       flushAll();
       expect(ref.on).toHaveBeenCalled();
       obj.$$$destroyFn();
-      expect(ref.off.calls.count()).toBe(ref.on.calls.count());
+      expect(ref.off).toHaveCallCount(ref.on.calls.count());
     });
 
     it('should trigger an angular compile', function() {
@@ -680,7 +712,7 @@ describe('$firebase', function () {
     });
 
     it('should batch requests', function() {
-      var obj = $fb.$asObject(); // creates listeners
+      $fb.$asObject(); // creates the listeners
       flushAll();
       $utils.wait.completed.calls.reset();
       var ref = $fb.$ref();
@@ -689,18 +721,17 @@ describe('$firebase', function () {
       ref.push({newc: 'newc'});
       ref.push({newd: 'newd'});
       flushAll();
-      expect($utils.wait.completed.calls.count()).toBe(1);
+      expect($utils.wait.completed).toHaveCallCount(1);
     });
   });
 
   function stubArrayFactory() {
     var arraySpy = [];
-    angular.forEach(['$$added', '$$updated', '$$moved', '$$removed', '$$error'], function(m) {
+    angular.forEach(['$$added', '$$updated', '$$moved', '$$removed', '$$error', '$getRecord', '$indexFor'], function(m) {
       arraySpy[m] = jasmine.createSpy(m);
     });
     var factory = jasmine.createSpy('ArrayFactory')
       .and.callFake(function(inst, destroyFn, readyPromise) {
-        arraySpy.$$$inst = inst;
         arraySpy.$$$destroyFn = destroyFn;
         arraySpy.$$$readyPromise = readyPromise;
         return arraySpy;
@@ -711,7 +742,6 @@ describe('$firebase', function () {
 
   function stubObjectFactory() {
     function Factory(inst, destFn, readyPromise) {
-      this.$$$inst = inst;
       this.$$$destroyFn = destFn;
       this.$$$readyPromise = readyPromise;
     }

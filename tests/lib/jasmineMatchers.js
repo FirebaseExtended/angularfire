@@ -6,16 +6,6 @@
 beforeEach(function() {
   'use strict';
 
-  // taken from Angular.js 2.0
-  var isArray = (function() {
-    if (typeof Array.isArray !== 'function') {
-      return function(value) {
-        return toString.call(value) === '[object Array]';
-      };
-    }
-    return Array.isArray;
-  })();
-
   function extendedTypeOf(x) {
     var actual;
     if( isArray(x) ) {
@@ -78,12 +68,12 @@ beforeEach(function() {
     // inspired by: https://gist.github.com/prantlf/8631877
     toBeInstanceOf: function() {
       return {
-        compare: function (actual, expected) {
+        compare: function (actual, expected, name) {
           var result = {
             pass: actual instanceof expected
           };
           var notText = result.pass? ' not' : '';
-          result.message = 'Expected ' + actual + notText + ' to be an instance of ' + expected;
+          result.message = 'Expected ' + actual + notText + ' to be an instance of ' + (name||expected.constructor.name);
           return result;
         }
       };
@@ -97,29 +87,103 @@ beforeEach(function() {
      */
     toBeA: function() {
       return {
-        compare: compare.bind(null, 'a')
+        compare: function() {
+          var args = Array.prototype.slice.apply(arguments);
+          return compare.apply(null, ['a'].concat(args));
+        }
       };
     },
 
     toBeAn: function() {
       return {
-        compare: compare.bind(null, 'an')
+        compare: function(actual) {
+          var args = Array.prototype.slice.apply(arguments);
+          return compare.apply(null, ['an'].concat(args));
+        }
       }
     },
 
     toHaveKey: function() {
       return {
         compare: function(actual, key) {
-          var pass = actual.hasOwnProperty(key);
+          var pass =
+            actual &&
+            typeof(actual) === 'object' &&
+            actual.hasOwnProperty(key);
           var notText = pass? ' not' : '';
           return {
             pass: pass,
-            message: 'Expected ' + key + notText + ' to exist in ' + extendedTypeOf(actual)
+            message: 'Expected key ' + key + notText + ' to exist in ' + extendedTypeOf(actual)
+          }
+        }
+      }
+    },
+
+    toHaveLength: function() {
+      return {
+        compare: function(actual, len) {
+          var actLen = isArray(actual)? actual.length : 'not an array';
+          var pass = actLen === len;
+          var notText = pass? ' not' : '';
+          return {
+            pass: pass,
+            message: 'Expected array ' + notText + ' to have length ' + len + ', but it was ' + actLen
+          }
+        }
+      }
+    },
+
+    toBeEmpty: function() {
+      return {
+        compare: function(actual) {
+          var pass, contents;
+          if( isObject(actual) ) {
+            actual = Object.keys(actual);
+          }
+          if( isArray(actual) ) {
+            pass = actual.length === 0;
+            contents = 'had ' + actual.length + ' items';
+          }
+          else {
+            pass = false;
+            contents = 'was not an array or object';
+          }
+          var notText = pass? ' not' : '';
+          return {
+            pass: pass,
+            message: 'Expected collection ' + notText + ' to be empty, but it ' + contents
+          }
+        }
+      }
+    },
+
+    toHaveCallCount: function() {
+      return {
+        compare: function(spy, expCount) {
+          var pass, not, count;
+          count = spy.calls.count();
+          pass = count === expCount;
+          not = pass? '" not' : '"';
+          return {
+            pass: pass,
+            message: 'Expected spy "' + spy.and.identity() + not + ' to have been called ' + expCount + ' times'
+            + (pass? '' : ', but it was called ' + count)
           }
         }
       }
     }
   });
+
+  function isObject(x) {
+    return x && typeof(x) === 'object' && !isArray(x);
+  }
+
+  function isArray(x) {
+    if (typeof Array.isArray !== 'function') {
+      return x && typeof x === 'object' && Object.prototype.toString.call(x) === '[object Array]';
+    }
+    return Array.isArray(x);
+  }
 
   function isFirebaseRef(obj) {
     return extendedTypeOf(obj) === 'object' &&
