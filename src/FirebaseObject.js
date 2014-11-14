@@ -188,17 +188,19 @@
          * Called by $firebase whenever an item is changed at the server.
          * This method must exist on any objectFactory passed into $firebase.
          *
-         * @param snap
+         * It should return true if any changes were made, otherwise `$$notify` will
+         * not be invoked.
+         *
+         * @param {object} snap a Firebase snapshot
+         * @return {boolean} true if any changes were made.
          */
         $$updated: function (snap) {
           // applies new data to this object
           var changed = $firebaseUtils.updateRec(this, snap);
+          // applies any defaults set using $$defaults
           $firebaseUtils.applyDefaults(this, this.$$defaults);
-          if( changed ) {
-            // notifies $watch listeners and
-            // updates $scope if bound to a variable
-            this.$$notify();
-          }
+          // returning true here causes $$notify to be triggered
+          return changed;
         },
 
         /**
@@ -225,8 +227,8 @@
         },
 
         /**
-         * Updates any bound scope variables and notifies listeners registered
-         * with $watch any time there is a change to data
+         * Updates any bound scope variables and
+         * notifies listeners registered with $watch
          */
         $$notify: function() {
           var self = this, list = this.$$conf.listeners.slice();

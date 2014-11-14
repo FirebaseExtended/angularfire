@@ -261,7 +261,14 @@
           var obj = new ObjectFactory($inst, destroy, def.promise);
           var ref = $inst.$ref();
           var batch = $firebaseUtils.batch();
-          var applyUpdate = batch(obj.$$updated, obj);
+          var applyUpdate = batch(function(snap) {
+            var changed = obj.$$updated(snap);
+            if( changed ) {
+              // notifies $watch listeners and
+              // updates $scope if bound to a variable
+              obj.$$notify();
+            }
+          });
           var error = batch(obj.$$error, obj);
           var resolve = batch(_resolveFn);
 
