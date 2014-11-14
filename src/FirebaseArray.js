@@ -356,7 +356,7 @@
         /**
          * Handles placement of recs in the array, sending notifications,
          * and other internals. Called by the $firebase synchronization process
-         * after $$added, $$updated, $$moved, and $$removed
+         * after $$added, $$updated, $$moved, and $$removed.
          *
          * @param {string} event one of child_added, child_removed, child_moved, or child_changed
          * @param {object} rec
@@ -383,7 +383,7 @@
               changed = true;
               break;
             default:
-              throw new Error('Invalid event type ' + event);
+              throw new Error('Invalid event type: ' + event);
           }
           if( angular.isDefined(pos) ) {
             // add it to the array
