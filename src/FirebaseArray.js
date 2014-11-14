@@ -64,8 +64,8 @@
         this._destroyFn = destroyFn;
 
         // indexCache is a weak hashmap (a lazy list) of keys to array indices,
-        // items are not guaranteed to stay up to date in this list (since the list
-        // can be manually edited without calling the $ methods) and it should
+        // items are not guaranteed to stay up to date in this list (since the data
+        // array can be manually edited without calling the $ methods) and it should
         // always be used with skepticism regarding whether it is accurate
         // (see $indexFor() below for proper usage)
         this._indexCache = {};
