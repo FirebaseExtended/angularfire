@@ -5,7 +5,7 @@
    * manually invoked. Instead, one should create a $firebase object and call $asArray
    * on it:  <code>$firebase( firebaseRef ).$asArray()</code>;
    *
-   * Internally, the $firebase object depends on this class to provide 5 methods, which it invokes
+   * Internally, the $firebase object depends on this class to provide 5 $$ methods, which it invokes
    * to notify the array whenever a change has been made at the server:
    *    $$added - called whenever a child_added event occurs
    *    $$updated - called whenever a child_changed event occurs
@@ -15,8 +15,9 @@
    *    $$process - called immediately after $$added/$$updated/$$moved/$$removed
    *                to splice/manipulate the array and invokes $$notify
    *
-   * Additionally, there is one more method of interest to devs extending this class:
+   * Additionally, these methods may be of interest to devs extending this class:
    *    $$notify - triggers notifications to any $watch listeners, called by $$process
+   *    $$getKey - determines how to look up a record's key (returns $id by default)
    *
    * Instead of directly modifying this class, one should generally use the $extendFactory
    * method to add or change how methods behave. $extendFactory modifies the prototype of
@@ -169,7 +170,7 @@
          */
         $keyAt: function(indexOrItem) {
           var item = this._resolveItem(indexOrItem);
-          return this._getKey(item);
+          return this.$$getKey(item);
         },
 
         /**
@@ -186,7 +187,7 @@
           // evaluate whether our key is cached and, if so, whether it is up to date
           if( !cache.hasOwnProperty(key) || self.$keyAt(cache[key]) !== key ) {
             // update the hashmap
-            var pos = self.$list.findIndex(function(rec) { return self._getKey(rec) === key; });
+            var pos = self.$list.findIndex(function(rec) { return self.$$getKey(rec) === key; });
             if( pos !== -1 ) {
               cache[key] = pos;
             }
@@ -364,7 +365,7 @@
          * @returns {string||null}
          * @private
          */
-        _getKey: function(rec) { //todo rename this to $$getId
+        $$getKey: function(rec) {
           return angular.isObject(rec)? rec.$id : null;
         },
 
@@ -379,7 +380,7 @@
          * @private
          */
         $$process: function(event, rec, prevChild) {
-          var key = this._getKey(rec);
+          var key = this.$$getKey(rec);
           var changed = false;
           var curPos;
           switch(event) {
@@ -448,7 +449,7 @@
             if( i === 0 ) { i = this.$list.length; }
           }
           this.$list.splice(i, 0, rec);
-          this._indexCache[this._getKey(rec)] = i;
+          this._indexCache[this.$$getKey(rec)] = i;
           return i;
         },
 
@@ -487,7 +488,7 @@
             // a $id or even a $id that is in the array, it must be an actual record
             // the fastest way to determine this is to use $getRecord (to avoid iterating all recs)
             // and compare the two
-            var key = this._getKey(indexOrItem);
+            var key = this.$$getKey(indexOrItem);
             var rec = this.$getRecord(key);
             return rec === indexOrItem? rec : null;
           }
