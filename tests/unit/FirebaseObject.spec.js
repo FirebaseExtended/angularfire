@@ -248,6 +248,7 @@ describe('$FirebaseObject', function() {
       $timeout.flush();
       $fb.$set.calls.reset();
       obj.$$updated(fakeSnap({foo: 'bar'}));
+      obj.$$notify();
       flushAll();
       expect($scope.test).toEqual({foo: 'bar', $id: obj.$id, $priority: obj.$priority});
     });
