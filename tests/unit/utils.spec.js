@@ -172,12 +172,6 @@ describe('$firebaseUtils', function () {
         $utils.toJSON({foo: 'bar', baz: undef});
       }).toThrowError(Error);
     });
-
-    it('should parse dates into milliseconds since epoch', function() {
-      var date = new Date();
-      var ts = date.getTime();
-      expect($utils.toJSON({date: date}).date).toBe(ts);
-    });
   });
 
   describe('#getKey', function() {

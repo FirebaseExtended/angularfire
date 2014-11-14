@@ -374,7 +374,6 @@
             else {
               dat = {};
               utils.each(rec, function (v, k) {
-                if( v instanceof Date ) { v = v.getTime(); }
                 dat[k] = stripDollarPrefixedKeys(v);
               });
             }
