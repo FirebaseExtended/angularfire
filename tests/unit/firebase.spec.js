@@ -712,6 +712,7 @@ describe('$firebase', function () {
     });
 
     it('should batch requests', function() {
+      $fb.$asObject(); // creates the listeners
       flushAll();
       $utils.wait.completed.calls.reset();
       var ref = $fb.$ref();

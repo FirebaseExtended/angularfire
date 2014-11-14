@@ -64,6 +64,13 @@
         this._promise = readyPromise;
         this._destroyFn = destroyFn;
 
+        // indexCache is a weak hashmap (a lazy list) of keys to array indices,
+        // items are not guaranteed to stay up to date in this list (since the list
+        // can be manually edited without calling the $ methods) and it should
+        // always be used with skepticism regarding whether it is accurate
+        // (see $indexFor() below for proper usage)
+        this._indexCache = {};
+
         // Array.isArray will not work on objects which extend the Array class.
         // So instead of extending the Array class, we just return an actual array.
         // However, it's still possible to extend FirebaseArray and have the public methods
@@ -176,8 +183,16 @@
          */
         $indexFor: function(key) {
           var self = this;
-          // todo optimize and/or cache these? they wouldn't need to be perfect
-          return this.$list.findIndex(function(rec) { return self.$$getKey(rec) === key; });
+          var cache = self._indexCache;
+          // evaluate whether our key is cached and, if so, whether it is up to date
+          if( !cache.hasOwnProperty(key) || self.$keyAt(cache[key]) !== key ) {
+            // update the hashmap
+            var pos = self.$list.findIndex(function(rec) { return self.$$getKey(rec) === key; });
+            if( pos !== -1 ) {
+              cache[key] = pos;
+            }
+          }
+          return cache.hasOwnProperty(key)? cache[key] : -1;
         },
 
         /**
@@ -367,13 +382,13 @@
         $$process: function(event, rec, prevChild) {
           var key = this.$$getKey(rec);
           var changed = false;
-          var pos;
+          var curPos;
           switch(event) {
             case 'child_added':
-              pos = this.$indexFor(key);
+              curPos = this.$indexFor(key);
               break;
             case 'child_moved':
-              pos = this.$indexFor(key);
+              curPos = this.$indexFor(key);
               this._spliceOut(key);
               break;
             case 'child_removed':
@@ -386,9 +401,9 @@
             default:
               throw new Error('Invalid event type: ' + event);
           }
-          if( angular.isDefined(pos) ) {
+          if( angular.isDefined(curPos) ) {
             // add it to the array
-            changed = this._addAfter(rec, prevChild) !== pos;
+            changed = this._addAfter(rec, prevChild) !== curPos;
           }
           if( changed ) {
             // send notifications to anybody monitoring $watch
@@ -434,6 +449,7 @@
             if( i === 0 ) { i = this.$list.length; }
           }
           this.$list.splice(i, 0, rec);
+          this._indexCache[this.$$getKey(rec)] = i;
           return i;
         },
 
@@ -448,6 +464,7 @@
         _spliceOut: function(key) {
           var i = this.$indexFor(key);
           if( i > -1 ) {
+            delete this._indexCache[key];
             return this.$list.splice(i, 1)[0];
           }
           return null;
@@ -467,12 +484,13 @@
             return list[indexOrItem];
           }
           else if( angular.isObject(indexOrItem) ) {
-            var i = list.length;
-            while(i--) {
-              if( list[i] === indexOrItem ) {
-                return indexOrItem;
-              }
-            }
+            // it must be an item in this array; it's not sufficient for it just to have
+            // a $id or even a $id that is in the array, it must be an actual record
+            // the fastest way to determine this is to use $getRecord (to avoid iterating all recs)
+            // and compare the two
+            var key = this.$$getKey(indexOrItem);
+            var rec = this.$getRecord(key);
+            return rec === indexOrItem? rec : null;
           }
           return null;
         },
