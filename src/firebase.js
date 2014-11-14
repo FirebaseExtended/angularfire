@@ -227,7 +227,7 @@
             }
           });
           var updated = batch(function(snap) {
-            var rec = array.$getRecord(snap.name());
+            var rec = array.$getRecord($firebaseUtils.getKey(snap));
             if( rec ) {
               var changed = array.$$updated(snap);
               if( changed ) {
@@ -236,7 +236,7 @@
             }
           });
           var moved   = batch(function(snap, prevChild) {
-            var rec = array.$getRecord(snap.name());
+            var rec = array.$getRecord($firebaseUtils.getKey(snap));
             if( rec ) {
               var confirmed = array.$$moved(snap, prevChild);
               if( confirmed ) {
@@ -245,7 +245,7 @@
             }
           });
           var removed = batch(function(snap) {
-            var rec = array.$getRecord(snap.name());
+            var rec = array.$getRecord($firebaseUtils.getKey(snap));
             if( rec ) {
               var confirmed = array.$$removed(snap);
               if( confirmed ) {

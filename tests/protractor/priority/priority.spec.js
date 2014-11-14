@@ -127,7 +127,7 @@ describe('Priority App', function () {
         data.makeItChange = true;
         snap.ref().setWithPriority(data, pri, function(err) {
           if( err ) { def.reject(err); }
-          else { def.fulfill(snap.name()); }
+          else { def.fulfill(snap.key()); }
         })
       }, def.reject);
       return def.promise;

@@ -112,7 +112,7 @@ describe('$firebase', function () {
       expect(whiteSpy).toHaveBeenCalled();
       expect(blackSpy).not.toHaveBeenCalled();
       var ref = whiteSpy.calls.argsFor(0)[0];
-      expect(ref.name()).toBe(newId);
+      expect(ref.key()).toBe(newId);
     });
 
     it('should reject if fails', function() {
@@ -127,7 +127,7 @@ describe('$firebase', function () {
 
     it('should save correct data into Firebase', function() {
       var spy = jasmine.createSpy('push callback').and.callFake(function(ref) {
-        expect($fb.$ref().getData()[ref.name()]).toEqual({foo: 'pushtest'});
+        expect($fb.$ref().getData()[ref.key()]).toEqual({foo: 'pushtest'});
       });
       $fb.$push({foo: 'pushtest'}).then(spy);
       flushAll();
@@ -324,7 +324,7 @@ describe('$firebase', function () {
       flushAll();
       var arg = spy.calls.argsFor(0)[0];
       expect(arg).toBeAFirebaseRef();
-      expect(arg.name()).toBe('index');
+      expect(arg.key()).toBe('index');
     });
 
     it('should reject if failed', function() {

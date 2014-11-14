@@ -235,7 +235,7 @@ describe('$FirebaseArray', function () {
       var resRef = whiteSpy.calls.argsFor(0)[0];
       expect(whiteSpy).toHaveBeenCalled();
       expect(resRef).toBeAFirebaseRef();
-      expect(resRef.name()).toBe(expName);
+      expect(resRef.key()).toBe(expName);
       expect(blackSpy).not.toHaveBeenCalled();
     });
 

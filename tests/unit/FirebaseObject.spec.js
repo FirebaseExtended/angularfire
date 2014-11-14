@@ -31,7 +31,7 @@ describe('$FirebaseObject', function() {
 
   describe('constructor', function() {
     it('should set the record id', function() {
-      expect(obj.$id).toEqual($fb.$ref().name());
+      expect(obj.$id).toEqual($fb.$ref().key());
     });
 
     it('should accept a query', function() {
