@@ -360,29 +360,7 @@
               }
             }
 
-            // Okay, so this magic hack is um... magic. It increments a
-            // variable every 50 seconds (counterKey) so that whenever $digest
-            // is run, the variable will be dirty. This allows us to determine
-            // when $digest is invoked, manually check the meta vars, and
-            // manually invoke our watcher if the $ prefixed data has changed
-            (function() {
-              // create a counter and store it in scope
-              var counterKey = '_firebaseCounterForVar'+varName;
-              scope[counterKey] = 0;
-              // update the counter every 51ms
-              // why 51? because it must be greater than scopeUpdated's debounce
-              // or protractor has a conniption
-              var to = $interval(function() {
-                scope[counterKey]++;
-              }, 51, 0, false);
-              // watch the counter for changes (which means $digest ran)
-              self.subs.push(scope.$watch(counterKey, checkMetaVars));
-              // cancel our interval and clear var from scope if unbound
-              self.subs.push(function() {
-                $interval.cancel(to);
-                delete scope[counterKey];
-              });
-            })();
+            self.subs.push(scope.$watch(checkMetaVars));
 
             setScope(rec);
             self.subs.push(scope.$on('$destroy', self.unbind.bind(self)));
