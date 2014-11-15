@@ -25,7 +25,7 @@
    */
   angular.module('firebase').factory('$FirebaseObject', [
     '$parse', '$firebaseUtils', '$log', '$interval',
-    function($parse, $firebaseUtils, $log, $interval) {
+    function($parse, $firebaseUtils, $log) {
       /**
        * This constructor should probably never be called manually. It is used internally by
        * <code>$firebase.$asObject()</code>.
