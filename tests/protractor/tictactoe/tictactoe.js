@@ -18,7 +18,6 @@ app.controller('TicTacToeCtrl', function Chat($scope, $firebase) {
   // Initialize $scope variables
   $scope.whoseTurn = 'X';
 
-
   /* Resets the tictactoe Firebase reference */
   $scope.resetRef = function () {
     ["x0", "x1", "x2"].forEach(function (xCoord) {

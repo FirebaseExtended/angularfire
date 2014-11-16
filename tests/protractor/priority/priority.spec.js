@@ -11,9 +11,17 @@ describe('Priority App', function () {
   // Boolean used to clear the Firebase on the first test only
   var firebaseCleared = false;
 
-  beforeEach(function () {
-    var flow = protractor.promise.controlFlow();
+  var flow = protractor.promise.controlFlow();
 
+  function waitOne() {
+    return protractor.promise.delayed(500);
+  }
+
+  function sleep() {
+    return flow.execute(waitOne);
+  }
+
+  beforeEach(function () {
     if( !firebaseCleared ) {
       firebaseCleared = true;
       flow.execute(purge);
@@ -37,7 +45,9 @@ describe('Priority App', function () {
     function waitForData() {
       var def = protractor.promise.defer();
       firebaseRef.once('value', function() {
-        def.fulfill(true);
+        waitOne().then(function() {
+          def.fulfill(true);
+        });
       });
       return def.promise;
     }
@@ -66,6 +76,8 @@ describe('Priority App', function () {
     newMessageInput.sendKeys('Oh, hi. How are you?\n');
     newMessageInput.sendKeys('Pretty fantastic!\n');
 
+    sleep();
+
     // Make sure the page has three messages
     expect(messages.count()).toBe(3);
 
@@ -81,11 +93,9 @@ describe('Priority App', function () {
   });
 
   it('responds to external priority updates', function () {
-    var movesDone = waitForMoveEvents();
-    var flow = protractor.promise.controlFlow();
     flow.execute(moveRecords);
+    flow.execute(waitOne);
 
-    expect(movesDone).toBe(true);
     expect(messages.count()).toBe(3);
     expect($('.message:nth-of-type(1) .priority').getText()).toEqual('0');
     expect($('.message:nth-of-type(2) .priority').getText()).toEqual('1');
@@ -101,25 +111,9 @@ describe('Priority App', function () {
         .then(setPriority.bind(null, 2, 0));
     }
 
-    function waitForMoveEvents() {
-      var def = protractor.promise.defer();
-      var count = 0;
-      firebaseRef.on('child_moved', updateCount, def.reject);
-
-      function updateCount() {
-        if( ++count === 2 ) {
-          setTimeout(function() {
-            def.fulfill(true);
-          }, 10);
-          firebaseRef.off('child_moved', updateCount);
-        }
-      }
-      return def.promise;
-    }
-
     function setPriority(start, pri) {
       var def = protractor.promise.defer();
-      firebaseRef.startAt(start).limit(1).once('child_added', function(snap) {
+      firebaseRef.startAt(start).limitToFirst(1).once('child_added', function(snap) {
         var data = snap.val();
         //todo https://github.com/firebase/angularFire/issues/333
         //todo makeItChange just forces Angular to update the dom since it won't change
