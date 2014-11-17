@@ -2,9 +2,6 @@ var protractor = require('protractor');
 var Firebase = require('firebase');
 
 describe('Todo App', function () {
-  // Protractor instance
-  var ptor = protractor.getInstance();
-
   // Reference to the Firebase which stores the data for this demo
   var firebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/todo');
 
@@ -13,21 +10,45 @@ describe('Todo App', function () {
 
   // Reference to the todos repeater
   var todos = element.all(by.repeater('(id, todo) in todos'));
+  var flow = protractor.promise.controlFlow();
 
-  beforeEach(function (done) {
+  function waitOne() {
+    return protractor.promise.delayed(500);
+  }
+
+  function sleep() {
+    return flow.execute(waitOne);
+  }
+
+  beforeEach(function () {
+
+    if( !firebaseCleared ) {
+      flow.execute(purge);
+    }
+
     // Navigate to the todo app
     browser.get('todo/todo.html');
 
-    // Clear the Firebase before the first test and sleep until it's finished
-    if (!firebaseCleared) {
-      firebaseRef.remove(function() {
+    flow.execute(waitForData);
+
+    function purge() {
+      var def = protractor.promise.defer();
+      firebaseRef.remove(function(err) {
+        if( err ) { def.reject(err); return; }
         firebaseCleared = true;
-        done();
+        def.fulfill();
       });
+      return def.promise;
     }
-    else {
-      ptor.sleep(500);
-      done();
+
+    function waitForData() {
+      var def = protractor.promise.defer();
+      firebaseRef.once('value', function() {
+        waitOne().then(function() {
+          def.fulfill(true);
+        });
+      });
+      return def.promise;
     }
   });
 
@@ -49,6 +70,8 @@ describe('Todo App', function () {
     newTodoInput.sendKeys('Run 10 miles\n');
     newTodoInput.sendKeys('Build Firebase\n');
 
+    sleep();
+
     expect(todos.count()).toBe(3);
   });
 
@@ -59,6 +82,8 @@ describe('Todo App', function () {
     addRandomTodoButton.click();
     addRandomTodoButton.click();
 
+    sleep();
+
     expect(todos.count()).toBe(6);
   });
 
@@ -67,36 +92,50 @@ describe('Todo App', function () {
     $('.todo:nth-of-type(2) .removeTodoButton').click();
     $('.todo:nth-of-type(3) .removeTodoButton').click();
 
+    sleep();
+
     expect(todos.count()).toBe(4);
   });
 
-  it('updates when a new Todo is added remotely', function (done) {
+  it('updates when a new Todo is added remotely', function () {
     // Simulate a todo being added remotely
-    firebaseRef.push({
-      title: 'Wash the dishes',
-      completed: false
-    }, function() {
-      expect(todos.count()).toBe(5);
-      done();
+    flow.execute(function() {
+      var def = protractor.promise.defer();
+      firebaseRef.push({
+        title: 'Wash the dishes',
+        completed: false
+      }, function(err) {
+        if( err ) { def.reject(err); }
+        else { def.fulfill(); }
+      });
+      return def.promise;
     });
+    expect(todos.count()).toBe(5);
   });
 
-  it('updates when an existing Todo is removed remotely', function (done) {
+  it('updates when an existing Todo is removed remotely', function () {
     // Simulate a todo being removed remotely
-    var onCallback = firebaseRef.limit(1).on("child_added", function(childSnapshot) {
-      // Make sure we only remove a child once
-      firebaseRef.off("child_added", onCallback);
+    flow.execute(function() {
+      var def = protractor.promise.defer();
+      var onCallback = firebaseRef.limitToLast(1).on("child_added", function(childSnapshot) {
+        // Make sure we only remove a child once
+        firebaseRef.off("child_added", onCallback);
 
-      childSnapshot.ref().remove(function() {
-        expect(todos.count()).toBe(4);
-        done();
+        childSnapshot.ref().remove(function(err) {
+          if( err ) { def.reject(err); }
+          else { def.fulfill(); }
+        });
       });
+      return def.promise;
     });
+    expect(todos.count()).toBe(4);
   });
 
   it('stops updating once the sync array is destroyed', function () {
     // Destroy the sync array
     $('#destroyArrayButton').click();
+
+    sleep();
 
     expect(todos.count()).toBe(0);
   });

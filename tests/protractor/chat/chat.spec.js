@@ -17,21 +17,39 @@ describe('Chat App', function () {
   // Reference to messages count
   var messagesCount = element(by.id('messagesCount'));
 
-  beforeEach(function (done) {
+  var flow = protractor.promise.controlFlow();
+
+  function waitOne() {
+    return protractor.promise.delayed(500);
+  }
+
+  function sleep() {
+    flow.execute(waitOne);
+  }
+
+  beforeEach(function () {
+    // Clear the Firebase before the first test and sleep until it's finished
+    if (!firebaseCleared) {
+      flow.execute(function() {
+        var def = protractor.promise.defer();
+        firebaseRef.remove(function(err) {
+          if( err ) {
+            def.reject(err);
+          }
+          else {
+            firebaseCleared = true;
+            def.fulfill();
+          }
+        });
+        return def.promise;
+      });
+    }
+
     // Navigate to the chat app
     browser.get('chat/chat.html');
 
-    // Clear the Firebase before the first test and sleep until it's finished
-    if (!firebaseCleared) {
-      firebaseRef.remove(function() {
-        firebaseCleared = true;
-        done();
-      });
-    }
-    else {
-      ptor.sleep(500);
-      done();
-    }
+    // wait for page to load
+    sleep();
   });
 
   it('loads', function () {
@@ -53,6 +71,8 @@ describe('Chat App', function () {
     newMessageInput.sendKeys('Oh, hi. How are you?\n');
     newMessageInput.sendKeys('Pretty fantastic!\n');
 
+    sleep();
+
     // We should only have two messages in the repeater since we did a limit query
     expect(messages.count()).toBe(2);
 
@@ -60,64 +80,70 @@ describe('Chat App', function () {
     expect(messagesCount.getText()).toEqual('3');
   });
 
-  it('updates upon new remote messages', function (done) {
-    // Simulate a message being added remotely
-    firebaseRef.child("messages").push({
-      from: 'Guest 2000',
-      content: 'Remote message detected'
-    }, function() {
-      // Update the message count as well
-      firebaseRef.child("numMessages").transaction(function(currentCount) {
-        if (!currentCount) {
-          return 1;
-        } else {
-          return currentCount + 1;
-        }
-      }, function () {
-        // We should only have two messages in the repeater since we did a limit query
-        expect(messages.count()).toBe(2);
-
-        // Messages count should include all messages, not just the ones displayed
-        expect(messagesCount.getText()).toEqual('4');
-
-        // We need to sleep long enough for the promises above to resolve
-        ptor.sleep(500).then(function() {
-          done();
-        });
-      });
-    });
-  });
-
-  it('updates upon removed remote messages', function (done) {
-    // Simulate a message being deleted remotely
-    var onCallback = firebaseRef.child("messages").limit(1).on("child_added", function(childSnapshot) {
-      firebaseRef.child("messages").off("child_added", onCallback);
-      childSnapshot.ref().remove(function() {
+  it('updates upon new remote messages', function () {
+    flow.execute(function() {
+      var def = protractor.promise.defer();
+      // Simulate a message being added remotely
+      firebaseRef.child("messages").push({
+        from: 'Guest 2000',
+        content: 'Remote message detected'
+      }, function() {
+        // Update the message count as well
         firebaseRef.child("numMessages").transaction(function(currentCount) {
           if (!currentCount) {
             return 1;
           } else {
-            return currentCount - 1;
+            return currentCount + 1;
           }
-        }, function() {
-          // We should only have two messages in the repeater since we did a limit query
-          expect(messages.count()).toBe(2);
+        }, function (e, c, s) {
+          if( e ) { def.reject(e); }
+          else { def.fulfill(); }
+        });
+      });
+      return def.promise;
+    });
 
-          // Messages count should include all messages, not just the ones displayed
-          expect(messagesCount.getText()).toEqual('3');
+    // We should only have two messages in the repeater since we did a limit query
+    expect(messages.count()).toBe(2);
 
-          // We need to sleep long enough for the promises above to resolve
-          ptor.sleep(500).then(function() {
-            done();
+    // Messages count should include all messages, not just the ones displayed
+    expect(messagesCount.getText()).toEqual('4');
+  });
+
+  it('updates upon removed remote messages', function () {
+    flow.execute(function() {
+      var def = protractor.promise.defer();
+      // Simulate a message being deleted remotely
+      var onCallback = firebaseRef.child("messages").limitToLast(1).on("child_added", function(childSnapshot) {
+        firebaseRef.child("messages").off("child_added", onCallback);
+        childSnapshot.ref().remove(function() {
+          firebaseRef.child("numMessages").transaction(function(currentCount) {
+            if (!currentCount) {
+              return 1;
+            } else {
+              return currentCount - 1;
+            }
+          }, function(err) {
+            if( err ) { def.reject(err); }
+            else { def.fulfill(); }
           });
         });
       });
+      return def.promise;
     });
+
+    // We should only have two messages in the repeater since we did a limit query
+    expect(messages.count()).toBe(2);
+
+    // Messages count should include all messages, not just the ones displayed
+    expect(messagesCount.getText()).toEqual('3');
   });
 
   it('stops updating once the AngularFire bindings are destroyed', function () {
     // Destroy the AngularFire bindings
     $('#destroyButton').click();
+
+    sleep();
 
     expect(messages.count()).toBe(0);
     expect(messagesCount.getText()).toEqual('0');
