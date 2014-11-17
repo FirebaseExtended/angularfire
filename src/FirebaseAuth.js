@@ -71,10 +71,10 @@
     },
 
     // Authenticates the Firebase reference with a custom authentication token.
-    authWithCustomToken: function(authToken) {
+    authWithCustomToken: function(authToken, options) {
       var deferred = this._q.defer();
 
-      this._ref.authWithCustomToken(authToken, this._onLoginHandler.bind(this, deferred));
+      this._ref.authWithCustomToken(authToken, this._onLoginHandler.bind(this, deferred), options);
 
       return deferred.promise;
     },
@@ -138,14 +138,14 @@
     // Asynchronously fires the provided callback with the current authentication data every time
     // the authentication data changes. It also fires as soon as the authentication data is
     // retrieved from the server.
-    onAuth: function(callback) {
+    onAuth: function(callback, context) {
       var self = this;
 
-      this._ref.onAuth(callback);
+      this._ref.onAuth(callback, context);
 
       // Return a method to detach the `onAuth()` callback.
       return function() {
-        self._ref.offAuth(callback);
+        self._ref.offAuth(callback, context);
       };
     },
 
