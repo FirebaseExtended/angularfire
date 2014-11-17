@@ -1,0 +1,12 @@
+important - AngularFire support for Simple Login has been removed in favor of the new authentication methods introduced in Firebase 1.1.0.
+feature - Upgraded Firebase dependency to 2.0.x.
+feature - Added `$waitForAuth()` and `$requireAuth()` methods to easily retrieve and require authentication state in Angular routers.
+feature - Added `$remove()` method to `$FirebaseObject` to remove an entire object from Firebase.
+feature - Simplified the code required to extend the `$FirebaseArray` and `$FirebaseObject` factories.
+feature - Added automatic session persistence for all authentication methods.
+feature - Added a standardized `authData` returned for all authentication providers.
+changed - The `$firebaseSimpleLogin` service has been replaced with `$firebaseAuth`, which supports the new Firebase authentication methods introduced in Firebase 1.1.0.
+changed - `$login()` has been replaced with the functionally equivalent `$authWith*()` methods.
+changed - `$logout()` has been renamed to `$unauth()`.
+changed - The API for the user management methods have changed slightly.
+removed - The `user` property has been removed from the authentication service. You can now use `$getAuth()` to synchronously retrieve a client's authentication state.
