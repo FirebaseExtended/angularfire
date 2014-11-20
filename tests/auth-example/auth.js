@@ -1,6 +1,6 @@
 var app = angular.module('auth',['firebase']);
 
-app.controller('MainCtrl',function($scope,$firebaseAuth){
+app.controller('MainCtrl',function($scope,$firebaseAuth,$location){
 
   var ref = new Firebase('https://jrtechnical-testing.firebaseio.com/authtesting');
 
@@ -14,7 +14,13 @@ app.controller('MainCtrl',function($scope,$firebaseAuth){
     return angular.toJson($scope.data.authData,true);
   };
 
-  $scope.authMode='popup';
+  $scope.authMode=$location.search().authMode || 'popup';
+
+  $scope.$watch('authMode',function(newValue, oldValue){
+    if(newValue !== oldValue){
+      $location.search('authMode',newValue);
+    }
+  });
 
   $scope.login = function (provider){
     switch ($scope.authMode) {
