@@ -156,10 +156,10 @@
 
     // Helper onAuth() callback method for the two router-related methods.
     _routerMethodOnAuthPromise: function(rejectIfAuthDataIsNull) {
-      var ref = this._ref,
-          deferred = this._q.defer();
+      var ref = this._ref;
+      var deferred = this._q.defer();
 
-      function callback (authData){
+      function callback(authData) {
         if (authData !== null) {
           deferred.resolve(authData);
         } else if (rejectIfAuthDataIsNull) {
@@ -167,6 +167,7 @@
         } else {
           deferred.resolve(null);
         }
+
         // Turn off this onAuth() callback since we just needed to get the authentication data once.
         ref.offAuth(callback);
       }
