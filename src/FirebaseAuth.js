@@ -191,6 +191,7 @@
 
     // Bind the authentication state to a property on scope.
     // Returns a deregistration function, which is called automatically when scope is destroyed.
+    // TODO: use $parse to allow deep property names
     bindTo:function(scope,propertyName){
       var ref = this._ref;
 
