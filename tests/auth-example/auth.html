@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html ng-app="auth">
+<head>
+  <title>AngularFire Auth Manual Tests</title>
+
+  <!-- Angular -->
+  <script src="../../bower_components/angular/angular.min.js"></script>
+
+  <!-- Firebase -->
+  <script src="../../bower_components/firebase/firebase.js"></script>
+
+  <!-- AngularFire -->
+  <script src="../../dist/angularfire.js"></script>
+
+
+  <!-- AngularFire -->
+  <script src="auth.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body ng-controller="MainCtrl">
+
+<!-- Radio Buttons to Pick AuthMode (popup or redirect) -->
+<div class="method-container">
+  <input type="radio" ng-model="authMode" value="popup">Popup
+  <input type="radio" ng-model="authMode" value="redirect">Redirect
+</div>
+
+<!-- Login Buttons -->
+<div class="button-container">
+  <button ng-click="login('twitter')" ng-disabled="authData.provider=='twitter'">Twitter</button>
+  <button ng-click="login('facebook')" ng-disabled="authData.provider=='facebook'">Facebook</button>
+  <button ng-click="login('github')" ng-disabled="authData.provider=='github'">GitHub</button>
+  <button ng-click="login('google')" ng-disabled="authData.provider=='google'">Google</button>
+  <button ng-click="anonymous()" ng-disabled="authData.provider=='anonymous'">Anonymous</button>
+  <button ng-click="logout()" ng-disabled="authData == null">Logout</button>
+</div>
+
+<pre>{{prettyData()}}</pre>
+</body>
+</html>
