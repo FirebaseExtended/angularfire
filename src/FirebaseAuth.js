@@ -5,7 +5,7 @@
 
   // Define a service which provides user authentication and management.
   angular.module('firebase').factory('$firebaseAuth', [
-    '$q', function($q) {
+    '$q', '$parse', function($q, $parse) {
       // This factory returns an object containing the current authentication state of the client.
       // This service takes one argument:
       //
@@ -14,14 +14,15 @@
       // The returned object contains methods for authenticating clients, retrieving authentication
       // state, and managing users.
       return function(ref) {
-        var auth = new FirebaseAuth($q, ref);
+        var auth = new FirebaseAuth($q, $parse, ref);
         return auth.construct();
       };
     }
   ]);
 
-  FirebaseAuth = function($q, ref) {
+  FirebaseAuth = function($q, $parse, ref) {
     this._q = $q;
+    this._parse = $parse;
 
     if (typeof ref === 'string') {
       throw new Error('Please provide a Firebase reference instead of a URL when creating a `$firebaseAuth` object.');
@@ -191,13 +192,13 @@
 
     // Bind the authentication state to a property on scope.
     // Returns a deregistration function, which is called automatically when scope is destroyed.
-    // TODO: use $parse to allow deep property names
     bindTo:function(scope,propertyName){
       var ref = this._ref;
+      var parsed = this._parse(propertyName);
 
       function callback(authData){
         scope.$evalAsync(function(){
-          scope[propertyName] = authData;
+          parsed.assign(scope,authData);
         });
       }
 

@@ -29,12 +29,12 @@
 
 <!-- Login Buttons -->
 <div class="button-container">
-  <button ng-click="login('twitter')" ng-disabled="authData.provider=='twitter'">Twitter</button>
-  <button ng-click="login('facebook')" ng-disabled="authData.provider=='facebook'">Facebook</button>
-  <button ng-click="login('github')" ng-disabled="authData.provider=='github'">GitHub</button>
-  <button ng-click="login('google')" ng-disabled="authData.provider=='google'">Google</button>
-  <button ng-click="anonymous()" ng-disabled="authData.provider=='anonymous'">Anonymous</button>
-  <button ng-click="logout()" ng-disabled="authData == null">Logout</button>
+  <button ng-click="login('twitter')"  ng-disabled="data.authData.provider=='twitter'">Twitter</button>
+  <button ng-click="login('facebook')" ng-disabled="data.authData.provider=='facebook'">Facebook</button>
+  <button ng-click="login('github')"   ng-disabled="data.authData.provider=='github'">GitHub</button>
+  <button ng-click="login('google')"   ng-disabled="data.authData.provider=='google'">Google</button>
+  <button ng-click="anonymous()"       ng-disabled="data.authData.provider=='anonymous'">Anonymous</button>
+  <button ng-click="logout()"          ng-disabled="data.authData == null">Logout</button>
 </div>
 
 <pre>{{prettyData()}}</pre>

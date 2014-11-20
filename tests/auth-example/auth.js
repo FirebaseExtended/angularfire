@@ -6,10 +6,12 @@ app.controller('MainCtrl',function($scope,$firebaseAuth){
 
   var auth = $firebaseAuth(ref);
 
-  auth.$bindTo($scope,'authData');
+  $scope.data = {};
+
+  auth.$bindTo($scope,'data.authData');
 
   $scope.prettyData = function(){
-    return angular.toJson($scope.authData,true);
+    return angular.toJson($scope.data.authData,true);
   };
 
   $scope.authMode='popup';
