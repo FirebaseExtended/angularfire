@@ -26,6 +26,11 @@ html,body {
     margin-bottom: 20px;
 }
 
+/*
+   Button styling is a modified copy of Tom Raspo's Simple Web Buttons.
+   Check it out at: http://www.lab.tommasoraspo.com/simple-web-buttoms/
+*/
+
 button{
     display: inline-block;
     text-decoration: none;
