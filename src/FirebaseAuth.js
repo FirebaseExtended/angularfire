@@ -46,6 +46,7 @@
         $getAuth: this.getAuth.bind(this),
         $requireAuth: this.requireAuth.bind(this),
         $waitForAuth: this.waitForAuth.bind(this),
+        $bindTo:this.bindTo.bind(this),
 
         // User management methods
         $createUser: this.createUser.bind(this),
@@ -186,6 +187,28 @@
       this._ref.onAuth(this._routerMethodOnAuthCallback.bind(this, deferred, /* rejectIfAuthDataIsNull */ false));
 
       return deferred.promise;
+    },
+
+    // Bind the authentication state to a property on scope.
+    // Returns a deregistration function, which is called automatically when scope is destroyed.
+    bindTo:function(scope,propertyName){
+      var ref = this._ref;
+
+      function callback(authData){
+        scope.$evalAsync(function(){
+          scope[propertyName] = authData;
+        });
+      }
+
+      function deregister(){
+        ref.offAuth(callback);
+      }
+
+      scope.$on('$destroy',deregister);
+
+      ref.onAuth(callback);
+
+      return deregister;
     },
 
 
