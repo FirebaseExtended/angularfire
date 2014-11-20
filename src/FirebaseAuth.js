@@ -159,7 +159,7 @@
       var ref = this._ref,
           deferred = this._q.defer();
 
-      var callback = function (authData){
+      function callback (authData){
         if (authData !== null) {
           deferred.resolve(authData);
         } else if (rejectIfAuthDataIsNull) {
@@ -169,7 +169,9 @@
         }
         // Turn off this onAuth() callback since we just needed to get the authentication data once.
         ref.offAuth(callback);
-      };
+      }
+
+      ref.onAuth(callback);
 
       return deferred.promise;
     },
