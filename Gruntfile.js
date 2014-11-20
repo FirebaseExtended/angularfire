@@ -95,12 +95,12 @@ module.exports = function(grunt) {
         configFile: 'tests/automatic_karma.conf.js'
       },
       manual: {
-        configFile: 'tests/manual_karma.conf.js',
+        configFile: 'tests/manual_karma.conf.js'
       },
       singlerun: {},
       watch: {
          autowatch: true,
-         singleRun: false,
+         singleRun: false
       },
       saucelabs: {
         configFile: 'tests/sauce_karma.conf.js'
