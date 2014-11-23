@@ -334,11 +334,12 @@
               parsed.assign(scope, $firebaseUtils.scopeData(rec));
             }
 
+            var send = $firebaseUtils.debounce(function() {
+              rec.$$scopeUpdated(getScope())
+                ['finally'](function() { sending = false; });
+            }, 50, 500);
+
             var scopeUpdated = function() {
-              var send = $firebaseUtils.debounce(function() {
-                rec.$$scopeUpdated(getScope())
-                  ['finally'](function() { sending = false; });
-              }, 50, 500);
               if( !equals(rec) ) {
                 sending = true;
                 send();
