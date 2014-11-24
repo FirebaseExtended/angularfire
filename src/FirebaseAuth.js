@@ -51,7 +51,8 @@
         $createUser: this.createUser.bind(this),
         $changePassword: this.changePassword.bind(this),
         $removeUser: this.removeUser.bind(this),
-        $sendPasswordResetEmail: this.sendPasswordResetEmail.bind(this)
+        $resetPassword: this.resetPassword.bind(this),
+        $sendPasswordResetEmail: this.resetPassword.bind(this)
       };
 
       return this._object;
@@ -196,13 +197,19 @@
     // Creates a new email/password user. Note that this function only creates the user, if you
     // wish to log in as the newly created user, call $authWithPassword() after the promise for
     // this method has been resolved.
-    createUser: function(email, password) {
+    createUser: function(emailOrCredentials, password) {
       var deferred = this._q.defer();
 
-      this._ref.createUser({
-        email: email,
-        password: password
-      }, function(error) {
+      // Allow this method to take a single credentials argument or two separate string arguments
+      var credentials = emailOrCredentials;
+      if (typeof emailOrCredentials === "string") {
+        credentials = {
+          email: emailOrCredentials,
+          password: password
+        };
+      }
+
+      this._ref.createUser(credentials, function(error) {
         if (error !== null) {
           deferred.reject(error);
         } else {
@@ -214,33 +221,44 @@
     },
 
     // Changes the password for an email/password user.
-    changePassword: function(email, oldPassword, newPassword) {
+    changePassword: function(emailOrCredentials, oldPassword, newPassword) {
       var deferred = this._q.defer();
 
-      this._ref.changePassword({
-        email: email,
-        oldPassword: oldPassword,
-        newPassword: newPassword
-      }, function(error) {
-          if (error !== null) {
-            deferred.reject(error);
-          } else {
-            deferred.resolve();
-          }
+      // Allow this method to take a single credentials argument or three separate string arguments
+      var credentials = emailOrCredentials;
+      if (typeof emailOrCredentials === "string") {
+        credentials = {
+          email: emailOrCredentials,
+          oldPassword: oldPassword,
+          newPassword: newPassword
+        };
+      }
+
+      this._ref.changePassword(credentials, function(error) {
+        if (error !== null) {
+          deferred.reject(error);
+        } else {
+          deferred.resolve();
         }
-      );
+      });
 
       return deferred.promise;
     },
 
     // Removes an email/password user.
-    removeUser: function(email, password) {
+    removeUser: function(emailOrCredentials, password) {
       var deferred = this._q.defer();
 
-      this._ref.removeUser({
-        email: email,
-        password: password
-      }, function(error) {
+      // Allow this method to take a single credentials argument or two separate string arguments
+      var credentials = emailOrCredentials;
+      if (typeof emailOrCredentials === "string") {
+        credentials = {
+          email: emailOrCredentials,
+          password: password
+        };
+      }
+
+      this._ref.removeUser(credentials, function(error) {
         if (error !== null) {
           deferred.reject(error);
         } else {
@@ -252,12 +270,18 @@
     },
 
     // Sends a password reset email to an email/password user.
-    sendPasswordResetEmail: function(email) {
+    resetPassword: function(emailOrCredentials) {
       var deferred = this._q.defer();
 
-      this._ref.resetPassword({
-        email: email
-      }, function(error) {
+      // Allow this method to take a single credentials argument or a single string argument
+      var credentials = emailOrCredentials;
+      if (typeof emailOrCredentials === "string") {
+        credentials = {
+          email: emailOrCredentials
+        };
+      }
+
+      this._ref.resetPassword(credentials, function(error) {
         if (error !== null) {
           deferred.reject(error);
         } else {
