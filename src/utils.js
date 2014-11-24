@@ -77,7 +77,7 @@
             }
 
             // clears the current wait timer and creates a new one
-            // however, if maxWait is exceeded, calles runNow() immediately
+            // however, if maxWait is exceeded, calls runNow() immediately
             function resetTimer() {
               if( cancelTimer ) {
                 cancelTimer();
@@ -130,7 +130,7 @@
             if( !maxWait ) { maxWait = wait*10 || 100; }
 
             // clears the current wait timer and creates a new one
-            // however, if maxWait is exceeded, calles runNow() immediately
+            // however, if maxWait is exceeded, calls runNow() immediately
             function resetTimer() {
               if( cancelTimer ) {
                 cancelTimer();
