@@ -52,7 +52,7 @@
         $changePassword: this.changePassword.bind(this),
         $removeUser: this.removeUser.bind(this),
         $resetPassword: this.resetPassword.bind(this),
-        $sendPasswordResetEmail: this.resetPassword.bind(this)
+        $sendPasswordResetEmail: this.sendPasswordResetEmail.bind(this)
       };
 
       return this._object;
@@ -267,6 +267,12 @@
       });
 
       return deferred.promise;
+    },
+
+    // Sends a password reset email to an email/password user. [DEPRECATED]
+    sendPasswordResetEmail: function(emailOrCredentials) {
+      console.warn("$sendPasswordResetEmail() has been deprecated in favor of the equivalent $resetPassword().");
+      return this.resetPassword(emailOrCredentials);
     },
 
     // Sends a password reset email to an email/password user.
