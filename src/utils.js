@@ -62,6 +62,7 @@
             var queue = [];
             var start;
             var cancelTimer;
+            var runScheduledForNextTick;
 
             // returns `fn` wrapped in a function that queues up each call event to be
             // invoked later inside fo runNow()
@@ -77,14 +78,17 @@
             }
 
             // clears the current wait timer and creates a new one
-            // however, if maxWait is exceeded, calls runNow() immediately
+            // however, if maxWait is exceeded, calls runNow() on the next tick.
             function resetTimer() {
               if( cancelTimer ) {
                 cancelTimer();
                 cancelTimer = null;
               }
               if( start && Date.now() - start > maxWait ) {
-                utils.compile(runNow);
+                if(!runScheduledForNextTick){
+                  runScheduledForNextTick = true;
+                  utils.compile(runNow);
+                }
               }
               else {
                 if( !start ) { start = Date.now(); }
@@ -96,6 +100,7 @@
             function runNow() {
               cancelTimer = null;
               start = null;
+              runScheduledForNextTick = false;
               var copyList = queue.slice(0);
               queue = [];
               angular.forEach(copyList, function(parts) {
@@ -114,7 +119,7 @@
            * @param {int} [maxWait] max milliseconds to wait before sending out, defaults to wait * 10 or 100
            */
           debounce: function(fn, ctx, wait, maxWait) {
-            var start, cancelTimer, args;
+            var start, cancelTimer, args, runScheduledForNextTick;
             if( typeof(ctx) === 'number' ) {
               maxWait = wait;
               wait = ctx;
@@ -130,14 +135,17 @@
             if( !maxWait ) { maxWait = wait*10 || 100; }
 
             // clears the current wait timer and creates a new one
-            // however, if maxWait is exceeded, calls runNow() immediately
+            // however, if maxWait is exceeded, calls runNow() on the next tick.
             function resetTimer() {
               if( cancelTimer ) {
                 cancelTimer();
                 cancelTimer = null;
               }
               if( start && Date.now() - start > maxWait ) {
-                utils.compile(runNow);
+                if(!runScheduledForNextTick){
+                  runScheduledForNextTick = true;
+                  utils.compile(runNow);
+                }
               }
               else {
                 if( !start ) { start = Date.now(); }
@@ -145,10 +153,11 @@
               }
             }
 
-            // Clears the queue and invokes all of the functions awaiting notification
+            // Clears the queue and invokes the debounced function with the most recent arguments
             function runNow() {
               cancelTimer = null;
               start = null;
+              runScheduledForNextTick = false;
               fn.apply(ctx, args);
             }
 

@@ -51,6 +51,42 @@ describe('$firebaseUtils', function () {
     });
   });
 
+  describe('#debounce', function(){
+    it('should trigger function with arguments',function(){
+      var spy = jasmine.createSpy();
+      $utils.debounce(spy,10)('foo', 'bar');
+      $timeout.flush();
+      expect(spy).toHaveBeenCalledWith('foo', 'bar');
+    });
+
+    it('should only trigger once, with most recent arguments',function(){
+      var spy = jasmine.createSpy();
+      var fn =  $utils.debounce(spy,10);
+      fn('foo', 'bar');
+      fn('baz', 'biz');
+      $timeout.flush();
+      expect(spy.calls.count()).toBe(1);
+      expect(spy).toHaveBeenCalledWith('baz', 'biz');
+    });
+
+    it('should only trigger once (timing corner case)',function(){
+      var spy = jasmine.createSpy();
+      var fn =  $utils.debounce(spy, null, 1, 2);
+      fn('foo', 'bar');
+      var start = Date.now();
+
+      // block for 3ms without releasing
+      while(Date.now() - start < 3){ }
+
+      fn('bar', 'baz');
+      fn('baz', 'biz');
+      expect(spy).not.toHaveBeenCalled();
+      $timeout.flush();
+      expect(spy.calls.count()).toBe(1);
+      expect(spy).toHaveBeenCalledWith('baz', 'biz');
+    });
+  });
+
   describe('#updateRec', function() {
     it('should return true if changes applied', function() {
       var rec = {};
