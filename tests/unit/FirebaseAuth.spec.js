@@ -53,8 +53,9 @@ describe('FirebaseAuth',function(){
   describe('.$authWithCustomToken',function(){
 
     it('passes custom token to underlying method',function(){
-      auth.$authWithCustomToken('myToken');
-      expect(ref.authWithCustomToken).toHaveBeenCalledWith('myToken',jasmine.any(Function));
+      var options = {optionA:'a'};
+      auth.$authWithCustomToken('myToken',options);
+      expect(ref.authWithCustomToken).toHaveBeenCalledWith('myToken', jasmine.any(Function), options);
     });
 
     it('will revoke the promise if authentication fails',function(){
