@@ -14,7 +14,8 @@ describe('FirebaseAuth',function(){
 
     ref = jasmine.createSpyObj('ref',
       ['authWithCustomToken','authAnonymously','authWithPassword',
-        'authWithOAuthPopup','authWithOAuthRedirect','authWithOAuthToken'
+        'authWithOAuthPopup','authWithOAuthRedirect','authWithOAuthToken',
+        'unauth','getAuth','onAuth','offAuth'
       ]);
 
     inject(function(_$firebaseAuth_,_$timeout_){
@@ -201,6 +202,48 @@ describe('FirebaseAuth',function(){
       callback('authWithOAuthToken')(null,'myResult');
       $timeout.flush();
       expect(result).toEqual('myResult');
+    });
+  });
+
+  describe('.$getAuth()',function(){
+    it('returns getAuth() from backing ref',function(){
+      ref.getAuth.and.returnValue({provider:'facebook'});
+      expect(auth.$getAuth()).toEqual({provider:'facebook'});
+      ref.getAuth.and.returnValue({provider:'twitter'});
+      expect(auth.$getAuth()).toEqual({provider:'twitter'});
+      ref.getAuth.and.returnValue(null);
+      expect(auth.$getAuth()).toEqual(null);
+    });
+  });
+
+  describe('.$unauth()',function(){
+    it('will call unauth() on the backing ref if logged in',function(){
+      ref.getAuth.and.returnValue({provider:'facebook'});
+      auth.$unauth();
+      expect(ref.unauth).toHaveBeenCalled();
+    });
+
+    it('will NOT call unauth() on the backing ref if NOT logged in',function(){
+      ref.getAuth.and.returnValue(null);
+      auth.$unauth();
+      expect(ref.unauth).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('.$onAuth()',function(){
+    it('calls onAuth() on the backing ref with callback and context provided',function(){
+      function cb(){}
+      var ctx = {};
+      auth.$onAuth(cb,ctx);
+      expect(ref.onAuth).toHaveBeenCalledWith(cb, ctx);
+    });
+
+    it('returns a deregistration function that calls offAuth on the backing ref with callback and context',function(){
+      function cb(){}
+      var ctx = {};
+      var deregister = auth.$onAuth(cb,ctx);
+      deregister();
+      expect(ref.offAuth).toHaveBeenCalledWith(cb, ctx);
     });
   });
 });
