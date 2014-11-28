@@ -50,7 +50,7 @@
            *   fn2();
            *   console.log(total); // 0 (nothing invoked yet)
            *   // after 10ms will log "10" and then "20"
-           * </pre></code>
+           * </code></pre>
            *
            * @param {int} wait number of milliseconds to pause before sending out after each invocation
            * @param {int} maxWait max milliseconds to wait before sending out, defaults to wait * 10 or 100
@@ -77,7 +77,7 @@
             }
 
             // clears the current wait timer and creates a new one
-            // however, if maxWait is exceeded, calles runNow() immediately
+            // however, if maxWait is exceeded, calls runNow() immediately
             function resetTimer() {
               if( cancelTimer ) {
                 cancelTimer();
@@ -130,7 +130,7 @@
             if( !maxWait ) { maxWait = wait*10 || 100; }
 
             // clears the current wait timer and creates a new one
-            // however, if maxWait is exceeded, calles runNow() immediately
+            // however, if maxWait is exceeded, calls runNow() immediately
             function resetTimer() {
               if( cancelTimer ) {
                 cancelTimer();

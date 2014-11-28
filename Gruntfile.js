@@ -95,12 +95,12 @@ module.exports = function(grunt) {
         configFile: 'tests/automatic_karma.conf.js'
       },
       manual: {
-        configFile: 'tests/manual_karma.conf.js',
+        configFile: 'tests/manual_karma.conf.js'
       },
       singlerun: {},
       watch: {
          autowatch: true,
-         singleRun: false,
+         singleRun: false
       },
       saucelabs: {
         configFile: 'tests/sauce_karma.conf.js'
@@ -144,7 +144,7 @@ module.exports = function(grunt) {
   // Single run tests
   grunt.registerTask('test', ['test:unit', 'test:e2e']);
   grunt.registerTask('test:unit', ['karma:singlerun']);
-  grunt.registerTask('test:e2e', ['connect:testserver', 'protractor:singlerun']);
+  grunt.registerTask('test:e2e', ['concat', 'connect:testserver', 'protractor:singlerun']);
   grunt.registerTask('test:manual', ['karma:manual']);
 
   // Travis CI testing
@@ -153,7 +153,7 @@ module.exports = function(grunt) {
 
   // Sauce tasks
   grunt.registerTask('sauce:unit', ['karma:saucelabs']);
-  grunt.registerTask('sauce:e2e', ['connect:testserver', 'protractor:saucelabs']);
+  grunt.registerTask('sauce:e2e', ['concat', 'connect:testserver', 'protractor:saucelabs']);
 
   // Watch tests
   grunt.registerTask('test:watch', ['karma:watch']);

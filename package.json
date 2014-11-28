@@ -31,6 +31,7 @@
     "package.json"
   ],
   "dependencies": {
+    "angular": "1.3.x",
     "firebase": "2.0.x"
   },
   "devDependencies": {

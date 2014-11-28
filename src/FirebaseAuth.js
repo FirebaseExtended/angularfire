@@ -71,10 +71,10 @@
     },
 
     // Authenticates the Firebase reference with a custom authentication token.
-    authWithCustomToken: function(authToken) {
+    authWithCustomToken: function(authToken, options) {
       var deferred = this._q.defer();
 
-      this._ref.authWithCustomToken(authToken, this._onLoginHandler.bind(this, deferred));
+      this._ref.authWithCustomToken(authToken, this._onLoginHandler.bind(this, deferred), options);
 
       return deferred.promise;
     },
@@ -138,14 +138,14 @@
     // Asynchronously fires the provided callback with the current authentication data every time
     // the authentication data changes. It also fires as soon as the authentication data is
     // retrieved from the server.
-    onAuth: function(callback) {
+    onAuth: function(callback, context) {
       var self = this;
 
-      this._ref.onAuth(callback);
+      this._ref.onAuth(callback, context);
 
       // Return a method to detach the `onAuth()` callback.
       return function() {
-        self._ref.offAuth(callback);
+        self._ref.offAuth(callback, context);
       };
     },
 
@@ -155,37 +155,38 @@
     },
 
     // Helper onAuth() callback method for the two router-related methods.
-    _routerMethodOnAuthCallback: function(deferred, rejectIfAuthDataIsNull, authData) {
-      if (authData !== null) {
-        deferred.resolve(authData);
-      } else if (rejectIfAuthDataIsNull) {
-        deferred.reject("AUTH_REQUIRED");
-      } else {
-        deferred.resolve(null);
+    _routerMethodOnAuthPromise: function(rejectIfAuthDataIsNull) {
+      var ref = this._ref;
+      var deferred = this._q.defer();
+
+      function callback(authData) {
+        if (authData !== null) {
+          deferred.resolve(authData);
+        } else if (rejectIfAuthDataIsNull) {
+          deferred.reject("AUTH_REQUIRED");
+        } else {
+          deferred.resolve(null);
+        }
+
+        // Turn off this onAuth() callback since we just needed to get the authentication data once.
+        ref.offAuth(callback);
       }
 
-      // Turn off this onAuth() callback since we just needed to get the authentication data once.
-      this._ref.offAuth(this._routerMethodOnAuthCallback);
+      ref.onAuth(callback);
+
+      return deferred.promise;
     },
 
     // Returns a promise which is resolved if the client is authenticated and rejects otherwise.
     // This can be used to require that a route has a logged in user.
     requireAuth: function() {
-      var deferred = this._q.defer();
-
-      this._ref.onAuth(this._routerMethodOnAuthCallback.bind(this, deferred, /* rejectIfAuthDataIsNull */ true));
-
-      return deferred.promise;
+      return this._routerMethodOnAuthPromise(true);
     },
 
     // Returns a promise which is resolved with the client's current authenticated data. This can
     // be used in a route's resolve() method to grab the current authentication data.
     waitForAuth: function() {
-      var deferred = this._q.defer();
-
-      this._ref.onAuth(this._routerMethodOnAuthCallback.bind(this, deferred, /* rejectIfAuthDataIsNull */ false));
-
-      return deferred.promise;
+      return this._routerMethodOnAuthPromise(false);
     },
 
 

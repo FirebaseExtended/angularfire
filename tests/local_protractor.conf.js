@@ -10,7 +10,7 @@ exports.config = {
   // Capabilities to be passed to the webdriver instance
   // For a full list of available capabilities, see https://code.google.com/p/selenium/wiki/DesiredCapabilities
   capabilities: {
-    'browserName': 'chrome',
+    'browserName': 'chrome'
   },
 
   // Calls to protractor.get() with relative paths will be prepended with the baseUrl

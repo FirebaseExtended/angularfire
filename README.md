@@ -18,13 +18,13 @@ In order to use AngularFire in your project, you need to include the following f
 
 ```html
 <!-- AngularJS -->
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-rc.0/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.2/angular.min.js"></script>
 
 <!-- Firebase -->
-<script src="https://cdn.firebase.com/js/client/1.0.21/firebase.js"></script>
+<script src="https://cdn.firebase.com/js/client/2.0.4/firebase.js"></script>
 
 <!-- AngularFire -->
-<script src="https://cdn.firebase.com/libs/angularfire/0.8.2/angularfire.min.js"></script>
+<script src="https://cdn.firebase.com/libs/angularfire/0.9.0/angularfire.min.js"></script>
 ```
 
 Use the URL above to download both the minified and non-minified versions of AngularFire from the
@@ -33,7 +33,12 @@ Firebase CDN. You can also download them from the
 [Firebase](https://www.firebase.com/docs/web/quickstart.html?utm_medium=web&utm_source=angularfire) and
 [Angular](https://angularjs.org/) can be downloaded directly from their respective websites.
 
-You can also install AngularFire via Bower and its dependencies will be downloaded automatically:
+You can also install AngularFire via npm and Bower and its dependencies will be downloaded
+automatically:
+
+```bash
+$ npm install angularfire --save
+```
 
 ```bash
 $ bower install angularfire --save
@@ -51,9 +56,8 @@ Nitrous.IO](https://d3o0mnbgv6k92a.cloudfront.net/assets/hack-l-v1-3cc067e71372f
 
 ## Getting Started with Firebase
 
-AngularFire requires Firebase in order to sync data. You can
-[sign up here](https://www.firebase.com/signup/?utm_medium=web&utm_source=angularfire) for a free
-account.
+AngularFire requires Firebase in order to sync data. You can [sign up here for a free
+account](https://www.firebase.com/signup/?utm_medium=web&utm_source=angularfire).
 
 
 ## Documentation
@@ -94,8 +98,3 @@ update any source files.
 You can run the entire test suite via the command line using `grunt test`. To only run the unit
 tests, run `grunt test:unit`. To only run the end-to-end [Protractor](https://github.com/angular/protractor/)
 tests, run `grunt test:e2e`.
-
-In addition to the automated test suite, there is an additional manual test suite that ensures that
-the `$firebaseUser` service is working properly with the authentication providers. These tests can
-be run with `grunt test:manual`. Note that you must click "Close this window", login to Twitter,
-etc. when prompted in order for these tests to complete successfully.

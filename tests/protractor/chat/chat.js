@@ -2,7 +2,7 @@ var app = angular.module('chat', ['firebase']);
 app.controller('ChatCtrl', function Chat($scope, $firebase) {
   // Get a reference to the Firebase
   var chatFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/chat');
-  var messagesFirebaseRef = chatFirebaseRef.child("messages").limit(2);
+  var messagesFirebaseRef = chatFirebaseRef.child("messages").limitToLast(2);
   var numMessagesFirebaseRef = chatFirebaseRef.child("numMessages");
 
   // Get AngularFire sync objects
@@ -74,6 +74,11 @@ app.controller('ChatCtrl', function Chat($scope, $firebase) {
     $scope.chat.$destroy();
     $scope.messages.$destroy();
   };
+
+  $scope.$on('destroy', function() {
+    $scope.chat.$destroy();
+    $scope.messages.$destroy();
+  });
 
   /* Logs a message and throws an error if the inputted expression is false */
   function verify(expression, message) {
