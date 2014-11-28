@@ -51,7 +51,6 @@ describe('FirebaseAuth',function(){
   }
 
   describe('.$authWithCustomToken',function(){
-
     it('passes custom token to underlying method',function(){
       var options = {optionA:'a'};
       auth.$authWithCustomToken('myToken',options);
@@ -71,11 +70,9 @@ describe('FirebaseAuth',function(){
       $timeout.flush();
       expect(result).toEqual('myResult');
     });
-
   });
 
   describe('.$authAnonymously',function(){
-
     it('passes options object to underlying method',function(){
       var options = {someOption:'a'};
       auth.$authAnonymously(options);
@@ -95,11 +92,9 @@ describe('FirebaseAuth',function(){
       $timeout.flush();
       expect(result).toEqual('myResult');
     });
-
   });
 
   describe('.$authWithPassword',function(){
-
     it('passes options and credentials object to underlying method',function(){
       var options = {someOption:'a'};
       var credentials = {username:'myname',password:'password'};
@@ -124,11 +119,9 @@ describe('FirebaseAuth',function(){
       $timeout.flush();
       expect(result).toEqual('myResult');
     });
-
   });
 
   describe('.$authWithOAuthPopup',function(){
-
     it('passes provider and options object to underlying method',function(){
       var options = {someOption:'a'};
       var provider = 'facebook';
@@ -153,11 +146,9 @@ describe('FirebaseAuth',function(){
       $timeout.flush();
       expect(result).toEqual('myResult');
     });
-
   });
 
   describe('.$authWithOAuthRedirect',function(){
-
     it('passes provider and options object to underlying method',function(){
       var provider = 'facebook';
       var options = {someOption:'a'};
@@ -182,11 +173,9 @@ describe('FirebaseAuth',function(){
       $timeout.flush();
       expect(result).toEqual('myResult');
     });
-
-  }); 
+  });
   
   describe('.$authWithOAuthToken',function(){
-
     it('passes provider,credentials, and options object to underlying method',function(){
       var provider = 'facebook';
       var credentials = {username:'myname',password:'password'};
@@ -213,6 +202,5 @@ describe('FirebaseAuth',function(){
       $timeout.flush();
       expect(result).toEqual('myResult');
     });
-
   });
 });
