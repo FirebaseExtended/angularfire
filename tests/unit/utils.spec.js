@@ -181,4 +181,28 @@ describe('$firebaseUtils', function () {
     });
   });
 
+  describe('#makeNodeResolver', function(){
+    var deferred, callback;
+    beforeEach(function(){
+      deferred = jasmine.createSpyObj('promise',['resolve','reject']);
+      callback = $utils.makeNodeResolver(deferred);
+    });
+
+    it('should return a function', function(){
+      expect(callback).toBeA('function');
+    });
+
+    it('should reject the promise if the first argument is truthy', function(){
+      var error = new Error('blah');
+      callback(error);
+      expect(deferred.reject).toHaveBeenCalledWith(error);
+    });
+
+    it('should resolve the promise if the first argument is falsy', function(){
+      var result = {data:'hello world'};
+      callback(null,result);
+      expect(deferred.resolve).toHaveBeenCalledWith(result);
+    });
+  });
+
 });

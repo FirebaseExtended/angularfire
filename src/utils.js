@@ -227,6 +227,17 @@
             return def.promise;
           },
 
+          makeNodeResolver:function(deferred){
+            return function(err,result){
+              if(err){
+                deferred.reject(err);
+              }
+              else {
+                deferred.resolve(result);
+              }
+            }
+          },
+
           wait: function(fn, wait) {
             var to = $timeout(fn, wait||0);
             return function() {
