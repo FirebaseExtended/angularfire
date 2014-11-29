@@ -1,4 +1,3 @@
-/* istanbul ignore next */
 (function() {
   'use strict';
   var FirebaseAuth;
