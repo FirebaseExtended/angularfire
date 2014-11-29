@@ -1,7 +1,7 @@
 describe('FirebaseAuth',function(){
   'use strict';
 
-  var $firebaseAuth, ref, auth, result, failure, $timeout;
+  var $firebaseAuth, ref, auth, result, failure, status, $timeout;
 
   beforeEach(function(){
 
@@ -11,11 +11,13 @@ describe('FirebaseAuth',function(){
 
     result = undefined;
     failure = undefined;
+    status = null;
 
     ref = jasmine.createSpyObj('ref',
       ['authWithCustomToken','authAnonymously','authWithPassword',
         'authWithOAuthPopup','authWithOAuthRedirect','authWithOAuthToken',
-        'unauth','getAuth','onAuth','offAuth'
+        'unauth','getAuth','onAuth','offAuth',
+        'createUser','changePassword','removeUser','resetPassword'
       ]);
 
     inject(function(_$firebaseAuth_,_$timeout_){
@@ -41,8 +43,10 @@ describe('FirebaseAuth',function(){
 
   function wrapPromise(promise){
     promise.then(function(_result_){
+      status = 'resolved';
       result = _result_;
     },function(_failure_){
+      status = 'rejected';
       failure = _failure_;
     });
   }
@@ -278,6 +282,98 @@ describe('FirebaseAuth',function(){
       callback('onAuth')(null);
       $timeout.flush();
       expect(result).toBe(null);
+    });
+  });
+
+  describe('.$createUser',function(){
+    it('passes email/password to method on backing ref',function(){
+      auth.$createUser('somebody@somewhere.com','12345');
+      expect(ref.createUser).toHaveBeenCalledWith(
+        {email:'somebody@somewhere.com',password:'12345'},
+        jasmine.any(Function));
+    });
+
+    it('will revoke the promise if authentication fails',function(){
+      wrapPromise(auth.$createUser('dark@helmet.com','12345'));
+      callback('createUser')("I've got the same combination on my luggage");
+      $timeout.flush();
+      expect(failure).toEqual("I've got the same combination on my luggage");
+    });
+
+    it('will resolve the promise upon authentication',function(){
+      wrapPromise(auth.$createUser('somebody@somewhere.com','12345'));
+      callback('createUser')(null);
+      $timeout.flush();
+      expect(status).toEqual('resolved');
+    });
+  });
+  
+  describe('.$changePassword',function(){
+    it('passes email/password to method on backing ref',function(){
+      auth.$changePassword('somebody@somewhere.com','54321','12345');
+      expect(ref.changePassword).toHaveBeenCalledWith(
+        {email:'somebody@somewhere.com',oldPassword:'54321',newPassword:'12345'},
+        jasmine.any(Function));
+    });
+
+    it('will revoke the promise if authentication fails',function(){
+      wrapPromise(auth.$changePassword('somebody@somewhere.com','54321','12345'));
+      callback('changePassword')("bad password");
+      $timeout.flush();
+      expect(failure).toEqual("bad password");
+    });
+
+    it('will resolve the promise upon authentication',function(){
+      wrapPromise(auth.$changePassword('somebody@somewhere.com','54321','12345'));
+      callback('changePassword')(null);
+      $timeout.flush();
+      expect(status).toEqual('resolved');
+    });
+  });
+  
+  describe('.$removeUser',function(){
+    it('passes email/password to method on backing ref',function(){
+      auth.$removeUser('somebody@somewhere.com','12345');
+      expect(ref.removeUser).toHaveBeenCalledWith(
+        {email:'somebody@somewhere.com',password:'12345'},
+        jasmine.any(Function));
+    });
+
+    it('will revoke the promise if there is an error',function(){
+      wrapPromise(auth.$removeUser('somebody@somewhere.com','12345'));
+      callback('removeUser')("bad password");
+      $timeout.flush();
+      expect(failure).toEqual("bad password");
+    });
+
+    it('will resolve the promise upon removal',function(){
+      wrapPromise(auth.$removeUser('somebody@somewhere.com','12345'));
+      callback('removeUser')(null);
+      $timeout.flush();
+      expect(status).toEqual('resolved');
+    });
+  });
+  
+  describe('.$sendPasswordResetEmail',function(){
+    it('passes email to method on backing ref',function(){
+      auth.$sendPasswordResetEmail('somebody@somewhere.com');
+      expect(ref.resetPassword).toHaveBeenCalledWith(
+        {email:'somebody@somewhere.com'},
+        jasmine.any(Function));
+    });
+
+    it('will revoke the promise if reset action fails',function(){
+      wrapPromise(auth.$sendPasswordResetEmail('somebody@somewhere.com'));
+      callback('resetPassword')("user not found");
+      $timeout.flush();
+      expect(failure).toEqual("user not found");
+    });
+
+    it('will resolve the promise upon success',function(){
+      wrapPromise(auth.$sendPasswordResetEmail('somebody@somewhere.com','12345'));
+      callback('resetPassword')(null);
+      $timeout.flush();
+      expect(status).toEqual('resolved');
     });
   });
 });
