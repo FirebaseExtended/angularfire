@@ -1,7 +1,7 @@
 describe('FirebaseAuth',function(){
   'use strict';
 
-  var $firebaseAuth, ref, auth, result, failure, wrapPromise, $timeout;
+  var $firebaseAuth, ref, auth, result, failure, $timeout;
 
   beforeEach(function(){
 
@@ -9,8 +9,8 @@ describe('FirebaseAuth',function(){
     module('firebase');
     module('testutils');
 
-    result = null;
-    failure = null;
+    result = undefined;
+    failure = undefined;
 
     ref = jasmine.createSpyObj('ref',
       ['authWithCustomToken','authAnonymously','authWithPassword',
@@ -24,25 +24,27 @@ describe('FirebaseAuth',function(){
       $timeout = _$timeout_;
     });
 
-    wrapPromise = function(promise){
-      promise.then(function(_result_){
-        result = _result_;
-      },function(_failure_){
-        failure = _failure_;
-      });
-    }
   });
 
   function getArgIndex(callbackName){
-    //In the firebase API, the completion callback is the second argument for all but two functions.
+    //In the firebase API, the completion callback is the second argument for all but a few functions.
     switch (callbackName){
       case 'authAnonymously':
+      case 'onAuth':
         return 0;
       case 'authWithOAuthToken':
         return 2;
       default :
         return 1;
     }
+  }
+
+  function wrapPromise(promise){
+    promise.then(function(_result_){
+      result = _result_;
+    },function(_failure_){
+      failure = _failure_;
+    });
   }
 
   function callback(callbackName,callIndex){
@@ -244,6 +246,38 @@ describe('FirebaseAuth',function(){
       var deregister = auth.$onAuth(cb,ctx);
       deregister();
       expect(ref.offAuth).toHaveBeenCalledWith(cb, ctx);
+    });
+  });
+
+  describe('.$requireAuth()',function(){
+    it('will be resolved if user is logged in', function(){
+      wrapPromise(auth.$requireAuth());
+      callback('onAuth')({provider:'facebook'});
+      $timeout.flush();
+      expect(result).toEqual({provider:'facebook'});
+    });
+
+    it('will be rejected if user is not logged in', function(){
+      wrapPromise(auth.$requireAuth());
+      callback('onAuth')(null);
+      $timeout.flush();
+      expect(failure).toBe('AUTH_REQUIRED');
+    });
+  });
+
+  describe('.$waitForAuth()',function(){
+    it('will be resolved with authData if user is logged in', function(){
+      wrapPromise(auth.$waitForAuth());
+      callback('onAuth')({provider:'facebook'});
+      $timeout.flush();
+      expect(result).toEqual({provider:'facebook'});
+    });
+
+    it('will be resolved with null if user is not logged in', function(){
+      wrapPromise(auth.$waitForAuth());
+      callback('onAuth')(null);
+      $timeout.flush();
+      expect(result).toBe(null);
     });
   });
 });
