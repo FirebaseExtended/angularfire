@@ -57,6 +57,12 @@ describe('FirebaseAuth',function(){
     return ref[callbackName].calls.argsFor(callIndex)[argIndex];
   }
 
+  it('will throw an error if a string is used in place of a Firebase Ref',function(){
+    expect(function(){
+      $firebaseAuth('https://some-firebase.firebaseio.com/');
+    }).toThrow();
+  });
+
   describe('.$authWithCustomToken',function(){
     it('passes custom token to underlying method',function(){
       var options = {optionA:'a'};
