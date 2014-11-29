@@ -317,6 +317,8 @@ describe('$firebase', function () {
       try {$timeout.flush();} catch(e){} //this may actually throw an error
       expect(resolved).toBe(false);
       flushAll(ref);
+      flushAll(ref);
+      expect(resolved).toBe(true);
     });
   });
 
