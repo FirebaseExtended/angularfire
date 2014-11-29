@@ -239,7 +239,8 @@ describe('$firebase', function () {
       var ref = new Firebase('Mock://').child('ordered').limit(2);
       var $fb = $firebase(ref);
       $fb.$remove().then(spy);
-      flushAll();
+      flushAll(ref);
+      flushAll(ref);
       expect(spy).toHaveBeenCalledWith(ref);
     });
 
@@ -304,6 +305,18 @@ describe('$firebase', function () {
           expect(ref.ref().child(key).remove).not.toHaveBeenCalled();
         }
       });
+    });
+
+    it('should wait to resolve promise until data is actually deleted',function(){
+      var ref = new Firebase('Mock://').child('ordered').limit(2);
+      var $fb = $firebase(ref);
+      var resolved = false;
+      $fb.$remove().then(function(){
+        resolved = true;
+      });
+      try {$timeout.flush();} catch(e){} //this may actually throw an error
+      expect(resolved).toBe(false);
+      flushAll(ref);
     });
   });
 

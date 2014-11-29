@@ -72,7 +72,7 @@
           },
 
           $remove: function (key) {
-            var ref = this._ref, self = this, promise;
+            var ref = this._ref, self = this;
             var def = $firebaseUtils.defer();
             if (arguments.length > 0) {
               ref = ref.ref().child(key);
@@ -80,25 +80,28 @@
             if( angular.isFunction(ref.remove) ) {
               // self is not a query, just do a flat remove
               ref.remove(self._handle(def, ref));
-              promise = def.promise;
             }
             else {
-              var promises = [];
               // self is a query so let's only remove the
               // items in the query and not the entire path
               ref.once('value', function(snap) {
+                var promises = [];
                 snap.forEach(function(ss) {
                   var d = $firebaseUtils.defer();
-                  promises.push(d);
-                  ss.ref().remove(self._handle(d, ss.ref()));
+                  promises.push(d.promise);
+                  ss.ref().remove(self._handle(d));
                 }, self);
+                $firebaseUtils.allPromises(promises)
+                  .then(function() {
+                    def.resolve(ref);
+                  },
+                  function(err){
+                    def.reject(err);
+                  }
+                );
               });
-              promise = $firebaseUtils.allPromises(promises)
-                .then(function() {
-                  return ref;
-                });
             }
-            return promise;
+            return def.promise;
           },
 
           $update: function (key, data) {
