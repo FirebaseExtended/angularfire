@@ -5,7 +5,7 @@
 
   // Define a service which provides user authentication and management.
   angular.module('firebase').factory('$firebaseAuth', [
-    '$q', function($q) {
+    '$q', '$firebaseUtils', function($q, $firebaseUtils) {
       // This factory returns an object containing the current authentication state of the client.
       // This service takes one argument:
       //
@@ -14,14 +14,15 @@
       // The returned object contains methods for authenticating clients, retrieving authentication
       // state, and managing users.
       return function(ref) {
-        var auth = new FirebaseAuth($q, ref);
+        var auth = new FirebaseAuth($q, $firebaseUtils, ref);
         return auth.construct();
       };
     }
   ]);
 
-  FirebaseAuth = function($q, ref) {
+  FirebaseAuth = function($q, $firebaseUtils, ref) {
     this._q = $q;
+    this._utils = $firebaseUtils;
 
     if (typeof ref === 'string') {
       throw new Error('Please provide a Firebase reference instead of a URL when creating a `$firebaseAuth` object.');
@@ -61,20 +62,12 @@
     /********************/
     /*  Authentication  */
     /********************/
-    // Common login completion handler for all authentication methods.
-    _onLoginHandler: function(deferred, error, authData) {
-      if (error !== null) {
-        deferred.reject(error);
-      } else {
-        deferred.resolve(authData);
-      }
-    },
 
     // Authenticates the Firebase reference with a custom authentication token.
     authWithCustomToken: function(authToken, options) {
       var deferred = this._q.defer();
 
-      this._ref.authWithCustomToken(authToken, this._onLoginHandler.bind(this, deferred), options);
+      this._ref.authWithCustomToken(authToken, this._utils.makeNodeResolver(deferred), options);
 
       return deferred.promise;
     },
@@ -83,7 +76,7 @@
     authAnonymously: function(options) {
       var deferred = this._q.defer();
 
-      this._ref.authAnonymously(this._onLoginHandler.bind(this, deferred), options);
+      this._ref.authAnonymously(this._utils.makeNodeResolver(deferred), options);
 
       return deferred.promise;
     },
@@ -92,7 +85,7 @@
     authWithPassword: function(credentials, options) {
       var deferred = this._q.defer();
 
-      this._ref.authWithPassword(credentials, this._onLoginHandler.bind(this, deferred), options);
+      this._ref.authWithPassword(credentials, this._utils.makeNodeResolver(deferred), options);
 
       return deferred.promise;
     },
@@ -101,7 +94,7 @@
     authWithOAuthPopup: function(provider, options) {
       var deferred = this._q.defer();
 
-      this._ref.authWithOAuthPopup(provider, this._onLoginHandler.bind(this, deferred), options);
+      this._ref.authWithOAuthPopup(provider, this._utils.makeNodeResolver(deferred), options);
 
       return deferred.promise;
     },
@@ -110,7 +103,7 @@
     authWithOAuthRedirect: function(provider, options) {
       var deferred = this._q.defer();
 
-      this._ref.authWithOAuthRedirect(provider, this._onLoginHandler.bind(this, deferred), options);
+      this._ref.authWithOAuthRedirect(provider, this._utils.makeNodeResolver(deferred), options);
 
       return deferred.promise;
     },
@@ -119,7 +112,7 @@
     authWithOAuthToken: function(provider, credentials, options) {
       var deferred = this._q.defer();
 
-      this._ref.authWithOAuthToken(provider, credentials, this._onLoginHandler.bind(this, deferred), options);
+      this._ref.authWithOAuthToken(provider, credentials, this._utils.makeNodeResolver(deferred), options);
 
       return deferred.promise;
     },
@@ -202,13 +195,7 @@
       this._ref.createUser({
         email: email,
         password: password
-      }, function(error) {
-        if (error !== null) {
-          deferred.reject(error);
-        } else {
-          deferred.resolve();
-        }
-      });
+      }, this._utils.makeNodeResolver(deferred));
 
       return deferred.promise;
     },
@@ -221,14 +208,7 @@
         email: email,
         oldPassword: oldPassword,
         newPassword: newPassword
-      }, function(error) {
-          if (error !== null) {
-            deferred.reject(error);
-          } else {
-            deferred.resolve();
-          }
-        }
-      );
+      }, this._utils.makeNodeResolver(deferred));
 
       return deferred.promise;
     },
@@ -240,13 +220,7 @@
       this._ref.removeUser({
         email: email,
         password: password
-      }, function(error) {
-        if (error !== null) {
-          deferred.reject(error);
-        } else {
-          deferred.resolve();
-        }
-      });
+      }, this._utils.makeNodeResolver(deferred));
 
       return deferred.promise;
     },
@@ -257,13 +231,7 @@
 
       this._ref.resetPassword({
         email: email
-      }, function(error) {
-        if (error !== null) {
-          deferred.reject(error);
-        } else {
-          deferred.resolve();
-        }
-      });
+      }, this._utils.makeNodeResolver(deferred));
 
       return deferred.promise;
     }
