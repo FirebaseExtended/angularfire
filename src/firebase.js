@@ -139,14 +139,14 @@
 
           $asObject: function () {
             if (!this._objectSync || this._objectSync.isDestroyed) {
-              this._objectSync = new SyncObject(this, this._config.objectFactory);
+              this._objectSync = new SyncObject(this, this._config.objectFactory, this._config.batchFactory());
             }
             return this._objectSync.getObject();
           },
 
           $asArray: function () {
             if (!this._arraySync || this._arraySync.isDestroyed) {
-              this._arraySync = new SyncArray(this, this._config.arrayFactory);
+              this._arraySync = new SyncArray(this, this._config.arrayFactory, this._config.batchFactory());
             }
             return this._arraySync.getArray();
           },
@@ -175,7 +175,7 @@
           }
         };
 
-        function SyncArray($inst, ArrayFactory) {
+        function SyncArray($inst, ArrayFactory, batch) {
           function destroy(err) {
             self.isDestroyed = true;
             var ref = $inst.$ref();
@@ -219,7 +219,6 @@
 
           var def     = $firebaseUtils.defer();
           var array   = new ArrayFactory($inst, destroy, def.promise);
-          var batch   = $firebaseUtils.batch();
           var created = batch(function(snap, prevChild) {
             var rec = array.$$added(snap, prevChild);
             if( rec ) {
@@ -264,7 +263,7 @@
           init();
         }
 
-        function SyncObject($inst, ObjectFactory) {
+        function SyncObject($inst, ObjectFactory, batch) {
           function destroy(err) {
             self.isDestroyed = true;
             ref.off('value', applyUpdate);
@@ -289,7 +288,6 @@
           var def = $firebaseUtils.defer();
           var obj = new ObjectFactory($inst, destroy, def.promise);
           var ref = $inst.$ref();
-          var batch = $firebaseUtils.batch();
           var applyUpdate = batch(function(snap) {
             var changed = obj.$$updated(snap);
             if( changed ) {

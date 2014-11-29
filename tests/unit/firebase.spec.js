@@ -616,6 +616,31 @@ describe('$firebase', function () {
       flushAll();
       expect($utils.wait.completed).toHaveCallCount(1);
     });
+
+    it('should allow custom batching implementations', function() {
+      var batchFactory = stubBatchFactory();
+      var arrayFactory = stubArrayFactory();
+
+      $fb = $firebase(new Firebase('Mock://').child('data'), {
+        arrayFactory:arrayFactory,
+        batchFactory:batchFactory
+      });
+
+      $fb.$asArray(); // creates the listeners
+      flushAll();
+      batchFactory.flush();
+      arrayFactory.$myArray.$$added.calls.reset();
+      var ref = $fb.$ref();
+      ref.push({newa: 'newa'});
+      ref.push({newb: 'newb'});
+      ref.push({newc: 'newc'});
+      ref.push({newd: 'newd'});
+      flushAll();
+      expect(batchFactory.queue.length).toBe(4);
+      expect(arrayFactory.$myArray.$$added).not.toHaveBeenCalled();
+      batchFactory.flush();
+      expect(arrayFactory.$myArray.$$added).toHaveCallCount(4);
+    });
   });
 
   describe('$asObject', function() {
@@ -723,7 +748,57 @@ describe('$firebase', function () {
       flushAll();
       expect($utils.wait.completed).toHaveCallCount(1);
     });
+
+    it('should allow custom batching implementations', function() {
+      var batchFactory = stubBatchFactory();
+      var objectFactory =  stubObjectFactory();
+
+      $fb = $firebase(new Firebase('Mock://').child('data'), {
+        objectFactory:objectFactory,
+        batchFactory:batchFactory
+      });
+
+      $fb.$asObject(); // creates the listeners
+      flushAll();
+      batchFactory.flush();
+      objectFactory.prototype.$$updated.calls.reset();
+      var ref = $fb.$ref();
+      ref.push({newa: 'newa'});
+      ref.push({newb: 'newb'});
+      ref.push({newc: 'newc'});
+      ref.push({newd: 'newd'});
+      flushAll();
+      expect(batchFactory.queue.length).toBe(4);
+      expect(objectFactory.prototype.$$updated).not.toHaveBeenCalled();
+      batchFactory.flush();
+      expect(objectFactory.prototype.$$updated).toHaveCallCount(4);
+    });
   });
+
+  function stubBatchFactory() {
+    function makeBatchFn(fn){
+      return function(){
+        var args = Array.prototype.slice.call(arguments,0);
+        factory.queue.push(function(){
+          fn.apply(null,args);
+        });
+      }
+    }
+
+    function flushBatch(){
+      var queueCopy = factory.queue;
+      factory.queue = [];
+      angular.forEach(queueCopy,function(fn){fn()});
+    }
+
+    function factory(){
+      return makeBatchFn;
+    }
+
+    factory.flush = flushBatch;
+    factory.queue = [];
+    return factory;
+  }
 
   function stubArrayFactory() {
     var arraySpy = [];
