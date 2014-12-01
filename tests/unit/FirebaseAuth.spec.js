@@ -275,7 +275,7 @@ describe('FirebaseAuth',function(){
     });
   });
 
-  describe('.$waitForAuth()',function(){
+  describe('$waitForAuth()',function(){
     it('will be resolved with authData if user is logged in', function(){
       wrapPromise(auth.$waitForAuth());
       callback('onAuth')({provider:'facebook'});
