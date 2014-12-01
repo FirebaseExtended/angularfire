@@ -63,14 +63,14 @@ describe('FirebaseAuth',function(){
     }).toThrow();
   });
 
-  describe('.$authWithCustomToken',function(){
+  describe('$authWithCustomToken',function(){
     it('passes custom token to underlying method',function(){
       var options = {optionA:'a'};
       auth.$authWithCustomToken('myToken',options);
       expect(ref.authWithCustomToken).toHaveBeenCalledWith('myToken', jasmine.any(Function), options);
     });
 
-    it('will revoke the promise if authentication fails',function(){
+    it('will reject the promise if authentication fails',function(){
       wrapPromise(auth.$authWithCustomToken('myToken'));
       callback('authWithCustomToken')('myError');
       $timeout.flush();
@@ -85,14 +85,14 @@ describe('FirebaseAuth',function(){
     });
   });
 
-  describe('.$authAnonymously',function(){
+  describe('$authAnonymously',function(){
     it('passes options object to underlying method',function(){
       var options = {someOption:'a'};
       auth.$authAnonymously(options);
       expect(ref.authAnonymously).toHaveBeenCalledWith(jasmine.any(Function),{someOption:'a'});
     });
 
-    it('will revoke the promise if authentication fails',function(){
+    it('will reject the promise if authentication fails',function(){
       wrapPromise(auth.$authAnonymously());
       callback('authAnonymously')('myError');
       $timeout.flush();
@@ -107,7 +107,7 @@ describe('FirebaseAuth',function(){
     });
   });
 
-  describe('.$authWithPassword',function(){
+  describe('$authWithPassword',function(){
     it('passes options and credentials object to underlying method',function(){
       var options = {someOption:'a'};
       var credentials = {username:'myname',password:'password'};
@@ -134,7 +134,7 @@ describe('FirebaseAuth',function(){
     });
   });
 
-  describe('.$authWithOAuthPopup',function(){
+  describe('$authWithOAuthPopup',function(){
     it('passes provider and options object to underlying method',function(){
       var options = {someOption:'a'};
       var provider = 'facebook';
@@ -146,7 +146,7 @@ describe('FirebaseAuth',function(){
       );
     });
 
-    it('will revoke the promise if authentication fails',function(){
+    it('will reject the promise if authentication fails',function(){
       wrapPromise(auth.$authWithOAuthPopup());
       callback('authWithOAuthPopup')('myError');
       $timeout.flush();
@@ -161,7 +161,7 @@ describe('FirebaseAuth',function(){
     });
   });
 
-  describe('.$authWithOAuthRedirect',function(){
+  describe('$authWithOAuthRedirect',function(){
     it('passes provider and options object to underlying method',function(){
       var provider = 'facebook';
       var options = {someOption:'a'};
@@ -173,7 +173,7 @@ describe('FirebaseAuth',function(){
       );
     });
 
-    it('will revoke the promise if authentication fails',function(){
+    it('will reject the promise if authentication fails',function(){
       wrapPromise(auth.$authWithOAuthRedirect());
       callback('authWithOAuthRedirect')('myError');
       $timeout.flush();
@@ -188,7 +188,7 @@ describe('FirebaseAuth',function(){
     });
   });
   
-  describe('.$authWithOAuthToken',function(){
+  describe('$authWithOAuthToken',function(){
     it('passes provider,credentials, and options object to underlying method',function(){
       var provider = 'facebook';
       var credentials = {username:'myname',password:'password'};
@@ -202,7 +202,7 @@ describe('FirebaseAuth',function(){
       );
     });
 
-    it('will revoke the promise if authentication fails',function(){
+    it('will reject the promise if authentication fails',function(){
       wrapPromise(auth.$authWithOAuthToken());
       callback('authWithOAuthToken')('myError');
       $timeout.flush();
@@ -217,7 +217,7 @@ describe('FirebaseAuth',function(){
     });
   });
 
-  describe('.$getAuth()',function(){
+  describe('$getAuth()',function(){
     it('returns getAuth() from backing ref',function(){
       ref.getAuth.and.returnValue({provider:'facebook'});
       expect(auth.$getAuth()).toEqual({provider:'facebook'});
@@ -228,7 +228,7 @@ describe('FirebaseAuth',function(){
     });
   });
 
-  describe('.$unauth()',function(){
+  describe('$unauth()',function(){
     it('will call unauth() on the backing ref if logged in',function(){
       ref.getAuth.and.returnValue({provider:'facebook'});
       auth.$unauth();
@@ -242,7 +242,7 @@ describe('FirebaseAuth',function(){
     });
   });
 
-  describe('.$onAuth()',function(){
+  describe('$onAuth()',function(){
     it('calls onAuth() on the backing ref with callback and context provided',function(){
       function cb(){}
       var ctx = {};
@@ -259,7 +259,7 @@ describe('FirebaseAuth',function(){
     });
   });
 
-  describe('.$requireAuth()',function(){
+  describe('$requireAuth()',function(){
     it('will be resolved if user is logged in', function(){
       wrapPromise(auth.$requireAuth());
       callback('onAuth')({provider:'facebook'});
@@ -291,7 +291,7 @@ describe('FirebaseAuth',function(){
     });
   });
 
-  describe('.$createUser',function(){
+  describe('$createUser()',function(){
     it('passes email/password to method on backing ref',function(){
       auth.$createUser('somebody@somewhere.com','12345');
       expect(ref.createUser).toHaveBeenCalledWith(
@@ -299,7 +299,7 @@ describe('FirebaseAuth',function(){
         jasmine.any(Function));
     });
 
-    it('will revoke the promise if authentication fails',function(){
+    it('will reject the promise if authentication fails',function(){
       wrapPromise(auth.$createUser('dark@helmet.com','12345'));
       callback('createUser')("I've got the same combination on my luggage");
       $timeout.flush();
@@ -314,7 +314,7 @@ describe('FirebaseAuth',function(){
     });
   });
   
-  describe('.$changePassword',function(){
+  describe('$changePassword()',function(){
     it('passes email/password to method on backing ref',function(){
       auth.$changePassword('somebody@somewhere.com','54321','12345');
       expect(ref.changePassword).toHaveBeenCalledWith(
@@ -322,7 +322,7 @@ describe('FirebaseAuth',function(){
         jasmine.any(Function));
     });
 
-    it('will revoke the promise if authentication fails',function(){
+    it('will reject the promise if authentication fails',function(){
       wrapPromise(auth.$changePassword('somebody@somewhere.com','54321','12345'));
       callback('changePassword')("bad password");
       $timeout.flush();
@@ -337,7 +337,7 @@ describe('FirebaseAuth',function(){
     });
   });
   
-  describe('.$removeUser',function(){
+  describe('$removeUser()',function(){
     it('passes email/password to method on backing ref',function(){
       auth.$removeUser('somebody@somewhere.com','12345');
       expect(ref.removeUser).toHaveBeenCalledWith(
@@ -345,7 +345,7 @@ describe('FirebaseAuth',function(){
         jasmine.any(Function));
     });
 
-    it('will revoke the promise if there is an error',function(){
+    it('will reject the promise if there is an error',function(){
       wrapPromise(auth.$removeUser('somebody@somewhere.com','12345'));
       callback('removeUser')("bad password");
       $timeout.flush();
@@ -360,7 +360,7 @@ describe('FirebaseAuth',function(){
     });
   });
   
-  describe('.$sendPasswordResetEmail',function(){
+  describe('$sendPasswordResetEmail()',function(){
     it('passes email to method on backing ref',function(){
       auth.$sendPasswordResetEmail('somebody@somewhere.com');
       expect(ref.resetPassword).toHaveBeenCalledWith(
@@ -368,7 +368,7 @@ describe('FirebaseAuth',function(){
         jasmine.any(Function));
     });
 
-    it('will revoke the promise if reset action fails',function(){
+    it('will reject the promise if reset action fails',function(){
       wrapPromise(auth.$sendPasswordResetEmail('somebody@somewhere.com'));
       callback('resetPassword')("user not found");
       $timeout.flush();
