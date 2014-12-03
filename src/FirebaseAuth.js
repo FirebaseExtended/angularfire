@@ -5,7 +5,7 @@
 
   // Define a service which provides user authentication and management.
   angular.module('firebase').factory('$firebaseAuth', [
-    '$q', function($q) {
+    '$q', '$log', function($q, $log) {
       // This factory returns an object containing the current authentication state of the client.
       // This service takes one argument:
       //
@@ -14,14 +14,15 @@
       // The returned object contains methods for authenticating clients, retrieving authentication
       // state, and managing users.
       return function(ref) {
-        var auth = new FirebaseAuth($q, ref);
+        var auth = new FirebaseAuth($q, $log, ref);
         return auth.construct();
       };
     }
   ]);
 
-  FirebaseAuth = function($q, ref) {
+  FirebaseAuth = function($q, $log, ref) {
     this._q = $q;
+    this._log = $log;
 
     if (typeof ref === 'string') {
       throw new Error('Please provide a Firebase reference instead of a URL when creating a `$firebaseAuth` object.');
@@ -297,6 +298,8 @@
       // Allow this method to take a single credentials argument or two separate string arguments
       var credentials = emailOrCredentials;
       if (typeof emailOrCredentials === "string") {
+        this._log.warn("Passing in credentials to $createUser() as individual arguments has been deprecated in favor of a single credentials argument. See the AngularFire API reference for details.");
+
         credentials = {
           email: emailOrCredentials,
           password: password
@@ -330,6 +333,8 @@
       // Allow this method to take a single credentials argument or three separate string arguments
       var credentials = emailOrCredentials;
       if (typeof emailOrCredentials === "string") {
+        this._log.warn("Passing in credentials to $changePassword() as individual arguments has been deprecated in favor of a single credentials argument. See the AngularFire API reference for details.");
+
         credentials = {
           email: emailOrCredentials,
           oldPassword: oldPassword,
@@ -362,6 +367,8 @@
       // Allow this method to take a single credentials argument or two separate string arguments
       var credentials = emailOrCredentials;
       if (typeof emailOrCredentials === "string") {
+        this._log.warn("Passing in credentials to $removeUser() as individual arguments has been deprecated in favor of a single credentials argument. See the AngularFire API reference for details.");
+
         credentials = {
           email: emailOrCredentials,
           password: password
@@ -388,7 +395,7 @@
      * @return {Promise<>} An empty promise fulfilled once the reset password email is sent.
      */
     sendPasswordResetEmail: function(emailOrCredentials) {
-      console.warn("$sendPasswordResetEmail() has been deprecated in favor of the equivalent $resetPassword().");
+      this._log.warn("$sendPasswordResetEmail() has been deprecated in favor of the equivalent $resetPassword().");
       return this.resetPassword(emailOrCredentials);
     },
 
@@ -405,6 +412,8 @@
       // Allow this method to take a single credentials argument or a single string argument
       var credentials = emailOrCredentials;
       if (typeof emailOrCredentials === "string") {
+        this._log.warn("Passing in credentials to $resetPassword() as individual arguments has been deprecated in favor of a single credentials argument. See the AngularFire API reference for details.");
+
         credentials = {
           email: emailOrCredentials
         };
