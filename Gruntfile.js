@@ -53,6 +53,17 @@ module.exports = function(grunt) {
           hostname: 'localhost',
           port: 3030
         }
+      },
+      auth_example:{
+        options: {
+          hostname: 'localhost',
+          port: 3030,
+          keepalive:true,
+          open:{
+            target:'http://localhost:3030/tests/auth-example/auth.html'
+          }
+
+        }
       }
     },
 
@@ -161,6 +172,9 @@ module.exports = function(grunt) {
 
   // Build tasks
   grunt.registerTask('build', ['concat', 'jshint', 'uglify']);
+
+  // Examples
+  grunt.registerTask('example:auth',['concat','connect:auth_example']);
 
   // Default task
   grunt.registerTask('default', ['build', 'test']);

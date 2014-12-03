@@ -5,7 +5,7 @@
 
   // Define a service which provides user authentication and management.
   angular.module('firebase').factory('$firebaseAuth', [
-    '$q', function($q) {
+    '$q', '$parse', function($q, $parse) {
       // This factory returns an object containing the current authentication state of the client.
       // This service takes one argument:
       //
@@ -14,14 +14,15 @@
       // The returned object contains methods for authenticating clients, retrieving authentication
       // state, and managing users.
       return function(ref) {
-        var auth = new FirebaseAuth($q, ref);
+        var auth = new FirebaseAuth($q, $parse, ref);
         return auth.construct();
       };
     }
   ]);
 
-  FirebaseAuth = function($q, ref) {
+  FirebaseAuth = function($q, $parse, ref) {
     this._q = $q;
+    this._parse = $parse;
 
     if (typeof ref === 'string') {
       throw new Error('Please provide a Firebase reference instead of a URL when creating a `$firebaseAuth` object.');
@@ -46,6 +47,7 @@
         $getAuth: this.getAuth.bind(this),
         $requireAuth: this.requireAuth.bind(this),
         $waitForAuth: this.waitForAuth.bind(this),
+        $bindTo:this.bindTo.bind(this),
 
         // User management methods
         $createUser: this.createUser.bind(this),
@@ -187,6 +189,29 @@
     // be used in a route's resolve() method to grab the current authentication data.
     waitForAuth: function() {
       return this._routerMethodOnAuthPromise(false);
+    },
+
+    // Bind the authentication state to a property on scope.
+    // Returns a deregistration function, which is called automatically when scope is destroyed.
+    bindTo:function(scope,propertyName){
+      var ref = this._ref;
+      var parsed = this._parse(propertyName);
+
+      function callback(authData){
+        scope.$evalAsync(function(){
+          parsed.assign(scope,authData);
+        });
+      }
+
+      function deregister(){
+        ref.offAuth(callback);
+      }
+
+      scope.$on('$destroy',deregister);
+
+      ref.onAuth(callback);
+
+      return deregister;
     },
 
 
