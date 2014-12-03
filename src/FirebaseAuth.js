@@ -206,7 +206,7 @@
         if (error !== null) {
           deferred.reject(error);
         } else {
-          deferred.resolve(user && user.uid);
+          deferred.resolve(user);
         }
       });
 
