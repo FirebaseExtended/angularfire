@@ -62,7 +62,13 @@
     /********************/
     /*  Authentication  */
     /********************/
-    // Common login completion handler for all authentication methods.
+    /**
+     * Common login completion handler for all authentication methods.
+     *
+     * @param {Promise} deferred A deferred promise which is either resolved or rejected.
+     * @param {Error|null} error A Firebase error if authentication fails.
+     * @param {Object|null} authData The authentication state upon successful authentication.
+     */
     _onLoginHandler: function(deferred, error, authData) {
       if (error !== null) {
         deferred.reject(error);
@@ -71,7 +77,16 @@
       }
     },
 
-    // Authenticates the Firebase reference with a custom authentication token.
+    /**
+     * Authenticates the Firebase reference with a custom authentication token.
+     *
+     * @param {string} authToken An authentication token or a Firebase Secret. A Firebase Secret
+     * should only be used for authenticating a server process and provides full read / write
+     * access to the entire Firebase.
+     * @param {Object} [options] An object containing optional client arguments, such as configuring
+     * session persistence.
+     * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
+     */
     authWithCustomToken: function(authToken, options) {
       var deferred = this._q.defer();
 
@@ -80,7 +95,13 @@
       return deferred.promise;
     },
 
-    // Authenticates the Firebase reference anonymously.
+    /**
+     * Authenticates the Firebase reference anonymously.
+     *
+     * @param {Object} [options] An object containing optional client arguments, such as configuring
+     * session persistence.
+     * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
+     */
     authAnonymously: function(options) {
       var deferred = this._q.defer();
 
@@ -89,7 +110,15 @@
       return deferred.promise;
     },
 
-    // Authenticates the Firebase reference with an email/password user.
+    /**
+     * Authenticates the Firebase reference with an email/password user.
+     *
+     * @param {Object} credentials An object containing email and password attributes corresponding
+     * to the user account.
+     * @param {Object} [options] An object containing optional client arguments, such as configuring
+     * session persistence.
+     * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
+     */
     authWithPassword: function(credentials, options) {
       var deferred = this._q.defer();
 
@@ -98,7 +127,15 @@
       return deferred.promise;
     },
 
-    // Authenticates the Firebase reference with the OAuth popup flow.
+    /**
+     * Authenticates the Firebase reference with the OAuth popup flow.
+     *
+     * @param {string} provider The unique string identifying the OAuth provider to authenticate
+     * with, e.g. google.
+     * @param {Object} [options] An object containing optional client arguments, such as configuring
+     * session persistence.
+     * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
+     */
     authWithOAuthPopup: function(provider, options) {
       var deferred = this._q.defer();
 
@@ -107,7 +144,15 @@
       return deferred.promise;
     },
 
-    // Authenticates the Firebase reference with the OAuth redirect flow.
+    /**
+     * Authenticates the Firebase reference with the OAuth redirect flow.
+     *
+     * @param {string} provider The unique string identifying the OAuth provider to authenticate
+     * with, e.g. google.
+     * @param {Object} [options] An object containing optional client arguments, such as configuring
+     * session persistence.
+     * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
+     */
     authWithOAuthRedirect: function(provider, options) {
       var deferred = this._q.defer();
 
@@ -116,7 +161,17 @@
       return deferred.promise;
     },
 
-    // Authenticates the Firebase reference with an OAuth token.
+    /**
+     * Authenticates the Firebase reference with an OAuth token.
+     *
+     * @param {string} provider The unique string identifying the OAuth provider to authenticate
+     * with, e.g. google.
+     * @param {string|Object} credentials Either a string, such as an OAuth 2.0 access token, or an
+     * Object of key / value pairs, such as a set of OAuth 1.0a credentials.
+     * @param {Object} [options] An object containing optional client arguments, such as configuring
+     * session persistence.
+     * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
+     */
     authWithOAuthToken: function(provider, credentials, options) {
       var deferred = this._q.defer();
 
@@ -125,7 +180,9 @@
       return deferred.promise;
     },
 
-    // Unauthenticates the Firebase reference.
+    /**
+     * Unauthenticates the Firebase reference.
+     */
     unauth: function() {
       if (this.getAuth() !== null) {
         this._ref.unauth();
@@ -136,9 +193,18 @@
     /**************************/
     /*  Authentication State  */
     /**************************/
-    // Asynchronously fires the provided callback with the current authentication data every time
-    // the authentication data changes. It also fires as soon as the authentication data is
-    // retrieved from the server.
+    /**
+     * Asynchronously fires the provided callback with the current authentication data every time
+     * the authentication data changes. It also fires as soon as the authentication data is
+     * retrieved from the server.
+     *
+     * @param {function} callback A callback that fires when the client's authenticate state
+     * changes. If authenticated, the callback will be passed an object containing authentication
+     * data according to the provider used to authenticate. Otherwise, it will be passed null.
+     * @param {string} [context] If provided, this object will be used as this when calling your
+     * callback.
+     * @return {function} A function which can be used to deregister the provided callback.
+     */
     onAuth: function(callback, context) {
       var self = this;
 
@@ -150,12 +216,23 @@
       };
     },
 
-    // Synchronously retrieves the current authentication data.
+    /**
+     * Synchronously retrieves the current authentication data.
+     *
+     * @return {Object} The client's authentication data.
+     */
     getAuth: function() {
       return this._ref.getAuth();
     },
 
-    // Helper onAuth() callback method for the two router-related methods.
+    /**
+     * Helper onAuth() callback method for the two router-related methods.
+     *
+     * @param {boolean} rejectIfAuthDataIsNull Determines if the returned promise should be
+     * resolved or rejected upon an unauthenticated client.
+     * @return {Promise<Object>} A promise fulfilled with the client's authentication state or
+     * rejected if the client is unauthenticated and rejectIfAuthDataIsNull is true.
+     */
     _routerMethodOnAuthPromise: function(rejectIfAuthDataIsNull) {
       var ref = this._ref;
       var deferred = this._q.defer();
@@ -178,14 +255,24 @@
       return deferred.promise;
     },
 
-    // Returns a promise which is resolved if the client is authenticated and rejects otherwise.
-    // This can be used to require that a route has a logged in user.
+    /**
+     * Utility method which can be used in a route's resolve() method to require that a route has
+     * a logged in client.
+     *
+     * @returns {Promise<Object>} A promise fulfilled with the client's current authentication
+     * state or rejected if the client is not authenticated.
+     */
     requireAuth: function() {
       return this._routerMethodOnAuthPromise(true);
     },
 
-    // Returns a promise which is resolved with the client's current authenticated data. This can
-    // be used in a route's resolve() method to grab the current authentication data.
+    /**
+     * Utility method which can be used in a route's resolve() method to grab the current
+     * authentication data.
+     *
+     * @returns {Promise<Object|null>} A promise fulfilled with the client's current authentication
+     * state, which will be null if the client is not authenticated.
+     */
     waitForAuth: function() {
       return this._routerMethodOnAuthPromise(false);
     },
@@ -194,9 +281,16 @@
     /*********************/
     /*  User Management  */
     /*********************/
-    // Creates a new email/password user. Note that this function only creates the user, if you
-    // wish to log in as the newly created user, call $authWithPassword() after the promise for
-    // this method has been resolved.
+    /**
+     * Creates a new email/password user. Note that this function only creates the user, if you
+     * wish to log in as the newly created user, call $authWithPassword() after the promise for
+     * this method has been resolved.
+     *
+     * @param {Object|string} emailOrCredentials The email of the user to create or an object
+     * containing the email and password of the user to create.
+     * @param {string} [password] The password for the user to create.
+     * @return {Promise<>} An empty promise fulfilled once the user is created.
+     */
     createUser: function(emailOrCredentials, password) {
       var deferred = this._q.defer();
 
@@ -220,7 +314,16 @@
       return deferred.promise;
     },
 
-    // Changes the password for an email/password user.
+    /**
+     * Changes the password for an email/password user.
+     *
+     * @param {Object|string} emailOrCredentials The email of the user whose password is to change
+     * or an objet containing the email, old password, and new password of the user whose password
+     * is to change.
+     * @param {string} [oldPassword] The current password for the user.
+     * @param {string} [newPassword] The new password for the user.
+     * @return {Promise<>} An empty promise fulfilled once the password change is complete.
+     */
     changePassword: function(emailOrCredentials, oldPassword, newPassword) {
       var deferred = this._q.defer();
 
@@ -245,7 +348,14 @@
       return deferred.promise;
     },
 
-    // Removes an email/password user.
+    /**
+     * Removes an email/password user.
+     *
+     * @param {Object|string} emailOrCredentials The email of the user to remove or an object
+     * containing the email and password of the user to remove.
+     * @param {string} [password] The password of the user to remove.
+     * @return {Promise<>} An empty promise fulfilled once the user is removed.
+     */
     removeUser: function(emailOrCredentials, password) {
       var deferred = this._q.defer();
 
@@ -269,13 +379,26 @@
       return deferred.promise;
     },
 
-    // Sends a password reset email to an email/password user. [DEPRECATED]
+    /**
+     * Sends a password reset email to an email/password user. [DEPRECATED]
+     *
+     * @deprecated
+     * @param {Object|string} emailOrCredentials The email of the user to send a reset password
+     * email to or an object containing the email of the user to send a reset password email to.
+     * @return {Promise<>} An empty promise fulfilled once the reset password email is sent.
+     */
     sendPasswordResetEmail: function(emailOrCredentials) {
       console.warn("$sendPasswordResetEmail() has been deprecated in favor of the equivalent $resetPassword().");
       return this.resetPassword(emailOrCredentials);
     },
 
-    // Sends a password reset email to an email/password user.
+    /**
+     * Sends a password reset email to an email/password user.
+     *
+     * @param {Object|string} emailOrCredentials The email of the user to send a reset password
+     * email to or an object containing the email of the user to send a reset password email to.
+     * @return {Promise<>} An empty promise fulfilled once the reset password email is sent.
+     */
     resetPassword: function(emailOrCredentials) {
       var deferred = this._q.defer();
 
