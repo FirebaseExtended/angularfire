@@ -290,7 +290,8 @@
      * @param {Object|string} emailOrCredentials The email of the user to create or an object
      * containing the email and password of the user to create.
      * @param {string} [password] The password for the user to create.
-     * @return {Promise<>} An empty promise fulfilled once the user is created.
+     * @return {Promise<Object>} A promise fulfilled with an object containing the uid of the
+     * created user.
      */
     createUser: function(emailOrCredentials, password) {
       var deferred = this._q.defer();
@@ -310,7 +311,7 @@
         if (error !== null) {
           deferred.reject(error);
         } else {
-          deferred.resolve();
+          deferred.resolve(user);
         }
       });
 
