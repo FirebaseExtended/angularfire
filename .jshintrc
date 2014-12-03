@@ -9,6 +9,7 @@
   "forin": true,
   "indent": 2,
   "latedef": true,
+  "node": true,
   "noempty": true,
   "nonbsp": true,
   "strict": true,
