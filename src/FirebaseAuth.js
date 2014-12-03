@@ -193,20 +193,20 @@
     /*********************/
     /*  User Management  */
     /*********************/
-    // Creates a new email/password user. Note that this function only creates the user, if you
-    // wish to log in as the newly created user, call $authWithPassword() after the promise for
-    // this method has been resolved.
+    // Creates a new email/password user. Returns a promise fulfilled with the uid of the created
+    // user. Note that this function only creates the user, if you wish to log in as the newly
+    // created user, call $authWithPassword() after the promise for this method has been resolved.
     createUser: function(email, password) {
       var deferred = this._q.defer();
 
       this._ref.createUser({
         email: email,
         password: password
-      }, function(error) {
+      }, function(error, user) {
         if (error !== null) {
           deferred.reject(error);
         } else {
-          deferred.resolve();
+          deferred.resolve(user);
         }
       });
 
