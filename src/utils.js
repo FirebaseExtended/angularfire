@@ -236,6 +236,20 @@
             return def.promise;
           },
 
+          makeNodeResolver:function(deferred){
+            return function(err,result){
+              if(err === null){
+                if(arguments.length > 2){
+                  result = Array.prototype.slice.call(arguments,1);
+                }
+                deferred.resolve(result);
+              }
+              else {
+                deferred.reject(err);
+              }
+            };
+          },
+
           wait: function(fn, wait) {
             var to = $timeout(fn, wait||0);
             return function() {
