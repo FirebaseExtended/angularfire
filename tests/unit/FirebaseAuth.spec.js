@@ -334,6 +334,13 @@ describe('FirebaseAuth',function(){
       $timeout.flush();
       expect(status).toEqual('resolved');
     });
+
+    it('promise will resolve with the uid of the user',function(){
+      wrapPromise(auth.$createUser({email:'captreynolds@serenity.com',password:'12345'}));
+      callback('createUser')(null,{uid:'1234'});
+      $timeout.flush();
+      expect(result).toEqual('1234');
+    });
   });
   
   describe('$changePassword()',function(){

@@ -295,7 +295,9 @@
 
       this._ref.createUser(credentials, this._utils.makeNodeResolver(deferred));
 
-      return deferred.promise;
+      return deferred.promise.then(function(user){
+        return user && user.uid;
+      });
     },
 
     /**
