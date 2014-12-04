@@ -198,6 +198,11 @@ describe('$firebaseUtils', function () {
       expect(deferred.reject).toHaveBeenCalledWith(error);
     });
 
+    it('should reject the promise if the first argument is not null', function(){
+      callback(false);
+      expect(deferred.reject).toHaveBeenCalledWith(false);
+    });
+
     it('should resolve the promise if the first argument is falsy', function(){
       var result = {data:'hello world'};
       callback(null,result);

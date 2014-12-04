@@ -229,13 +229,13 @@
 
           makeNodeResolver:function(deferred){
             return function(err,result){
-              if(err){
-                deferred.reject(err);
-              }
-              else {
+              if(err === null){
                 deferred.resolve(result);
               }
-            }
+              else {
+                deferred.reject(err);
+              }
+            };
           },
 
           wait: function(fn, wait) {
