@@ -230,6 +230,9 @@
           makeNodeResolver:function(deferred){
             return function(err,result){
               if(err === null){
+                if(arguments.length > 2){
+                  result = Array.prototype.slice.call(arguments,1);
+                }
                 deferred.resolve(result);
               }
               else {

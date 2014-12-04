@@ -203,6 +203,13 @@ describe('$firebaseUtils', function () {
       expect(deferred.reject).toHaveBeenCalledWith(false);
     });
 
+    it('should aggregate multiple args into an array', function(){
+      var result1 = {data:'hello world!'};
+      var result2 = {data:'howdy!'};
+      callback(null,result1,result2);
+      expect(deferred.resolve).toHaveBeenCalledWith([result1,result2]);
+    });
+
     it('should resolve the promise if the first argument is falsy', function(){
       var result = {data:'hello world'};
       callback(null,result);
