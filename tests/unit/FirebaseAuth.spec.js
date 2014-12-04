@@ -321,15 +321,14 @@ describe('FirebaseAuth',function(){
           jasmine.any(Function));
     });
 
-    it('will reject the promise if authentication fails',function(){
+    it('will reject the promise if creation fails',function(){
       wrapPromise(auth.$createUser('dark@helmet.com','12345'));
       callback('createUser')("I've got the same combination on my luggage");
       $timeout.flush();
       expect(failure).toEqual("I've got the same combination on my luggage");
     });
 
-    //TODO: Enable once #496 is resolved
-    xit('will resolve the promise upon authentication',function(){
+    it('will resolve the promise upon creation',function(){
       wrapPromise(auth.$createUser('somebody@somewhere.com','12345'));
       callback('createUser')(null);
       $timeout.flush();
