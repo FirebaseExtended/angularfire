@@ -1,12 +1,22 @@
 describe('FirebaseAuth',function(){
   'use strict';
 
-  var $firebaseAuth, ref, auth, result, failure, status, $timeout;
+  var $firebaseAuth, ref, auth, result, failure, status, $timeout, log;
 
   beforeEach(function(){
 
+    log = {
+      warn:[]
+    };
+
     module('mock.firebase');
-    module('firebase');
+    module('firebase',function($provide){
+      $provide.value('$log',{
+        warn:function(){
+          log.warn.push(Array.prototype.slice.call(arguments,0));
+        }
+      })
+    });
     module('testutils');
 
     result = undefined;
@@ -292,11 +302,23 @@ describe('FirebaseAuth',function(){
   });
 
   describe('$createUser()',function(){
-    it('passes email/password to method on backing ref',function(){
+    it('passes email/password to method on backing ref (string args)',function(){
       auth.$createUser('somebody@somewhere.com','12345');
       expect(ref.createUser).toHaveBeenCalledWith(
         {email:'somebody@somewhere.com',password:'12345'},
         jasmine.any(Function));
+    });
+
+    it('will log a warning if deprecated string arguments are used',function(){
+      auth.$createUser('somebody@somewhere.com','12345');
+      expect(log.warn).toHaveLength(1);
+    });
+
+    it('passes email/password to method on backing ref (object arg)',function(){
+      auth.$createUser({email:'somebody@somewhere.com',password:'12345'});
+      expect(ref.createUser).toHaveBeenCalledWith(
+          {email:'somebody@somewhere.com',password:'12345'},
+          jasmine.any(Function));
     });
 
     it('will reject the promise if authentication fails',function(){
@@ -316,11 +338,23 @@ describe('FirebaseAuth',function(){
   });
   
   describe('$changePassword()',function(){
-    it('passes email/password to method on backing ref',function(){
+    it('passes email/password to method on backing ref (string args)',function(){
       auth.$changePassword('somebody@somewhere.com','54321','12345');
       expect(ref.changePassword).toHaveBeenCalledWith(
         {email:'somebody@somewhere.com',oldPassword:'54321',newPassword:'12345'},
         jasmine.any(Function));
+    });
+
+    it('passes email/password to method on backing ref (object arg)',function(){
+      auth.$changePassword({email:'somebody@somewhere.com',oldPassword:'54321',newPassword:'12345'});
+      expect(ref.changePassword).toHaveBeenCalledWith(
+        {email:'somebody@somewhere.com',oldPassword:'54321',newPassword:'12345'},
+        jasmine.any(Function));
+    });
+
+    it('will log a warning if deprecated string args are used',function(){
+      auth.$changePassword('somebody@somewhere.com','54321','12345');
+      expect(log.warn).toHaveLength(1);
     });
 
     it('will reject the promise if authentication fails',function(){
@@ -339,11 +373,23 @@ describe('FirebaseAuth',function(){
   });
   
   describe('$removeUser()',function(){
-    it('passes email/password to method on backing ref',function(){
+    it('passes email/password to method on backing ref (string args)',function(){
       auth.$removeUser('somebody@somewhere.com','12345');
       expect(ref.removeUser).toHaveBeenCalledWith(
         {email:'somebody@somewhere.com',password:'12345'},
         jasmine.any(Function));
+    });
+
+    it('passes email/password to method on backing ref (object arg)',function(){
+      auth.$removeUser({email:'somebody@somewhere.com',password:'12345'});
+      expect(ref.removeUser).toHaveBeenCalledWith(
+        {email:'somebody@somewhere.com',password:'12345'},
+        jasmine.any(Function));
+    });
+
+    it('will log a warning if deprecated string args are used',function(){
+      auth.$removeUser('somebody@somewhere.com','12345');
+      expect(log.warn).toHaveLength(1);
     });
 
     it('will reject the promise if there is an error',function(){
@@ -362,11 +408,28 @@ describe('FirebaseAuth',function(){
   });
   
   describe('$sendPasswordResetEmail()',function(){
-    it('passes email to method on backing ref',function(){
+    it('passes email to method on backing ref (string args)',function(){
       auth.$sendPasswordResetEmail('somebody@somewhere.com');
       expect(ref.resetPassword).toHaveBeenCalledWith(
         {email:'somebody@somewhere.com'},
         jasmine.any(Function));
+    });
+
+    it('passes email to method on backing ref (object arg)',function(){
+      auth.$sendPasswordResetEmail({email:'somebody@somewhere.com'});
+      expect(ref.resetPassword).toHaveBeenCalledWith(
+        {email:'somebody@somewhere.com'},
+        jasmine.any(Function));
+    });
+
+    it('will log a deprecation warning (object arg)',function(){
+      auth.$sendPasswordResetEmail({email:'somebody@somewhere.com'});
+      expect(log.warn).toHaveLength(1);
+    });
+    
+    it('will log two deprecation warnings if string arg is used',function(){
+      auth.$sendPasswordResetEmail('somebody@somewhere.com');
+      expect(log.warn).toHaveLength(2);
     });
 
     it('will reject the promise if reset action fails',function(){
@@ -378,6 +441,41 @@ describe('FirebaseAuth',function(){
 
     it('will resolve the promise upon success',function(){
       wrapPromise(auth.$sendPasswordResetEmail('somebody@somewhere.com','12345'));
+      callback('resetPassword')(null);
+      $timeout.flush();
+      expect(status).toEqual('resolved');
+    });
+  });
+  
+  describe('$resetPassword()',function(){
+    it('passes email to method on backing ref (string args)',function(){
+      auth.$resetPassword('somebody@somewhere.com');
+      expect(ref.resetPassword).toHaveBeenCalledWith(
+        {email:'somebody@somewhere.com'},
+        jasmine.any(Function));
+    });
+
+    it('passes email to method on backing ref (object arg)',function(){
+      auth.$resetPassword({email:'somebody@somewhere.com'});
+      expect(ref.resetPassword).toHaveBeenCalledWith(
+        {email:'somebody@somewhere.com'},
+        jasmine.any(Function));
+    });
+
+    it('will log a warning if deprecated string arg is used',function(){
+      auth.$resetPassword('somebody@somewhere.com');
+      expect(log.warn).toHaveLength(1);
+    });
+
+    it('will reject the promise if reset action fails',function(){
+      wrapPromise(auth.$resetPassword('somebody@somewhere.com'));
+      callback('resetPassword')("user not found");
+      $timeout.flush();
+      expect(failure).toEqual("user not found");
+    });
+
+    it('will resolve the promise upon success',function(){
+      wrapPromise(auth.$resetPassword('somebody@somewhere.com','12345'));
       callback('resetPassword')(null);
       $timeout.flush();
       expect(status).toEqual('resolved');
