@@ -478,7 +478,8 @@ describe('$firebase', function () {
       expect(function() {
         function fn() { return {}; }
         $firebase(new Firebase('Mock://').child('data'), {arrayFactory: fn}).$asArray();
-      }).toThrowError(Error);
+      }).toThrow(new Error('arrayFactory must return a valid array that passes ' +
+      'angular.isArray and Array.isArray, but received "[object Object]"'));
     });
 
     it('should contain data in ref() after load', function() {

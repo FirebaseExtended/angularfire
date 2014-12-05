@@ -248,6 +248,9 @@
               }
             }
           });
+
+          assertArray(array);
+
           var error   = batch(array.$$error, array);
           var resolve = batch(_resolveFn);
 
@@ -255,7 +258,6 @@
           self.isDestroyed = false;
           self.getArray = function() { return array; };
 
-          assertArray(array);
           init();
         }
 
