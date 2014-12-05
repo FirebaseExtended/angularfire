@@ -1,6 +1,6 @@
 describe('$FirebaseObject', function() {
   'use strict';
-  var $firebase, $FirebaseObject, $utils, $rootScope, $timeout, obj, $fb, testutils, $interval;
+  var $firebase, $FirebaseObject, $utils, $rootScope, $timeout, obj, $fb, testutils, $interval, log;
 
   var DEFAULT_ID = 'recc';
   var FIXTURE_DATA = {
@@ -11,9 +11,19 @@ describe('$FirebaseObject', function() {
   };
 
   beforeEach(function () {
+    log = {
+      error:[]
+    };
+
     module('mock.firebase');
     module('firebase');
-    module('testutils');
+    module('testutils',function($provide){
+      $provide.value('$log',{
+        error:function(){
+          log.error.push(Array.prototype.slice.call(arguments));
+        }
+      })
+    });
     inject(function (_$firebase_, _$interval_, _$FirebaseObject_, _$timeout_, $firebaseUtils, _$rootScope_, _testutils_) {
       $firebase = _$firebase_;
       $FirebaseObject = _$FirebaseObject_;
@@ -253,6 +263,34 @@ describe('$FirebaseObject', function() {
       expect($scope.test).toEqual({foo: 'bar', $id: obj.$id, $priority: obj.$priority});
     });
 
+    it('will replace the object on scope if new server value is not deeply equal', function () {
+      var $scope = $rootScope.$new();
+      obj.$bindTo($scope, 'test');
+      $timeout.flush();
+      $fb.$set.calls.reset();
+      obj.$$updated(fakeSnap({foo: 'bar'}));
+      obj.$$notify();
+      flushAll();
+      var oldTest = $scope.test;
+      obj.$$updated(fakeSnap({foo: 'baz'}));
+      obj.$$notify();
+      expect($scope.test === oldTest).toBe(false);
+    });
+
+    it('will leave the scope value alone if new server value is deeply equal', function () {
+      var $scope = $rootScope.$new();
+      obj.$bindTo($scope, 'test');
+      $timeout.flush();
+      $fb.$set.calls.reset();
+      obj.$$updated(fakeSnap({foo: 'bar'}));
+      obj.$$notify();
+      flushAll();
+      var oldTest = $scope.test;
+      obj.$$updated(fakeSnap({foo: 'bar'}));
+      obj.$$notify();
+      expect($scope.test === oldTest).toBe(true);
+    });
+
     it('should stop binding when off function is called', function () {
       var origData = $utils.scopeData(obj);
       var $scope = $rootScope.$new();
@@ -347,6 +385,31 @@ describe('$FirebaseObject', function() {
     });
   });
 
+  describe('$watch', function(){
+    it('should return a deregistration function',function(){
+      var spy = jasmine.createSpy('$watch');
+      var off = obj.$watch(spy);
+      obj.foo = 'watchtest';
+      obj.$save();
+      flushAll();
+      expect(spy).toHaveBeenCalled();
+      spy.calls.reset();
+      off();
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('additional calls to the deregistration function should be silently ignored',function(){
+      var spy = jasmine.createSpy('$watch');
+      var off = obj.$watch(spy);
+      off();
+      off();
+      obj.foo = 'watchtest';
+      obj.$save();
+      flushAll();
+      expect(spy).not.toHaveBeenCalled();
+    });
+  });
+
   describe('$remove', function() {
     it('should return a promise', function() {
       expect(obj.$remove()).toBeAPromise();
@@ -389,6 +452,13 @@ describe('$FirebaseObject', function() {
     it('should invoke destroyFn', function () {
       obj.$destroy();
       expect(obj.$$$destroyFn).toHaveBeenCalled();
+    });
+
+    it('should NOT invoke destroyFn if it is invoked a second time', function () {
+      obj.$destroy();
+      obj.$$$destroyFn.calls.reset();
+      obj.$destroy();
+      expect(obj.$$$destroyFn).not.toHaveBeenCalled();
     });
 
     it('should dispose of any bound instance', function () {
@@ -505,6 +575,20 @@ describe('$FirebaseObject', function() {
       obj.$$updated(fakeSnap(FIXTURE_DATA));
       expect(obj.aString).toBe(FIXTURE_DATA.aString);
       expect(obj.baz).toBe('baz');
+    });
+  });
+
+  describe('$$error',function(){
+    it('will log an error',function(){
+      obj.$$error(new Error());
+      expect(log.error).toHaveLength(1);
+    });
+
+    it('will call $destroy',function(){
+      obj.$destroy = jasmine.createSpy('$destroy');
+      var error = new Error();
+      obj.$$error(error);
+      expect(obj.$destroy).toHaveBeenCalledWith(error);
     });
   });
 
