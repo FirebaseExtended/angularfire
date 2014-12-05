@@ -222,7 +222,7 @@ describe('FirebaseAuth',function(){
       var options = {someOption:'a'};
       auth.$authWithOAuthToken(provider,oauth_credentials,options);
       expect(ref.authWithOAuthToken).toHaveBeenCalledWith(
-        'facebook',
+        'twitter',
         oauth_credentials,
         jasmine.any(Function),
         {someOption:'a'}
@@ -339,14 +339,14 @@ describe('FirebaseAuth',function(){
     });
 
     it('will reject the promise if creation fails',function(){
-      wrapPromise(auth.$createUser('dark@helmet.com','12345'));
+      wrapPromise(auth.$createUser({email:'dark@helmet.com', password:'12345'}));
       callback('createUser')("I've got the same combination on my luggage");
       $timeout.flush();
       expect(failure).toEqual("I've got the same combination on my luggage");
     });
 
     it('will resolve the promise upon creation',function(){
-      wrapPromise(auth.$createUser('somebody@somewhere.com','12345'));
+      wrapPromise(auth.$createUser({email:'somebody@somewhere.com', password: '12345'}));
       callback('createUser')(null);
       $timeout.flush();
       expect(status).toEqual('resolved');
@@ -381,7 +381,7 @@ describe('FirebaseAuth',function(){
     });
 
     it('will reject the promise if authentication fails',function(){
-      wrapPromise(auth.$changePassword('somebody@somewhere.com','54321','12345'));
+      wrapPromise(auth.$changePassword({email:'somebody@somewhere.com',oldPassword:'54321',newPassword:'12345'}));
       callback('changePassword')("bad password");
       $timeout.flush();
       expect(failure).toEqual("bad password");
@@ -416,14 +416,14 @@ describe('FirebaseAuth',function(){
     });
 
     it('will reject the promise if there is an error',function(){
-      wrapPromise(auth.$removeUser('somebody@somewhere.com','12345'));
+      wrapPromise(auth.$removeUser({email:'somebody@somewhere.com',password:'12345'}));
       callback('removeUser')("bad password");
       $timeout.flush();
       expect(failure).toEqual("bad password");
     });
 
     it('will resolve the promise upon removal',function(){
-      wrapPromise(auth.$removeUser('somebody@somewhere.com','12345'));
+      wrapPromise(auth.$removeUser({email:'somebody@somewhere.com',password:'12345'}));
       callback('removeUser')(null);
       $timeout.flush();
       expect(status).toEqual('resolved');
@@ -456,14 +456,14 @@ describe('FirebaseAuth',function(){
     });
 
     it('will reject the promise if reset action fails',function(){
-      wrapPromise(auth.$sendPasswordResetEmail('somebody@somewhere.com'));
+      wrapPromise(auth.$sendPasswordResetEmail({email:'somebody@somewhere.com'}));
       callback('resetPassword')("user not found");
       $timeout.flush();
       expect(failure).toEqual("user not found");
     });
 
     it('will resolve the promise upon success',function(){
-      wrapPromise(auth.$sendPasswordResetEmail('somebody@somewhere.com','12345'));
+      wrapPromise(auth.$sendPasswordResetEmail({email:'somebody@somewhere.com'}));
       callback('resetPassword')(null);
       $timeout.flush();
       expect(status).toEqual('resolved');
@@ -491,14 +491,14 @@ describe('FirebaseAuth',function(){
     });
 
     it('will reject the promise if reset action fails',function(){
-      wrapPromise(auth.$resetPassword('somebody@somewhere.com'));
+      wrapPromise(auth.$resetPassword({email:'somebody@somewhere.com'}));
       callback('resetPassword')("user not found");
       $timeout.flush();
       expect(failure).toEqual("user not found");
     });
 
     it('will resolve the promise upon success',function(){
-      wrapPromise(auth.$resetPassword('somebody@somewhere.com','12345'));
+      wrapPromise(auth.$resetPassword({email:'somebody@somewhere.com'}));
       callback('resetPassword')(null);
       $timeout.flush();
       expect(status).toEqual('resolved');
