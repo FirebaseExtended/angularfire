@@ -199,14 +199,31 @@ describe('FirebaseAuth',function(){
   });
   
   describe('$authWithOAuthToken',function(){
-    it('passes provider,credentials, and options object to underlying method',function(){
+    it('passes provider, token, and options object to underlying method',function(){
       var provider = 'facebook';
-      var credentials = {username:'myname',password:'password'};
+      var token = 'FACEBOOK TOKEN';
       var options = {someOption:'a'};
-      auth.$authWithOAuthToken(provider,credentials,options);
+      auth.$authWithOAuthToken(provider,token,options);
       expect(ref.authWithOAuthToken).toHaveBeenCalledWith(
         'facebook',
-        {username:'myname',password:'password'},
+        'FACEBOOK TOKEN',
+        jasmine.any(Function),
+        {someOption:'a'}
+      );
+    });
+
+    it('passes provider, OAuth credentials, and options object to underlying method',function(){
+      var provider = 'twitter';
+      var oauth_credentials = {
+        "user_id": "<USER-ID>",
+        "oauth_token": "<ACCESS-TOKEN>",
+        "oauth_token_secret": "<ACCESS-TOKEN-SECRET>"
+      };
+      var options = {someOption:'a'};
+      auth.$authWithOAuthToken(provider,oauth_credentials,options);
+      expect(ref.authWithOAuthToken).toHaveBeenCalledWith(
+        'facebook',
+        oauth_credentials,
         jasmine.any(Function),
         {someOption:'a'}
       );
