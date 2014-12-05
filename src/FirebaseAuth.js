@@ -276,8 +276,8 @@
      * @param {Object|string} emailOrCredentials The email of the user to create or an object
      * containing the email and password of the user to create.
      * @param {string} [password] The password for the user to create.
-     * @return {Promise<Object>} A promise fulfilled with an object containing the uid of the
-     * created user.
+     * @return {Promise<Object>} A promise fulfilled with the user object, which contains the
+     * uid of the created user.
      */
     createUser: function(emailOrCredentials, password) {
       var deferred = this._q.defer();
@@ -295,9 +295,7 @@
 
       this._ref.createUser(credentials, this._utils.makeNodeResolver(deferred));
 
-      return deferred.promise.then(function(user){
-        return user && user.uid;
-      });
+      return deferred.promise;
     },
 
     /**

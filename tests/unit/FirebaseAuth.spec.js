@@ -120,10 +120,10 @@ describe('FirebaseAuth',function(){
   describe('$authWithPassword',function(){
     it('passes options and credentials object to underlying method',function(){
       var options = {someOption:'a'};
-      var credentials = {username:'myname',password:'password'};
+      var credentials = {email:'myname',password:'password'};
       auth.$authWithPassword(credentials,options);
       expect(ref.authWithPassword).toHaveBeenCalledWith(
-        {username:'myname',password:'password'},
+        {email:'myname',password:'password'},
         jasmine.any(Function),
         {someOption:'a'}
       );
@@ -260,7 +260,7 @@ describe('FirebaseAuth',function(){
       expect(ref.onAuth).toHaveBeenCalledWith(cb, ctx);
     });
 
-    it('returns a deregistration function that calls offAuth on the backing ref with callback and context',function(){
+    it('returns a deregistration function that calls offAuth() on the backing ref with callback and context',function(){
       function cb(){}
       var ctx = {};
       var deregister = auth.$onAuth(cb,ctx);
@@ -339,7 +339,7 @@ describe('FirebaseAuth',function(){
       wrapPromise(auth.$createUser({email:'captreynolds@serenity.com',password:'12345'}));
       callback('createUser')(null,{uid:'1234'});
       $timeout.flush();
-      expect(result).toEqual('1234');
+      expect(result).toEqual({uid:'1234'});
     });
   });
   
