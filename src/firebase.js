@@ -212,14 +212,6 @@
             }
           }
 
-          function assertArray(arr) {
-            if( !angular.isArray(arr) ) {
-              var type = Object.prototype.toString.call(arr);
-              throw new Error('arrayFactory must return a valid array that passes ' +
-                'angular.isArray and Array.isArray, but received "' + type + '"');
-            }
-          }
-
           var def     = $firebaseUtils.defer();
           var array   = new ArrayFactory($inst, destroy, def.promise);
           var batch   = $firebaseUtils.batch();
@@ -265,6 +257,14 @@
 
           assertArray(array);
           init();
+        }
+
+        function assertArray(arr) {
+          if( !angular.isArray(arr) ) {
+            var type = Object.prototype.toString.call(arr);
+            throw new Error('arrayFactory must return a valid array that passes ' +
+            'angular.isArray and Array.isArray, but received "' + type + '"');
+          }
         }
 
         function SyncObject($inst, ObjectFactory) {
