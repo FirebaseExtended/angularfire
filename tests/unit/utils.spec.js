@@ -254,3 +254,67 @@ describe('$firebaseUtils', function () {
   });
 
 });
+
+describe('#promise (ES6 Polyfill)', function(){
+
+  var status, result, reason, $utils, $timeout;
+
+  function wrapPromise(promise){
+    promise.then(function(_result){
+      status = 'resolved';
+      result = _result;
+    },function(_reason){
+      status = 'rejected';
+      reason = _reason;
+    });
+  }
+
+  beforeEach(function(){
+    status = 'pending';
+    result = null;
+    reason = null;
+  });
+
+  beforeEach(module('firebase',function($provide){
+    $provide.decorator('$q',function($delegate){
+      //Forces polyfil even if we are testing against angular 1.3.x
+      return {
+        defer:$delegate.defer,
+        all:$delegate.all
+      }
+    });
+  }));
+
+  beforeEach(inject(function(_$firebaseUtils_, _$timeout_){
+    $utils = _$firebaseUtils_;
+    $timeout = _$timeout_;
+  }));
+
+  it('throws an error if not called with a function',function(){
+    expect(function(){
+      $utils.promise();
+    }).toThrow();
+    expect(function(){
+      $utils.promise({});
+    }).toThrow();
+  });
+
+  it('calling resolve will resolve the promise with the provided result',function(){
+    wrapPromise(new $utils.promise(function(resolve,reject){
+      resolve('foo');
+    }));
+    $timeout.flush();
+    expect(status).toBe('resolved');
+    expect(result).toBe('foo');
+  });
+
+  it('calling reject will reject the promise with the provided reason',function(){
+    wrapPromise(new $utils.promise(function(resolve,reject){
+      reject('bar');
+    }));
+    $timeout.flush();
+    expect(status).toBe('rejected');
+    expect(reason).toBe('bar');
+  });
+
+});
