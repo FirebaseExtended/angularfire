@@ -82,7 +82,7 @@ describe('$FirebaseArray', function () {
       var spy = jasmine.createSpy();
       arr.$add({foo: 'bar'}).then(spy);
       flushAll();
-      var lastId = $fb.$ref().getLastAutoId();
+      var lastId = $fb.$ref()._lastAutoId;
       expect(spy).toHaveBeenCalledWith($fb.$ref().child(lastId));
     });
 

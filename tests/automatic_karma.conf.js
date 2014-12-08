@@ -10,7 +10,8 @@ module.exports = function(config) {
     singleRun: true,
 
     preprocessors: {
-      "../src/*.js": "coverage"
+      "../src/*.js": "coverage",
+      "./fixtures/**/*.json": "html2js"
     },
 
     coverageReporter: {
@@ -34,6 +35,7 @@ module.exports = function(config) {
       '../src/module.js',
       '../src/**/*.js',
       'mocks/**/*.js',
+      "fixtures/**/*.json",
       'unit/**/*.spec.js'
     ]
   });

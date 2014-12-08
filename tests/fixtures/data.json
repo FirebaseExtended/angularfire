@@ -1,0 +1,82 @@
+{
+  "data": {
+    "a": {
+      "aString": "alpha",
+      "aNumber": 1,
+      "aBoolean": false
+    },
+    "b": {
+      "aString": "bravo",
+      "aNumber": 2,
+      "aBoolean": true
+    },
+    "c": {
+      "aString": "charlie",
+      "aNumber": 3,
+      "aBoolean": true
+    },
+    "d": {
+      "aString": "delta",
+      "aNumber": 4,
+      "aBoolean": true
+    },
+    "e": {
+      "aString": "echo",
+      "aNumber": 5
+    }
+  },
+  "index": {
+    "b": true,
+    "c": 1,
+    "e": false,
+    "z": true
+  },
+  "ordered": {
+    "null_a": {
+      "aNumber": 0,
+      "aLetter": "a"
+    },
+    "null_b": {
+      "aNumber": 0,
+      "aLetter": "b"
+    },
+    "null_c": {
+      "aNumber": 0,
+      "aLetter": "c"
+    },
+    "num_1_a": {
+      ".priority": 1,
+      "aNumber": 1
+    },
+    "num_1_b": {
+      ".priority": 1,
+      "aNumber": 1
+    },
+    "num_2": {
+      ".priority": 2,
+      "aNumber": 2
+    },
+    "num_3": {
+      ".priority": 3,
+      "aNumber": 3
+    },
+    "char_a_1": {
+      ".priority": "a",
+      "aNumber": 1,
+      "aLetter": "a"
+    },
+    "char_a_2": {
+      ".priority": "a",
+      "aNumber": 2,
+      "aLetter": "a"
+    },
+    "char_b": {
+      ".priority": "b",
+      "aLetter": "b"
+    },
+    "char_c": {
+      ".priority": "c",
+      "aLetter": "c"
+    }
+  }
+}
