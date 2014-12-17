@@ -195,11 +195,12 @@
     onAuth: function(callback, context) {
       var self = this;
 
-      this._ref.onAuth(callback, context);
+      var fn = this._utils.debounce(callback, context, 0);
+      this._ref.onAuth(fn);
 
       // Return a method to detach the `onAuth()` callback.
       return function() {
-        self._ref.offAuth(callback, context);
+        self._ref.offAuth(fn);
       };
     },
 

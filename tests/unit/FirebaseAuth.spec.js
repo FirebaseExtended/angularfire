@@ -270,19 +270,21 @@ describe('FirebaseAuth',function(){
   });
 
   describe('$onAuth()',function(){
-    it('calls onAuth() on the backing ref with callback and context provided',function(){
-      function cb(){}
+    //todo add more testing here after mockfirebase v2 auth is released
+
+    it('calls onAuth() on the backing ref', function() {
+      function cb() {}
       var ctx = {};
-      auth.$onAuth(cb,ctx);
-      expect(ref.onAuth).toHaveBeenCalledWith(cb, ctx);
+      auth.$onAuth(cb, ctx);
+      expect(ref.onAuth).toHaveBeenCalledWith(jasmine.any(Function));
     });
 
-    it('returns a deregistration function that calls offAuth() on the backing ref with callback and context',function(){
-      function cb(){}
+    it('returns a deregistration function that calls offAuth() on the backing ref', function(){
+      function cb() {}
       var ctx = {};
-      var deregister = auth.$onAuth(cb,ctx);
+      var deregister = auth.$onAuth(cb, ctx);
       deregister();
-      expect(ref.offAuth).toHaveBeenCalledWith(cb, ctx);
+      expect(ref.offAuth).toHaveBeenCalledWith(jasmine.any(Function));
     });
   });
 
