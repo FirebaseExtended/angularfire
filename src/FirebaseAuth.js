@@ -5,7 +5,7 @@
 
   // Define a service which provides user authentication and management.
   angular.module('firebase').factory('$firebaseAuth', [
-    '$q', function($q) {
+    '$q', '$timeout', function($q, $timeout) {
       // This factory returns an object containing the current authentication state of the client.
       // This service takes one argument:
       //
@@ -14,14 +14,15 @@
       // The returned object contains methods for authenticating clients, retrieving authentication
       // state, and managing users.
       return function(ref) {
-        var auth = new FirebaseAuth($q, ref);
+        var auth = new FirebaseAuth($q, $timeout, ref);
         return auth.construct();
       };
     }
   ]);
 
-  FirebaseAuth = function($q, ref) {
+  FirebaseAuth = function($q, $timeout, ref) {
     this._q = $q;
+    this._timeout = $timeout;
 
     if (typeof ref === 'string') {
       throw new Error('Please provide a Firebase reference instead of a URL when creating a `$firebaseAuth` object.');
@@ -141,7 +142,12 @@
     onAuth: function(callback) {
       var self = this;
 
-      this._ref.onAuth(callback);
+      self._ref.onAuth(function() {
+        var args = Array.prototype.slice.call(arguments, 0);
+        self._timeout(function() {
+          callback.apply(null, args);
+        });
+      });
 
       // Return a method to detach the `onAuth()` callback.
       return function() {
