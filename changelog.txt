@@ -1,2 +1,3 @@
+feature - Added `$firebaseAuth.$changeEmail()` to change the email address associated with an existing account.
 deprecated - Passing in credentials to the user management methods of `$firebaseAuth` as individual arguments has been deprecated in favor of a single credentials argument.
 deprecated - Deprecated `$firebaseAuth.$sendPasswordResetEmail()` in favor of the functionally equivalent `$firebaseAuth.$resetPassword()`.
