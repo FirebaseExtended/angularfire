@@ -340,7 +340,11 @@
     changeEmail: function(credentials) {
       var deferred = this._q.defer();
 
-      this._ref.changeEmail(credentials, this._utils.makeNodeResolver(deferred));
+      try {
+        this._ref.changeEmail(credentials, this._utils.makeNodeResolver(deferred));
+      } catch (error) {
+        deferred.reject(error);
+      }
 
       return deferred.promise;
     },
