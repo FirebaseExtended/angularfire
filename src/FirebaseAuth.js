@@ -5,13 +5,13 @@
   // Define a service which provides user authentication and management.
   angular.module('firebase').factory('$firebaseAuth', [
     '$q', '$firebaseUtils', '$log', function($q, $firebaseUtils, $log) {
-      // This factory returns an object containing the current authentication state of the client.
-      // This service takes one argument:
-      //
-      //   * `ref`: A Firebase reference.
-      //
-      // The returned object contains methods for authenticating clients, retrieving authentication
-      // state, and managing users.
+      /**
+       * This factory returns an object allowing you to manage the client's authentication state.
+       *
+       * @param {Firebase} ref A Firebase reference to authenticate.
+       * @return {object} An object containing methods for authenticating clients, retrieving
+       * authentication state, and managing users.
+       */
       return function(ref) {
         var auth = new FirebaseAuth($q, $firebaseUtils, $log, ref);
         return auth.construct();
@@ -77,7 +77,11 @@
     authWithCustomToken: function(authToken, options) {
       var deferred = this._q.defer();
 
-      this._ref.authWithCustomToken(authToken, this._utils.makeNodeResolver(deferred), options);
+      try {
+        this._ref.authWithCustomToken(authToken, this._utils.makeNodeResolver(deferred), options);
+      } catch (error) {
+        deferred.reject(error);
+      }
 
       return deferred.promise;
     },
@@ -92,7 +96,11 @@
     authAnonymously: function(options) {
       var deferred = this._q.defer();
 
-      this._ref.authAnonymously(this._utils.makeNodeResolver(deferred), options);
+      try {
+        this._ref.authAnonymously(this._utils.makeNodeResolver(deferred), options);
+      } catch (error) {
+        deferred.reject(error);
+      }
 
       return deferred.promise;
     },
@@ -109,7 +117,11 @@
     authWithPassword: function(credentials, options) {
       var deferred = this._q.defer();
 
-      this._ref.authWithPassword(credentials, this._utils.makeNodeResolver(deferred), options);
+      try {
+        this._ref.authWithPassword(credentials, this._utils.makeNodeResolver(deferred), options);
+      } catch (error) {
+        deferred.reject(error);
+      }
 
       return deferred.promise;
     },
@@ -126,7 +138,11 @@
     authWithOAuthPopup: function(provider, options) {
       var deferred = this._q.defer();
 
-      this._ref.authWithOAuthPopup(provider, this._utils.makeNodeResolver(deferred), options);
+      try {
+        this._ref.authWithOAuthPopup(provider, this._utils.makeNodeResolver(deferred), options);
+      } catch (error) {
+        deferred.reject(error);
+      }
 
       return deferred.promise;
     },
@@ -143,7 +159,11 @@
     authWithOAuthRedirect: function(provider, options) {
       var deferred = this._q.defer();
 
-      this._ref.authWithOAuthRedirect(provider, this._utils.makeNodeResolver(deferred), options);
+      try {
+        this._ref.authWithOAuthRedirect(provider, this._utils.makeNodeResolver(deferred), options);
+      } catch (error) {
+        deferred.reject(error);
+      }
 
       return deferred.promise;
     },
@@ -162,7 +182,11 @@
     authWithOAuthToken: function(provider, credentials, options) {
       var deferred = this._q.defer();
 
-      this._ref.authWithOAuthToken(provider, credentials, this._utils.makeNodeResolver(deferred), options);
+      try {
+        this._ref.authWithOAuthToken(provider, credentials, this._utils.makeNodeResolver(deferred), options);
+      } catch (error) {
+        deferred.reject(error);
+      }
 
       return deferred.promise;
     },
@@ -294,7 +318,11 @@
         };
       }
 
-      this._ref.createUser(credentials, this._utils.makeNodeResolver(deferred));
+      try {
+        this._ref.createUser(credentials, this._utils.makeNodeResolver(deferred));
+      } catch (error) {
+        deferred.reject(error);
+      }
 
       return deferred.promise;
     },
@@ -324,7 +352,11 @@
         };
       }
 
-      this._ref.changePassword(credentials, this._utils.makeNodeResolver(deferred));
+      try {
+        this._ref.changePassword(credentials, this._utils.makeNodeResolver(deferred));
+      } catch (error) {
+        deferred.reject(error);
+      }
 
       return deferred.promise;
     },
@@ -351,7 +383,11 @@
         };
       }
 
-      this._ref.removeUser(credentials, this._utils.makeNodeResolver(deferred));
+      try {
+        this._ref.removeUser(credentials, this._utils.makeNodeResolver(deferred));
+      } catch (error) {
+        deferred.reject(error);
+      }
 
       return deferred.promise;
     },
@@ -366,7 +402,12 @@
      */
     sendPasswordResetEmail: function(emailOrCredentials) {
       this._log.warn("$sendPasswordResetEmail() has been deprecated in favor of the equivalent $resetPassword().");
-      return this.resetPassword(emailOrCredentials);
+
+      try {
+        return this.resetPassword(emailOrCredentials);
+      } catch (error) {
+        deferred.reject(error);
+      }
     },
 
     /**
@@ -389,7 +430,11 @@
         };
       }
 
-      this._ref.resetPassword(credentials, this._utils.makeNodeResolver(deferred));
+      try {
+        this._ref.resetPassword(credentials, this._utils.makeNodeResolver(deferred));
+      } catch (error) {
+        deferred.reject(error);
+      }
 
       return deferred.promise;
     }
