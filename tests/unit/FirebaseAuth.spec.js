@@ -9,7 +9,6 @@ describe('FirebaseAuth',function(){
       warn:[]
     };
 
-    module('mock.firebase');
     module('firebase',function($provide){
       $provide.value('$log',{
         warn:function(){

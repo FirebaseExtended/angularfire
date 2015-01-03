@@ -2,7 +2,6 @@
 describe('$firebaseUtils', function () {
   var $utils, $timeout, testutils;
   beforeEach(function () {
-    module('mock.firebase');
     module('firebase');
     module('testutils');
     inject(function (_$firebaseUtils_, _$timeout_, _testutils_) {

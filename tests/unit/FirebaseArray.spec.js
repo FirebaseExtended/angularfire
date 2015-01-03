@@ -30,7 +30,6 @@ describe('$FirebaseArray', function () {
 
   var $firebase, $fb, $fbOldTodo, arr, $FirebaseArray, $utils, $rootScope, $timeout, destroySpy, testutils;
   beforeEach(function() {
-    module('mock.firebase');
     module('firebase');
     module('testutils');
     inject(function ($firebase, _$FirebaseArray_, $firebaseUtils, _$rootScope_, _$timeout_, _testutils_) {
