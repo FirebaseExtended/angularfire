@@ -7,7 +7,6 @@ describe('$firebase', function () {
 
   beforeEach(function() {
     module('firebase');
-    module('mock.firebase');
     module('mock.utils');
     // have to create these before the first call to inject
     // or they will not be registered with the angular mock injector

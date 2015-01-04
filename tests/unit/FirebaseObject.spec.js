@@ -11,7 +11,6 @@ describe('$FirebaseObject', function() {
   };
 
   beforeEach(function () {
-    module('mock.firebase');
     module('firebase');
     module('testutils');
     inject(function (_$firebase_, _$interval_, _$FirebaseObject_, _$timeout_, $firebaseUtils, _$rootScope_, _testutils_) {
