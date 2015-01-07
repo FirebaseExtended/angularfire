@@ -31,7 +31,7 @@
   ],
   "dependencies": {
     "angular": "1.2.x || 1.3.x",
-    "firebase": "2.0.x"
+    "firebase": "2.1.x"
   },
   "devDependencies": {
     "lodash": "~2.4.1",
