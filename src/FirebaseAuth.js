@@ -340,10 +340,14 @@
     changeEmail: function(credentials) {
       var deferred = this._q.defer();
 
-      try {
-        this._ref.changeEmail(credentials, this._utils.makeNodeResolver(deferred));
-      } catch (error) {
-        deferred.reject(error);
+      if (typeof this._ref.changeEmail !== 'function') {
+        deferred.reject('$firebaseAuth.$changeEmail() requires Firebase version 2.1.0 or greater.');
+      } else {
+        try {
+          this._ref.changeEmail(credentials, this._utils.makeNodeResolver(deferred));
+        } catch (error) {
+          deferred.reject(error);
+        }
       }
 
       return deferred.promise;
