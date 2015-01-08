@@ -401,7 +401,7 @@ describe('FirebaseAuth',function(){
       expect(failure).toEqual("bad password");
     });
 
-    it('will resolve the promise upon authentication',function() {
+    it('will resolve the promise upon the password change',function() {
       wrapPromise(auth.$changePassword({
         email: 'somebody@somewhere.com',
         oldPassword: '54321',
@@ -438,7 +438,7 @@ describe('FirebaseAuth',function(){
       expect(failure).toEqual("bad password");
     });
 
-    it('will resolve the promise upon authentication',function() {
+    it('will resolve the promise upon the email change',function() {
       wrapPromise(auth.$changeEmail({
         oldEmail: 'somebody@somewhere.com',
         newEmail: 'otherperson@somewhere.com',
