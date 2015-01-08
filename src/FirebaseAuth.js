@@ -430,7 +430,9 @@
       try {
         return this.resetPassword(emailOrCredentials);
       } catch (error) {
-        deferred.reject(error);
+        return this._q(function(resolve, reject) {
+          return reject(error);
+        });
       }
     },
 
