@@ -1,3 +1,4 @@
+feature - Added `$firebaseAuth.$changeEmail()` to change the email address associated with an existing account.
 feature - `$firebaseAuth.$createUser()` is now fulfilled with a user object which contains the created user's `uid`.
 feature - Added several minor performance improvements implemented by @jamestalmage.
 fixed - `$firebaseAuth.$onAuth()` now properly fires a digest loop upon changes in authentication state.

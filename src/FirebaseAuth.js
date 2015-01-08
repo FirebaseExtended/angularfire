@@ -51,6 +51,7 @@
         // User management methods
         $createUser: this.createUser.bind(this),
         $changePassword: this.changePassword.bind(this),
+        $changeEmail: this.changeEmail.bind(this),
         $removeUser: this.removeUser.bind(this),
         $resetPassword: this.resetPassword.bind(this),
         $sendPasswordResetEmail: this.sendPasswordResetEmail.bind(this)
@@ -331,7 +332,7 @@
      * Changes the password for an email/password user.
      *
      * @param {Object|string} emailOrCredentials The email of the user whose password is to change
-     * or an objet containing the email, old password, and new password of the user whose password
+     * or an object containing the email, old password, and new password of the user whose password
      * is to change.
      * @param {string} [oldPassword] The current password for the user.
      * @param {string} [newPassword] The new password for the user.
@@ -354,6 +355,29 @@
 
       try {
         this._ref.changePassword(credentials, this._utils.makeNodeResolver(deferred));
+      } catch (error) {
+        deferred.reject(error);
+      }
+
+      return deferred.promise;
+    },
+
+    /**
+     * Changes the email for an email/password user.
+     *
+     * @param {Object} credentials An object containing the old email, new email, and password of
+     * the user whose email is to change.
+     * @return {Promise<>} An empty promise fulfilled once the email change is complete.
+     */
+    changeEmail: function(credentials) {
+      if (typeof this._ref.changeEmail !== 'function') {
+        throw new Error('$firebaseAuth.$changeEmail() requires Firebase version 2.1.0 or greater.');
+      }
+
+      var deferred = this._q.defer();
+
+      try {
+        this._ref.changeEmail(credentials, this._utils.makeNodeResolver(deferred));
       } catch (error) {
         deferred.reject(error);
       }
