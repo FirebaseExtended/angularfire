@@ -1,8 +1,0 @@
-feature - Added `$firebaseAuth.$changeEmail()` to change the email address associated with an existing account.
-feature - `$firebaseAuth.$createUser()` is now fulfilled with a user object which contains the created user's `uid`.
-feature - Added several minor performance improvements implemented by @jamestalmage.
-fixed - `$firebaseAuth.$onAuth()` now properly fires a digest loop upon changes in authentication state.
-fixed - Fixed an issue with `$firebaseAuth.$offAuth()` which prevented the callback from actually being unbound (thanks to @jamestalmage).
-fixed - Fixed a bug in `$firebase.$remove()` when deleting a Firebase query reference (thanks to @jamestalmage).
-deprecated - Passing in credentials to the user management methods of `$firebaseAuth` as individual arguments has been deprecated in favor of a single credentials argument.
-deprecated - Deprecated `$firebaseAuth.$sendPasswordResetEmail()` in favor of the functionally equivalent `$firebaseAuth.$resetPassword()`.
