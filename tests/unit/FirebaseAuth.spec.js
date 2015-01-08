@@ -390,7 +390,7 @@ describe('FirebaseAuth',function(){
       expect(log.warn).toHaveLength(1);
     });
 
-    it('will reject the promise if authentication fails',function() {
+    it('will reject the promise if the password change fails',function() {
       wrapPromise(auth.$changePassword({
         email:'somebody@somewhere.com',
         oldPassword: '54321',
@@ -427,7 +427,7 @@ describe('FirebaseAuth',function(){
       }, jasmine.any(Function));
     });
 
-    it('will reject the promise if authentication fails',function() {
+    it('will reject the promise if the email change fails',function() {
       wrapPromise(auth.$changeEmail({
         oldEmail: 'somebody@somewhere.com',
         newEmail: 'otherperson@somewhere.com',
