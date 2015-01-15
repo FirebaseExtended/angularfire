@@ -15,7 +15,6 @@ describe('$FirebaseObject', function() {
       error:[]
     };
 
-    module('mock.firebase');
     module('firebase');
     module('testutils',function($provide){
       $provide.value('$log',{
