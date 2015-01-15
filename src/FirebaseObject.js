@@ -85,7 +85,7 @@
           var self = this;
           $firebaseUtils.trimKeys(this, {});
           this.$value = null;
-          return self.$inst().$remove(self.$id).then(function(ref) {
+          return self.$inst().$remove().then(function(ref) {
             self.$$notify();
             return ref;
           });

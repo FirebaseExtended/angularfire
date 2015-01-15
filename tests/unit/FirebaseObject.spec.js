@@ -425,7 +425,7 @@ describe('$FirebaseObject', function() {
       expect(obj.$inst().$remove).not.toHaveBeenCalled();
       obj.$remove();
       flushAll();
-      expect(obj.$inst().$remove).toHaveBeenCalled();
+      expect(obj.$inst().$remove).toHaveBeenCalledWith(); // should not pass a key
     });
 
     it('should delete a primitive value', function() {
