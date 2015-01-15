@@ -1,7 +1,7 @@
 (function() {
   'use strict';
   /**
-   * Creates and maintains a synchronized boject. This constructor should not be
+   * Creates and maintains a synchronized object. This constructor should not be
    * manually invoked. Instead, one should create a $firebase object and call $asObject
    * on it:  <code>$firebase( firebaseRef ).$asObject()</code>;
    *

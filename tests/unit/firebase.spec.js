@@ -3,9 +3,10 @@ describe('$firebase', function () {
 
   var $firebase, $timeout, $rootScope, $utils;
 
+  var defaults = JSON.parse(window.__html__['fixtures/data.json']);
+
   beforeEach(function() {
     module('firebase');
-    module('mock.firebase');
     module('mock.utils');
     // have to create these before the first call to inject
     // or they will not be registered with the angular mock injector
@@ -29,7 +30,10 @@ describe('$firebase', function () {
   describe('<constructor>', function() {
     var $fb;
     beforeEach(function() {
-      $fb = $firebase(new Firebase('Mock://').child('data'));
+      var ref = new Firebase('Mock://');
+      ref.set(defaults);
+      ref.flush();
+      $fb = $firebase(ref.child('data'));
     });
 
     it('should accept a Firebase ref', function() {
@@ -122,7 +126,7 @@ describe('$firebase', function () {
       var blackSpy = jasmine.createSpy('reject');
       $fb.$push({foo: 'bar'}).then(whiteSpy, blackSpy);
       flushAll();
-      var newId = $fb.$ref().getLastAutoId();
+      var newId = $fb.$ref()._lastAutoId;
       expect(whiteSpy).toHaveBeenCalled();
       expect(blackSpy).not.toHaveBeenCalled();
       var ref = whiteSpy.calls.argsFor(0)[0];
@@ -152,10 +156,8 @@ describe('$firebase', function () {
       var ref = new Firebase('Mock://').child('ordered').limit(5);
       var $fb = $firebase(ref);
       spyOn(ref.ref(), 'push').and.callThrough();
-      flushAll();
       expect(ref.ref().push).not.toHaveBeenCalled();
       $fb.$push({foo: 'querytest'});
-      flushAll();
       expect(ref.ref().push).toHaveBeenCalled();
     });
   });
@@ -217,7 +219,6 @@ describe('$firebase', function () {
       var ref = new Firebase('Mock://').child('ordered').limit(1);
       var $fb = $firebase(ref);
       spyOn(ref.ref(), 'update');
-      ref.flush();
       var expKeys = ref.slice().keys;
       $fb.$set({hello: 'world'});
       ref.flush();
@@ -230,6 +231,7 @@ describe('$firebase', function () {
     var $fb, flushAll;
     beforeEach(function() {
       $fb = $firebase(new Firebase('Mock://').child('data'));
+      $fb.$ref().set(defaults.data);
       flushAll = flush.bind(null, $fb.$ref());
     });
 
@@ -253,8 +255,7 @@ describe('$firebase', function () {
       var ref = new Firebase('Mock://').child('ordered').limit(2);
       var $fb = $firebase(ref);
       $fb.$remove().then(spy);
-      flushAll(ref);
-      flushAll(ref);
+      flush(ref);
       expect(spy).toHaveBeenCalledWith(ref);
     });
 
@@ -299,39 +300,47 @@ describe('$firebase', function () {
     });
 
     it('should only remove keys in query if used on a query', function() {
-      var ref = new Firebase('Mock://').child('ordered').limit(2);
-      var keys = ref.slice().keys;
-      var origKeys = ref.ref().getKeys();
+      var ref = new Firebase('Mock://').child('ordered')
+      var query = ref.limit(2);
+      ref.set(defaults.ordered);
+      ref.flush();
+      var keys = query.slice().keys;
+      var origKeys = query.ref().getKeys();
       expect(keys.length).toBeGreaterThan(0);
       expect(origKeys.length).toBeGreaterThan(keys.length);
-      var $fb = $firebase(ref);
-      flushAll(ref);
+      var $fb = $firebase(query);
       origKeys.forEach(function (key) {
-        spyOn(ref.ref().child(key), 'remove');
+        spyOn(query.ref().child(key), 'remove');
       });
       $fb.$remove();
-      flushAll(ref);
+      flushAll(query);
       keys.forEach(function(key) {
-        expect(ref.ref().child(key).remove).toHaveBeenCalled();
+        expect(query.ref().child(key).remove).toHaveBeenCalled();
       });
       origKeys.forEach(function(key) {
         if( keys.indexOf(key) === -1 ) {
-          expect(ref.ref().child(key).remove).not.toHaveBeenCalled();
+          expect(query.ref().child(key).remove).not.toHaveBeenCalled();
         }
       });
     });
 
     it('should wait to resolve promise until data is actually deleted',function(){
-      var ref = new Firebase('Mock://').child('ordered').limit(2);
-      var $fb = $firebase(ref);
+      var ref = new Firebase('Mock://').child('ordered');
+      ref.set(defaults.ordered);
+      ref.flush();
+      var query = ref.limit(2);
+      var $fb = $firebase(query);
       var resolved = false;
       $fb.$remove().then(function(){
         resolved = true;
       });
-      try {$timeout.flush();} catch(e){} //this may actually throw an error
       expect(resolved).toBe(false);
-      flushAll(ref);
-      flushAll(ref);
+      // flush once for on('value')
+      ref.flush();
+      // flush again to fire the ref#remove calls
+      ref.flush();
+      // then flush the promise
+      $timeout.flush();
       expect(resolved).toBe(true);
     });
   });
@@ -339,8 +348,11 @@ describe('$firebase', function () {
   describe('$update', function() {
     var $fb, flushAll;
     beforeEach(function() {
-      $fb = $firebase(new Firebase('Mock://').child('data'));
-      flushAll = flush.bind(null, $fb.$ref());
+      var ref = new Firebase('Mock://').child('data');
+      ref.set(defaults.data);
+      ref.flush();
+      $fb = $firebase(ref);
+      flushAll = flush.bind(null, ref);
     });
 
     it('should return a promise', function() {
@@ -367,7 +379,6 @@ describe('$firebase', function () {
     });
 
     it('should not destroy untouched keys', function() {
-      flushAll();
       var data = $fb.$ref().getData();
       data.a = 'foo';
       delete data.b;
@@ -387,7 +398,6 @@ describe('$firebase', function () {
 
     it('should work on a query object', function() {
       var $fb2 = $firebase($fb.$ref().limit(1));
-      flushAll();
       $fb2.$update({foo: 'bar'});
       flushAll();
       expect($fb2.$ref().ref().getData().foo).toBe('bar');
@@ -459,7 +469,10 @@ describe('$firebase', function () {
 
     beforeEach(function() {
       $ArrayFactory = stubArrayFactory();
-      $fb = $firebase(new Firebase('Mock://').child('data'), {arrayFactory: $ArrayFactory});
+      var ref = new Firebase('Mock://').child('data');
+      ref.set(defaults.data);
+      ref.flush();
+      $fb = $firebase(ref, {arrayFactory: $ArrayFactory});
     });
 
     it('should call $FirebaseArray constructor with correct args', function() {
@@ -595,10 +608,9 @@ describe('$firebase', function () {
 
     it('should call $$error if an error event occurs', function() {
       var arr = $fb.$asArray();
-      // flush all the existing data through
       flushAll();
       $fb.$ref().forceCancel('test_failure');
-      flushAll();
+      $timeout.flush();
       expect(arr.$$error).toHaveBeenCalledWith('test_failure');
     });
 
@@ -657,7 +669,10 @@ describe('$firebase', function () {
 
     beforeEach(function() {
       var Factory = stubObjectFactory();
-      $fb = $firebase(new Firebase('Mock://').child('data'), {objectFactory: Factory});
+      var ref = new Firebase('Mock://').child('data');
+      ref.set(defaults.data);
+      ref.flush();
+      $fb = $firebase(ref, {objectFactory: Factory});
       $fb.$Factory = Factory;
     });
 
@@ -704,7 +719,7 @@ describe('$firebase', function () {
       flushAll();
       expect(obj.$$error).not.toHaveBeenCalled();
       ref.forceCancel('test_cancel');
-      flushAll();
+      $timeout.flush();
       expect(obj.$$error).toHaveBeenCalledWith('test_cancel');
     });
 

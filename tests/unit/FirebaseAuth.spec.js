@@ -9,7 +9,6 @@ describe('FirebaseAuth',function(){
       warn:[]
     };
 
-    module('mock.firebase');
     module('firebase',function($provide){
       $provide.value('$log',{
         warn:function(){
@@ -27,7 +26,7 @@ describe('FirebaseAuth',function(){
       ['authWithCustomToken','authAnonymously','authWithPassword',
         'authWithOAuthPopup','authWithOAuthRedirect','authWithOAuthToken',
         'unauth','getAuth','onAuth','offAuth',
-        'createUser','changePassword','removeUser','resetPassword'
+        'createUser','changePassword','changeEmail','removeUser','resetPassword'
       ]);
 
     inject(function(_$firebaseAuth_,_$timeout_){
@@ -197,7 +196,7 @@ describe('FirebaseAuth',function(){
       expect(result).toEqual('myResult');
     });
   });
-  
+
   describe('$authWithOAuthToken',function(){
     it('passes provider, token, and options object to underlying method',function(){
       var provider = 'facebook';
@@ -270,19 +269,21 @@ describe('FirebaseAuth',function(){
   });
 
   describe('$onAuth()',function(){
-    it('calls onAuth() on the backing ref with callback and context provided',function(){
-      function cb(){}
+    //todo add more testing here after mockfirebase v2 auth is released
+
+    it('calls onAuth() on the backing ref', function() {
+      function cb() {}
       var ctx = {};
-      auth.$onAuth(cb,ctx);
-      expect(ref.onAuth).toHaveBeenCalledWith(cb, ctx);
+      auth.$onAuth(cb, ctx);
+      expect(ref.onAuth).toHaveBeenCalledWith(jasmine.any(Function));
     });
 
-    it('returns a deregistration function that calls offAuth() on the backing ref with callback and context',function(){
-      function cb(){}
+    it('returns a deregistration function that calls offAuth() on the backing ref', function(){
+      function cb() {}
       var ctx = {};
-      var deregister = auth.$onAuth(cb,ctx);
+      var deregister = auth.$onAuth(cb, ctx);
       deregister();
-      expect(ref.offAuth).toHaveBeenCalledWith(cb, ctx);
+      expect(ref.offAuth).toHaveBeenCalledWith(jasmine.any(Function));
     });
   });
 
@@ -359,42 +360,95 @@ describe('FirebaseAuth',function(){
       expect(result).toEqual({uid:'1234'});
     });
   });
-  
-  describe('$changePassword()',function(){
-    it('passes email/password to method on backing ref (string args)',function(){
+
+  describe('$changePassword()',function() {
+    it('passes credentials to method on backing ref (string args)',function() {
       auth.$changePassword('somebody@somewhere.com','54321','12345');
-      expect(ref.changePassword).toHaveBeenCalledWith(
-        {email:'somebody@somewhere.com',oldPassword:'54321',newPassword:'12345'},
-        jasmine.any(Function));
+      expect(ref.changePassword).toHaveBeenCalledWith({
+        email: 'somebody@somewhere.com',
+        oldPassword: '54321',
+        newPassword: '12345'
+      }, jasmine.any(Function));
     });
 
-    it('passes email/password to method on backing ref (object arg)',function(){
-      auth.$changePassword({email:'somebody@somewhere.com',oldPassword:'54321',newPassword:'12345'});
-      expect(ref.changePassword).toHaveBeenCalledWith(
-        {email:'somebody@somewhere.com',oldPassword:'54321',newPassword:'12345'},
-        jasmine.any(Function));
+    it('passes credentials to method on backing ref (object arg)',function() {
+      auth.$changePassword({
+        email: 'somebody@somewhere.com',
+        oldPassword: '54321',
+        newPassword: '12345'
+      });
+      expect(ref.changePassword).toHaveBeenCalledWith({
+        email:'somebody@somewhere.com',
+        oldPassword: '54321',
+        newPassword: '12345'
+      }, jasmine.any(Function));
     });
 
-    it('will log a warning if deprecated string args are used',function(){
+    it('will log a warning if deprecated string args are used',function() {
       auth.$changePassword('somebody@somewhere.com','54321','12345');
       expect(log.warn).toHaveLength(1);
     });
 
-    it('will reject the promise if authentication fails',function(){
-      wrapPromise(auth.$changePassword({email:'somebody@somewhere.com',oldPassword:'54321',newPassword:'12345'}));
+    it('will reject the promise if the password change fails',function() {
+      wrapPromise(auth.$changePassword({
+        email:'somebody@somewhere.com',
+        oldPassword: '54321',
+        newPassword: '12345'
+      }));
       callback('changePassword')("bad password");
       $timeout.flush();
       expect(failure).toEqual("bad password");
     });
 
-    it('will resolve the promise upon authentication',function(){
-      wrapPromise(auth.$changePassword('somebody@somewhere.com','54321','12345'));
+    it('will resolve the promise upon the password change',function() {
+      wrapPromise(auth.$changePassword({
+        email: 'somebody@somewhere.com',
+        oldPassword: '54321',
+        newPassword: '12345'
+      }));
       callback('changePassword')(null);
       $timeout.flush();
       expect(status).toEqual('resolved');
     });
   });
-  
+
+  describe('$changeEmail()',function() {
+    it('passes credentials to method on backing reference', function() {
+      auth.$changeEmail({
+        oldEmail: 'somebody@somewhere.com',
+        newEmail: 'otherperson@somewhere.com',
+        password: '12345'
+      });
+      expect(ref.changeEmail).toHaveBeenCalledWith({
+        oldEmail: 'somebody@somewhere.com',
+        newEmail: 'otherperson@somewhere.com',
+        password: '12345'
+      }, jasmine.any(Function));
+    });
+
+    it('will reject the promise if the email change fails',function() {
+      wrapPromise(auth.$changeEmail({
+        oldEmail: 'somebody@somewhere.com',
+        newEmail: 'otherperson@somewhere.com',
+        password: '12345'
+      }));
+      callback('changeEmail')("bad password");
+      $timeout.flush();
+      expect(failure).toEqual("bad password");
+    });
+
+    it('will resolve the promise upon the email change',function() {
+      wrapPromise(auth.$changeEmail({
+        oldEmail: 'somebody@somewhere.com',
+        newEmail: 'otherperson@somewhere.com',
+        password: '12345'
+      }));
+      callback('changeEmail')(null);
+      $timeout.flush();
+      expect(status).toEqual('resolved');
+    });
+  });
+
   describe('$removeUser()',function(){
     it('passes email/password to method on backing ref (string args)',function(){
       auth.$removeUser('somebody@somewhere.com','12345');
@@ -429,7 +483,7 @@ describe('FirebaseAuth',function(){
       expect(status).toEqual('resolved');
     });
   });
-  
+
   describe('$sendPasswordResetEmail()',function(){
     it('passes email to method on backing ref (string args)',function(){
       auth.$sendPasswordResetEmail('somebody@somewhere.com');
@@ -449,7 +503,7 @@ describe('FirebaseAuth',function(){
       auth.$sendPasswordResetEmail({email:'somebody@somewhere.com'});
       expect(log.warn).toHaveLength(1);
     });
-    
+
     it('will log two deprecation warnings if string arg is used',function(){
       auth.$sendPasswordResetEmail('somebody@somewhere.com');
       expect(log.warn).toHaveLength(2);
@@ -469,7 +523,7 @@ describe('FirebaseAuth',function(){
       expect(status).toEqual('resolved');
     });
   });
-  
+
   describe('$resetPassword()',function(){
     it('passes email to method on backing ref (string args)',function(){
       auth.$resetPassword('somebody@somewhere.com');

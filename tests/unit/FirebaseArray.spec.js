@@ -30,7 +30,6 @@ describe('$FirebaseArray', function () {
 
   var $firebase, $fb, $fbOldTodo, arr, $FirebaseArray, $utils, $rootScope, $timeout, destroySpy, testutils;
   beforeEach(function() {
-    module('mock.firebase');
     module('firebase');
     module('testutils');
     inject(function ($firebase, _$FirebaseArray_, $firebaseUtils, _$rootScope_, _$timeout_, _testutils_) {
@@ -82,7 +81,7 @@ describe('$FirebaseArray', function () {
       var spy = jasmine.createSpy();
       arr.$add({foo: 'bar'}).then(spy);
       flushAll();
-      var lastId = $fb.$ref().getLastAutoId();
+      var lastId = $fb.$ref()._lastAutoId;
       expect(spy).toHaveBeenCalledWith($fb.$ref().child(lastId));
     });
 
