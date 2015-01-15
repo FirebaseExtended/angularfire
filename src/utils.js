@@ -2,8 +2,8 @@
   'use strict';
 
   angular.module('firebase')
-    .factory('$firebaseConfig', ["$FirebaseArray", "$FirebaseObject", "$injector",
-      function($FirebaseArray, $FirebaseObject, $injector) {
+    .factory('$firebaseConfig', ["$FirebaseArray", "$FirebaseObject", "$injector", "$firebaseUtils",
+      function($FirebaseArray, $FirebaseObject, $injector, $firebaseUtils) {
         return function(configOpts) {
           // make a copy we can modify
           var opts = angular.extend({}, configOpts);
@@ -14,10 +14,14 @@
           if( typeof opts.arrayFactory === 'string' ) {
             opts.arrayFactory = $injector.get(opts.arrayFactory);
           }
+          if( typeof opts.batchFactory === 'string' ) {
+            opts.batchFactory = $injector.get(opts.batchFactory);
+          }
           // extend defaults and return
           return angular.extend({
             arrayFactory: $FirebaseArray,
-            objectFactory: $FirebaseObject
+            objectFactory: $FirebaseObject,
+            batchFactory: $firebaseUtils.batch
           }, opts);
         };
       }
