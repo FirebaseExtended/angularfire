@@ -18,7 +18,7 @@ describe('$firebase', function () {
       $get: function() {
         return function() {};
       }
-    });
+    }).value('NonFunctionFactory','NonFunctionValue');
     inject(function (_$firebase_, _$timeout_, _$rootScope_, $firebaseUtils) {
       $firebase = _$firebase_;
       $timeout = _$timeout_;
@@ -69,14 +69,28 @@ describe('$firebase', function () {
     it('should throw an error if factory name for arrayFactory does not exist', function()  {
       var ref = new Firebase('Mock://');
       expect(function() {
-        $firebase(ref, {arrayFactory: 'notarealarrayfactorymethod'})
+        $firebase(ref, {arrayFactory: 'notarealarrayfactorymethod'}); //injectable by that name doesn't exist.
+      }).toThrowError();
+    });
+
+    it('should throw an error if factory name for arrayFactory exists, but is not a function', function()  {
+      var ref = new Firebase('Mock://');
+      expect(function() {
+        $firebase(ref, {arrayFactory: 'NonFunctionFactory'}); //injectable exists, but is not a function.
       }).toThrowError();
     });
 
     it('should throw an error if factory name for objectFactory does not exist', function()  {
       var ref = new Firebase('Mock://');
       expect(function() {
-        $firebase(ref, {objectFactory: 'notarealobjectfactorymethod'})
+        $firebase(ref, {objectFactory: 'notarealobjectfactorymethod'}); //injectable by that name doesn't exist.
+      }).toThrowError();
+    });
+
+    it('should throw an error if factory name for objectFactory exists, but is not a function', function()  {
+      var ref = new Firebase('Mock://');
+      expect(function() {
+        $firebase(ref, {objectFactory: 'NonFunctionFactory'}); //injectable exists, but is not a function.
       }).toThrowError();
     });
   });
@@ -477,7 +491,8 @@ describe('$firebase', function () {
       expect(function() {
         function fn() { return {}; }
         $firebase(new Firebase('Mock://').child('data'), {arrayFactory: fn}).$asArray();
-      }).toThrowError(Error);
+      }).toThrow(new Error('arrayFactory must return a valid array that passes ' +
+      'angular.isArray and Array.isArray, but received "[object Object]"'));
     });
 
     it('should contain data in ref() after load', function() {

@@ -390,12 +390,29 @@ describe('$FirebaseArray', function () {
       arr.$$notify('child_removed', 'removedkey123', 'prevkey456');
       expect(spy).not.toHaveBeenCalled();
     });
+
+    it('calling the deregistration function twice should be silently ignored', function(){
+      var spy = jasmine.createSpy('$watch');
+      var off = arr.$watch(spy);
+      off();
+      off();
+      arr.$$notify('child_removed', 'removedkey123', 'prevkey456');
+      expect(spy).not.toHaveBeenCalled();
+    });
   });
 
   describe('$destroy', function() {
     it('should call destroyFn', function() {
       arr.$destroy();
       expect(arr.$$$destroyFn).toHaveBeenCalled();
+    });
+
+    it('should only call destroyFn the first time it is called', function() {
+      arr.$destroy();
+      expect(arr.$$$destroyFn).toHaveBeenCalled();
+      arr.$$$destroyFn.calls.reset();
+      arr.$destroy();
+      expect(arr.$$$destroyFn).not.toHaveBeenCalled();
     });
 
     it('should empty the array', function() {
@@ -601,6 +618,16 @@ describe('$FirebaseArray', function () {
       expect(spy).toHaveBeenCalled();
     });
 
+    it('"child_added" should not invoke $$notify if it already exists after prevChild', function() {
+      var spy = jasmine.createSpy('$$notify');
+      var arr = stubArray(STUB_DATA, $FirebaseArray.$extendFactory({ $$notify: spy }));
+      var index = arr.$indexFor('e');
+      var prevChild = arr.$$getKey(arr[index -1]);
+      spy.calls.reset();
+      arr.$$process('child_added', arr.$getRecord('e'), prevChild);
+      expect(spy).not.toHaveBeenCalled();
+    });
+
     ///////////////// UPDATE
 
     it('should invoke $$notify with "child_changed" event', function() {
@@ -647,6 +674,16 @@ describe('$FirebaseArray', function () {
       expect(spy).toHaveBeenCalled();
     });
 
+    it('"child_moved" should not trigger $$notify if prevChild is already the previous element' , function() {
+      var spy = jasmine.createSpy('$$notify');
+      var arr = stubArray(STUB_DATA, $FirebaseArray.$extendFactory({ $$notify: spy }));
+      var index = arr.$indexFor('e');
+      var prevChild = arr.$$getKey(arr[index - 1]);
+      spy.calls.reset();
+      arr.$$process('child_moved', arr.$getRecord('e'), prevChild);
+      expect(spy).not.toHaveBeenCalled();
+    });
+
     ///////////////// REMOVE
     it('should remove from local array', function() {
       var len = arr.length;
@@ -665,6 +702,23 @@ describe('$FirebaseArray', function () {
       arr.$$process('child_removed', arr.$getRecord('e'));
       expect(spy).toHaveBeenCalled();
     });
+
+    it('"child_removed" should not trigger $$notify if the record is not in the array' , function() {
+      var spy = jasmine.createSpy('$$notify');
+      var arr = stubArray(STUB_DATA, $FirebaseArray.$extendFactory({ $$notify: spy }));
+      spy.calls.reset();
+      arr.$$process('child_removed', {$id:'f'});
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    //////////////// OTHER
+    it('should throw an error for an unknown event type',function(){
+      var arr = stubArray(STUB_DATA);
+      expect(function(){
+        arr.$$process('unknown_event', arr.$getRecord('e'));
+      }).toThrow();
+    });
+
   });
 
   describe('$extendFactory', function() {
