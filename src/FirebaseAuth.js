@@ -225,16 +225,20 @@
 
       return this._utils.promise(function(resolve,reject){
         function callback(authData) {
-          if (authData !== null) {
-            resolve(authData);
-          } else if (rejectIfAuthDataIsNull) {
-            reject("AUTH_REQUIRED");
-          } else {
-            resolve(null);
-          }
-
           // Turn off this onAuth() callback since we just needed to get the authentication data once.
           ref.offAuth(callback);
+
+          if (authData !== null) {
+            resolve(authData);
+            return;
+          }
+          else if (rejectIfAuthDataIsNull) {
+            reject("AUTH_REQUIRED");
+            return;
+          }
+          else {
+            resolve(null);
+          }
         }
 
         ref.onAuth(callback);

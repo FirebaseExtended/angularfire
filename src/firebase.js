@@ -132,9 +132,11 @@
               ref.transaction(valueFn, function(err, committed, snap) {
                 if( err ) {
                   reject(err);
+                  return;
                 }
                 else {
                   resolve(committed? snap : null);
+                  return;
                 }
               }, applyLocally);
             });
