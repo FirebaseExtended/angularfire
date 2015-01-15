@@ -222,24 +222,23 @@
      */
     _routerMethodOnAuthPromise: function(rejectIfAuthDataIsNull) {
       var ref = this._ref;
-      var deferred = this._q.defer();
 
-      function callback(authData) {
-        if (authData !== null) {
-          deferred.resolve(authData);
-        } else if (rejectIfAuthDataIsNull) {
-          deferred.reject("AUTH_REQUIRED");
-        } else {
-          deferred.resolve(null);
+      return this._utils.promise(function(resolve,reject){
+        function callback(authData) {
+          if (authData !== null) {
+            resolve(authData);
+          } else if (rejectIfAuthDataIsNull) {
+            reject("AUTH_REQUIRED");
+          } else {
+            resolve(null);
+          }
+
+          // Turn off this onAuth() callback since we just needed to get the authentication data once.
+          ref.offAuth(callback);
         }
 
-        // Turn off this onAuth() callback since we just needed to get the authentication data once.
-        ref.offAuth(callback);
-      }
-
-      ref.onAuth(callback);
-
-      return deferred.promise;
+        ref.onAuth(callback);
+      });
     },
 
     /**

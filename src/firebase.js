@@ -128,16 +128,16 @@
             }
             applyLocally = !!applyLocally;
 
-            var def = $firebaseUtils.defer();
-            ref.transaction(valueFn, function(err, committed, snap) {
-               if( err ) {
-                 def.reject(err);
-               }
-               else {
-                 def.resolve(committed? snap : null);
-               }
-            }, applyLocally);
-            return def.promise;
+            return new $firebaseUtils.promise(function(resolve,reject){
+              ref.transaction(valueFn, function(err, committed, snap) {
+                if( err ) {
+                  reject(err);
+                }
+                else {
+                  resolve(committed? snap : null);
+                }
+              }, applyLocally);
+            });
           },
 
           $asObject: function () {
