@@ -238,6 +238,7 @@
           }
           else {
             resolve(null);
+            return;
           }
         }
 
