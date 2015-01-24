@@ -1,0 +1,1 @@
+fixed - Fixed bug which caused `$FirebaseObject.$remove()` to not actually remove the object from Firebase and, in some cases, caused a `PERMISSION_DENIED` error.
