@@ -102,6 +102,12 @@ describe('$firebaseUtils', function () {
       $utils.updateRec(rec, testutils.snap({bar: 'baz', baz: 'foo'}));
       expect(rec).toEqual({bar: 'baz', baz: 'foo', $id: 'foo', $priority: null})
     });
+
+    it('should delete $value property if not a primitive',function(){
+      var rec = {$id:'foo', $priority:null, $value:null };
+      $utils.updateRec(rec, testutils.snap({bar: 'baz', baz:'foo'}));
+      expect(rec).toEqual({bar: 'baz', baz: 'foo', $id: 'foo', $priority: null});
+    });
   });
 
   describe('#applyDefaults', function() {
