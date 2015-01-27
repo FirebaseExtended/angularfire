@@ -322,6 +322,21 @@ describe('$FirebaseObject', function() {
       expect($scope.test).toEqual({$value: null, $id: obj.$id, $priority: obj.$priority});
     });
 
+    it('should delete $value if set to an object', function () {
+      var $scope = $rootScope.$new();
+      var obj = makeObject();
+      obj.$bindTo($scope, 'test');
+      obj.$$$ready(null);
+      expect($scope.test).toEqual({$value: null, $id: obj.$id, $priority: obj.$priority});
+      $scope.$apply(function() {
+        $scope.test.text = 'hello';
+      });
+      $interval.flush(500);
+      $timeout.flush(); // for $interval
+      //$timeout.flush(); // for $watch
+      expect($scope.test).toEqual({text: 'hello', $id: obj.$id, $priority: obj.$priority});
+    });
+
     it('should update $priority if $priority changed in $scope', function () {
       var $scope = $rootScope.$new();
       var spy = obj.$inst().$set;
