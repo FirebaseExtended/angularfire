@@ -110,6 +110,23 @@ describe('$firebaseUtils', function () {
     });
   });
 
+  describe('#scopeData',function(){
+    it('$value, $priority, and $value are only private properties that get copied',function(){
+      var data = {$id:'foo',$priority:'bar',$value:null,$private1:'baz',$private2:'foo'};
+      expect($utils.scopeData(data)).toEqual({$id:'foo',$priority:'bar',$value:null});
+    });
+
+    it('all public properties will be copied',function(){
+      var data = {$id:'foo',$priority:'bar',public1:'baz',public2:'test'};
+      expect($utils.scopeData(data)).toEqual({$id:'foo',$priority:'bar',public1:'baz',public2:'test'});
+    });
+
+    it('$value will not be copied if public properties are present',function(){
+      var data = {$id:'foo',$priority:'bar',$value:'noCopy',public1:'baz',public2:'test'};
+      expect($utils.scopeData(data)).toEqual({$id:'foo',$priority:'bar',public1:'baz',public2:'test'});
+    });
+  });
+
   describe('#applyDefaults', function() {
     it('should return rec', function() {
       var rec = {foo: 'bar'};

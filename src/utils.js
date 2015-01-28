@@ -313,10 +313,15 @@
               $id: dataOrRec.$id,
               $priority: dataOrRec.$priority
             };
-            if( dataOrRec.hasOwnProperty('$value') ) {
+            var hasPublicProp = false;
+            utils.each(dataOrRec, function(v,k) {
+              hasPublicProp = true;
+              data[k] = utils.deepCopy(v);
+            });
+            if(!hasPublicProp && dataOrRec.hasOwnProperty('$value')){
               data.$value = dataOrRec.$value;
             }
-            return utils.extendData(data, dataOrRec);
+            return data;
           },
 
           updateRec: function(rec, snap) {
