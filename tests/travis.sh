@@ -1,3 +1,5 @@
+#!/bin/bash
+set -e
 grunt build
 grunt test:unit
 if [ $TRAVIS_TAG ]; then
