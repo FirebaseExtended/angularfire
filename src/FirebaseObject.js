@@ -324,23 +324,20 @@
                 scopeValue.$value === rec.$value;
             }
 
-            function getScope() {
-              return $firebaseUtils.scopeData(parsed(scope));
-            }
-
             function setScope(rec) {
               parsed.assign(scope, $firebaseUtils.scopeData(rec));
             }
 
-            var send = $firebaseUtils.debounce(function() {
-              rec.$$scopeUpdated(getScope())
+            var send = $firebaseUtils.debounce(function(val) {
+              rec.$$scopeUpdated($firebaseUtils.scopeData(val))
                 ['finally'](function() { sending = false; });
             }, 50, 500);
 
             var scopeUpdated = function(newVal) {
-              if( !equals(newVal[0]) ) {
+              newVal = newVal[0];
+              if( !equals(newVal) ) {
                 sending = true;
-                send();
+                send(newVal);
               }
             };
 
