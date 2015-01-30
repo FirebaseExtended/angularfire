@@ -52,7 +52,7 @@
             }
             if( angular.isFunction(ref.set) || !angular.isObject(data) ) {
               // this is not a query, just do a flat set
-              ref.ref().set(data, this._handle(def, ref));
+              ref.set(data, this._handle(def, ref));
             }
             else {
               var dataCopy = angular.extend({}, data);
