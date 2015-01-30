@@ -354,20 +354,16 @@
 
             // $watch will not check any vars prefixed with $, so we
             // manually check $priority and $value using this method
-            function checkMetaVars() {
-              var dat = parsed(scope);
-              if( dat.$value !== rec.$value || dat.$priority !== rec.$priority ) {
-                scopeUpdated();
-              }
+            function watchExp(){
+              var obj = parsed(scope);
+              return [obj, obj.$priority, obj.$value];
             }
-
-            self.subs.push(scope.$watch(checkMetaVars));
 
             setScope(rec);
             self.subs.push(scope.$on('$destroy', self.unbind.bind(self)));
 
             // monitor scope for any changes
-            self.subs.push(scope.$watch(varName, scopeUpdated, true));
+            self.subs.push(scope.$watch(watchExp, scopeUpdated, true));
 
             // monitor the object for changes
             self.subs.push(rec.$watch(recUpdated));

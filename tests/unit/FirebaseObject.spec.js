@@ -331,8 +331,7 @@ describe('$FirebaseObject', function() {
         $scope.test.$priority = 999;
       });
       $interval.flush(500);
-      $timeout.flush(); // for $interval
-      $timeout.flush(); // for $watch
+      $timeout.flush();
       expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({'.priority': 999}));
     });
 
@@ -348,9 +347,37 @@ describe('$FirebaseObject', function() {
         $scope.test.$value = 'bar';
       });
       $interval.flush(500);
-      $timeout.flush(); // for $interval
-      $timeout.flush(); // for $watch
+      $timeout.flush();
       expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({'.value': 'bar'}));
+    });
+
+    it('should only call $$scopeUpdated once if both metaVars and properties change in the same $digest',function(){
+      var $scope = $rootScope.$new();
+      var fb = new MockFirebase();
+      fb.autoFlush(true);
+      fb.setWithPriority({text:'hello'},3);
+      var $fb = new $firebase(fb);
+      var obj = $fb.$asObject();
+      flushAll();
+      flushAll();
+      obj.$bindTo($scope, 'test');
+      $scope.$apply();
+      expect($scope.test).toEqual({text:'hello', $id: obj.$id, $priority: 3});
+      var callCount = 0;
+      var old$scopeUpdated = obj.$$scopeUpdated;
+      obj.$$scopeUpdated = function(){
+        callCount++;
+        return old$scopeUpdated.apply(this,arguments);
+      };
+      $scope.$apply(function(){
+        $scope.test.text='goodbye';
+        $scope.test.$priority=4;
+      });
+      flushAll();
+      flushAll();
+      flushAll();
+      flushAll();
+      expect(callCount).toEqual(1);
     });
 
     it('should throw error if double bound', function() {
