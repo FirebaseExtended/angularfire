@@ -202,7 +202,13 @@
             ref.on('child_removed', removed, error);
 
             // determine when initial load is completed
-            ref.once('value', function() { resolve(null); }, resolve);
+            ref.once('value', function(snap) {
+              if (angular.isArray(snap.val())) {
+                throw new Error('Storing data using array indices in Firebase can result in unexpected behavior. See https://www.firebase.com/docs/rest/guide/understanding-data.html#section-arrays-in-firebase for more information.');
+              }
+
+              resolve(null);
+            }, resolve);
           }
 
           // call resolve(), do not call this directly
@@ -281,7 +287,13 @@
 
           function init() {
             ref.on('value', applyUpdate, error);
-            ref.once('value', function() { resolve(null); }, resolve);
+            ref.once('value', function(snap) {
+              if (angular.isArray(snap.val())) {
+                throw new Error('Storing data using array indices in Firebase can result in unexpected behavior. See https://www.firebase.com/docs/rest/guide/understanding-data.html#section-arrays-in-firebase for more information.');
+              }
+
+              resolve(null);
+            }, resolve);
           }
 
           // call resolve(); do not call this directly
