@@ -318,12 +318,10 @@
             self.scope = scope;
             self.varName = varName;
 
-            function equals(rec) {
-              var parsed = getScope();
-              var newData = $firebaseUtils.scopeData(rec);
-              return angular.equals(parsed, newData) &&
-                parsed.$priority === rec.$priority &&
-                parsed.$value === rec.$value;
+            function equals(scopeValue) {
+              return angular.equals(scopeValue, rec) &&
+                scopeValue.$priority === rec.$priority &&
+                scopeValue.$value === rec.$value;
             }
 
             function getScope() {
@@ -339,15 +337,15 @@
                 ['finally'](function() { sending = false; });
             }, 50, 500);
 
-            var scopeUpdated = function() {
-              if( !equals(rec) ) {
+            var scopeUpdated = function(newVal) {
+              if( !equals(newVal[0]) ) {
                 sending = true;
                 send();
               }
             };
 
             var recUpdated = function() {
-              if( !sending && !equals(rec) ) {
+              if( !sending && !equals(parsed(scope)) ) {
                 setScope(rec);
               }
             };
