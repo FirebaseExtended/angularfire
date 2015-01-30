@@ -301,13 +301,6 @@
             });
           },
 
-          extendData: function(dest, source) {
-            utils.each(source, function(v,k) {
-              dest[k] = utils.deepCopy(v);
-            });
-            return dest;
-          },
-
           scopeData: function(dataOrRec) {
             var data = {
               $id: dataOrRec.$id,
