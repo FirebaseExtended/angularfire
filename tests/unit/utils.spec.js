@@ -237,7 +237,7 @@ describe('$firebaseUtils', function () {
       callback(false);
       expect(deferred.reject).toHaveBeenCalledWith(false);
     });
-    
+
     it('should resolve the promise if the first argument is null', function(){
       var result = {data:'hello world'};
       callback(null,result);
@@ -252,6 +252,11 @@ describe('$firebaseUtils', function () {
     });
   });
 
+  describe('#VERSION', function() {
+    it('should return the version number', function() {
+      expect($utils.VERSION).toEqual('0.0.0');
+    });
+  });
 });
 
 describe('#promise (ES6 Polyfill)', function(){
