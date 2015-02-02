@@ -318,56 +318,47 @@
             self.scope = scope;
             self.varName = varName;
 
-            function equals(rec) {
-              var parsed = getScope();
-              var newData = $firebaseUtils.scopeData(rec);
-              return angular.equals(parsed, newData) &&
-                parsed.$priority === rec.$priority &&
-                parsed.$value === rec.$value;
-            }
-
-            function getScope() {
-              return $firebaseUtils.scopeData(parsed(scope));
+            function equals(scopeValue) {
+              return angular.equals(scopeValue, rec) &&
+                scopeValue.$priority === rec.$priority &&
+                scopeValue.$value === rec.$value;
             }
 
             function setScope(rec) {
               parsed.assign(scope, $firebaseUtils.scopeData(rec));
             }
 
-            var send = $firebaseUtils.debounce(function() {
-              rec.$$scopeUpdated(getScope())
+            var send = $firebaseUtils.debounce(function(val) {
+              rec.$$scopeUpdated($firebaseUtils.scopeData(val))
                 ['finally'](function() { sending = false; });
             }, 50, 500);
 
-            var scopeUpdated = function() {
-              if( !equals(rec) ) {
+            var scopeUpdated = function(newVal) {
+              newVal = newVal[0];
+              if( !equals(newVal) ) {
                 sending = true;
-                send();
+                send(newVal);
               }
             };
 
             var recUpdated = function() {
-              if( !sending && !equals(rec) ) {
+              if( !sending && !equals(parsed(scope)) ) {
                 setScope(rec);
               }
             };
 
             // $watch will not check any vars prefixed with $, so we
             // manually check $priority and $value using this method
-            function checkMetaVars() {
-              var dat = parsed(scope);
-              if( dat.$value !== rec.$value || dat.$priority !== rec.$priority ) {
-                scopeUpdated();
-              }
+            function watchExp(){
+              var obj = parsed(scope);
+              return [obj, obj.$priority, obj.$value];
             }
-
-            self.subs.push(scope.$watch(checkMetaVars));
 
             setScope(rec);
             self.subs.push(scope.$on('$destroy', self.unbind.bind(self)));
 
             // monitor scope for any changes
-            self.subs.push(scope.$watch(varName, scopeUpdated, true));
+            self.subs.push(scope.$watch(watchExp, scopeUpdated, true));
 
             // monitor the object for changes
             self.subs.push(rec.$watch(recUpdated));
