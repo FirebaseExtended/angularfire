@@ -210,6 +210,8 @@
         $loaded: function(resolve, reject) {
           var promise = this._promise;
           if( arguments.length ) {
+            // allow this method to be called just like .then
+            // by passing any arguments on to .then
             promise = promise.then.call(promise, resolve, reject);
           }
           return promise;
