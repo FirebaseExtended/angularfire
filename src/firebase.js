@@ -9,8 +9,8 @@
     //
     //   * `ref`: A Firebase reference. Queries or limits may be applied.
     //   * `config`: An object containing any of the advanced config options explained in API docs
-    .factory("$firebase", [ "$firebaseUtils", "$firebaseConfig",
-      function ($firebaseUtils, $firebaseConfig) {
+    .factory("$firebase", [ "$log", "$firebaseUtils", "$firebaseConfig",
+      function ($log, $firebaseUtils, $firebaseConfig) {
         function AngularFire(ref, config) {
           // make the new keyword optional
           if (!(this instanceof AngularFire)) {
@@ -204,7 +204,7 @@
             // determine when initial load is completed
             ref.once('value', function(snap) {
               if (angular.isArray(snap.val())) {
-                throw new Error('Storing data using array indices in Firebase can result in unexpected behavior. See https://www.firebase.com/docs/rest/guide/understanding-data.html#section-arrays-in-firebase for more information.');
+                $log.warn('Storing data using array indices in Firebase can result in unexpected behavior. See https://www.firebase.com/docs/web/guide/understanding-data.html#section-arrays-in-firebase for more information.');
               }
 
               resolve(null);
@@ -289,7 +289,7 @@
             ref.on('value', applyUpdate, error);
             ref.once('value', function(snap) {
               if (angular.isArray(snap.val())) {
-                throw new Error('Storing data using array indices in Firebase can result in unexpected behavior. See https://www.firebase.com/docs/rest/guide/understanding-data.html#section-arrays-in-firebase for more information.');
+                $log.warn('Storing data using array indices in Firebase can result in unexpected behavior. See https://www.firebase.com/docs/web/guide/understanding-data.html#section-arrays-in-firebase for more information.');
               }
 
               resolve(null);
