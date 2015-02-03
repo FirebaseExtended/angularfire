@@ -486,7 +486,10 @@ describe('$FirebaseArray', function () {
       expect(len).toBeGreaterThan(0);
       var copy = testutils.deepCopyObject(arr);
       arr.$$updated(testutils.snap('foo', 'notarealkey'));
-      expect(arr).toEqual(copy);
+      expect(len).toEqual(copy.length);
+      for (var i = 0; i < len; i++) {
+        expect(arr[i]).toEqual(copy[i]);
+      }
     });
 
     it('should preserve ids', function() {
