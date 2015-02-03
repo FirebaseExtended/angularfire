@@ -329,7 +329,8 @@
             }
 
             var send = $firebaseUtils.debounce(function(val) {
-              rec.$$scopeUpdated($firebaseUtils.scopeData(val))
+              var scopeData = $firebaseUtils.scopeData(val);
+              rec.$$scopeUpdated(scopeData)
                 ['finally'](function() {
                   sending = false;
                   if(!scopeData.hasOwnProperty('$value')){
