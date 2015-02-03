@@ -136,11 +136,11 @@ describe('$firebase', function () {
     it('should reject if fails', function() {
       var whiteSpy = jasmine.createSpy('resolve');
       var blackSpy = jasmine.createSpy('reject');
-      $fb.$ref().failNext('push', 'failpush');
+      $fb.$ref().failNext('push', new Error('failpush'));
       $fb.$push({foo: 'bar'}).then(whiteSpy, blackSpy);
       flushAll();
       expect(whiteSpy).not.toHaveBeenCalled();
-      expect(blackSpy).toHaveBeenCalledWith('failpush');
+      expect(blackSpy).toHaveBeenCalledWith(new Error('failpush'));
     });
 
     it('should save correct data into Firebase', function() {
@@ -206,13 +206,13 @@ describe('$firebase', function () {
     });
 
     it('should reject if fails', function() {
-      $fb.$ref().failNext('set', 'setfail');
+      $fb.$ref().failNext('set', new Error('setfail'));
       var whiteSpy = jasmine.createSpy('resolve');
       var blackSpy = jasmine.createSpy('reject');
       $fb.$set({foo: 'bar'}).then(whiteSpy, blackSpy);
       flushAll();
       expect(whiteSpy).not.toHaveBeenCalled();
-      expect(blackSpy).toHaveBeenCalledWith('setfail');
+      expect(blackSpy).toHaveBeenCalledWith(new Error('setfail'));
     });
 
     it('should affect query keys only if query used', function() {
@@ -285,11 +285,11 @@ describe('$firebase', function () {
     it('should reject if fails', function() {
       var whiteSpy = jasmine.createSpy('resolve');
       var blackSpy = jasmine.createSpy('reject');
-      $fb.$ref().failNext('remove', 'test_fail_remove');
+      $fb.$ref().failNext('remove', new Error('test_fail_remove'));
       $fb.$remove().then(whiteSpy, blackSpy);
       flushAll();
       expect(whiteSpy).not.toHaveBeenCalled();
-      expect(blackSpy).toHaveBeenCalledWith('test_fail_remove');
+      expect(blackSpy).toHaveBeenCalledWith(new Error('test_fail_remove'));
     });
 
     it('should remove data in Firebase', function() {
@@ -371,11 +371,11 @@ describe('$firebase', function () {
     it('should reject if failed', function() {
       var whiteSpy = jasmine.createSpy('resolve');
       var blackSpy = jasmine.createSpy('reject');
-      $fb.$ref().failNext('update', 'oops');
+      $fb.$ref().failNext('update', new Error('oops'));
       $fb.$update({index: {foo: 'bar'}}).then(whiteSpy, blackSpy);
       flushAll();
       expect(whiteSpy).not.toHaveBeenCalled();
-      expect(blackSpy).toHaveBeenCalled();
+      expect(blackSpy).toHaveBeenCalledWith(new Error('oops'));
     });
 
     it('should not destroy untouched keys', function() {
@@ -435,11 +435,11 @@ describe('$firebase', function () {
     it('should reject if failed', function() {
       var whiteSpy = jasmine.createSpy('success');
       var blackSpy = jasmine.createSpy('failed');
-      $fb.$ref().child('a').failNext('transaction', 'test_fail');
+      $fb.$ref().child('a').failNext('transaction', new Error('test_fail'));
       $fb.$transaction('a', function() { return true; }).then(whiteSpy, blackSpy);
       flushAll();
       expect(whiteSpy).not.toHaveBeenCalled();
-      expect(blackSpy).toHaveBeenCalledWith('test_fail');
+      expect(blackSpy).toHaveBeenCalledWith(new Error('test_fail'));
     });
 
     it('should modify data in firebase', function() {

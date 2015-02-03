@@ -430,6 +430,12 @@
             });
             return dat;
           },
+
+          /**
+           * AngularFire version number.
+           */
+          VERSION: '0.0.0',
+
           batchDelay: firebaseBatchDelay,
           allPromises: $q.all.bind($q)
         };
