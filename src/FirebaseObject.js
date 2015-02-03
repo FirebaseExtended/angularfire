@@ -329,8 +329,16 @@
             }
 
             var send = $firebaseUtils.debounce(function(val) {
-              rec.$$scopeUpdated($firebaseUtils.scopeData(val))
-                ['finally'](function() { sending = false; });
+              var scopeData = $firebaseUtils.scopeData(val);
+              rec.$$scopeUpdated(scopeData)
+                ['finally'](function() {
+                  sending = false;
+                  if(!scopeData.hasOwnProperty('$value')){
+                    delete rec.$value;
+                    delete parsed(scope).$value;
+                  }
+                }
+              );
             }, 50, 500);
 
             var scopeUpdated = function(newVal) {
