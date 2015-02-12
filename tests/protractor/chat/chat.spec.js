@@ -11,9 +11,6 @@ describe('Chat App', function () {
   // Reference to the messages repeater
   var messages = element.all(by.repeater('message in messages'));
 
-  // Reference to messages count
-  var messagesCount = element(by.id('messagesCount'));
-
   var flow = protractor.promise.controlFlow();
 
   function waitOne() {
@@ -58,7 +55,6 @@ describe('Chat App', function () {
 
   it('starts with an empty list of messages', function () {
     expect(messages.count()).toBe(0);
-    expect(messagesCount.getText()).toEqual('0');
   });
 
   it('adds new messages', function () {
@@ -72,9 +68,6 @@ describe('Chat App', function () {
 
     // We should only have two messages in the repeater since we did a limit query
     expect(messages.count()).toBe(2);
-
-    // Messages count should include all messages, not just the ones displayed
-    expect(messagesCount.getText()).toEqual('3');
   });
 
   it('updates upon new remote messages', function () {
@@ -84,27 +77,15 @@ describe('Chat App', function () {
       firebaseRef.child("messages").push({
         from: 'Guest 2000',
         content: 'Remote message detected'
-      }, function() {
-        // Update the message count as well
-        firebaseRef.child("numMessages").transaction(function(currentCount) {
-          if (!currentCount) {
-            return 1;
-          } else {
-            return currentCount + 1;
-          }
-        }, function (e, c, s) {
-          if( e ) { def.reject(e); }
-          else { def.fulfill(); }
-        });
+      }, function(err) {
+        if( err ) { def.reject(err); }
+        else { def.fulfill(); }
       });
       return def.promise;
     });
 
     // We should only have two messages in the repeater since we did a limit query
     expect(messages.count()).toBe(2);
-
-    // Messages count should include all messages, not just the ones displayed
-    expect(messagesCount.getText()).toEqual('4');
   });
 
   it('updates upon removed remote messages', function () {
@@ -113,17 +94,9 @@ describe('Chat App', function () {
       // Simulate a message being deleted remotely
       var onCallback = firebaseRef.child("messages").limitToLast(1).on("child_added", function(childSnapshot) {
         firebaseRef.child("messages").off("child_added", onCallback);
-        childSnapshot.ref().remove(function() {
-          firebaseRef.child("numMessages").transaction(function(currentCount) {
-            if (!currentCount) {
-              return 1;
-            } else {
-              return currentCount - 1;
-            }
-          }, function(err) {
-            if( err ) { def.reject(err); }
-            else { def.fulfill(); }
-          });
+        childSnapshot.ref().remove(function(err) {
+          if( err ) { def.reject(err); }
+          else { def.fulfill(); }
         });
       });
       return def.promise;
@@ -131,9 +104,6 @@ describe('Chat App', function () {
 
     // We should only have two messages in the repeater since we did a limit query
     expect(messages.count()).toBe(2);
-
-    // Messages count should include all messages, not just the ones displayed
-    expect(messagesCount.getText()).toEqual('3');
   });
 
   it('stops updating once the AngularFire bindings are destroyed', function () {
@@ -143,6 +113,5 @@ describe('Chat App', function () {
     sleep();
 
     expect(messages.count()).toBe(0);
-    expect(messagesCount.getText()).toEqual('0');
   });
 });
