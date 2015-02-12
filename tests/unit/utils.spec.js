@@ -1,6 +1,34 @@
 'use strict';
 describe('$firebaseUtils', function () {
   var $utils, $timeout, testutils;
+
+  var MOCK_DATA = {
+    'a': {
+      aString: 'alpha',
+      aNumber: 1,
+      aBoolean: false
+    },
+    'b': {
+      aString: 'bravo',
+      aNumber: 2,
+      aBoolean: true
+    },
+    'c': {
+      aString: 'charlie',
+      aNumber: 3,
+      aBoolean: true
+    },
+    'd': {
+      aString: 'delta',
+      aNumber: 4,
+      aBoolean: true
+    },
+    'e': {
+      aString: 'echo',
+      aNumber: 5
+    }
+  };
+
   beforeEach(function () {
     module('firebase');
     module('testutils');
@@ -272,6 +300,132 @@ describe('$firebaseUtils', function () {
       var result2 = {data:'howdy!'};
       callback(null,result1,result2);
       expect(deferred.resolve).toHaveBeenCalledWith([result1,result2]);
+    });
+  });
+
+  describe('#doSet', function() {
+    var ref;
+    beforeEach(function() {
+      ref = new MockFirebase('Mock://').child('data/REC1');
+    });
+
+    it('returns a promise', function() {
+      expect($utils.doSet(ref, null)).toBeAPromise();
+    });
+
+    it('resolves on success', function() {
+      var whiteSpy = jasmine.createSpy('resolve');
+      var blackSpy = jasmine.createSpy('reject');
+      $utils.doSet(ref, {foo: 'bar'}).then(whiteSpy, blackSpy);
+      ref.flush();
+      $timeout.flush();
+      expect(blackSpy).not.toHaveBeenCalled();
+      expect(whiteSpy).toHaveBeenCalled();
+    });
+
+    it('saves the data', function() {
+      $utils.doSet(ref, true);
+      ref.flush();
+      expect(ref.getData()).toBe(true);
+    });
+
+    it('rejects promise when fails', function() {
+      ref.failNext('set', new Error('setfail'));
+      var whiteSpy = jasmine.createSpy('resolve');
+      var blackSpy = jasmine.createSpy('reject');
+      $utils.doSet(ref, {foo: 'bar'}).then(whiteSpy, blackSpy);
+      ref.flush();
+      $timeout.flush();
+      expect(whiteSpy).not.toHaveBeenCalled();
+      expect(blackSpy).toHaveBeenCalledWith(new Error('setfail'));
+    });
+
+    it('only affects query keys when using a query', function() {
+      ref.set(MOCK_DATA);
+      ref.flush();
+      var query = ref.limit(1); //todo-mock MockFirebase doesn't support 2.x queries yet
+      spyOn(query.ref(), 'update');
+      var expKeys = query.slice().keys;
+      $utils.doSet(query, {hello: 'world'});
+      query.flush();
+      var args = query.ref().update.calls.mostRecent().args[0];
+      expect(Object.keys(args)).toEqual(['hello'].concat(expKeys));
+    });
+  });
+
+  describe('#doRemove', function() {
+    var ref;
+    beforeEach(function() {
+      ref = new MockFirebase('Mock://').child('data/REC1');
+    });
+
+    it('returns a promise', function() {
+      expect($utils.doRemove(ref)).toBeAPromise();
+    });
+
+    it('resolves if successful', function() {
+      var whiteSpy = jasmine.createSpy('resolve');
+      var blackSpy = jasmine.createSpy('reject');
+      $utils.doRemove(ref).then(whiteSpy, blackSpy);
+      ref.flush();
+      $timeout.flush();
+      expect(blackSpy).not.toHaveBeenCalled();
+      expect(whiteSpy).toHaveBeenCalled();
+    });
+
+    it('removes the data', function() {
+      $utils.doRemove(ref);
+      ref.flush();
+      expect(ref.getData()).toBe(null);
+    });
+
+    it('rejects promise if write fails', function() {
+      var whiteSpy = jasmine.createSpy('resolve');
+      var blackSpy = jasmine.createSpy('reject');
+      var err = new Error('test_fail_remove');
+      ref.failNext('remove', err);
+      $utils.doRemove(ref).then(whiteSpy, blackSpy);
+      ref.flush();
+      $timeout.flush();
+      expect(whiteSpy).not.toHaveBeenCalled();
+      expect(blackSpy).toHaveBeenCalledWith(err);
+    });
+
+    it('only removes keys in query when query is used', function() {
+      ref.set(MOCK_DATA);
+      ref.flush();
+      var query = ref.limit(2); //todo-mock MockFirebase does not support 2.x queries yet
+      var keys = query.slice().keys;
+      var origKeys = query.ref().getKeys();
+      expect(keys.length).toBeGreaterThan(0);
+      expect(origKeys.length).toBeGreaterThan(keys.length);
+      origKeys.forEach(function (key) {
+        spyOn(query.ref().child(key), 'remove');
+      });
+      $utils.doRemove(query);
+      query.flush();
+      keys.forEach(function(key) {
+        expect(query.ref().child(key).remove).toHaveBeenCalled();
+      });
+      origKeys.forEach(function(key) {
+        if( keys.indexOf(key) === -1 ) {
+          expect(query.ref().child(key).remove).not.toHaveBeenCalled();
+        }
+      });
+    });
+
+    it('waits to resolve promise until data is actually deleted',function(){
+      ref.set(MOCK_DATA);
+      ref.flush();
+      var query = ref.limit(2);
+      var resolved = false;
+      $utils.doRemove(query).then(function(){
+        resolved = true;
+      });
+      expect(resolved).toBe(false);
+      ref.flush();
+      $timeout.flush();
+      expect(resolved).toBe(true);
     });
   });
 

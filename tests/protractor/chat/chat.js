@@ -1,24 +1,20 @@
 var app = angular.module('chat', ['firebase']);
-app.controller('ChatCtrl', function Chat($scope, $firebase) {
+app.controller('ChatCtrl', function Chat($scope, $FirebaseObject, $FirebaseArray) {
   // Get a reference to the Firebase
   var chatFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/chat');
   var messagesFirebaseRef = chatFirebaseRef.child("messages").limitToLast(2);
-  var numMessagesFirebaseRef = chatFirebaseRef.child("numMessages");
 
   // Get AngularFire sync objects
-  var chatSync = $firebase(chatFirebaseRef);
-  var messagesSync = $firebase(messagesFirebaseRef);
-  var numMessagesSync = $firebase(numMessagesFirebaseRef);
 
   // Get the chat data as an object
-  $scope.chat = chatSync.$asObject();
+  $scope.chat = new $FirebaseObject(chatFirebaseRef);
 
   // Get the chat messages as an array
-  $scope.messages = messagesSync.$asArray();
+  $scope.messages = new $FirebaseArray(messagesFirebaseRef);
 
   // Verify that $inst() works
-  verify($scope.chat.$inst() === chatSync, "Something is wrong with $FirebaseObject.$inst().");
-  verify($scope.messages.$inst() === messagesSync, "Something is wrong with $FirebaseArray.$inst().");
+  verify($scope.chat.$ref() === chatFirebaseRef, "Something is wrong with $FirebaseObject.$inst().");
+  verify($scope.messages.$ref() === messagesFirebaseRef, "Something is wrong with $FirebaseArray.$inst().");
 
   // Initialize $scope variables
   $scope.message = "";
@@ -26,7 +22,7 @@ app.controller('ChatCtrl', function Chat($scope, $firebase) {
 
   /* Clears the chat Firebase reference */
   $scope.clearRef = function () {
-    chatSync.$remove();
+    chatFirebaseRef.remove();
   };
 
   /* Adds a new message to the messages list and updates the messages count */
@@ -40,32 +36,6 @@ app.controller('ChatCtrl', function Chat($scope, $firebase) {
 
       // Reset the message input
       $scope.message = "";
-
-      // Increment the messages count by 1
-      numMessagesSync.$transaction(function (currentCount) {
-        if (currentCount === null) {
-          // Set the initial value
-          return 1;
-        }
-        else if (currentCount < 0) {
-          // Return undefined to abort the transaction
-          return;
-        }
-        else {
-          // Increment the messages count by 1
-          return currentCount + 1;
-        }
-      }).then(function (snapshot) {
-        if (snapshot === null) {
-          // Handle aborted transaction
-          verify(false, "Messages count transaction unexpectedly aborted.")
-        }
-        else {
-          // Success
-        }
-      }, function(error) {
-        verify(false, "Messages count transaction errored: " + error);
-      });
     }
   };
 
