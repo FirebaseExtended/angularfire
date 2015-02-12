@@ -55,7 +55,7 @@ app.controller('ChatCtrl', function Chat($scope, $FirebaseObject, $FirebaseArray
         }
       }, function (error, committed, snapshot) {
         if( error ) {
-
+          verify(false, "Messages count transaction errored: " + error);
         }
         else if(!committed) {
           // Handle aborted transaction
