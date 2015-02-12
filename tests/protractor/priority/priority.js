@@ -1,16 +1,13 @@
 var app = angular.module('priority', ['firebase']);
-app.controller('PriorityCtrl', function Chat($scope, $firebase) {
+app.controller('PriorityCtrl', function Chat($scope, $FirebaseArray, $FirebaseObject) {
   // Get a reference to the Firebase
   var messagesFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/priority');
 
-  // Get the messages as an AngularFire sync object
-  var messagesSync = $firebase(messagesFirebaseRef);
-
   // Get the chat messages as an array
-  $scope.messages = messagesSync.$asArray();
+  $scope.messages = new $FirebaseArray(messagesFirebaseRef);
 
   // Verify that $inst() works
-  verify($scope.messages.$inst() === messagesSync, 'Something is wrong with $FirebaseArray.$inst().');
+  verify($scope.messages.$ref() === messagesFirebaseRef, 'Something is wrong with $FirebaseArray.$ref().');
 
   // Initialize $scope variables
   $scope.message = '';
@@ -18,7 +15,7 @@ app.controller('PriorityCtrl', function Chat($scope, $firebase) {
 
   /* Clears the priority Firebase reference */
   $scope.clearRef = function () {
-    messagesSync.$remove();
+    messagesFirebaseRef.$remove();
   };
 
   /* Adds a new message to the messages list */
@@ -26,24 +23,21 @@ app.controller('PriorityCtrl', function Chat($scope, $firebase) {
     if ($scope.message !== '') {
       // Add a new message to the messages list
       var priority = $scope.messages.length;
-      $scope.messages.$inst().$push({
+      $scope.messages.$add({
         from: $scope.username,
         content: $scope.message
       }).then(function (ref) {
-        var newItem = $firebase(ref).$asObject();
+        var newItem = new $FirebaseObject(ref);
 
         newItem.$loaded().then(function (data) {
           verify(newItem === data, '$FirebaseArray.$loaded() does not return correct value.');
 
           // Update the message's priority
-          // Note: we need to also update a non-$priority variable since Angular won't
-          // recognize the change otherwise
-          newItem.a = priority;
           newItem.$priority = priority;
           newItem.$save();
         });
       }, function (error) {
-        verify(false, 'Something is wrong with $firebase.$push().');
+        verify(false, 'Something is wrong with $FirebaseArray.$add().');
       });
 
       // Reset the message input

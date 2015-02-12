@@ -431,6 +431,58 @@
             return dat;
           },
 
+          doSet: function(ref, data) {
+            var def = utils.defer();
+            if( angular.isFunction(ref.set) || !angular.isObject(data) ) {
+              // this is not a query, just do a flat set
+              ref.set(data, utils.makeNodeResolver(def));
+            }
+            else {
+              var dataCopy = angular.extend({}, data);
+              // this is a query, so we will replace all the elements
+              // of this query with the value provided, but not blow away
+              // the entire Firebase path
+              ref.once('value', function(snap) {
+                snap.forEach(function(ss) {
+                  if( !dataCopy.hasOwnProperty(utils.getKey(ss)) ) {
+                    dataCopy[utils.getKey(ss)] = null;
+                  }
+                });
+                ref.ref().update(dataCopy, utils.makeNodeResolver(def));
+              });
+            }
+            return def.promise;
+          },
+
+          doRemove: function(ref) {
+            var def = utils.defer();
+            if( angular.isFunction(ref.remove) ) {
+              // ref is not a query, just do a flat remove
+              ref.remove(utils.makeNodeResolver(def));
+            }
+            else {
+              // ref is a query so let's only remove the
+              // items in the query and not the entire path
+              ref.once('value', function(snap) {
+                var promises = [];
+                snap.forEach(function(ss) {
+                  var d = utils.defer();
+                  promises.push(d.promise);
+                  ss.ref().remove(utils.makeNodeResolver(def));
+                });
+                utils.allPromises(promises)
+                  .then(function() {
+                    def.resolve(ref);
+                  },
+                  function(err){
+                    def.reject(err);
+                  }
+                );
+              });
+            }
+            return def.promise;
+          },
+
           /**
            * AngularFire version number.
            */

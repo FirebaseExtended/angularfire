@@ -7,24 +7,25 @@
    *
    * Internally, the $firebase object depends on this class to provide 5 $$ methods, which it invokes
    * to notify the array whenever a change has been made at the server:
-   *    $$added - called whenever a child_added event occurs
-   *    $$updated - called whenever a child_changed event occurs
-   *    $$moved - called whenever a child_moved event occurs
-   *    $$removed - called whenever a child_removed event occurs
+   *    $$added - called whenever a child_added event occurs, returns the new record, or null to cancel
+   *    $$updated - called whenever a child_changed event occurs, returns true if updates were applied
+   *    $$moved - called whenever a child_moved event occurs, returns true if move should be applied
+   *    $$removed - called whenever a child_removed event occurs, returns true if remove should be applied
    *    $$error - called when listeners are canceled due to a security error
    *    $$process - called immediately after $$added/$$updated/$$moved/$$removed
-   *                to splice/manipulate the array and invokes $$notify
+   *                (assuming that these methods do not abort by returning false or null)
+   *                to splice/manipulate the array and invoke $$notify
    *
    * Additionally, these methods may be of interest to devs extending this class:
    *    $$notify - triggers notifications to any $watch listeners, called by $$process
    *    $$getKey - determines how to look up a record's key (returns $id by default)
    *
-   * Instead of directly modifying this class, one should generally use the $extendFactory
-   * method to add or change how methods behave. $extendFactory modifies the prototype of
+   * Instead of directly modifying this class, one should generally use the $extend
+   * method to add or change how methods behave. $extend modifies the prototype of
    * the array class by returning a clone of $FirebaseArray.
    *
    * <pre><code>
-   * var NewFactory = $FirebaseArray.$extendFactory({
+   * var ExtendedArray = $FirebaseArray.$extend({
    *    // add a new method to the prototype
    *    foo: function() { return 'bar'; },
    *
@@ -38,10 +39,9 @@
    *      return this.$getRecord(snap.key()).update(snap);
    *    }
    * });
-   * </code></pre>
    *
-   * And then the new factory can be passed as an argument:
-   * <code>$firebase( firebaseRef, {arrayFactory: NewFactory}).$asArray();</code>
+   * var list = new ExtendedArray(ref);
+   * </code></pre>
    */
   angular.module('firebase').factory('$FirebaseArray', ["$log", "$firebaseUtils",
     function($log, $firebaseUtils) {
@@ -49,20 +49,19 @@
        * This constructor should probably never be called manually. It is used internally by
        * <code>$firebase.$asArray()</code>.
        *
-       * @param $firebase
-       * @param {Function} destroyFn invoking this will cancel all event listeners and stop
-       *                   notifications from being delivered to $$added, $$updated, $$moved, and $$removed
-       * @param readyPromise resolved when the initial data downloaded from Firebase
+       * @param {Firebase} ref
        * @returns {Array}
        * @constructor
        */
-      function FirebaseArray($firebase, destroyFn, readyPromise) {
+      function FirebaseArray(ref) {
         var self = this;
         this._observers = [];
         this.$list = [];
-        this._inst = $firebase;
-        this._promise = readyPromise;
-        this._destroyFn = destroyFn;
+        this._ref = ref;
+        this._sync = new ArraySyncManager(this);
+
+        $firebaseUtils.assertValidRef(ref, 'Must pass a valid Firebase reference ' +
+        'to $FirebaseArray (not a string or URL)');
 
         // indexCache is a weak hashmap (a lazy list) of keys to array indices,
         // items are not guaranteed to stay up to date in this list (since the data
@@ -79,6 +78,8 @@
         $firebaseUtils.getPublicMethods(self, function(fn, key) {
           self.$list[key] = fn.bind(self);
         });
+
+        this._sync.init(this.$list);
 
         return this.$list;
       }
@@ -101,7 +102,12 @@
          */
         $add: function(data) {
           this._assertNotDestroyed('$add');
-          return this.$inst().$push($firebaseUtils.toJSON(data));
+          var def = $firebaseUtils.defer();
+          var ref = this.$ref().ref().push();
+          ref.set($firebaseUtils.toJSON(data), $firebaseUtils.makeNodeResolver(def));
+          return def.promise.then(function() {
+            return ref;
+          });
         },
 
         /**
@@ -124,14 +130,15 @@
           var item = self._resolveItem(indexOrItem);
           var key = self.$keyAt(item);
           if( key !== null ) {
-            return self.$inst().$set(key, $firebaseUtils.toJSON(item))
-              .then(function(ref) {
-                self.$$notify('child_changed', key);
-                return ref;
-              });
+            var ref = self.$ref().ref().child(key);
+            var data = $firebaseUtils.toJSON(item);
+            return $firebaseUtils.doSet(ref, data).then(function() {
+              self.$$notify('child_changed', key);
+              return ref;
+            });
           }
           else {
-            return $firebaseUtils.reject('Invalid record; could determine its key: '+indexOrItem);
+            return $firebaseUtils.reject('Invalid record; could determine key for '+indexOrItem);
           }
         },
 
@@ -153,10 +160,13 @@
           this._assertNotDestroyed('$remove');
           var key = this.$keyAt(indexOrItem);
           if( key !== null ) {
-            return this.$inst().$remove(key);
+            var ref = this.$ref().ref().child(key);
+            return $firebaseUtils.doRemove(ref).then(function() {
+              return ref;
+            });
           }
           else {
-            return $firebaseUtils.reject('Invalid record; could not find key: '+indexOrItem);
+            return $firebaseUtils.reject('Invalid record; could not determine key for '+indexOrItem);
           }
         },
 
@@ -208,7 +218,7 @@
          * @returns a promise
          */
         $loaded: function(resolve, reject) {
-          var promise = this._promise;
+          var promise = this._sync.ready();
           if( arguments.length ) {
             // allow this method to be called just like .then
             // by passing any arguments on to .then
@@ -218,9 +228,9 @@
         },
 
         /**
-         * @returns the original $firebase object used to create this object.
+         * @returns {Firebase} the original Firebase ref used to create this object.
          */
-        $inst: function() { return this._inst; },
+        $ref: function() { return this._ref; },
 
         /**
          * Listeners passed into this method are notified whenever a new change (add, updated,
@@ -257,9 +267,9 @@
         $destroy: function(err) {
           if( !this._isDestroyed ) {
             this._isDestroyed = true;
+            this._sync.destroy(err);
             this.$list.length = 0;
-            $log.debug('destroy called for FirebaseArray: '+this.$inst().$ref().toString());
-            this._destroyFn(err);
+            $log.debug('destroy called for FirebaseArray: '+this.$ref().ref().toString());
           }
         },
 
@@ -282,6 +292,7 @@
          * @param {object} snap a Firebase snapshot
          * @param {string} prevChild
          * @return {object} the record to be inserted into the array
+         * @protected
          */
         $$added: function(snap/*, prevChild*/) {
           // check to make sure record does not exist
@@ -540,13 +551,108 @@
        * @param {Object} [methods] a list of functions to add onto the prototype
        * @returns {Function} a new factory suitable for use with $firebase
        */
-      FirebaseArray.$extendFactory = function(ChildClass, methods) {
+      FirebaseArray.$extend = function(ChildClass, methods) {
         if( arguments.length === 1 && angular.isObject(ChildClass) ) {
           methods = ChildClass;
           ChildClass = function() { return FirebaseArray.apply(this, arguments); };
         }
         return $firebaseUtils.inherit(ChildClass, FirebaseArray, methods);
       };
+
+      function ArraySyncManager(firebaseArray) {
+        function destroy(err) {
+          if( !sync.isDestroyed ) {
+            sync.isDestroyed = true;
+            var ref = firebaseArray.$ref();
+            ref.off('child_added', created);
+            ref.off('child_moved', moved);
+            ref.off('child_changed', updated);
+            ref.off('child_removed', removed);
+            firebaseArray = null;
+            resolve(err||'destroyed');
+          }
+        }
+
+        function init($list) {
+          var ref = firebaseArray.$ref();
+
+          // listen for changes at the Firebase instance
+          ref.on('child_added', created, error);
+          ref.on('child_moved', moved, error);
+          ref.on('child_changed', updated, error);
+          ref.on('child_removed', removed, error);
+
+          // determine when initial load is completed
+          ref.once('value', function(snap) {
+            if (angular.isArray(snap.val())) {
+              $log.warn('Storing data using array indices in Firebase can result in unexpected behavior. See https://www.firebase.com/docs/web/guide/understanding-data.html#section-arrays-in-firebase for more information.');
+            }
+
+            resolve(null, $list);
+          }, resolve);
+        }
+
+        // call resolve(), do not call this directly
+        function _resolveFn(err, result) {
+          if( !isResolved ) {
+            isResolved = true;
+            if( err ) { def.reject(err); }
+            else { def.resolve(result); }
+          }
+        }
+
+        var def     = $firebaseUtils.defer();
+        var batch   = $firebaseUtils.batch();
+        var created = batch(function(snap, prevChild) {
+          var rec = firebaseArray.$$added(snap, prevChild);
+          if( rec ) {
+            firebaseArray.$$process('child_added', rec, prevChild);
+          }
+        });
+        var updated = batch(function(snap) {
+          var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
+          if( rec ) {
+            var changed = firebaseArray.$$updated(snap);
+            if( changed ) {
+              firebaseArray.$$process('child_changed', rec);
+            }
+          }
+        });
+        var moved   = batch(function(snap, prevChild) {
+          var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
+          if( rec ) {
+            var confirmed = firebaseArray.$$moved(snap, prevChild);
+            if( confirmed ) {
+              firebaseArray.$$process('child_moved', rec, prevChild);
+            }
+          }
+        });
+        var removed = batch(function(snap) {
+          var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
+          if( rec ) {
+            var confirmed = firebaseArray.$$removed(snap);
+            if( confirmed ) {
+              firebaseArray.$$process('child_removed', rec);
+            }
+          }
+        });
+
+        var isResolved = false;
+        var error   = batch(function(err) {
+          _resolveFn(err);
+          firebaseArray.$$error(err);
+        });
+        var resolve = batch(_resolveFn);
+
+        var sync = {
+          destroy: destroy,
+          isDestroyed: false,
+          init: init,
+          ready: function() { return def.promise; }
+        };
+
+        return sync;
+      }
 
       return FirebaseArray;
     }

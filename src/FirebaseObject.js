@@ -1,64 +1,65 @@
 (function() {
   'use strict';
   /**
-   * Creates and maintains a synchronized object. This constructor should not be
-   * manually invoked. Instead, one should create a $firebase object and call $asObject
-   * on it:  <code>$firebase( firebaseRef ).$asObject()</code>;
+   * Creates and maintains a synchronized object, with 2-way bindings between Angular and Firebase.
    *
-   * Internally, the $firebase object depends on this class to provide 2 methods, which it invokes
-   * to notify the object whenever a change has been made at the server:
+   * Implementations of this class are contracted to provide the following internal methods,
+   * which are used by the synchronization process and 3-way bindings:
    *    $$updated - called whenever a change occurs (a value event from Firebase)
    *    $$error - called when listeners are canceled due to a security error
+   *    $$notify - called to update $watch listeners and trigger updates to 3-way bindings
+   *    $ref - called to obtain the underlying Firebase reference
    *
-   * Instead of directly modifying this class, one should generally use the $extendFactory
+   * Instead of directly modifying this class, one should generally use the $extend
    * method to add or change how methods behave:
    *
    * <pre><code>
-   * var NewFactory = $FirebaseObject.$extendFactory({
+   * var ExtendedObject = $FirebaseObject.$extend({
    *    // add a new method to the prototype
    *    foo: function() { return 'bar'; },
    * });
-   * </code></pre>
    *
-   * And then the new factory can be used by passing it as an argument:
-   * <code>$firebase( firebaseRef, {objectFactory: NewFactory}).$asObject();</code>
+   * var obj = new ExtendedObject(ref);
+   * </code></pre>
    */
   angular.module('firebase').factory('$FirebaseObject', [
-    '$parse', '$firebaseUtils', '$log', '$interval',
+    '$parse', '$firebaseUtils', '$log',
     function($parse, $firebaseUtils, $log) {
       /**
-       * This constructor should probably never be called manually. It is used internally by
-       * <code>$firebase.$asObject()</code>.
+       * Creates a synchronized object with 2-way bindings between Angular and Firebase.
        *
-       * @param $firebase
-       * @param {Function} destroyFn invoking this will cancel all event listeners and stop
-       *                   notifications from being delivered to $$updated and $$error
-       * @param readyPromise resolved when the initial data downloaded from Firebase
+       * @param {Firebase} ref
        * @returns {FirebaseObject}
        * @constructor
        */
-      function FirebaseObject($firebase, destroyFn, readyPromise) {
+      function FirebaseObject(ref) {
         // These are private config props and functions used internally
         // they are collected here to reduce clutter in console.log and forEach
         this.$$conf = {
-          promise: readyPromise,
-          inst: $firebase,
+          // synchronizes data to Firebase
+          sync: new ObjectSyncManager(this, ref),
+          // stores the Firebase ref
+          ref: ref,
+          // synchronizes $scope variables with this object
           binding: new ThreeWayBinding(this),
-          destroyFn: destroyFn,
+          // stores observers registered with $watch
           listeners: []
         };
 
         // this bit of magic makes $$conf non-enumerable and non-configurable
         // and non-writable (its properties are still writable but the ref cannot be replaced)
-        // we declare it above so the IDE can relax
+        // we redundantly assign it above so the IDE can relax
         Object.defineProperty(this, '$$conf', {
           value: this.$$conf
         });
 
-        this.$id = $firebaseUtils.getKey($firebase.$ref().ref());
+        this.$id = $firebaseUtils.getKey(ref.ref());
         this.$priority = null;
 
         $firebaseUtils.applyDefaults(this, this.$$defaults);
+
+        // start synchronizing data with Firebase
+        this.$$conf.sync.init();
       }
 
       FirebaseObject.prototype = {
@@ -68,11 +69,12 @@
          */
         $save: function () {
           var self = this;
-          return self.$inst().$set($firebaseUtils.toJSON(self))
-            .then(function(ref) {
-              self.$$notify();
-              return ref;
-            });
+          var ref = self.$ref();
+          var data = $firebaseUtils.toJSON(self);
+          return $firebaseUtils.doSet(ref, data).then(function() {
+            self.$$notify();
+            return self.$ref();
+          });
         },
 
         /**
@@ -83,11 +85,11 @@
          */
         $remove: function() {
           var self = this;
-          $firebaseUtils.trimKeys(this, {});
-          this.$value = null;
-          return self.$inst().$remove().then(function(ref) {
+          $firebaseUtils.trimKeys(self, {});
+          self.$value = null;
+          return $firebaseUtils.doRemove(self.$ref()).then(function() {
             self.$$notify();
-            return ref;
+            return self.$ref();
           });
         },
 
@@ -104,7 +106,7 @@
          * @returns a promise which resolves after initial data is downloaded from Firebase
          */
         $loaded: function(resolve, reject) {
-          var promise = this.$$conf.promise;
+          var promise = this.$$conf.sync.ready();
           if (arguments.length) {
             // allow this method to be called just like .then
             // by passing any arguments on to .then
@@ -114,10 +116,10 @@
         },
 
         /**
-         * @returns the original $firebase object used to create this object.
+         * @returns {Firebase} the original Firebase instance used to create this object.
          */
-        $inst: function () {
-          return this.$$conf.inst;
+        $ref: function () {
+          return this.$$conf.ref;
         },
 
         /**
@@ -172,15 +174,15 @@
          * Informs $firebase to stop sending events and clears memory being used
          * by this object (delete's its local content).
          */
-        $destroy: function (err) {
+        $destroy: function(err) {
           var self = this;
           if (!self.$isDestroyed) {
             self.$isDestroyed = true;
+            self.$$conf.sync.destroy(err);
             self.$$conf.binding.destroy();
             $firebaseUtils.each(self, function (v, k) {
               delete self[k];
             });
-            self.$$conf.destroyFn(err);
           }
         },
 
@@ -223,7 +225,9 @@
         $$scopeUpdated: function(newData) {
           // we use a one-directional loop to avoid feedback with 3-way bindings
           // since set() is applied locally anyway, this is still performant
-          return this.$inst().$set($firebaseUtils.toJSON(newData));
+          var def = $firebaseUtils.defer();
+          this.$ref().set($firebaseUtils.toJSON(newData), $firebaseUtils.makeNodeResolver(def));
+          return def.promise;
         },
 
         /**
@@ -262,7 +266,7 @@
        * `objectFactory` parameter:
        *
        * <pre><code>
-       * var MyFactory = $FirebaseObject.$extendFactory({
+       * var MyFactory = $FirebaseObject.$extend({
        *    // add a method onto the prototype that prints a greeting
        *    getGreeting: function() {
        *       return 'Hello ' + this.first_name + ' ' + this.last_name + '!';
@@ -277,7 +281,7 @@
        * @param {Object} [methods] a list of functions to add onto the prototype
        * @returns {Function} a new factory suitable for use with $firebase
        */
-      FirebaseObject.$extendFactory = function(ChildClass, methods) {
+      FirebaseObject.$extend = function(ChildClass, methods) {
         if( arguments.length === 1 && angular.isObject(ChildClass) ) {
           methods = ChildClass;
           ChildClass = function() { FirebaseObject.apply(this, arguments); };
@@ -304,7 +308,7 @@
           if( this.scope ) {
             var msg = 'Cannot bind to ' + varName + ' because this instance is already bound to ' +
               this.key + '; one binding per instance ' +
-              '(call unbind method or create another $firebase instance)';
+              '(call unbind method or create another FirebaseObject instance)';
             $log.error(msg);
             return $firebaseUtils.reject(msg);
           }
@@ -393,6 +397,59 @@
           this.rec = null;
         }
       };
+
+      function ObjectSyncManager(firebaseObject, ref) {
+        function destroy(err) {
+          if( !sync.isDestroyed ) {
+            sync.isDestroyed = true;
+            ref.off('value', applyUpdate);
+            firebaseObject = null;
+            resolve(err||'destroyed');
+          }
+        }
+
+        function init() {
+          ref.on('value', applyUpdate, error);
+          ref.once('value', function(snap) {
+            if (angular.isArray(snap.val())) {
+              $log.warn('Storing data using array indices in Firebase can result in unexpected behavior. See https://www.firebase.com/docs/web/guide/understanding-data.html#section-arrays-in-firebase for more information. Also note that you probably wanted $FirebaseArray and not $FirebaseObject.');
+            }
+
+            resolve(null);
+          }, resolve);
+        }
+
+        // call resolve(); do not call this directly
+        function _resolveFn(err) {
+          if( !isResolved ) {
+            isResolved = true;
+            if( err ) { def.reject(err); }
+            else { def.resolve(firebaseObject); }
+          }
+        }
+
+        var isResolved = false;
+        var def = $firebaseUtils.defer();
+        var batch = $firebaseUtils.batch();
+        var applyUpdate = batch(function(snap) {
+          var changed = firebaseObject.$$updated(snap);
+          if( changed ) {
+            // notifies $watch listeners and
+            // updates $scope if bound to a variable
+            firebaseObject.$$notify();
+          }
+        });
+        var error = batch(firebaseObject.$$error, firebaseObject);
+        var resolve = batch(_resolveFn);
+
+        var sync = {
+          isDestroyed: false,
+          destroy: destroy,
+          init: init,
+          ready: function() { return def.promise; }
+        };
+        return sync;
+      }
 
       return FirebaseObject;
     }
