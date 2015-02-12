@@ -29,7 +29,6 @@ app.controller('ChatCtrl', function Chat($scope, $FirebaseObject, $FirebaseArray
   /* Adds a new message to the messages list and updates the messages count */
   $scope.addMessage = function() {
     if ($scope.message !== "") {
-      console.log('adding message'); //debug
       // Add a new message to the messages list
       $scope.messages.$add({
         from: $scope.username,
