@@ -28,14 +28,12 @@ describe('$FirebaseArray', function () {
     }
   };
 
-  var $fbOldTodo, arr, $FirebaseArray, $utils, $rootScope, $timeout, destroySpy, testutils;
+  var arr, $FirebaseArray, $utils, $timeout, testutils;
   beforeEach(function() {
     module('firebase');
     module('testutils');
-    inject(function (_$FirebaseArray_, $firebaseUtils, _$rootScope_, _$timeout_, _testutils_) {
+    inject(function (_$FirebaseArray_, $firebaseUtils, _$timeout_, _testutils_) {
       testutils = _testutils_;
-      destroySpy = jasmine.createSpy('destroy spy');
-      $rootScope = _$rootScope_;
       $timeout = _$timeout_;
       $FirebaseArray = _$FirebaseArray_;
       $utils = $firebaseUtils;
