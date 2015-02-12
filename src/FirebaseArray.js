@@ -584,7 +584,7 @@
             ref.off('child_changed', updated);
             ref.off('child_removed', removed);
             firebaseArray = null;
-            resolve(err||'destroyed');
+            initComplete(err||'destroyed');
           }
         }
 
@@ -603,12 +603,12 @@
               $log.warn('Storing data using array indices in Firebase can result in unexpected behavior. See https://www.firebase.com/docs/web/guide/understanding-data.html#section-arrays-in-firebase for more information.');
             }
 
-            resolve(null, $list);
-          }, resolve);
+            initComplete(null, $list);
+          }, initComplete);
         }
 
-        // call resolve(), do not call this directly
-        function _resolveFn(err, result) {
+        // call initComplete(), do not call this directly
+        function _initComplete(err, result) {
           if( !isResolved ) {
             isResolved = true;
             if( err ) { def.reject(err); }
@@ -654,10 +654,10 @@
 
         var isResolved = false;
         var error   = batch(function(err) {
-          _resolveFn(err);
+          _initComplete(err);
           firebaseArray.$$error(err);
         });
-        var resolve = batch(_resolveFn);
+        var initComplete = batch(_initComplete);
 
         var sync = {
           destroy: destroy,

@@ -30,7 +30,7 @@ app.controller('PriorityCtrl', function Chat($scope, $FirebaseArray, $FirebaseOb
         var newItem = new $FirebaseObject(ref);
 
         newItem.$loaded().then(function (data) {
-          verify(newItem === data, '$FirebaseArray.$loaded() does not return correct value.');
+          verify(newItem === data, '$FirebaseObject.$loaded() does not return correct value.');
 
           // Update the message's priority
           newItem.$priority = priority;

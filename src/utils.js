@@ -449,6 +449,8 @@
                   }
                 });
                 ref.ref().update(dataCopy, utils.makeNodeResolver(def));
+              }, function(err) {
+                def.reject(err);
               });
             }
             return def.promise;
@@ -478,6 +480,8 @@
                     def.reject(err);
                   }
                 );
+              }, function(err) {
+                def.reject(err);
               });
             }
             return def.promise;

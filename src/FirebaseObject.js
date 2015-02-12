@@ -404,7 +404,7 @@
             sync.isDestroyed = true;
             ref.off('value', applyUpdate);
             firebaseObject = null;
-            resolve(err||'destroyed');
+            initComplete(err||'destroyed');
           }
         }
 
@@ -415,12 +415,12 @@
               $log.warn('Storing data using array indices in Firebase can result in unexpected behavior. See https://www.firebase.com/docs/web/guide/understanding-data.html#section-arrays-in-firebase for more information. Also note that you probably wanted $FirebaseArray and not $FirebaseObject.');
             }
 
-            resolve(null);
-          }, resolve);
+            initComplete(null);
+          }, initComplete);
         }
 
-        // call resolve(); do not call this directly
-        function _resolveFn(err) {
+        // call initComplete(); do not call this directly
+        function _initComplete(err) {
           if( !isResolved ) {
             isResolved = true;
             if( err ) { def.reject(err); }
@@ -440,7 +440,7 @@
           }
         });
         var error = batch(firebaseObject.$$error, firebaseObject);
-        var resolve = batch(_resolveFn);
+        var initComplete = batch(_initComplete);
 
         var sync = {
           isDestroyed: false,

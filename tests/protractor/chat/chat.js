@@ -3,7 +3,6 @@ app.controller('ChatCtrl', function Chat($scope, $FirebaseObject, $FirebaseArray
   // Get a reference to the Firebase
   var chatFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/chat');
   var messagesFirebaseRef = chatFirebaseRef.child("messages").limitToLast(2);
-  var numMessagesFirebaseRef = chatFirebaseRef.child("numMessages");
 
   // Get AngularFire sync objects
 
@@ -37,33 +36,6 @@ app.controller('ChatCtrl', function Chat($scope, $FirebaseObject, $FirebaseArray
 
       // Reset the message input
       $scope.message = "";
-
-      // Increment the messages count by 1
-      numMessagesFirebaseRef.transaction(function (currentCount) {
-        if (currentCount === null) {
-          // Set the initial value
-          return 1;
-        }
-        else if (currentCount < 0) {
-          // Return undefined to abort the transaction
-          return;
-        }
-        else {
-          // Increment the messages count by 1
-          return currentCount + 1;
-        }
-      }, function (error, committed, snapshot) {
-        if( error ) {
-          verify(false, "Messages count transaction errored: " + error);
-        }
-        else if(!committed) {
-          // Handle aborted transaction
-          verify(false, "Messages count transaction unexpectedly aborted.")
-        }
-        else {
-          // Success
-        }
-      });
     }
   };
 
