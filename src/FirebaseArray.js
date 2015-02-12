@@ -7,10 +7,10 @@
    *
    * Internally, the $firebase object depends on this class to provide 5 $$ methods, which it invokes
    * to notify the array whenever a change has been made at the server:
-   *    $$added - called whenever a child_added event occurs, returns the new record, or null to cancel
-   *    $$updated - called whenever a child_changed event occurs, returns true if updates were applied
-   *    $$moved - called whenever a child_moved event occurs, returns true if move should be applied
-   *    $$removed - called whenever a child_removed event occurs, returns true if remove should be applied
+   *    $$added - called whenever a child_added event occurs
+   *    $$updated - called whenever a child_changed event occurs
+   *    $$moved - called whenever a child_moved event occurs
+   *    $$removed - called whenever a child_removed event occurs
    *    $$error - called when listeners are canceled due to a security error
    *    $$process - called immediately after $$added/$$updated/$$moved/$$removed
    *                (assuming that these methods do not abort by returning false or null)
@@ -286,8 +286,10 @@
         },
 
         /**
-         * Called by $firebase to inform the array when a new item has been added at the server.
-         * This method must exist on any array factory used by $firebase.
+         * Called to inform the array when a new item has been added at the server.
+         * This method should return the record (an object) that will be passed into $$process
+         * along with the add event. Alternately, the record will be skipped if this method returns
+         * a falsey value.
          *
          * @param {object} snap a Firebase snapshot
          * @param {string} prevChild
@@ -313,25 +315,31 @@
         },
 
         /**
-         * Called by $firebase whenever an item is removed at the server.
+         * Called whenever an item is removed at the server.
          * This method does not physically remove the objects, but instead
          * returns a boolean indicating whether it should be removed (and
          * taking any other desired actions before the remove completes).
          *
          * @param {object} snap a Firebase snapshot
          * @return {boolean} true if item should be removed
+         * @protected
          */
         $$removed: function(snap) {
           return this.$indexFor($firebaseUtils.getKey(snap)) > -1;
         },
 
         /**
-         * Called by $firebase whenever an item is changed at the server.
+         * Called whenever an item is changed at the server.
          * This method should apply the changes, including changes to data
          * and to $priority, and then return true if any changes were made.
          *
+         * If this method returns false, then $$process will not be invoked,
+         * which means that $$notify will not take place and no $watch events
+         * will be triggered.
+         *
          * @param {object} snap a Firebase snapshot
          * @return {boolean} true if any data changed
+         * @protected
          */
         $$updated: function(snap) {
           var changed = false;
@@ -345,13 +353,18 @@
         },
 
         /**
-         * Called by $firebase whenever an item changes order (moves) on the server.
+         * Called whenever an item changes order (moves) on the server.
          * This method should set $priority to the updated value and return true if
          * the record should actually be moved. It should not actually apply the move
          * operation.
          *
+         * If this method returns false, then the record will not be moved in the array
+         * and no $watch listeners will be notified. (When true, $$process is invoked
+         * which invokes $$notify)
+         *
          * @param {object} snap a Firebase snapshot
          * @param {string} prevChild
+         * @protected
          */
         $$moved: function(snap/*, prevChild*/) {
           var rec = this.$getRecord($firebaseUtils.getKey(snap));
@@ -365,7 +378,9 @@
         /**
          * Called whenever a security error or other problem causes the listeners to become
          * invalid. This is generally an unrecoverable error.
+         *
          * @param {Object} err which will have a `code` property and possibly a `message`
+         * @protected
          */
         $$error: function(err) {
           $log.error(err);
@@ -376,7 +391,7 @@
          * Returns ID for a given record
          * @param {object} rec
          * @returns {string||null}
-         * @private
+         * @protected
          */
         $$getKey: function(rec) {
           return angular.isObject(rec)? rec.$id : null;
@@ -384,13 +399,13 @@
 
         /**
          * Handles placement of recs in the array, sending notifications,
-         * and other internals. Called by the $firebase synchronization process
-         * after $$added, $$updated, $$moved, and $$removed.
+         * and other internals. Called by the synchronization process
+         * after $$added, $$updated, $$moved, and $$removed return a truthy value.
          *
          * @param {string} event one of child_added, child_removed, child_moved, or child_changed
          * @param {object} rec
          * @param {string} [prevChild]
-         * @private
+         * @protected
          */
         $$process: function(event, rec, prevChild) {
           var key = this.$$getKey(rec);
@@ -426,12 +441,13 @@
         },
 
         /**
-         * Used to trigger notifications for listeners registered using $watch
+         * Used to trigger notifications for listeners registered using $watch. This method is
+         * typically invoked internally by the $$process method.
          *
          * @param {string} event
          * @param {string} key
          * @param {string} [prevChild]
-         * @private
+         * @protected
          */
         $$notify: function(event, key, prevChild) {
           var eventData = {event: event, key: key};
@@ -522,7 +538,7 @@
       };
 
       /**
-       * This method allows FirebaseArray to be copied into a new factory. Methods passed into this
+       * This method allows FirebaseArray to be inherited by child classes. Methods passed into this
        * function will be added onto the array's prototype. They can override existing methods as
        * well.
        *
@@ -531,10 +547,8 @@
        * FirebaseArray. It's also possible to do both, passing a class to inherit and additional
        * methods to add onto the prototype.
        *
-       * Once a factory is obtained by this method, it can be passed into $firebase as the
-       * `arrayFactory` parameter:
-       * <pre><code>
-       * var MyFactory = $FirebaseArray.$extendFactory({
+       *  <pre><code>
+       * var ExtendedArray = $FirebaseArray.$extend({
        *    // add a method onto the prototype that sums all items in the array
        *    getSum: function() {
        *       var ct = 0;
@@ -544,12 +558,13 @@
        * });
        *
        * // use our new factory in place of $FirebaseArray
-       * var list = $firebase(ref, {arrayFactory: MyFactory}).$asArray();
+       * var list = new ExtendedArray(ref);
        * </code></pre>
        *
        * @param {Function} [ChildClass] a child class which should inherit FirebaseArray
        * @param {Object} [methods] a list of functions to add onto the prototype
-       * @returns {Function} a new factory suitable for use with $firebase
+       * @returns {Function} a child class suitable for use with $firebase (this will be ChildClass if provided)
+       * @static
        */
       FirebaseArray.$extend = function(ChildClass, methods) {
         if( arguments.length === 1 && angular.isObject(ChildClass) ) {

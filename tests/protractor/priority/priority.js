@@ -15,7 +15,7 @@ app.controller('PriorityCtrl', function Chat($scope, $FirebaseArray, $FirebaseOb
 
   /* Clears the priority Firebase reference */
   $scope.clearRef = function () {
-    messagesFirebaseRef.$remove();
+    messagesFirebaseRef.remove();
   };
 
   /* Adds a new message to the messages list */
