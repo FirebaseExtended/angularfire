@@ -1,5 +1,5 @@
 'use strict';
-describe('$FirebaseArray', function () {
+describe('$firebaseArray', function () {
 
   var STUB_DATA = {
     'a': {
@@ -28,14 +28,14 @@ describe('$FirebaseArray', function () {
     }
   };
 
-  var arr, $FirebaseArray, $utils, $timeout, testutils;
+  var arr, $firebaseArray, $utils, $timeout, testutils;
   beforeEach(function() {
     module('firebase');
     module('testutils');
-    inject(function (_$FirebaseArray_, $firebaseUtils, _$timeout_, _testutils_) {
+    inject(function (_$firebaseArray_, $firebaseUtils, _$timeout_, _testutils_) {
       testutils = _testutils_;
       $timeout = _$timeout_;
-      $FirebaseArray = _$FirebaseArray_;
+      $firebaseArray = _$firebaseArray_;
       $utils = $firebaseUtils;
       arr = stubArray(STUB_DATA);
     });
@@ -43,9 +43,9 @@ describe('$FirebaseArray', function () {
 
   describe('<constructor>', function() {
     beforeEach(function() {
-      inject(function($firebaseUtils, $FirebaseArray) {
+      inject(function($firebaseUtils, $firebaseArray) {
         this.$utils = $firebaseUtils;
-        this.$FirebaseArray = $FirebaseArray;
+        this.$firebaseArray = $firebaseArray;
       });
     });
 
@@ -55,7 +55,7 @@ describe('$FirebaseArray', function () {
 
     it('should have API methods', function() {
       var i = 0;
-      this.$utils.getPublicMethods($FirebaseArray, function(v,k) {
+      this.$utils.getPublicMethods($firebaseArray, function(v,k) {
         expect(typeof arr[k]).toBe('function');
         i++;
       });
@@ -139,7 +139,7 @@ describe('$FirebaseArray', function () {
     it('should work on a query', function() {
       var ref = stubRef();
       var query = ref.limit(2);
-      var arr = new $FirebaseArray(query);
+      var arr = $firebaseArray(query);
       addAndProcess(arr, testutils.snap('one', 'b', 1), null);
       expect(arr.length).toBe(1);
     });
@@ -241,7 +241,7 @@ describe('$FirebaseArray', function () {
       ref.set(STUB_DATA);
       ref.flush();
       var query = ref.limit(5);
-      var arr = new $FirebaseArray(query);
+      var arr = $firebaseArray(query);
       flushAll(arr.$ref());
       var key = arr.$keyAt(1);
       arr[1].foo = 'watchtest';
@@ -316,7 +316,7 @@ describe('$FirebaseArray', function () {
         console.error(e);
       });
       var query = ref.limit(5); //todo-mock MockFirebase does not support 2.x queries yet
-      var arr = new $FirebaseArray(query);
+      var arr = $firebaseArray(query);
       flushAll(arr.$ref());
       var key = arr.$keyAt(1);
       arr.$remove(1).then(whiteSpy, blackSpy);
@@ -399,7 +399,7 @@ describe('$FirebaseArray', function () {
       var err = new Error('test_fail');
       var ref = stubRef();
       ref.failNext('on', err);
-      var arr = new $FirebaseArray(ref);
+      var arr = $firebaseArray(ref);
       arr.$loaded().then(whiteSpy, blackSpy);
       flushAll(ref);
       expect(whiteSpy).not.toHaveBeenCalled();
@@ -419,7 +419,7 @@ describe('$FirebaseArray', function () {
       var ref = stubRef();
       var err = new Error('test_fail');
       ref.failNext('once', err);
-      var arr = new $FirebaseArray(ref);
+      var arr = $firebaseArray(ref);
       arr.$loaded(whiteSpy, blackSpy);
       flushAll(ref);
       expect(whiteSpy).not.toHaveBeenCalled();
@@ -430,7 +430,7 @@ describe('$FirebaseArray', function () {
   describe('$ref', function() {
     it('should return Firebase instance it was created with', function() {
       var ref = stubRef();
-      var arr = new $FirebaseArray(ref);
+      var arr = $firebaseArray(ref);
       expect(arr.$ref()).toBe(ref);
     });
   });
@@ -509,7 +509,7 @@ describe('$FirebaseArray', function () {
     });
 
     it('should apply $$defaults if they exist', function() {
-      var arr = stubArray(null, $FirebaseArray.$extend({
+      var arr = stubArray(null, $firebaseArray.$extend({
         $$defaults: {aString: 'not_applied', foo: 'foo'}
       }));
       var res = arr.$$added(testutils.snap(STUB_DATA.a));
@@ -563,7 +563,7 @@ describe('$FirebaseArray', function () {
     });
 
     it('should apply $$defaults if they exist', function() {
-      var arr = stubArray(STUB_DATA, $FirebaseArray.$extend({
+      var arr = stubArray(STUB_DATA, $firebaseArray.$extend({
         $$defaults: {aString: 'not_applied', foo: 'foo'}
       }));
       var rec = arr.$getRecord('a');
@@ -611,7 +611,7 @@ describe('$FirebaseArray', function () {
   describe('$$error', function() {
     it('should call $destroy', function() {
       var spy = jasmine.createSpy('$destroy');
-      var arr = stubArray(STUB_DATA, $FirebaseArray.$extend({ $destroy: spy }));
+      var arr = stubArray(STUB_DATA, $firebaseArray.$extend({ $destroy: spy }));
       spy.calls.reset();
       arr.$$error('test_err');
       expect(spy).toHaveBeenCalled();
@@ -670,7 +670,7 @@ describe('$FirebaseArray', function () {
 
     it('should invoke $$notify with "child_added" event', function() {
       var spy = jasmine.createSpy('$$notify');
-      var arr = stubArray(STUB_DATA, $FirebaseArray.$extend({ $$notify: spy }));
+      var arr = stubArray(STUB_DATA, $firebaseArray.$extend({ $$notify: spy }));
       spy.calls.reset();
       var rec = arr.$$added(testutils.snap({hello: 'world'}, 'addFirst'), null);
       arr.$$process('child_added', rec, null);
@@ -679,7 +679,7 @@ describe('$FirebaseArray', function () {
 
     it('"child_added" should not invoke $$notify if it already exists after prevChild', function() {
       var spy = jasmine.createSpy('$$notify');
-      var arr = stubArray(STUB_DATA, $FirebaseArray.$extend({ $$notify: spy }));
+      var arr = stubArray(STUB_DATA, $firebaseArray.$extend({ $$notify: spy }));
       var index = arr.$indexFor('e');
       var prevChild = arr.$$getKey(arr[index -1]);
       spy.calls.reset();
@@ -691,7 +691,7 @@ describe('$FirebaseArray', function () {
 
     it('should invoke $$notify with "child_changed" event', function() {
       var spy = jasmine.createSpy('$$notify');
-      var arr = stubArray(STUB_DATA, $FirebaseArray.$extend({ $$notify: spy }));
+      var arr = stubArray(STUB_DATA, $firebaseArray.$extend({ $$notify: spy }));
       spy.calls.reset();
       arr.$$updated(testutils.snap({hello: 'world'}, 'a'));
       arr.$$process('child_changed', arr.$getRecord('a'));
@@ -726,7 +726,7 @@ describe('$FirebaseArray', function () {
 
     it('should invoke $$notify with "child_moved" event', function() {
       var spy = jasmine.createSpy('$$notify');
-      var arr = stubArray(STUB_DATA, $FirebaseArray.$extend({ $$notify: spy }));
+      var arr = stubArray(STUB_DATA, $firebaseArray.$extend({ $$notify: spy }));
       spy.calls.reset();
       arr.$$moved(testutils.refSnap(testutils.ref('b')), 'notarealkey');
       arr.$$process('child_moved', arr.$getRecord('b'), 'notarealkey');
@@ -735,7 +735,7 @@ describe('$FirebaseArray', function () {
 
     it('"child_moved" should not trigger $$notify if prevChild is already the previous element' , function() {
       var spy = jasmine.createSpy('$$notify');
-      var arr = stubArray(STUB_DATA, $FirebaseArray.$extend({ $$notify: spy }));
+      var arr = stubArray(STUB_DATA, $firebaseArray.$extend({ $$notify: spy }));
       var index = arr.$indexFor('e');
       var prevChild = arr.$$getKey(arr[index - 1]);
       spy.calls.reset();
@@ -755,7 +755,7 @@ describe('$FirebaseArray', function () {
 
     it('should trigger $$notify with "child_removed" event', function() {
       var spy = jasmine.createSpy('$$notify');
-      var arr = stubArray(STUB_DATA, $FirebaseArray.$extend({ $$notify: spy }));
+      var arr = stubArray(STUB_DATA, $firebaseArray.$extend({ $$notify: spy }));
       spy.calls.reset();
       arr.$$removed(testutils.refSnap(testutils.ref('e')));
       arr.$$process('child_removed', arr.$getRecord('e'));
@@ -764,7 +764,7 @@ describe('$FirebaseArray', function () {
 
     it('"child_removed" should not trigger $$notify if the record is not in the array' , function() {
       var spy = jasmine.createSpy('$$notify');
-      var arr = stubArray(STUB_DATA, $FirebaseArray.$extend({ $$notify: spy }));
+      var arr = stubArray(STUB_DATA, $firebaseArray.$extend({ $$notify: spy }));
       spy.calls.reset();
       arr.$$process('child_removed', {$id:'f'});
       expect(spy).not.toHaveBeenCalled();
@@ -782,33 +782,33 @@ describe('$FirebaseArray', function () {
 
   describe('$extend', function() {
     it('should return a valid array', function() {
-      var F = $FirebaseArray.$extend({});
+      var F = $firebaseArray.$extend({});
       expect(Array.isArray(new F(stubRef()))).toBe(true);
     });
 
     it('should preserve child prototype', function() {
-      function Extend() { $FirebaseArray.apply(this, arguments); }
+      function Extend() { $firebaseArray.apply(this, arguments); }
       Extend.prototype.foo = function() {};
-      $FirebaseArray.$extend(Extend);
+      $firebaseArray.$extend(Extend);
       var arr = new Extend(stubRef());
       expect(typeof(arr.foo)).toBe('function');
     });
 
     it('should return child class', function() {
       function A() {}
-      var res = $FirebaseArray.$extend(A);
+      var res = $firebaseArray.$extend(A);
       expect(res).toBe(A);
     });
 
-    it('should be instanceof $FirebaseArray', function() {
+    it('should be instanceof $firebaseArray', function() {
       function A() {}
-      $FirebaseArray.$extend(A);
-      expect(new A(stubRef()) instanceof $FirebaseArray).toBe(true);
+      $firebaseArray.$extend(A);
+      expect(new A(stubRef()) instanceof $firebaseArray).toBe(true);
     });
 
     it('should add on methods passed into function', function() {
       function foo() { return 'foo'; }
-      var F = $FirebaseArray.$extend({foo: foo});
+      var F = $firebaseArray.$extend({foo: foo});
       var res = new F(stubRef());
       expect(typeof res.$$updated).toBe('function');
       expect(typeof res.foo).toBe('function');
@@ -832,7 +832,7 @@ describe('$FirebaseArray', function () {
   }
 
   function stubArray(initialData, Factory, ref) {
-    if( !Factory ) { Factory = $FirebaseArray; }
+    if( !Factory ) { Factory = $firebaseArray; }
     if( !ref ) {
       ref = stubRef();
     }

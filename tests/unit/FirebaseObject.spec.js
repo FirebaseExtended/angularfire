@@ -1,6 +1,6 @@
-describe('$FirebaseObject', function() {
+describe('$firebaseObject', function() {
   'use strict';
-  var $FirebaseObject, $utils, $rootScope, $timeout, obj, testutils, $interval, log;
+  var $firebaseObject, $utils, $rootScope, $timeout, obj, testutils, $interval, log;
 
   var DEFAULT_ID = 'REC1';
   var FIXTURE_DATA = {
@@ -23,8 +23,8 @@ describe('$FirebaseObject', function() {
         }
       })
     });
-    inject(function (_$interval_, _$FirebaseObject_, _$timeout_, $firebaseUtils, _$rootScope_, _testutils_) {
-      $FirebaseObject = _$FirebaseObject_;
+    inject(function (_$interval_, _$firebaseObject_, _$timeout_, $firebaseUtils, _$rootScope_, _testutils_) {
+      $firebaseObject = _$firebaseObject_;
       $timeout = _$timeout_;
       $interval = _$interval_;
       $utils = $firebaseUtils;
@@ -49,7 +49,7 @@ describe('$FirebaseObject', function() {
     });
 
     it('should apply $$defaults if they exist', function() {
-      var F = $FirebaseObject.$extend({
+      var F = $firebaseObject.$extend({
         $$defaults: {aNum: 0, aStr: 'foo', aBool: false}
       });
       var ref = stubRef();
@@ -108,7 +108,7 @@ describe('$FirebaseObject', function() {
       ref.flush();
       var spy = spyOn(ref, 'update');
       var query = ref.limit(3);
-      var obj = new $FirebaseObject(query);
+      var obj = $firebaseObject(query);
       flushAll(query);
       obj.foo = 'bar';
       obj.$save();
@@ -207,7 +207,7 @@ describe('$FirebaseObject', function() {
   describe('$ref', function () {
     it('should return the Firebase instance that created it', function () {
       var ref = stubRef();
-      var obj = new $FirebaseObject(ref);
+      var obj = $firebaseObject(ref);
       expect(obj.$ref()).toBe(ref);
     });
   });
@@ -376,7 +376,7 @@ describe('$FirebaseObject', function() {
     it('should update $value if $value changed in $scope', function () {
       var $scope = $rootScope.$new();
       var ref = stubRef();
-      var obj = new $FirebaseObject(ref);
+      var obj = $firebaseObject(ref);
       ref.flush();
       obj.$$updated(testutils.refSnap(ref, 'foo', null));
       expect(obj.$value).toBe('foo');
@@ -396,7 +396,7 @@ describe('$FirebaseObject', function() {
       var ref = stubRef();
       ref.autoFlush(true);
       ref.setWithPriority({text:'hello'},3);
-      var obj = new $FirebaseObject(ref);
+      var obj = $firebaseObject(ref);
       flushAll();
       flushAll();
       obj.$bindTo($scope, 'test');
@@ -518,7 +518,7 @@ describe('$FirebaseObject', function() {
       ref.set({foo: 'bar'});
       ref.flush();
       var query = ref.limit(3);
-      var obj = new $FirebaseObject(query);
+      var obj = $firebaseObject(query);
       flushAll(query);
       expect(obj.foo).toBe('bar');
       obj.$remove();
@@ -561,32 +561,32 @@ describe('$FirebaseObject', function() {
   describe('$extend', function () {
     it('should preserve child prototype', function () {
       function Extend() {
-        $FirebaseObject.apply(this, arguments);
+        $firebaseObject.apply(this, arguments);
       }
       Extend.prototype.foo = function () {};
       var ref = stubRef();
-      $FirebaseObject.$extend(Extend);
+      $firebaseObject.$extend(Extend);
       var arr = new Extend(ref);
       expect(arr.foo).toBeA('function');
     });
 
     it('should return child class', function () {
       function A() {}
-      var res = $FirebaseObject.$extend(A);
+      var res = $firebaseObject.$extend(A);
       expect(res).toBe(A);
     });
 
-    it('should be instanceof $FirebaseObject', function () {
+    it('should be instanceof $firebaseObject', function () {
       function A() {}
-      $FirebaseObject.$extend(A);
-      expect(new A(stubRef())).toBeInstanceOf($FirebaseObject);
+      $firebaseObject.$extend(A);
+      expect(new A(stubRef())).toBeInstanceOf($firebaseObject);
     });
 
     it('should add on methods passed into function', function () {
       function foo() {
         return 'foo';
       }
-      var F = $FirebaseObject.$extend({foo: foo});
+      var F = $firebaseObject.$extend({foo: foo});
       var res = new F(stubRef());
       expect(res.$$updated).toBeA('function');
       expect(res.foo).toBeA('function');
@@ -640,7 +640,7 @@ describe('$FirebaseObject', function() {
     });
 
     it('should apply $$defaults if they exist', function() {
-      var F = $FirebaseObject.$extend({
+      var F = $firebaseObject.$extend({
         $$defaults: {baz: 'baz', aString: 'bravo'}
       });
       var obj = new F(stubRef());
@@ -690,7 +690,7 @@ describe('$FirebaseObject', function() {
     if( !ref ) {
       ref = stubRef();
     }
-    var obj = new $FirebaseObject(ref);
+    var obj = $firebaseObject(ref);
     if (angular.isDefined(initialData)) {
       ref.ref().set(initialData);
       ref.flush();

@@ -14,7 +14,7 @@
    * method to add or change how methods behave:
    *
    * <pre><code>
-   * var ExtendedObject = $FirebaseObject.$extend({
+   * var ExtendedObject = $firebaseObject.$extend({
    *    // add a new method to the prototype
    *    foo: function() { return 'bar'; },
    * });
@@ -22,7 +22,7 @@
    * var obj = new ExtendedObject(ref);
    * </code></pre>
    */
-  angular.module('firebase').factory('$FirebaseObject', [
+  angular.module('firebase').factory('$firebaseObject', [
     '$parse', '$firebaseUtils', '$log',
     function($parse, $firebaseUtils, $log) {
       /**
@@ -33,6 +33,9 @@
        * @constructor
        */
       function FirebaseObject(ref) {
+        if( !(this instanceof FirebaseObject) ) {
+          return new FirebaseObject(ref);
+        }
         // These are private config props and functions used internally
         // they are collected here to reduce clutter in console.log and forEach
         this.$$conf = {
@@ -266,14 +269,14 @@
        * `objectFactory` parameter:
        *
        * <pre><code>
-       * var MyFactory = $FirebaseObject.$extend({
+       * var MyFactory = $firebaseObject.$extend({
        *    // add a method onto the prototype that prints a greeting
        *    getGreeting: function() {
        *       return 'Hello ' + this.first_name + ' ' + this.last_name + '!';
        *    }
        * });
        *
-       * // use our new factory in place of $FirebaseObject
+       * // use our new factory in place of $firebaseObject
        * var obj = $firebase(ref, {objectFactory: MyFactory}).$asObject();
        * </code></pre>
        *
@@ -412,7 +415,7 @@
           ref.on('value', applyUpdate, error);
           ref.once('value', function(snap) {
             if (angular.isArray(snap.val())) {
-              $log.warn('Storing data using array indices in Firebase can result in unexpected behavior. See https://www.firebase.com/docs/web/guide/understanding-data.html#section-arrays-in-firebase for more information. Also note that you probably wanted $FirebaseArray and not $FirebaseObject.');
+              $log.warn('Storing data using array indices in Firebase can result in unexpected behavior. See https://www.firebase.com/docs/web/guide/understanding-data.html#section-arrays-in-firebase for more information. Also note that you probably wanted $firebaseArray and not $firebaseObject.');
             }
 
             initComplete(null);
@@ -452,6 +455,16 @@
       }
 
       return FirebaseObject;
+    }
+  ]);
+
+  /** @deprecated */
+  angular.module('firebase').factory('$FirebaseObject', ['$log', '$firebaseObject',
+    function($log, $firebaseObject) {
+      return function() {
+        $log.warn('$FirebaseObject has been renamed. Use $firebaseObject instead.');
+        return $firebaseObject.apply(null, arguments);
+      };
     }
   ]);
 })();
