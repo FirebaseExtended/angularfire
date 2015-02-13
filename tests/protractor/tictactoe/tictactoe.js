@@ -1,16 +1,16 @@
 var app = angular.module('tictactoe', ['firebase']);
-app.controller('TicTacToeCtrl', function Chat($scope, $FirebaseObject) {
+app.controller('TicTacToeCtrl', function Chat($scope, $firebaseObject) {
   // Get a reference to the Firebase
   var boardFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/tictactoe');
 
   // Get the board as an AngularFire object
-  $scope.boardObject = new $FirebaseObject(boardFirebaseRef);
+  $scope.boardObject = $firebaseObject(boardFirebaseRef);
 
   // Create a 3-way binding to Firebase
   $scope.boardObject.$bindTo($scope, 'board');
 
   // Verify that $inst() works
-  verify($scope.boardObject.$ref() === boardFirebaseRef, 'Something is wrong with $FirebaseObject.$ref().');
+  verify($scope.boardObject.$ref() === boardFirebaseRef, 'Something is wrong with $firebaseObject.$ref().');
 
   // Initialize $scope variables
   $scope.whoseTurn = 'X';

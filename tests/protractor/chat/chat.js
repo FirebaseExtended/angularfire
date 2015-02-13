@@ -1,20 +1,18 @@
 var app = angular.module('chat', ['firebase']);
-app.controller('ChatCtrl', function Chat($scope, $FirebaseObject, $FirebaseArray) {
+app.controller('ChatCtrl', function Chat($scope, $firebaseObject, $firebaseArray) {
   // Get a reference to the Firebase
   var chatFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/chat');
   var messagesFirebaseRef = chatFirebaseRef.child("messages").limitToLast(2);
 
-  // Get AngularFire sync objects
-
   // Get the chat data as an object
-  $scope.chat = new $FirebaseObject(chatFirebaseRef);
+  $scope.chat = $firebaseObject(chatFirebaseRef);
 
   // Get the chat messages as an array
-  $scope.messages = new $FirebaseArray(messagesFirebaseRef);
+  $scope.messages = $firebaseArray(messagesFirebaseRef);
 
   // Verify that $inst() works
-  verify($scope.chat.$ref() === chatFirebaseRef, "Something is wrong with $FirebaseObject.$inst().");
-  verify($scope.messages.$ref() === messagesFirebaseRef, "Something is wrong with $FirebaseArray.$inst().");
+  verify($scope.chat.$ref() === chatFirebaseRef, "Something is wrong with $firebaseObject.$ref().");
+  verify($scope.messages.$ref() === messagesFirebaseRef, "Something is wrong with $firebaseArray.$ref().");
 
   // Initialize $scope variables
   $scope.message = "";

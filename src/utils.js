@@ -2,8 +2,8 @@
   'use strict';
 
   angular.module('firebase')
-    .factory('$firebaseConfig', ["$FirebaseArray", "$FirebaseObject", "$injector",
-      function($FirebaseArray, $FirebaseObject, $injector) {
+    .factory('$firebaseConfig', ["$firebaseArray", "$firebaseObject", "$injector",
+      function($firebaseArray, $firebaseObject, $injector) {
         return function(configOpts) {
           // make a copy we can modify
           var opts = angular.extend({}, configOpts);
@@ -16,8 +16,8 @@
           }
           // extend defaults and return
           return angular.extend({
-            arrayFactory: $FirebaseArray,
-            objectFactory: $FirebaseObject
+            arrayFactory: $firebaseArray,
+            objectFactory: $firebaseObject
           }, opts);
         };
       }

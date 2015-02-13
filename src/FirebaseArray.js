@@ -1,12 +1,16 @@
 (function() {
   'use strict';
   /**
-   * Creates and maintains a synchronized list of data. This constructor should not be
-   * manually invoked. Instead, one should create a $firebase object and call $asArray
-   * on it:  <code>$firebase( firebaseRef ).$asArray()</code>;
+   * Creates and maintains a synchronized list of data. This is a pseudo-read-only array. One should
+   * not call splice(), push(), pop(), et al directly on this array, but should instead use the
+   * $remove and $add methods.
    *
-   * Internally, the $firebase object depends on this class to provide 5 $$ methods, which it invokes
-   * to notify the array whenever a change has been made at the server:
+   * It is acceptable to .sort() this array, but it is important to use this in conjunction with
+   * $watch(), so that it will be re-sorted any time the server data changes. Examples of this are
+   * included in the $watch documentation.
+   *
+   * Internally, the $firebase object depends on this class to provide several $$ (i.e. protected)
+   * methods, which it invokes to notify the array whenever a change has been made at the server:
    *    $$added - called whenever a child_added event occurs
    *    $$updated - called whenever a child_changed event occurs
    *    $$moved - called whenever a child_moved event occurs
@@ -22,10 +26,10 @@
    *
    * Instead of directly modifying this class, one should generally use the $extend
    * method to add or change how methods behave. $extend modifies the prototype of
-   * the array class by returning a clone of $FirebaseArray.
+   * the array class by returning a clone of $firebaseArray.
    *
    * <pre><code>
-   * var ExtendedArray = $FirebaseArray.$extend({
+   * var ExtendedArray = $firebaseArray.$extend({
    *    // add a new method to the prototype
    *    foo: function() { return 'bar'; },
    *
@@ -43,7 +47,7 @@
    * var list = new ExtendedArray(ref);
    * </code></pre>
    */
-  angular.module('firebase').factory('$FirebaseArray', ["$log", "$firebaseUtils",
+  angular.module('firebase').factory('$firebaseArray', ["$log", "$firebaseUtils",
     function($log, $firebaseUtils) {
       /**
        * This constructor should probably never be called manually. It is used internally by
@@ -54,6 +58,9 @@
        * @constructor
        */
       function FirebaseArray(ref) {
+        if( !(this instanceof FirebaseArray) ) {
+          return new FirebaseArray(ref);
+        }
         var self = this;
         this._observers = [];
         this.$list = [];
@@ -61,7 +68,7 @@
         this._sync = new ArraySyncManager(this);
 
         $firebaseUtils.assertValidRef(ref, 'Must pass a valid Firebase reference ' +
-        'to $FirebaseArray (not a string or URL)');
+        'to $firebaseArray (not a string or URL)');
 
         // indexCache is a weak hashmap (a lazy list) of keys to array indices,
         // items are not guaranteed to stay up to date in this list (since the data
@@ -532,7 +539,7 @@
          */
         _assertNotDestroyed: function(method) {
           if( this._isDestroyed ) {
-            throw new Error('Cannot call ' + method + ' method on a destroyed $FirebaseArray object');
+            throw new Error('Cannot call ' + method + ' method on a destroyed $firebaseArray object');
           }
         }
       };
@@ -548,7 +555,7 @@
        * methods to add onto the prototype.
        *
        *  <pre><code>
-       * var ExtendedArray = $FirebaseArray.$extend({
+       * var ExtendedArray = $firebaseArray.$extend({
        *    // add a method onto the prototype that sums all items in the array
        *    getSum: function() {
        *       var ct = 0;
@@ -557,7 +564,7 @@
        *    }
        * });
        *
-       * // use our new factory in place of $FirebaseArray
+       * // use our new factory in place of $firebaseArray
        * var list = new ExtendedArray(ref);
        * </code></pre>
        *
@@ -670,6 +677,16 @@
       }
 
       return FirebaseArray;
+    }
+  ]);
+
+  /** @deprecated */
+  angular.module('firebase').factory('$FirebaseArray', ['$log', '$firebaseArray',
+    function($log, $firebaseArray) {
+      return function() {
+        $log.warn('$FirebaseArray has been renamed. Use $firebaseArray instead.');
+        return $firebaseArray.apply(null, arguments);
+      };
     }
   ]);
 })();

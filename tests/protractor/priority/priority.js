@@ -1,13 +1,13 @@
 var app = angular.module('priority', ['firebase']);
-app.controller('PriorityCtrl', function Chat($scope, $FirebaseArray, $FirebaseObject) {
+app.controller('PriorityCtrl', function Chat($scope, $firebaseArray, $firebaseObject) {
   // Get a reference to the Firebase
   var messagesFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/priority');
 
   // Get the chat messages as an array
-  $scope.messages = new $FirebaseArray(messagesFirebaseRef);
+  $scope.messages = $firebaseArray(messagesFirebaseRef);
 
   // Verify that $inst() works
-  verify($scope.messages.$ref() === messagesFirebaseRef, 'Something is wrong with $FirebaseArray.$ref().');
+  verify($scope.messages.$ref() === messagesFirebaseRef, 'Something is wrong with $firebaseArray.$ref().');
 
   // Initialize $scope variables
   $scope.message = '';
@@ -27,17 +27,17 @@ app.controller('PriorityCtrl', function Chat($scope, $FirebaseArray, $FirebaseOb
         from: $scope.username,
         content: $scope.message
       }).then(function (ref) {
-        var newItem = new $FirebaseObject(ref);
+        var newItem = $firebaseObject(ref);
 
         newItem.$loaded().then(function (data) {
-          verify(newItem === data, '$FirebaseObject.$loaded() does not return correct value.');
+          verify(newItem === data, '$firebaseObject.$loaded() does not return correct value.');
 
           // Update the message's priority
           newItem.$priority = priority;
           newItem.$save();
         });
       }, function (error) {
-        verify(false, 'Something is wrong with $FirebaseArray.$add().');
+        verify(false, 'Something is wrong with $firebaseArray.$add().');
       });
 
       // Reset the message input

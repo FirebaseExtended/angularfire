@@ -1,13 +1,13 @@
 var app = angular.module('todo', ['firebase']);
-app. controller('TodoCtrl', function Todo($scope, $FirebaseArray) {
+app. controller('TodoCtrl', function Todo($scope, $firebaseArray) {
   // Get a reference to the Firebase
   var todosFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/todo');
 
   // Get the todos as an array
-  $scope.todos = new $FirebaseArray(todosFirebaseRef);
+  $scope.todos = $firebaseArray(todosFirebaseRef);
 
   // Verify that $ref() works
-  verify($scope.todos.$ref() === todosFirebaseRef, "Something is wrong with $FirebaseArray.$ref().");
+  verify($scope.todos.$ref() === todosFirebaseRef, "Something is wrong with $firebaseArray.$ref().");
 
   /* Clears the todos Firebase reference */
   $scope.clearRef = function () {
@@ -35,7 +35,7 @@ app. controller('TodoCtrl', function Todo($scope, $FirebaseArray) {
   /* Removes the todo item with the inputted ID */
   $scope.removeTodo = function(id) {
     // Verify that $indexFor() and $keyAt() work
-    verify($scope.todos.$indexFor($scope.todos.$keyAt(id)) === id, "Something is wrong with $FirebaseArray.$indexFor() or FirebaseArray.$keyAt().");
+    verify($scope.todos.$indexFor($scope.todos.$keyAt(id)) === id, "Something is wrong with $firebaseArray.$indexFor() or FirebaseArray.$keyAt().");
 
     $scope.todos.$remove(id);
   };
