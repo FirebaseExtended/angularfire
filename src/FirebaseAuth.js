@@ -53,8 +53,7 @@
         $changePassword: this.changePassword.bind(this),
         $changeEmail: this.changeEmail.bind(this),
         $removeUser: this.removeUser.bind(this),
-        $resetPassword: this.resetPassword.bind(this),
-        $sendPasswordResetEmail: this.sendPasswordResetEmail.bind(this)
+        $resetPassword: this.resetPassword.bind(this)
       };
 
       return this._object;
@@ -303,24 +302,16 @@
      * wish to log in as the newly created user, call $authWithPassword() after the promise for
      * this method has been resolved.
      *
-     * @param {Object|string} emailOrCredentials The email of the user to create or an object
-     * containing the email and password of the user to create.
-     * @param {string} [password] The password for the user to create.
+     * @param {Object} credentials An object containing the email and password of the user to create.
      * @return {Promise<Object>} A promise fulfilled with the user object, which contains the
      * uid of the created user.
      */
-    createUser: function(emailOrCredentials, password) {
+    createUser: function(credentials) {
       var deferred = this._q.defer();
 
-      // Allow this method to take a single credentials argument or two separate string arguments
-      var credentials = emailOrCredentials;
-      if (typeof emailOrCredentials === "string") {
-        this._log.warn("Passing in credentials to $createUser() as individual arguments has been deprecated in favor of a single credentials argument. See the AngularFire API reference for details.");
-
-        credentials = {
-          email: emailOrCredentials,
-          password: password
-        };
+      // Throw an error if they are trying to pass in separate string arguments
+      if (typeof credentials === "string") {
+        throw new Error("Passing in credentials to $createUser() as individual arguments has been removed in favor of a single credentials argument. See the AngularFire API reference for details.");
       }
 
       try {
@@ -335,26 +326,16 @@
     /**
      * Changes the password for an email/password user.
      *
-     * @param {Object|string} emailOrCredentials The email of the user whose password is to change
-     * or an object containing the email, old password, and new password of the user whose password
-     * is to change.
-     * @param {string} [oldPassword] The current password for the user.
-     * @param {string} [newPassword] The new password for the user.
+     * @param {Object} credentials An object containing the email, old password, and new password of
+     * the user whose password is to change.
      * @return {Promise<>} An empty promise fulfilled once the password change is complete.
      */
-    changePassword: function(emailOrCredentials, oldPassword, newPassword) {
+    changePassword: function(credentials) {
       var deferred = this._q.defer();
 
-      // Allow this method to take a single credentials argument or three separate string arguments
-      var credentials = emailOrCredentials;
-      if (typeof emailOrCredentials === "string") {
-        this._log.warn("Passing in credentials to $changePassword() as individual arguments has been deprecated in favor of a single credentials argument. See the AngularFire API reference for details.");
-
-        credentials = {
-          email: emailOrCredentials,
-          oldPassword: oldPassword,
-          newPassword: newPassword
-        };
+      // Throw an error if they are trying to pass in separate string arguments
+      if (typeof credentials === "string") {
+        throw new Error("Passing in credentials to $changePassword() as individual arguments has been removed in favor of a single credentials argument. See the AngularFire API reference for details.");
       }
 
       try {
@@ -392,23 +373,15 @@
     /**
      * Removes an email/password user.
      *
-     * @param {Object|string} emailOrCredentials The email of the user to remove or an object
-     * containing the email and password of the user to remove.
-     * @param {string} [password] The password of the user to remove.
+     * @param {Object} credentials An object containing the email and password of the user to remove.
      * @return {Promise<>} An empty promise fulfilled once the user is removed.
      */
-    removeUser: function(emailOrCredentials, password) {
+    removeUser: function(credentials) {
       var deferred = this._q.defer();
 
-      // Allow this method to take a single credentials argument or two separate string arguments
-      var credentials = emailOrCredentials;
-      if (typeof emailOrCredentials === "string") {
-        this._log.warn("Passing in credentials to $removeUser() as individual arguments has been deprecated in favor of a single credentials argument. See the AngularFire API reference for details.");
-
-        credentials = {
-          email: emailOrCredentials,
-          password: password
-        };
+      // Throw an error if they are trying to pass in separate string arguments
+      if (typeof credentials === "string") {
+        throw new Error("Passing in credentials to $removeUser() as individual arguments has been removed in favor of a single credentials argument. See the AngularFire API reference for details.");
       }
 
       try {
@@ -420,44 +393,20 @@
       return deferred.promise;
     },
 
-    /**
-     * Sends a password reset email to an email/password user. [DEPRECATED]
-     *
-     * @deprecated
-     * @param {Object|string} emailOrCredentials The email of the user to send a reset password
-     * email to or an object containing the email of the user to send a reset password email to.
-     * @return {Promise<>} An empty promise fulfilled once the reset password email is sent.
-     */
-    sendPasswordResetEmail: function(emailOrCredentials) {
-      this._log.warn("$sendPasswordResetEmail() has been deprecated in favor of the equivalent $resetPassword().");
-
-      try {
-        return this.resetPassword(emailOrCredentials);
-      } catch (error) {
-        return this._q(function(resolve, reject) {
-          return reject(error);
-        });
-      }
-    },
 
     /**
      * Sends a password reset email to an email/password user.
      *
-     * @param {Object|string} emailOrCredentials The email of the user to send a reset password
-     * email to or an object containing the email of the user to send a reset password email to.
+     * @param {Object} credentials An object containing the email of the user to send a reset
+     * password email to.
      * @return {Promise<>} An empty promise fulfilled once the reset password email is sent.
      */
-    resetPassword: function(emailOrCredentials) {
+    resetPassword: function(credentials) {
       var deferred = this._q.defer();
 
-      // Allow this method to take a single credentials argument or a single string argument
-      var credentials = emailOrCredentials;
-      if (typeof emailOrCredentials === "string") {
-        this._log.warn("Passing in credentials to $resetPassword() as individual arguments has been deprecated in favor of a single credentials argument. See the AngularFire API reference for details.");
-
-        credentials = {
-          email: emailOrCredentials
-        };
+      // Throw an error if they are trying to pass in a string argument
+      if (typeof credentials === "string") {
+        throw new Error("Passing in credentials to $resetPassword() as individual arguments has been removed in favor of a single credentials argument. See the AngularFire API reference for details.");
       }
 
       try {
