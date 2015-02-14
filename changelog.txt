@@ -1,18 +1,15 @@
 important - Read carefully! There are several breaking changes in this release.
-important - API is now official! Future 1.x versions will remain backwards compatible with the current API contract.
-important - We have a migration guide here: https://github.com/firebase/angularfire/releases/tag/v1.0.0
-removed - `$firebase` has been removed; see migration guide for alternatives
-removed - `$inst() was removed; use `$ref()` to get to the Firebase ref
-changed - `$asArray()` has been replaced by calling the `$firebaseArray` service directly
-changed - `$asObject()` has been replaced by calling the `$firebaseObject` service directly
-changed - `$FirebaseArray` renamed to $firebaseArray`
-changed - `$FirebaseObject` renamed to `$firebaseObject`
-changed - `$extendFactory` has been renamed to `$extend` (e.g. `$firebaseObject.$extend(...)`)
-feature - enhanced performance of $bindTo (thanks @jamesstalmage!)
-feature - improved test unit coverage, particularly around auth (thanks @jamesstalmage!)
-added - An error message is now displayed if one tries to sync to array-like data, since this is error-prone
-fixed - Travis now runs e2e locally with Firefox (thanks @jamesstalmage!)
-fixed - $value is now removed when data changes from a primitive to an object with child keys
-fixed - better test consistency with Jasmine/Travis, less timing issues (thanks @jamesstalmage!)
-fixed - tests now work around new Jasmine version's breaking change to equality checks
-fixed - utils.scopeData no longer accidentally copies `$value` if valid child keys exist (thanks @jamesstalmage!)
+important - API is now official! Future 1.x.x versions will remain backwards-compatible with the current API contract.
+important - We have a migration guide here: https://github.com/firebase/angularfire/releases/tag/v1.0.0.
+feature - Upgraded Firebase dependency to 2.2.x.
+feature - Enhanced performance of `$bindTo()` (thanks @jamesstalmage).
+removed - `$firebase` has been removed; see the migration guide for alternatives.
+removed - `$inst()` was removed; use `$ref()` to get to the underlying Firebase reference.
+removed - The previously deprecated ability to pass in credentials to the user management methods of `$firebaseAuth` as individual arguments has been removed in favor of a single credentials argument.
+changed - `$asArray()` has been replaced by calling the `$firebaseArray` service directly.
+changed - `$asObject()` has been replaced by calling the `$firebaseObject` service directly.
+changed - `$FirebaseArray` renamed to $firebaseArray`.
+changed - `$FirebaseObject` renamed to `$firebaseObject`.
+changed - `$extendFactory()` has been renamed to `$extend()`.
+changed - A warning message is now displayed when trying to sync to array-like data, since this is error-prone.
+fixed - `$value` is now removed when data changes from a primitive to an object with child keys (thanks @jamesstalmage).
