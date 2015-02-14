@@ -6,6 +6,7 @@ feature - Enhanced performance of `$bindTo()` (thanks @jamesstalmage).
 removed - `$firebase` has been removed; see the migration guide for alternatives.
 removed - `$inst()` was removed; use `$ref()` to get to the underlying Firebase reference.
 removed - The previously deprecated ability to pass in credentials to the user management methods of `$firebaseAuth` as individual arguments has been removed in favor of a single credentials argument.
+removed - The previously deprecated `$sendPasswordResetEmail()` method has been removed; use the equivalent `$resetPassword()` method instead.
 changed - `$asArray()` has been replaced by calling the `$firebaseArray` service directly.
 changed - `$asObject()` has been replaced by calling the `$firebaseObject` service directly.
 changed - `$FirebaseArray` renamed to $firebaseArray`.
