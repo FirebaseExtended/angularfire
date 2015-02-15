@@ -311,7 +311,7 @@
 
       // Throw an error if they are trying to pass in separate string arguments
       if (typeof credentials === "string") {
-        throw new Error("Passing in credentials to $createUser() as individual arguments has been removed in favor of a single credentials argument. See the AngularFire API reference for details.");
+        throw new Error("$createUser() expects an object containing 'email' and 'password', but got a string.");
       }
 
       try {
@@ -335,7 +335,7 @@
 
       // Throw an error if they are trying to pass in separate string arguments
       if (typeof credentials === "string") {
-        throw new Error("Passing in credentials to $changePassword() as individual arguments has been removed in favor of a single credentials argument. See the AngularFire API reference for details.");
+        throw new Error("$changePassword() expects an object containing 'email', 'oldPassword', and 'newPassword', but got a string.");
       }
 
       try {
@@ -356,7 +356,7 @@
      */
     changeEmail: function(credentials) {
       if (typeof this._ref.changeEmail !== 'function') {
-        throw new Error('$firebaseAuth.$changeEmail() requires Firebase version 2.1.0 or greater.');
+        throw new Error("$changeEmail() expects an object containing 'oldEmail', 'newEmail', and 'password', but got a string.");
       }
 
       var deferred = this._q.defer();
@@ -381,7 +381,7 @@
 
       // Throw an error if they are trying to pass in separate string arguments
       if (typeof credentials === "string") {
-        throw new Error("Passing in credentials to $removeUser() as individual arguments has been removed in favor of a single credentials argument. See the AngularFire API reference for details.");
+        throw new Error("$removeUser() expects an object containing 'email' and 'password', but got a string.");
       }
 
       try {
@@ -406,7 +406,7 @@
 
       // Throw an error if they are trying to pass in a string argument
       if (typeof credentials === "string") {
-        throw new Error("Passing in credentials to $resetPassword() as individual arguments has been removed in favor of a single credentials argument. See the AngularFire API reference for details.");
+        throw new Error("$resetPassword() expects an object containing 'email', but got a string.");
       }
 
       try {
