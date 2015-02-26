@@ -23,8 +23,9 @@
     "firebase",
     "realtime"
   ],
-  "main": "dist/angularfire.js",
+  "main": "index.js",
   "files": [
+    "index.js",
     "dist/**",
     "LICENSE",
     "README.md",
