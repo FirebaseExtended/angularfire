@@ -3,6 +3,7 @@ important - API is now official! Future 1.x.x versions will remain backwards-com
 important - We have a migration guide here: https://github.com/firebase/angularfire/releases/tag/v1.0.0.
 feature - Upgraded Firebase dependency to 2.2.x.
 feature - Enhanced performance of `$bindTo()` (thanks @jamesstalmage).
+feature - Added support for CommonJS (thanks @bendrucker).
 removed - `$firebase` has been removed; see the migration guide for alternatives.
 removed - `$inst()` was removed; use `$ref()` to get to the underlying Firebase reference.
 removed - The previously deprecated ability to pass in credentials to the user management methods of `$firebaseAuth` as individual arguments has been removed in favor of a single credentials argument.
