@@ -1,7 +1,19 @@
 var app = angular.module('tictactoe', ['firebase']);
 app.controller('TicTacToeCtrl', function Chat($scope, $firebaseObject) {
   // Get a reference to the Firebase
-  var boardRef = new Firebase('https://angularfire.firebaseio-demo.com/tictactoe').push();
+  var boardRef = new Firebase('https://angularfire.firebaseio-demo.com/tictactoe');
+
+  // If the query string contains a push ID, use that as the child for data storage;
+  // otherwise, generate a new random push ID
+  var pushId;
+  if (window.location && window.location.search) {
+    pushId = window.location.search.substr(1).split('=')[1];
+  }
+  if (pushId) {
+    boardRef = boardRef.child(pushId);
+  } else {
+    boardRef = boardRef.push();
+  }
 
   // Put the random push ID into the DOM so that the test suite can grab it
   document.getElementById('pushId').innerHTML = boardRef.key();

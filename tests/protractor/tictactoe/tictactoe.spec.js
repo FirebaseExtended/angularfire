@@ -94,14 +94,21 @@ describe('TicTacToe App', function () {
     expect(cells.get(6).getText()).toBe('X');
   });
 
-  xit('persists state across refresh', function() {
-    // Make sure the board has 9 cells
-    expect(cells.count()).toBe(9);
+  it('persists state across refresh', function(done) {
+    browser.get('tictactoe/tictactoe.html?pushId=' + firebaseRef.key()).then(function() {
+      // Wait for AngularFire to sync the initial state
+      sleep();
 
-    // Make sure the content of each clicked cell is correct
-    expect(cells.get(0).getText()).toBe('X');
-    expect(cells.get(2).getText()).toBe('O');
-    expect(cells.get(6).getText()).toBe('X');
+      // Make sure the board has 9 cells
+      expect(cells.count()).toBe(9);
+
+      // Make sure the content of each clicked cell is correct
+      expect(cells.get(0).getText()).toBe('X');
+      expect(cells.get(2).getText()).toBe('O');
+      expect(cells.get(6).getText()).toBe('X');
+
+      done();
+    });
   });
 
   it('stops updating Firebase once the AngularFire bindings are destroyed', function () {
@@ -117,7 +124,7 @@ describe('TicTacToe App', function () {
 
     sleep();
 
-    expect(cells.get(4).getText()).toBe('O');
+    expect(cells.get(4).getText()).toBe('X');
 
     sleep();
 
