@@ -6,10 +6,10 @@ describe('Priority App', function () {
   var messages = element.all(by.repeater('message in messages'));
 
   // Reference to the Firebase which stores the data for this demo
-  var firebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/priority');
+  var firebaseRef = new Firebase('https://angularfire.firebaseio-demo.com/priority');
 
-  // Boolean used to clear the Firebase on the first test only
-  var firebaseCleared = false;
+  // Boolean used to load the page on the first test only
+  var isPageLoaded = false;
 
   var flow = protractor.promise.controlFlow();
 
@@ -18,49 +18,45 @@ describe('Priority App', function () {
   }
 
   function sleep() {
-    return flow.execute(waitOne);
+    flow.execute(waitOne);
   }
 
-  beforeEach(function () {
-    if( !firebaseCleared ) {
-      firebaseCleared = true;
-      flow.execute(purge);
-    }
+  function clearFirebaseRef() {
+    var deferred = protractor.promise.defer();
 
-    // Navigate to the priority app
-    browser.get('priority/priority.html');
+    firebaseRef.remove(function(err) {
+      if (err) {
+        deferred.reject(err);
+      } else {
+        deferred.fulfill();
+      }
+    });
 
-    // Wait for all data to load into the client
-    flow.execute(waitForData);
+    return deferred.promise;
+  }
 
-    function purge() {
-      var def = protractor.promise.defer();
-      firebaseRef.remove(function(err) {
-        if( err ) { def.reject(err); }
-        else { def.fulfill(true); }
-      });
-      return def.promise;
-    }
+  beforeEach(function (done) {
+    if (!isPageLoaded) {
+      // Navigate to the priority app
+      browser.get('priority/priority.html').then(function() {
+        isPageLoaded = true;
 
-    function waitForData() {
-      var def = protractor.promise.defer();
-      firebaseRef.once('value', function() {
-        waitOne().then(function() {
-          def.fulfill(true);
-        });
-      });
-      return def.promise;
+        // Get the random push ID where the data is being stored
+        return $('#pushId').getText();
+      }).then(function(pushId) {
+        // Update the Firebase ref to point to the random push ID
+        firebaseRef = firebaseRef.child(pushId);
+
+        // Clear the Firebase ref
+        return clearFirebaseRef();
+      }).then(done);
+    } else {
+      done();
     }
   });
 
-  afterEach(function() {
-    firebaseRef.off();
-  });
 
   it('loads', function () {
-  });
-
-  it('has the correct title', function () {
     expect(browser.getTitle()).toEqual('AngularFire Priority e2e Test');
   });
 

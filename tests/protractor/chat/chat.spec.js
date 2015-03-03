@@ -3,10 +3,10 @@ var Firebase = require('firebase');
 
 describe('Chat App', function () {
   // Reference to the Firebase which stores the data for this demo
-  var firebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/chat');
+  var firebaseRef = new Firebase('https://angularfire.firebaseio-demo.com/chat');
 
-  // Boolean used to clear the Firebase on the first test only
-  var firebaseCleared = false;
+  // Boolean used to load the page on the first test only
+  var isPageLoaded = false;
 
   // Reference to the messages repeater
   var messages = element.all(by.repeater('message in messages'));
@@ -21,35 +21,41 @@ describe('Chat App', function () {
     flow.execute(waitOne);
   }
 
-  beforeEach(function () {
-    // Clear the Firebase before the first test and sleep until it's finished
-    if (!firebaseCleared) {
-      flow.execute(function() {
-        var def = protractor.promise.defer();
-        firebaseRef.remove(function(err) {
-          if( err ) {
-            def.reject(err);
-          }
-          else {
-            firebaseCleared = true;
-            def.fulfill();
-          }
-        });
-        return def.promise;
-      });
+  function clearFirebaseRef() {
+    var deferred = protractor.promise.defer();
+
+    firebaseRef.remove(function(err) {
+      if (err) {
+        deferred.reject(err);
+      } else {
+        deferred.fulfill();
+      }
+    });
+
+    return deferred.promise;
+  }
+
+  beforeEach(function (done) {
+    if (!isPageLoaded) {
+      // Navigate to the chat app
+      browser.get('chat/chat.html').then(function() {
+        isPageLoaded = true;
+
+        // Get the random push ID where the data is being stored
+        return $('#pushId').getText();
+      }).then(function(pushId) {
+        // Update the Firebase ref to point to the random push ID
+        firebaseRef = firebaseRef.child(pushId);
+
+        // Clear the Firebase ref
+        return clearFirebaseRef();
+      }).then(done);
+    } else {
+      done();
     }
-
-    // Navigate to the chat app
-    browser.get('chat/chat.html');
-
-    // wait for page to load
-    sleep();
   });
 
   it('loads', function () {
-  });
-
-  it('has the correct title', function () {
     expect(browser.getTitle()).toEqual('AngularFire Chat e2e Test');
   });
 
@@ -74,7 +80,7 @@ describe('Chat App', function () {
     flow.execute(function() {
       var def = protractor.promise.defer();
       // Simulate a message being added remotely
-      firebaseRef.child("messages").push({
+      firebaseRef.child('messages').push({
         from: 'Guest 2000',
         content: 'Remote message detected'
       }, function(err) {
@@ -92,8 +98,8 @@ describe('Chat App', function () {
     flow.execute(function() {
       var def = protractor.promise.defer();
       // Simulate a message being deleted remotely
-      var onCallback = firebaseRef.child("messages").limitToLast(1).on("child_added", function(childSnapshot) {
-        firebaseRef.child("messages").off("child_added", onCallback);
+      var onCallback = firebaseRef.child('messages').limitToLast(1).on('child_added', function(childSnapshot) {
+        firebaseRef.child('messages').off('child_added', onCallback);
         childSnapshot.ref().remove(function(err) {
           if( err ) { def.reject(err); }
           else { def.fulfill(); }
