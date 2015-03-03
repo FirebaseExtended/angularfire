@@ -37,10 +37,10 @@ describe('Chat App', function () {
 
   beforeEach(function (done) {
     if (!isPageLoaded) {
+      isPageLoaded = true;
+
       // Navigate to the chat app
       browser.get('chat/chat.html').then(function() {
-        isPageLoaded = true;
-
         // Get the random push ID where the data is being stored
         return $('#pushId').getText();
       }).then(function(pushId) {

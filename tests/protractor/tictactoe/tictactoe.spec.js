@@ -38,10 +38,10 @@ describe('TicTacToe App', function () {
 
   beforeEach(function (done) {
     if (!isPageLoaded) {
+      isPageLoaded = true;
+
       // Navigate to the tictactoe app
       browser.get('tictactoe/tictactoe.html').then(function() {
-        isPageLoaded = true;
-
         // Get the random push ID where the data is being stored
         return $('#pushId').getText();
       }).then(function(pushId) {
@@ -98,6 +98,7 @@ describe('TicTacToe App', function () {
     // Refresh the page, passing the push ID to use for data storage
     browser.get('tictactoe/tictactoe.html?pushId=' + firebaseRef.key()).then(function() {
       // Wait for AngularFire to sync the initial state
+      sleep();
       sleep();
 
       // Make sure the board has 9 cells

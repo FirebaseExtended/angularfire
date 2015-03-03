@@ -36,10 +36,10 @@ describe('Todo App', function () {
 
   beforeEach(function (done) {
     if (!isPageLoaded) {
+      isPageLoaded = true;
+
       // Navigate to the todo app
       browser.get('todo/todo.html').then(function() {
-        isPageLoaded = true;
-
         // Get the random push ID where the data is being stored
         return $('#pushId').getText();
       }).then(function(pushId) {
