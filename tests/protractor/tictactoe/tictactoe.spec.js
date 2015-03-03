@@ -3,10 +3,10 @@ var Firebase = require('firebase');
 
 describe('TicTacToe App', function () {
   // Reference to the Firebase which stores the data for this demo
-  var firebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/tictactoe');
+  var firebaseRef = new Firebase('https://angularfire.firebaseio-demo.com/tictactoe');
 
-  // Boolean used to clear the Firebase on the first test only
-  var firebaseCleared = false;
+  // Boolean used to load the page on the first test only
+  var isPageLoaded = false;
 
   // Reference to the messages repeater
   //var cells = $$('.cell');
@@ -22,37 +22,41 @@ describe('TicTacToe App', function () {
     flow.execute(waitOne);
   }
 
-  function clearFirebase() {
-    var def = protractor.promise.defer();
+  function clearFirebaseRef() {
+    var deferred = protractor.promise.defer();
+
     firebaseRef.remove(function(err) {
-      if( err ) {
-        def.reject(err);
-      }
-      else {
-        firebaseCleared = true;
-        def.fulfill();
+      if (err) {
+        deferred.reject(err);
+      } else {
+        deferred.fulfill();
       }
     });
-    return def.promise;
+
+    return deferred.promise;
   }
 
-  beforeEach(function () {
-    // Clear the Firebase before the first test and sleep until it's finished
-    if (!firebaseCleared) {
-      flow.execute(clearFirebase);
+  beforeEach(function (done) {
+    if (!isPageLoaded) {
+      isPageLoaded = true;
+
+      // Navigate to the tictactoe app
+      browser.get('tictactoe/tictactoe.html').then(function() {
+        // Get the random push ID where the data is being stored
+        return $('#pushId').getText();
+      }).then(function(pushId) {
+        // Update the Firebase ref to point to the random push ID
+        firebaseRef = firebaseRef.child(pushId);
+
+        // Clear the Firebase ref
+        return clearFirebaseRef();
+      }).then(done);
+    } else {
+      done();
     }
-
-    // Navigate to the tictactoe app
-    browser.get('tictactoe/tictactoe.html');
-
-    // wait for page to load
-    sleep();
   });
 
   it('loads', function () {
-  });
-
-  it('has the correct title', function () {
     expect(browser.getTitle()).toEqual('AngularFire TicTacToe e2e Test');
   });
 
@@ -90,14 +94,23 @@ describe('TicTacToe App', function () {
     expect(cells.get(6).getText()).toBe('X');
   });
 
-  it('persists state across refresh', function() {
-    // Make sure the board has 9 cells
-    expect(cells.count()).toBe(9);
+  it('persists state across refresh', function(done) {
+    // Refresh the page, passing the push ID to use for data storage
+    browser.get('tictactoe/tictactoe.html?pushId=' + firebaseRef.key()).then(function() {
+      // Wait for AngularFire to sync the initial state
+      sleep();
+      sleep();
 
-    // Make sure the content of each clicked cell is correct
-    expect(cells.get(0).getText()).toBe('X');
-    expect(cells.get(2).getText()).toBe('O');
-    expect(cells.get(6).getText()).toBe('X');
+      // Make sure the board has 9 cells
+      expect(cells.count()).toBe(9);
+
+      // Make sure the content of each clicked cell is correct
+      expect(cells.get(0).getText()).toBe('X');
+      expect(cells.get(2).getText()).toBe('O');
+      expect(cells.get(6).getText()).toBe('X');
+
+      done();
+    });
   });
 
   it('stops updating Firebase once the AngularFire bindings are destroyed', function () {
@@ -110,6 +123,9 @@ describe('TicTacToe App', function () {
 
     // Click the middle cell
     cells.get(4).click();
+
+    sleep();
+
     expect(cells.get(4).getText()).toBe('X');
 
     sleep();

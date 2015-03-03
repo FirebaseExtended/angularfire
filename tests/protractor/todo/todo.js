@@ -1,17 +1,20 @@
 var app = angular.module('todo', ['firebase']);
 app. controller('TodoCtrl', function Todo($scope, $firebaseArray) {
   // Get a reference to the Firebase
-  var todosFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/todo');
+  var todosRef = new Firebase('https://angularfire.firebaseio-demo.com/todo').push();
+
+  // Put the random push ID into the DOM so that the test suite can grab it
+  document.getElementById('pushId').innerHTML = todosRef.key();
 
   // Get the todos as an array
-  $scope.todos = $firebaseArray(todosFirebaseRef);
+  $scope.todos = $firebaseArray(todosRef);
 
   // Verify that $ref() works
-  verify($scope.todos.$ref() === todosFirebaseRef, "Something is wrong with $firebaseArray.$ref().");
+  verify($scope.todos.$ref() === todosRef, "Something is wrong with $firebaseArray.$ref().");
 
   /* Clears the todos Firebase reference */
   $scope.clearRef = function () {
-    todosFirebaseRef.remove();
+    todosRef.remove();
   };
 
   /* Adds a new todo item */

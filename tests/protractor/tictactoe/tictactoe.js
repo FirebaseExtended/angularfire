@@ -1,16 +1,31 @@
 var app = angular.module('tictactoe', ['firebase']);
 app.controller('TicTacToeCtrl', function Chat($scope, $firebaseObject) {
   // Get a reference to the Firebase
-  var boardFirebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/tictactoe');
+  var boardRef = new Firebase('https://angularfire.firebaseio-demo.com/tictactoe');
+
+  // If the query string contains a push ID, use that as the child for data storage;
+  // otherwise, generate a new random push ID
+  var pushId;
+  if (window.location && window.location.search) {
+    pushId = window.location.search.substr(1).split('=')[1];
+  }
+  if (pushId) {
+    boardRef = boardRef.child(pushId);
+  } else {
+    boardRef = boardRef.push();
+  }
+
+  // Put the random push ID into the DOM so that the test suite can grab it
+  document.getElementById('pushId').innerHTML = boardRef.key();
 
   // Get the board as an AngularFire object
-  $scope.boardObject = $firebaseObject(boardFirebaseRef);
+  $scope.boardObject = $firebaseObject(boardRef);
 
   // Create a 3-way binding to Firebase
   $scope.boardObject.$bindTo($scope, 'board');
 
   // Verify that $inst() works
-  verify($scope.boardObject.$ref() === boardFirebaseRef, 'Something is wrong with $firebaseObject.$ref().');
+  verify($scope.boardObject.$ref() === boardRef, 'Something is wrong with $firebaseObject.$ref().');
 
   // Initialize $scope variables
   $scope.whoseTurn = 'X';
@@ -25,6 +40,7 @@ app.controller('TicTacToeCtrl', function Chat($scope, $firebaseObject) {
       };
     });
   };
+
 
   /* Makes a move at the current cell */
   $scope.makeMove = function(rowId, columnId) {

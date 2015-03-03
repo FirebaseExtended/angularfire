@@ -18,6 +18,9 @@
 
   <body ng-controller="TodoCtrl">
     <div>
+      <!-- Firebase push ID where data is stored (used by the test spec to know where data is stored) -->
+      <p id="pushId"></p>
+
       <!-- Clear Firebase button -->
       <button id="clearRefButton" ng-click="clearRef()">Clear Ref</button>
 

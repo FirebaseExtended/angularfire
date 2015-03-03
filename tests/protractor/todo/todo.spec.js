@@ -3,10 +3,10 @@ var Firebase = require('firebase');
 
 describe('Todo App', function () {
   // Reference to the Firebase which stores the data for this demo
-  var firebaseRef = new Firebase('https://angularFireTests.firebaseio-demo.com/todo');
+  var firebaseRef = new Firebase('https://angularfire.firebaseio-demo.com/todo');
 
-  // Boolean used to clear the Firebase on the first test only
-  var firebaseCleared = false;
+  // Boolean used to load the page on the first test only
+  var isPageLoaded = false;
 
   // Reference to the todos repeater
   var todos = element.all(by.repeater('(id, todo) in todos'));
@@ -17,45 +17,44 @@ describe('Todo App', function () {
   }
 
   function sleep() {
-    return flow.execute(waitOne);
+    flow.execute(waitOne);
   }
 
-  beforeEach(function () {
+  function clearFirebaseRef() {
+    var deferred = protractor.promise.defer();
 
-    if( !firebaseCleared ) {
-      flow.execute(purge);
-    }
+    firebaseRef.remove(function(err) {
+      if (err) {
+        deferred.reject(err);
+      } else {
+        deferred.fulfill();
+      }
+    });
 
-    // Navigate to the todo app
-    browser.get('todo/todo.html');
+    return deferred.promise;
+  }
 
-    flow.execute(waitForData);
+  beforeEach(function (done) {
+    if (!isPageLoaded) {
+      isPageLoaded = true;
 
-    function purge() {
-      var def = protractor.promise.defer();
-      firebaseRef.remove(function(err) {
-        if( err ) { def.reject(err); return; }
-        firebaseCleared = true;
-        def.fulfill();
-      });
-      return def.promise;
-    }
+      // Navigate to the todo app
+      browser.get('todo/todo.html').then(function() {
+        // Get the random push ID where the data is being stored
+        return $('#pushId').getText();
+      }).then(function(pushId) {
+        // Update the Firebase ref to point to the random push ID
+        firebaseRef = firebaseRef.child(pushId);
 
-    function waitForData() {
-      var def = protractor.promise.defer();
-      firebaseRef.once('value', function() {
-        waitOne().then(function() {
-          def.fulfill(true);
-        });
-      });
-      return def.promise;
+        // Clear the Firebase ref
+        return clearFirebaseRef();
+      }).then(done);
+    } else {
+      done();
     }
   });
 
   it('loads', function () {
-  });
-
-  it('has the correct title', function () {
     expect(browser.getTitle()).toEqual('AngularFire Todo e2e Test');
   });
 
