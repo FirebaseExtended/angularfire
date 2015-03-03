@@ -95,6 +95,7 @@ describe('TicTacToe App', function () {
   });
 
   it('persists state across refresh', function(done) {
+    // Refresh the page, passing the push ID to use for data storage
     browser.get('tictactoe/tictactoe.html?pushId=' + firebaseRef.key()).then(function() {
       // Wait for AngularFire to sync the initial state
       sleep();
