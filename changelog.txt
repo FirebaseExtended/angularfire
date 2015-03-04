@@ -1,6 +1,6 @@
 important - Read carefully! There are several breaking changes in this release.
 important - API is now official! Future 1.x.x versions will remain backwards-compatible with the current API contract.
-important - We have a migration plan here: https://firebase.com/docs/web/libraries/angular/guide/migration-plans.html.
+important - We have a migration guide here: https://firebase.com/docs/web/libraries/angular/guide/migration-guides.html.
 feature - Upgraded Firebase dependency to 2.2.x.
 feature - Enhanced performance of `$bindTo()` (thanks @jamesstalmage).
 feature - Added support for CommonJS (thanks @bendrucker).
