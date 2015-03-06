@@ -63,7 +63,7 @@ account](https://www.firebase.com/signup/?utm_medium=web&utm_source=angularfire)
 ## Documentation
 
 The Firebase docs have a [quickstart](https://www.firebase.com/docs/web/bindings/angular/quickstart.html?utm_medium=web&utm_source=angularfire),
-[guide](https://www.firebase.com/docs/web/bindings/angular/guide.html?utm_medium=web&utm_source=angularfire),
+[guide](https://www.firebase.com/docs/web/bindings/angular/guide?utm_medium=web&utm_source=angularfire),
 and [full API reference](https://www.firebase.com/docs/web/bindings/angular/api.html?utm_medium=web&utm_source=angularfire)
 for AngularFire.
 
