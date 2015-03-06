@@ -7,9 +7,13 @@
 
 AngularFire is the officially supported [AngularJS](http://angularjs.org/) binding for
 [Firebase](http://www.firebase.com/?utm_medium=web&utm_source=angularfire). Firebase is a full
-backend so you don't need servers to build your Angular app. AngularFire provides you with the
-`$firebase` service which allows you to easily keep your `$scope` variables in sync with your
-Firebase backend.
+backend so you don't need servers to build your Angular app.
+
+AngularFire is a complement to the core Firebase client. It provides you with three Angular
+services:
+  * `$firebaseObject` - synchronized objects
+  * `$firebaseArray` - synchronized collections
+  * `$firebaseAuth` - authentication, user management, routing
 
 
 ## Downloading AngularFire
