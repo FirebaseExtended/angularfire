@@ -83,6 +83,30 @@ describe('$firebaseArray', function () {
       expect(spy).toHaveBeenCalledWith(arr.$ref().child(lastId));
     });
 
+    it('should wait for promise resolution to update array', function () {
+      var queue = [];
+      function addPromise(snap, prevChild){
+        return new $utils.promise(
+          function(resolve) {
+            queue.push(resolve);
+          }).then(function(name) {
+            var data = $firebaseArray.prototype.$$added.call(arr, snap, prevChild);
+            data.name = name;
+            return data;
+          });
+      }
+      arr = stubArray(null, $firebaseArray.$extend({$$added:addPromise}));
+      expect(arr.length).toBe(0);
+      arr.$add({userId:'1234'});
+      flushAll(arr.$ref());
+      expect(arr.length).toBe(0);
+      expect(queue.length).toBe(1);
+      queue[0]('James');
+      $timeout.flush();
+      expect(arr.length).toBe(1);
+      expect(arr[0].name).toBe('James')
+    });
+
     it('should reject promise on fail', function() {
       var successSpy = jasmine.createSpy('resolve spy');
       var errSpy = jasmine.createSpy('reject spy');

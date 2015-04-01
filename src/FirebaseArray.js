@@ -628,7 +628,11 @@
         var created = batch(function(snap, prevChild) {
           var rec = firebaseArray.$$added(snap, prevChild);
           if( rec ) {
-            firebaseArray.$$process('child_added', rec, prevChild);
+            $firebaseUtils.resolve(rec).then(function(rec) {
+              if( rec ) {
+                firebaseArray.$$process('child_added', rec, prevChild);
+              }
+            });
           }
         });
         var updated = batch(function(snap) {
