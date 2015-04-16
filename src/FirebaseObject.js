@@ -143,8 +143,17 @@
          */
         $bindTo: function (scope, varName) {
           var self = this;
+          var context = scope;
+          if(!angular.isFunction(scope.$on) || !angular.isFunction(scope.$watch)){
+            if (!scope.$$resolveScope) {
+              var defer = $firebaseUtils.defer();
+              scope.$$resolveScope = defer.resolve;
+              scope = defer.promise;
+            }
+          }
+
           return self.$loaded().then(function () {
-            return self.$$conf.binding.bindTo(scope, varName);
+            return self.$$conf.binding.bindTo(scope, varName, context);
           });
         },
 
@@ -317,8 +326,8 @@
           }
         },
 
-        bindTo: function(scope, varName) {
-          function _bind(self) {
+        bindTo: function(scope, varName, context) {
+          function _bind(self, scope, context) {
             var sending = false;
             var parsed = $parse(varName);
             var rec = self.rec;
@@ -332,7 +341,7 @@
             }
 
             function setScope(rec) {
-              parsed.assign(scope, $firebaseUtils.scopeData(rec));
+              parsed.assign(context, $firebaseUtils.scopeData(rec));
             }
 
             var send = $firebaseUtils.debounce(function(val) {
@@ -342,7 +351,7 @@
                   sending = false;
                   if(!scopeData.hasOwnProperty('$value')){
                     delete rec.$value;
-                    delete parsed(scope).$value;
+                    delete parsed(context).$value;
                   }
                 }
               );
@@ -357,7 +366,7 @@
             };
 
             var recUpdated = function() {
-              if( !sending && !equals(parsed(scope)) ) {
+              if (!sending && !equals(parsed(context))) {
                 setScope(rec);
               }
             };
@@ -365,7 +374,7 @@
             // $watch will not check any vars prefixed with $, so we
             // manually check $priority and $value using this method
             function watchExp(){
-              var obj = parsed(scope);
+              var obj = parsed(context);
               return [obj, obj.$priority, obj.$value];
             }
 
@@ -381,7 +390,24 @@
             return self.unbind.bind(self);
           }
 
-          return this.assertNotBound(varName) || _bind(this);
+          var notBound = this.assertNotBound(varName);
+          if (notBound) {
+            return notBound;
+          }
+
+          if (angular.isFunction(scope.$on) && angular.isFunction(scope.$watch)) {
+            return _bind(this, scope, context);
+          }
+
+          var self = this;
+
+          var unbind = scope.then(function(actualScope) {
+            return _bind(self, actualScope, context);
+          });
+
+          return function() {
+            unbind.then(function(unbind){unbind();});
+          }
         },
 
         unbind: function() {

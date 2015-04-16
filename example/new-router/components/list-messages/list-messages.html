@@ -1,0 +1,6 @@
+<section>
+  <h1>Messages</h1>
+  <div ng-repeat="messageId in listMessages.messages">
+    <a ng-link="editMessage({messageId:messageId})">{{messageId}}</a>
+  </div>
+</section>
