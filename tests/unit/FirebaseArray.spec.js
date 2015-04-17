@@ -783,7 +783,7 @@ describe('$firebaseArray', function () {
   describe('$extend', function() {
     it('should return a valid array', function() {
       var F = $firebaseArray.$extend({});
-      expect(Array.isArray(new F(stubRef()))).toBe(true);
+      expect(Array.isArray(F(stubRef()))).toBe(true);
     });
 
     it('should preserve child prototype', function() {
@@ -809,10 +809,22 @@ describe('$firebaseArray', function () {
     it('should add on methods passed into function', function() {
       function foo() { return 'foo'; }
       var F = $firebaseArray.$extend({foo: foo});
-      var res = new F(stubRef());
+      var res = F(stubRef());
       expect(typeof res.$$updated).toBe('function');
       expect(typeof res.foo).toBe('function');
       expect(res.foo()).toBe('foo');
+    });
+
+    it('should work with the new keyword', function() {
+      var fn = function() {};
+      var Res = $firebaseArray.$extend({foo: fn});
+      expect(new Res(stubRef()).foo).toBeA('function');
+    });
+
+    it('should work without the new keyword', function() {
+      var fn = function() {};
+      var Res = $firebaseArray.$extend({foo: fn});
+      expect(Res(stubRef()).foo).toBeA('function');
     });
   });
 

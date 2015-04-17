@@ -576,7 +576,13 @@
       FirebaseArray.$extend = function(ChildClass, methods) {
         if( arguments.length === 1 && angular.isObject(ChildClass) ) {
           methods = ChildClass;
-          ChildClass = function() { return FirebaseArray.apply(this, arguments); };
+          ChildClass = function(ref) {
+            if( !(this instanceof ChildClass) ) {
+              return new ChildClass(ref);
+            }
+            FirebaseArray.apply(this, arguments);
+            return this.$list;
+          };
         }
         return $firebaseUtils.inherit(ChildClass, FirebaseArray, methods);
       };

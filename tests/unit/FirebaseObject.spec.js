@@ -587,10 +587,23 @@ describe('$firebaseObject', function() {
         return 'foo';
       }
       var F = $firebaseObject.$extend({foo: foo});
-      var res = new F(stubRef());
+      var res = F(stubRef());
       expect(res.$$updated).toBeA('function');
       expect(res.foo).toBeA('function');
       expect(res.foo()).toBe('foo');
+    });
+
+
+    it('should work with the new keyword', function() {
+      var fn = function() {};
+      var Res = $firebaseObject.$extend({foo: fn});
+      expect(new Res(stubRef()).foo).toBeA('function');
+    });
+
+    it('should work without the new keyword', function() {
+      var fn = function() {};
+      var Res = $firebaseObject.$extend({foo: fn});
+      expect(Res(stubRef()).foo).toBeA('function');
     });
   });
 
