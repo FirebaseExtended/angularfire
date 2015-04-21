@@ -433,8 +433,7 @@
 
         var isResolved = false;
         var def = $firebaseUtils.defer();
-        var batch = $firebaseUtils.batch();
-        var applyUpdate = batch(function(snap) {
+        var applyUpdate = $firebaseUtils.batch(function(snap) {
           var changed = firebaseObject.$$updated(snap);
           if( changed ) {
             // notifies $watch listeners and
@@ -442,8 +441,8 @@
             firebaseObject.$$notify();
           }
         });
-        var error = batch(firebaseObject.$$error, firebaseObject);
-        var initComplete = batch(_initComplete);
+        var error = $firebaseUtils.batch(firebaseObject.$$error, firebaseObject);
+        var initComplete = $firebaseUtils.batch(_initComplete);
 
         var sync = {
           isDestroyed: false,
