@@ -23,8 +23,8 @@
       }
     ])
 
-    .factory('$firebaseUtils', ["$q", "$timeout", "firebaseBatchDelay",
-      function($q, $timeout, firebaseBatchDelay) {
+    .factory('$firebaseUtils', ["$q", "$timeout", "$rootScope",
+      function($q, $timeout, $rootScope) {
 
         // ES6 style promises polyfill for angular 1.2.x
         // Copied from angular 1.3.x implementation: https://github.com/angular/angular.js/blob/v1.3.5/src/ng/q.js#L539
@@ -50,88 +50,21 @@
 
         var utils = {
           /**
-           * Returns a function which, each time it is invoked, will pause for `wait`
-           * milliseconds before invoking the original `fn` instance. If another
-           * request is received in that time, it resets `wait` up until `maxWait` is
-           * reached.
+           * Returns a function which, each time it is invoked, will gather up the values until
+           * the next "tick" in the Angular compiler process. Then they are all run at the same
+           * time to avoid multiple cycles of the digest loop. Internally, this is done using $evalAsync()
            *
-           * Unlike a debounce function, once wait is received, all items that have been
-           * queued will be invoked (not just once per execution). It is acceptable to use 0,
-           * which means to batch all synchronously queued items.
-           *
-           * The batch function actually returns a wrap function that should be called on each
-           * method that is to be batched.
-           *
-           * <pre><code>
-           *   var total = 0;
-           *   var batchWrapper = batch(10, 100);
-           *   var fn1 = batchWrapper(function(x) { return total += x; });
-           *   var fn2 = batchWrapper(function() { console.log(total); });
-           *   fn1(10);
-           *   fn2();
-           *   fn1(10);
-           *   fn2();
-           *   console.log(total); // 0 (nothing invoked yet)
-           *   // after 10ms will log "10" and then "20"
-           * </code></pre>
-           *
-           * @param {int} wait number of milliseconds to pause before sending out after each invocation
-           * @param {int} maxWait max milliseconds to wait before sending out, defaults to wait * 10 or 100
+           * @param {Function} action
+           * @param {Object} [context]
            * @returns {Function}
            */
-          batch: function(wait, maxWait) {
-            wait = typeof('wait') === 'number'? wait : firebaseBatchDelay;
-            if( !maxWait ) { maxWait = wait*10 || 100; }
-            var queue = [];
-            var start;
-            var cancelTimer;
-            var runScheduledForNextTick;
-
-            // returns `fn` wrapped in a function that queues up each call event to be
-            // invoked later inside fo runNow()
-            function createBatchFn(fn, context) {
-               if( typeof(fn) !== 'function' ) {
-                 throw new Error('Must provide a function to be batched. Got '+fn);
-               }
-               return function() {
-                 var args = Array.prototype.slice.call(arguments, 0);
-                 queue.push([fn, context, args]);
-                 resetTimer();
-               };
-            }
-
-            // clears the current wait timer and creates a new one
-            // however, if maxWait is exceeded, calls runNow() on the next tick.
-            function resetTimer() {
-              if( cancelTimer ) {
-                cancelTimer();
-                cancelTimer = null;
-              }
-              if( start && Date.now() - start > maxWait ) {
-                if(!runScheduledForNextTick){
-                  runScheduledForNextTick = true;
-                  utils.compile(runNow);
-                }
-              }
-              else {
-                if( !start ) { start = Date.now(); }
-                cancelTimer = utils.wait(runNow, wait);
-              }
-            }
-
-            // Clears the queue and invokes all of the functions awaiting notification
-            function runNow() {
-              cancelTimer = null;
-              start = null;
-              runScheduledForNextTick = false;
-              var copyList = queue.slice(0);
-              queue = [];
-              angular.forEach(copyList, function(parts) {
-                parts[0].apply(parts[1], parts[2]);
+          batch: function(action, context) {
+            return function() {
+              var args = Array.prototype.slice.call(arguments, 0);
+              $rootScope.$evalAsync(function() {
+                action.apply(context, args);
               });
-            }
-
-            return createBatchFn;
+            };
           },
 
           /**
@@ -492,7 +425,6 @@
            */
           VERSION: '0.0.0',
 
-          batchDelay: firebaseBatchDelay,
           allPromises: $q.all.bind($q)
         };
 

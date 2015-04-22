@@ -624,14 +624,13 @@
         }
 
         var def     = $firebaseUtils.defer();
-        var batch   = $firebaseUtils.batch();
-        var created = batch(function(snap, prevChild) {
+        var created = $firebaseUtils.batch(function(snap, prevChild) {
           var rec = firebaseArray.$$added(snap, prevChild);
           if( rec ) {
             firebaseArray.$$process('child_added', rec, prevChild);
           }
         });
-        var updated = batch(function(snap) {
+        var updated = $firebaseUtils.batch(function(snap) {
           var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
           if( rec ) {
             var changed = firebaseArray.$$updated(snap);
@@ -640,7 +639,7 @@
             }
           }
         });
-        var moved   = batch(function(snap, prevChild) {
+        var moved   = $firebaseUtils.batch(function(snap, prevChild) {
           var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
           if( rec ) {
             var confirmed = firebaseArray.$$moved(snap, prevChild);
@@ -649,7 +648,7 @@
             }
           }
         });
-        var removed = batch(function(snap) {
+        var removed = $firebaseUtils.batch(function(snap) {
           var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
           if( rec ) {
             var confirmed = firebaseArray.$$removed(snap);
@@ -660,11 +659,11 @@
         });
 
         var isResolved = false;
-        var error   = batch(function(err) {
+        var error   = $firebaseUtils.batch(function(err) {
           _initComplete(err);
           firebaseArray.$$error(err);
         });
-        var initComplete = batch(_initComplete);
+        var initComplete = $firebaseUtils.batch(_initComplete);
 
         var sync = {
           destroy: destroy,

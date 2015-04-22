@@ -46,8 +46,7 @@ describe('$firebaseUtils', function () {
 
     it('should trigger function with arguments', function() {
       var spy = jasmine.createSpy();
-      var batch = $utils.batch();
-      var b = batch(spy);
+      var b = $utils.batch(spy);
       b('foo', 'bar');
       $timeout.flush();
       expect(spy).toHaveBeenCalledWith('foo', 'bar');
@@ -55,8 +54,7 @@ describe('$firebaseUtils', function () {
 
     it('should queue up requests until timeout', function() {
       var spy = jasmine.createSpy();
-      var batch = $utils.batch();
-      var b = batch(spy);
+      var b = $utils.batch(spy);
       for(var i=0; i < 4; i++) {
         b(i);
       }
@@ -70,8 +68,7 @@ describe('$firebaseUtils', function () {
       var spy = jasmine.createSpy().and.callFake(function() {
         b = this;
       });
-      var batch = $utils.batch();
-      batch(spy, a)();
+      $utils.batch(spy, a)();
       $timeout.flush();
       expect(spy).toHaveBeenCalled();
       expect(b).toBe(a);
