@@ -22,10 +22,10 @@ In order to use AngularFire in your project, you need to include the following f
 
 ```html
 <!-- AngularJS -->
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
 
 <!-- Firebase -->
-<script src="https://cdn.firebase.com/js/client/2.2.2/firebase.js"></script>
+<script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
 
 <!-- AngularFire -->
 <script src="https://cdn.firebase.com/libs/angularfire/1.0.0/angularfire.min.js"></script>
@@ -50,12 +50,6 @@ $ bower install angularfire --save
 
 Once you've included AngularFire and its dependencies into your project, you will have access to
 the `$firebase` service.
-
-You can also start hacking on AngularFire in a matter of seconds on
-[Nitrous.IO](https://www.nitrous.io/?utm_source=github.com&utm_campaign=angularfire&utm_medium=hackonnitrous):
-
-[![Hack firebase/angularfire on
-Nitrous.IO](https://d3o0mnbgv6k92a.cloudfront.net/assets/hack-l-v1-3cc067e71372f6045e1949af9d96095b.png)](https://www.nitrous.io/hack_button?source=embed&runtime=nodejs&repo=firebase%2Fangularfire&file_to_open=README.md)
 
 
 ## Getting Started with Firebase
