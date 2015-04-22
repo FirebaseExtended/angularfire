@@ -242,7 +242,8 @@
         /**
          * Listeners passed into this method are notified whenever a new change (add, updated,
          * move, remove) is received from the server. Each invocation is sent an object
-         * containing <code>{ type: 'added|updated|moved|removed', key: 'key_of_item_affected'}</code>
+         * containing <code>{ type: 'child_added|child_updated|child_moved|child_removed',
+         * key: 'key_of_item_affected'}</code>
          *
          * Additionally, added and moved events receive a prevChild parameter, containing the
          * key of the item before this one in the array.
