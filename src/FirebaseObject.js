@@ -151,7 +151,7 @@
         /**
          * Listeners passed into this method are notified whenever a new change is received
          * from the server. Each invocation is sent an object containing
-         * <code>{ type: 'updated', key: 'my_firebase_id' }</code>
+         * <code>{ type: 'value', key: 'my_firebase_id' }</code>
          *
          * This method returns an unbind function that can be used to detach the listener.
          *
