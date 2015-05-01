@@ -4,7 +4,7 @@
 
   // Define a service which provides user authentication and management.
   angular.module('firebase').factory('$firebaseAuth', [
-    '$q', '$firebaseUtils', '$log', function($q, $firebaseUtils, $log) {
+    '$q', '$firebaseUtils', function($q, $firebaseUtils) {
       /**
        * This factory returns an object allowing you to manage the client's authentication state.
        *
@@ -13,21 +13,20 @@
        * authentication state, and managing users.
        */
       return function(ref) {
-        var auth = new FirebaseAuth($q, $firebaseUtils, $log, ref);
+        var auth = new FirebaseAuth($q, $firebaseUtils, ref);
         return auth.construct();
       };
     }
   ]);
 
-  FirebaseAuth = function($q, $firebaseUtils, $log, ref) {
+  FirebaseAuth = function($q, $firebaseUtils, ref) {
     this._q = $q;
     this._utils = $firebaseUtils;
-    this._log = $log;
-
     if (typeof ref === 'string') {
       throw new Error('Please provide a Firebase reference instead of a URL when creating a `$firebaseAuth` object.');
     }
     this._ref = ref;
+    this._initialAuthResolver = this._initAuthResolver();
   };
 
   FirebaseAuth.prototype = {
@@ -246,27 +245,41 @@
      * rejected if the client is unauthenticated and rejectIfAuthDataIsNull is true.
      */
     _routerMethodOnAuthPromise: function(rejectIfAuthDataIsNull) {
-      var ref = this._ref;
+      var ref = this._ref, utils = this._utils;
+      // wait for the initial auth state to resolve; on page load we have to request auth state
+      // asynchronously so we don't want to resolve router methods or flash the wrong state
+      return this._initialAuthResolver.then(function() {
+        // auth state may change in the future so rather than depend on the initially resolved state
+        // we also check the auth data (synchronously) if a new promise is requested, ensuring we resolve
+        // to the current auth state and not a stale/initial state (see https://github.com/firebase/angularfire/issues/590)
+        var authData = ref.getAuth(), res = null;
+        if (authData !== null) {
+          res = utils.resolve(authData);
+        }
+        else if (rejectIfAuthDataIsNull) {
+          res = utils.reject("AUTH_REQUIRED");
+        }
+        else {
+          res = utils.resolve(null);
+        }
+        return res;
+      });
+    },
 
-      return this._utils.promise(function(resolve,reject){
-        function callback(authData) {
+    /**
+     * Helper that returns a promise which resolves when the initial auth state has been
+     * fetch from the Firebase server. This never rejects and resolves to undefined.
+     *
+     * @return {Promise<Object>} A promise fulfilled when the server returns initial auth state.
+     */
+    _initAuthResolver: function() {
+      var ref = this._ref;
+      return this._utils.promise(function(resolve) {
+        function callback() {
           // Turn off this onAuth() callback since we just needed to get the authentication data once.
           ref.offAuth(callback);
-
-          if (authData !== null) {
-            resolve(authData);
-            return;
-          }
-          else if (rejectIfAuthDataIsNull) {
-            reject("AUTH_REQUIRED");
-            return;
-          }
-          else {
-            resolve(null);
-            return;
-          }
+          resolve();
         }
-
         ref.onAuth(callback);
       });
     },
