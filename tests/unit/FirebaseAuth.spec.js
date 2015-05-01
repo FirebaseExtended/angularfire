@@ -289,15 +289,17 @@ describe('FirebaseAuth',function(){
 
   describe('$requireAuth()',function(){
     it('will be resolved if user is logged in', function(){
+      ref.getAuth.and.returnValue({provider:'facebook'});
       wrapPromise(auth.$requireAuth());
-      callback('onAuth')({provider:'facebook'});
+      callback('onAuth')();
       $timeout.flush();
       expect(result).toEqual({provider:'facebook'});
     });
 
     it('will be rejected if user is not logged in', function(){
+      ref.getAuth.and.returnValue(null);
       wrapPromise(auth.$requireAuth());
-      callback('onAuth')(null);
+      callback('onAuth')();
       $timeout.flush();
       expect(failure).toBe('AUTH_REQUIRED');
     });
@@ -305,15 +307,30 @@ describe('FirebaseAuth',function(){
 
   describe('$waitForAuth()',function(){
     it('will be resolved with authData if user is logged in', function(){
+      ref.getAuth.and.returnValue({provider:'facebook'});
       wrapPromise(auth.$waitForAuth());
-      callback('onAuth')({provider:'facebook'});
+      callback('onAuth')();
       $timeout.flush();
       expect(result).toEqual({provider:'facebook'});
     });
 
     it('will be resolved with null if user is not logged in', function(){
+      ref.getAuth.and.returnValue(null);
       wrapPromise(auth.$waitForAuth());
-      callback('onAuth')(null);
+      callback('onAuth')();
+      $timeout.flush();
+      expect(result).toBe(null);
+    });
+
+    it('promise resolves with current value if auth state changes after onAuth() completes', function() {
+      ref.getAuth.and.returnValue({provider:'facebook'});
+      wrapPromise(auth.$waitForAuth());
+      callback('onAuth')();
+      $timeout.flush();
+      expect(result).toEqual({provider:'facebook'});
+
+      ref.getAuth.and.returnValue(null);
+      wrapPromise(auth.$waitForAuth());
       $timeout.flush();
       expect(result).toBe(null);
     });
