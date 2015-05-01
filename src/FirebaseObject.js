@@ -446,7 +446,12 @@
             firebaseObject.$$notify();
           }
         });
-        var error = $firebaseUtils.batch(firebaseObject.$$error, firebaseObject);
+        var error = $firebaseUtils.batch(function(err) {
+          _initComplete(err);
+          if( firebaseObject ) {
+            firebaseObject.$$error(err);
+          }
+        });
         var initComplete = $firebaseUtils.batch(_initComplete);
 
         var sync = {
