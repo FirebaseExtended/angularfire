@@ -36,6 +36,7 @@
     "firebase": "2.2.x"
   },
   "devDependencies": {
+    "angular-new-router": "^0.5.3",
     "coveralls": "^2.11.2",
     "grunt": "~0.4.5",
     "grunt-cli": "^0.1.13",

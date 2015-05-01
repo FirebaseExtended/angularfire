@@ -86,6 +86,14 @@ module.exports = function(grunt) {
           interrupt : true,
           atBegin: true
         }
+      },
+      example : {
+        files : ['src/**/*.js', 'tests/unit/**/*.spec.js', 'tests/lib/**/*.js', 'tests/mocks/**/*.js', 'router/**/*'],
+        tasks : ['concat'],
+        options : {
+          interrupt : true,
+          atBegin: true
+        }
       }
     },
 
@@ -154,6 +162,8 @@ module.exports = function(grunt) {
   // Sauce tasks
   grunt.registerTask('sauce:unit', ['karma:saucelabs']);
   grunt.registerTask('sauce:e2e', ['concat', 'connect:testserver', 'protractor:saucelabs']);
+
+  grunt.registerTask('example', ['concat', 'connect:testserver', 'watch:example']);
 
   // Watch tests
   grunt.registerTask('test:watch', ['karma:watch']);
