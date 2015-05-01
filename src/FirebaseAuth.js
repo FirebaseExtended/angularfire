@@ -355,11 +355,13 @@
      * @return {Promise<>} An empty promise fulfilled once the email change is complete.
      */
     changeEmail: function(credentials) {
+      var deferred = this._q.defer();
+
       if (typeof this._ref.changeEmail !== 'function') {
+        throw new Error("$firebaseAuth.$changeEmail() requires Firebase version 2.1.0 or greater.");
+      } else if (typeof credentials === 'string') {
         throw new Error("$changeEmail() expects an object containing 'oldEmail', 'newEmail', and 'password', but got a string.");
       }
-
-      var deferred = this._q.defer();
 
       try {
         this._ref.changeEmail(credentials, this._utils.makeNodeResolver(deferred));
