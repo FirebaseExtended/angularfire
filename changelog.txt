@@ -1,0 +1,3 @@
+feature - Improved performance by replacing custom internal batching logic with Angular's `$evalAsync()`.
+changed - The `new` keyword is now optional for services which use `$extend()` to add functionality to `$firebaseArray` and `$firebaseObject`.
+fixed - Resolved inconsistent argument validation in `$firebaseAuth.changeEmail()` (thanks to @whitneyit).
