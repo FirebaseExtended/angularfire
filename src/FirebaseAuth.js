@@ -251,16 +251,13 @@
       return this._initialAuthResolver.then(function() {
         // auth state may change in the future so rather than depend on the initially resolved state
         // we also check the auth data (synchronously) if a new promise is requested, ensuring we resolve
-        // to the current auth state and not a stale/initial state (see https://github.com/firebase/angularfire/issues/590)
+        // to the current auth state and not a stale/initial state
         var authData = ref.getAuth(), res = null;
-        if (authData !== null) {
-          res = utils.resolve(authData);
-        }
-        else if (rejectIfAuthDataIsNull) {
+        if (rejectIfAuthDataIsNull && authData === null) {
           res = utils.reject("AUTH_REQUIRED");
         }
         else {
-          res = utils.resolve(null);
+          res = utils.resolve(authData);
         }
         return res;
       });
@@ -268,7 +265,7 @@
 
     /**
      * Helper that returns a promise which resolves when the initial auth state has been
-     * fetch from the Firebase server. This never rejects and resolves to undefined.
+     * fetched from the Firebase server. This never rejects and resolves to undefined.
      *
      * @return {Promise<Object>} A promise fulfilled when the server returns initial auth state.
      */
