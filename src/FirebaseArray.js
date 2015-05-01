@@ -667,7 +667,9 @@
         var isResolved = false;
         var error   = $firebaseUtils.batch(function(err) {
           _initComplete(err);
-          firebaseArray.$$error(err);
+          if( firebaseArray ) {
+            firebaseArray.$$error(err);
+          }
         });
         var initComplete = $firebaseUtils.batch(_initComplete);
 
