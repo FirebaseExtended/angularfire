@@ -277,7 +277,6 @@
             this._isDestroyed = true;
             this._sync.destroy(err);
             this.$list.length = 0;
-            $log.debug('destroy called for FirebaseArray: '+this.$ref().ref().toString());
           }
         },
 
