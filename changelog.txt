@@ -1,6 +1,0 @@
-feature - Improved performance (and fixed some timing bugs) by replacing custom internal batching logic with Angular's `$evalAsync()`.
-changed - The `new` keyword is now optional for services which use `$extend()` to add functionality to `$firebaseArray` and `$firebaseObject`.
-removed - Removed unnecessary debug logging in `$firebaseArray.$destroy()`.
-fixed - `$waitForAuth()` and `$requireAuth()` now properly detect authentication state changes.
-fixed - Fixed cases where `$$error()` was being called on `null` objects.
-fixed - Resolved inconsistent argument validation in `$changeEmail()` (thanks to @whitneyit).
