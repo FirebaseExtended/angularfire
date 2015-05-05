@@ -630,43 +630,39 @@
         }
 
         var def     = $firebaseUtils.defer();
-        var created = $firebaseUtils.batch(function(snap, prevChild) {
+        var created = function(snap, prevChild) {
           var rec = firebaseArray.$$added(snap, prevChild);
+          $firebaseUtils.whenUnwrapped(rec, function(rec) {
+            firebaseArray.$$process('child_added', rec, prevChild);
+          });
+        };
+        var updated = function(snap) {
+          var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
           if( rec ) {
-            $firebaseUtils.resolve(rec).then(function(rec) {
-              if( rec ) {
-                firebaseArray.$$process('child_added', rec, prevChild);
-              }
+            var res = firebaseArray.$$updated(snap);
+            $firebaseUtils.whenUnwrapped(res, function() {
+              firebaseArray.$$process('child_changed', rec);
             });
           }
-        });
-        var updated = $firebaseUtils.batch(function(snap) {
+        };
+        var moved   = function(snap, prevChild) {
           var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
           if( rec ) {
-            var changed = firebaseArray.$$updated(snap);
-            if( changed ) {
-              firebaseArray.$$process('child_changed', rec);
-            }
-          }
-        });
-        var moved   = $firebaseUtils.batch(function(snap, prevChild) {
-          var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
-          if( rec ) {
-            var confirmed = firebaseArray.$$moved(snap, prevChild);
-            if( confirmed ) {
+            var res = firebaseArray.$$moved(snap, prevChild);
+            $firebaseUtils.whenUnwrapped(res, function() {
               firebaseArray.$$process('child_moved', rec, prevChild);
-            }
+            });
           }
-        });
-        var removed = $firebaseUtils.batch(function(snap) {
+        };
+        var removed = function(snap) {
           var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
           if( rec ) {
-            var confirmed = firebaseArray.$$removed(snap);
-            if( confirmed ) {
+            var res = firebaseArray.$$removed(snap);
+            $firebaseUtils.whenUnwrapped(res, function() {
               firebaseArray.$$process('child_removed', rec);
-            }
+            });
           }
-        });
+        };
 
         var isResolved = false;
         var error   = $firebaseUtils.batch(function(err) {
