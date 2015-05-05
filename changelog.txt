@@ -1,0 +1,1 @@
+fixed - Fixed bug where `$firebaseArray.$loaded()` was triggered before the data was actually available.
