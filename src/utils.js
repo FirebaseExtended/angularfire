@@ -61,7 +61,7 @@
           batch: function(action, context) {
             return function() {
               var args = Array.prototype.slice.call(arguments, 0);
-              $rootScope.$evalAsync(function() {
+              utils.compile(function() {
                 action.apply(context, args);
               });
             };
@@ -182,6 +182,16 @@
 
           resolve: $q.when,
 
+          whenUnwrapped: function(possiblePromise, callback) {
+            if( possiblePromise ) {
+              utils.resolve(possiblePromise).then(function(res) {
+                if( res ) {
+                  callback(res);
+                }
+              });
+            }
+          },
+
           //TODO: Remove false branch and use only angular implementation when we drop angular 1.2.x support.
           promise: angular.isFunction($q) ? $q : Q,
 
@@ -210,7 +220,7 @@
           },
 
           compile: function(fn) {
-            return $timeout(fn||function() {});
+            return $rootScope.$evalAsync(fn||function() {});
           },
 
           deepCopy: function(obj) {

@@ -417,6 +417,14 @@ describe('$firebaseArray', function () {
       expect(spy).toHaveBeenCalledWith(arr);
     });
 
+    it('should have all data loaded when it resolves', function() {
+      var spy = jasmine.createSpy('resolve');
+      arr.$loaded().then(spy);
+      flushAll();
+      var list = spy.calls.argsFor(0)[0];
+      expect(list.length).toBe(5);
+    });
+
     it('should reject when error fetching records', function() {
       var whiteSpy = jasmine.createSpy('resolve');
       var blackSpy = jasmine.createSpy('reject');
