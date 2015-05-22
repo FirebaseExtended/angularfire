@@ -6,8 +6,8 @@
 [![Version](https://badge.fury.io/gh/firebase%2Fangularfire.svg)](http://badge.fury.io/gh/firebase%2Fangularfire)
 
 AngularFire is the officially supported [AngularJS](http://angularjs.org/) binding for
-[Firebase](http://www.firebase.com/?utm_medium=web&utm_source=angularfire). Firebase is a full
-backend so you don't need servers to build your Angular app.
+[Firebase](http://www.firebase.com/?utm_medium=web&utm_source=angularfire). Firebase is a
+backend service that provides data storage, authentication, and static website hosting for your Angular app.
 
 AngularFire is a complement to the core Firebase client. It provides you with three Angular
 services:
@@ -25,7 +25,7 @@ In order to use AngularFire in your project, you need to include the following f
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
 
 <!-- Firebase -->
-<script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
+<script src="https://cdn.firebase.com/js/client/2.2.5/firebase.js"></script>
 
 <!-- AngularFire -->
 <script src="https://cdn.firebase.com/libs/angularfire/1.1.1/angularfire.min.js"></script>
@@ -35,7 +35,7 @@ Use the URL above to download both the minified and non-minified versions of Ang
 Firebase CDN. You can also download them from the
 [releases page of this GitHub repository](https://github.com/firebase/angularfire/releases).
 [Firebase](https://www.firebase.com/docs/web/quickstart.html?utm_medium=web&utm_source=angularfire) and
-[Angular](https://angularjs.org/) can be downloaded directly from their respective websites.
+[Angular](https://angularjs.org/) libraries can be downloaded directly from their respective websites.
 
 You can also install AngularFire via npm and Bower and its dependencies will be downloaded
 automatically:
@@ -54,7 +54,7 @@ the `$firebase` service.
 
 ## Getting Started with Firebase
 
-AngularFire requires Firebase in order to sync data. You can [sign up here for a free
+AngularFire uses Firebase for data storage and authentication. You can [sign up here for a free
 account](https://www.firebase.com/signup/?utm_medium=web&utm_source=angularfire).
 
 
