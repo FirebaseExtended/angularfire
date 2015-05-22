@@ -54,7 +54,7 @@ the `$firebase` service.
 
 ## Getting Started with Firebase
 
-AngularFire uses the Firebase database to store and sync data. You can [sign up here for a free
+AngularFire uses Firebase for data storage and authentication. You can [sign up here for a free
 account](https://www.firebase.com/signup/?utm_medium=web&utm_source=angularfire).
 
 
