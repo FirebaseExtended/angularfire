@@ -1,7 +1,6 @@
 {
   "name": "angularfire",
   "description": "The officially supported AngularJS binding for Firebase",
-  "version": "0.0.0",
   "authors": [
     "Firebase <support@firebase.com> (https://www.firebase.com/)"
   ],
