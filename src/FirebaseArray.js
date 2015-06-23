@@ -632,7 +632,7 @@
         var def     = $firebaseUtils.defer();
         var created = function(snap, prevChild) {
           waitForResolution(firebaseArray.$$added(snap, prevChild), function(rec) {
-            firebaseArray.$$process('child_added', rec, prevChild)
+            firebaseArray.$$process('child_added', rec, prevChild);
           });
         };
         var updated = function(snap) {
@@ -663,7 +663,9 @@
         function waitForResolution(maybePromise, callback) {
           var promise = $q.when(maybePromise);
           promise.then(function(result){
-            if (result) callback(result);
+            if (result) {
+              callback(result);
+            }
           });
           if (!isResolved) {
             resolutionPromises.push(promise);
