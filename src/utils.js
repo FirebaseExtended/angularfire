@@ -182,16 +182,6 @@
 
           resolve: $q.when,
 
-          whenUnwrapped: function(possiblePromise, callback) {
-            if( possiblePromise ) {
-              utils.resolve(possiblePromise).then(function(res) {
-                if( res ) {
-                  callback(res);
-                }
-              });
-            }
-          },
-
           //TODO: Remove false branch and use only angular implementation when we drop angular 1.2.x support.
           promise: angular.isFunction($q) ? $q : Q,
 
