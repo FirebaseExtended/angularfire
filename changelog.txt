@@ -1,0 +1,1 @@
+fixed - Fixed issued with `$firebaseArray.$loaded()` which caused it to resolve before updates from the server were populated to the array (thanks to @jamestalmage).
