@@ -318,7 +318,7 @@
               this.key + '; one binding per instance ' +
               '(call unbind method or create another FirebaseObject instance)';
             $log.error(msg);
-            return $firebaseUtils.reject(msg);
+            return $q.reject(msg);
           }
         },
 

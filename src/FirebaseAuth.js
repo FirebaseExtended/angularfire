@@ -245,7 +245,7 @@
      * rejected if the client is unauthenticated and rejectIfAuthDataIsNull is true.
      */
     _routerMethodOnAuthPromise: function(rejectIfAuthDataIsNull) {
-      var ref = this._ref, utils = this._utils;
+      var ref = this._ref, utils = this._utils, q = this._q;
       // wait for the initial auth state to resolve; on page load we have to request auth state
       // asynchronously so we don't want to resolve router methods or flash the wrong state
       return this._initialAuthResolver.then(function() {
@@ -254,7 +254,7 @@
         // to the current auth state and not a stale/initial state
         var authData = ref.getAuth(), res = null;
         if (rejectIfAuthDataIsNull && authData === null) {
-          res = utils.reject("AUTH_REQUIRED");
+          res = q.reject("AUTH_REQUIRED");
         }
         else {
           res = utils.resolve(authData);
