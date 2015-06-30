@@ -152,6 +152,26 @@ describe('$firebaseUtils', function () {
     });
   });
 
+  describe('#applyDefaults', function() {
+    it('should return rec', function() {
+      var rec = {foo: 'bar'};
+      expect($utils.applyDefaults(rec), {bar: 'baz'}).toBe(rec);
+    });
+
+    it('should do nothing if no defaults exist', function() {
+      var rec = {foo: 'bar'};
+      $utils.applyDefaults(rec, null);
+      expect(rec).toEqual({foo: 'bar'});
+    });
+
+    it('should add $$defaults if they exist', function() {
+      var rec = {foo: 'foo',  bar: 'bar', $id: 'foo', $priority: null};
+      var defaults = { baz: 'baz', bar: 'not_applied' };
+      $utils.applyDefaults(rec, defaults);
+      expect(rec).toEqual({foo: 'foo',  bar: 'bar', $id: 'foo', $priority: null, baz: 'baz'});
+    });
+  });
+
   describe('#toJSON', function() {
     it('should use toJSON if it exists', function() {
       var json = {json: true};
