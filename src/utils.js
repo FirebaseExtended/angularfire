@@ -176,7 +176,7 @@
             });
           },
 
-          defer: $q.defer,
+          //defer: $q.defer,
 
           reject: $q.reject,
 
@@ -365,7 +365,7 @@
           },
 
           doSet: function(ref, data) {
-            var def = utils.defer();
+            var def = $q.defer();
             if( angular.isFunction(ref.set) || !angular.isObject(data) ) {
               // this is not a query, just do a flat set
               ref.set(data, utils.makeNodeResolver(def));
@@ -390,7 +390,7 @@
           },
 
           doRemove: function(ref) {
-            var def = utils.defer();
+            var def = $q.defer();
             if( angular.isFunction(ref.remove) ) {
               // ref is not a query, just do a flat remove
               ref.remove(utils.makeNodeResolver(def));
@@ -401,7 +401,7 @@
               ref.once('value', function(snap) {
                 var promises = [];
                 snap.forEach(function(ss) {
-                  var d = utils.defer();
+                  var d = $q.defer();
                   promises.push(d.promise);
                   ss.ref().remove(utils.makeNodeResolver(def));
                 });
