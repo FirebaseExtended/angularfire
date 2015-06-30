@@ -570,7 +570,7 @@ describe('$firebaseArray', function () {
 
     it('should apply $$defaults if they exist', function() {
       var arr = stubArray(null, $firebaseArray.$extend({
-        $$defaults: {aString: 'alpha', foo: 'foo'}
+        $$defaults: {aString: 'not_applied', foo: 'foo'}
       }));
       var res = arr.$$added(testutils.snap(STUB_DATA.a));
       expect(res.aString).toBe(STUB_DATA.a.aString);
@@ -624,7 +624,7 @@ describe('$firebaseArray', function () {
 
     it('should apply $$defaults if they exist', function() {
       var arr = stubArray(STUB_DATA, $firebaseArray.$extend({
-        $$defaults: {aString: 'alpha', foo: 'foo'}
+        $$defaults: {aString: 'not_applied', foo: 'foo'}
       }));
       var rec = arr.$getRecord('a');
       expect(rec.aString).toBe(STUB_DATA.a.aString);
