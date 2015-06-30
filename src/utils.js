@@ -202,7 +202,7 @@
               }
             };
           },
-          
+
           deepCopy: function(obj) {
             if( !angular.isObject(obj) ) { return obj; }
             var newCopy = angular.isArray(obj) ? obj.slice() : angular.extend({}, obj);
@@ -261,17 +261,6 @@
             return !angular.equals(oldData, rec) ||
               oldData.$value !== rec.$value ||
               oldData.$priority !== rec.$priority;
-          },
-
-          applyDefaults: function(rec, defaults) {
-            if( angular.isObject(defaults) ) {
-              angular.forEach(defaults, function(v,k) {
-                if( !rec.hasOwnProperty(k) ) {
-                  rec[k] = v;
-                }
-              });
-            }
-            return rec;
           },
 
           dataKeys: function(obj) {

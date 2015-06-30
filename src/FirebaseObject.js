@@ -59,7 +59,7 @@
         this.$id = $firebaseUtils.getKey(ref.ref());
         this.$priority = null;
 
-        $firebaseUtils.applyDefaults(this, this.$$defaults);
+        angular.extend(this, this.$$defaults);
 
         // start synchronizing data with Firebase
         this.$$conf.sync.init();
@@ -203,7 +203,7 @@
           // applies new data to this object
           var changed = $firebaseUtils.updateRec(this, snap);
           // applies any defaults set using $$defaults
-          $firebaseUtils.applyDefaults(this, this.$$defaults);
+          angular.extend(this, this.$$defaults);
           // returning true here causes $$notify to be triggered
           return changed;
         },

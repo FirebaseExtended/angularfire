@@ -654,7 +654,7 @@ describe('$firebaseObject', function() {
 
     it('should apply $$defaults if they exist', function() {
       var F = $firebaseObject.$extend({
-        $$defaults: {baz: 'baz', aString: 'bravo'}
+        $$defaults: {baz: 'baz', aString: 'alpha'}
       });
       var obj = new F(stubRef());
       obj.$$updated(fakeSnap(FIXTURE_DATA));
