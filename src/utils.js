@@ -263,14 +263,6 @@
               oldData.$priority !== rec.$priority;
           },
 
-          dataKeys: function(obj) {
-            var out = [];
-            utils.each(obj, function(v,k) {
-              out.push(k);
-            });
-            return out;
-          },
-
           each: function(obj, iterator, context) {
             if(angular.isObject(obj)) {
               for (var k in obj) {

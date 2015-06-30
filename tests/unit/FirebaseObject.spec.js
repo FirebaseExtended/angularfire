@@ -480,13 +480,6 @@ describe('$firebaseObject', function() {
       expect(obj.$remove()).toBeAPromise();
     });
 
-    it('should set $value to null and remove any local keys', function() {
-      expect($utils.dataKeys(obj).sort()).toEqual($utils.dataKeys(FIXTURE_DATA).sort());
-      obj.$remove();
-      flushAll();
-      expect($utils.dataKeys(obj)).toEqual([]);
-    });
-
     it('should call remove on the Firebase ref', function() {
       var spy = spyOn(obj.$ref(), 'remove');
       expect(spy).not.toHaveBeenCalled();
