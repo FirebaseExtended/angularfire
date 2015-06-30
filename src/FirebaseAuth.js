@@ -257,7 +257,7 @@
           res = q.reject("AUTH_REQUIRED");
         }
         else {
-          res = utils.resolve(authData);
+          res = q.when(authData);
         }
         return res;
       });
