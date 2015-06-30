@@ -61,7 +61,7 @@
           batch: function(action, context) {
             return function() {
               var args = Array.prototype.slice.call(arguments, 0);
-              utils.compile(function() {
+              $rootScope.$evalAsync(function() {
                 action.apply(context, args);
               });
             };
@@ -100,7 +100,7 @@
               if( start && Date.now() - start > maxWait ) {
                 if(!runScheduledForNextTick){
                   runScheduledForNextTick = true;
-                  utils.compile(runNow);
+                  $rootScope.$evalAsync(runNow);
                 }
               }
               else {
@@ -202,11 +202,7 @@
               }
             };
           },
-
-          compile: function(fn) {
-            return $rootScope.$evalAsync(fn||function() {});
-          },
-
+          
           deepCopy: function(obj) {
             if( !angular.isObject(obj) ) { return obj; }
             var newCopy = angular.isArray(obj) ? obj.slice() : angular.extend({}, obj);
