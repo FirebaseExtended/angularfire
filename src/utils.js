@@ -263,6 +263,17 @@
               oldData.$priority !== rec.$priority;
           },
 
+          applyDefaults: function(rec, defaults) {
+            if( angular.isObject(defaults) ) {
+              angular.forEach(defaults, function(v,k) {
+                if( !rec.hasOwnProperty(k) ) {
+                  rec[k] = v;
+                }
+              });
+            }
+            return rec;
+          },
+
           each: function(obj, iterator, context) {
             if(angular.isObject(obj)) {
               for (var k in obj) {

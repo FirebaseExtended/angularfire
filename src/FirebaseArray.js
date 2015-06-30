@@ -314,7 +314,7 @@
             }
             rec.$id = $firebaseUtils.getKey(snap);
             rec.$priority = snap.getPriority();
-            angular.extend(rec, this.$$defaults);
+            $firebaseUtils.applyDefaults(rec, this.$$defaults);
 
             return rec;
           }
@@ -354,7 +354,7 @@
           if( angular.isObject(rec) ) {
             // apply changes to the record
             changed = $firebaseUtils.updateRec(rec, snap);
-            angular.extend(rec, this.$$defaults);
+            $firebaseUtils.applyDefaults(rec, this.$$defaults);
           }
           return changed;
         },
