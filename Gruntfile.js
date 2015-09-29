@@ -139,7 +139,7 @@ module.exports = function(grunt) {
 
   // Installation
   grunt.registerTask('install', ['shell:protractor_install']);
-  grunt.registerTask('update', ['shell:npm_install', 'shell:bower_install']);
+  grunt.registerTask('update', ['shell:npm_install']);
 
   // Single run tests
   grunt.registerTask('test', ['test:unit', 'test:e2e']);

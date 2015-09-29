@@ -10,9 +10,9 @@ module.exports = function(config) {
     singleRun: false,
 
     files: [
-      '../bower_components/angular/angular.js',
-      '../bower_components/angular-mocks/angular-mocks.js',
-      '../bower_components/firebase/firebase.js',
+      '../node_modules/angular/angular.js',
+      '../node_modules/angular-mocks/angular-mocks.js',
+      '../node_modules/firebase/lib/firebase-web.js',
       '../src/module.js',
       '../src/**/*.js',
       'manual/**/*.spec.js'
