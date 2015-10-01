@@ -11,12 +11,7 @@
   "bugs": {
     "url": "https://github.com/firebase/angularfire/issues"
   },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "http://firebase.mit-license.org/"
-    }
-  ],
+  "license": "MIT",
   "keywords": [
     "angular",
     "angularjs",
