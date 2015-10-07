@@ -19,11 +19,22 @@
   ],
   "main": "dist/angularfire.js",
   "ignore": [
-    "**/*",
-    "!dist/angularfire.js"
+    "**/.*",
+    "src",
+    "tests",
+    "node_modules",
+    "bower_components",
+    "firebase.json",
+    "package.json",
+    "Gruntfile.js",
+    "changelog.txt"
   ],
   "dependencies": {
     "angular": "1.3.x || 1.4.x",
     "firebase": "2.x.x"
+  },
+  "devDependencies": {
+    "angular-mocks": "~1.4.6",
+    "mockfirebase": "~0.10.1"
   }
 }

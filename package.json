@@ -31,7 +31,6 @@
     "firebase": "2.x.x"
   },
   "devDependencies": {
-    "angular-mocks": "~1.4.6",
     "coveralls": "^2.11.2",
     "grunt": "~0.4.5",
     "grunt-cli": "^0.1.13",
@@ -57,7 +56,6 @@
     "karma-sauce-launcher": "~0.2.10",
     "karma-spec-reporter": "0.0.16",
     "load-grunt-tasks": "^3.1.0",
-    "mockfirebase": "jamestalmage/mockfirebase#deploy-npmignore-fix",
     "protractor": "^1.6.1"
   }
 }
