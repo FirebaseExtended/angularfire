@@ -81,9 +81,7 @@ environment set up:
 $ git clone https://github.com/firebase/angularfire.git
 $ cd angularfire            # go to the angularfire directory
 $ npm install -g grunt-cli  # globally install grunt task runner
-$ npm install -g bower      # globally install Bower package manager
 $ npm install               # install local npm build / test dependencies
-$ bower install             # install local JavaScript dependencies
 $ grunt install             # install Selenium server for end-to-end tests
 $ grunt watch               # watch for source file changes
 ```
