@@ -21,9 +21,8 @@
   "ignore": [
     "**/*",
     "!dist/*.js",
-    "!*.md",
-    "!*.txt",
-    "!index.js"
+    "!README.md",
+    "!LICENSE"
   ],
   "dependencies": {
     "angular": "1.3.x || 1.4.x",
