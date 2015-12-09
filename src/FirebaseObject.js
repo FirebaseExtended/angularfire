@@ -349,6 +349,7 @@
                     delete rec.$value;
                     delete parsed(scope).$value;
                   }
+                  setScope(rec);
                 }
               );
             }, 50, 500);
