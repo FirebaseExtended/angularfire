@@ -109,7 +109,7 @@
          */
         $add: function(data) {
           this._assertNotDestroyed('$add');
-          var def = $firebaseUtils.defer();
+          var def = $q.defer();
           var ref = this.$ref().ref().push();
           ref.set($firebaseUtils.toJSON(data), $firebaseUtils.makeNodeResolver(def));
           return def.promise.then(function() {
@@ -145,7 +145,7 @@
             });
           }
           else {
-            return $firebaseUtils.reject('Invalid record; could determine key for '+indexOrItem);
+            return $q.reject('Invalid record; could determine key for '+indexOrItem);
           }
         },
 
@@ -173,7 +173,7 @@
             });
           }
           else {
-            return $firebaseUtils.reject('Invalid record; could not determine key for '+indexOrItem);
+            return $q.reject('Invalid record; could not determine key for '+indexOrItem);
           }
         },
 
@@ -629,7 +629,7 @@
           }
         }
 
-        var def     = $firebaseUtils.defer();
+        var def     = $q.defer();
         var created = function(snap, prevChild) {
           waitForResolution(firebaseArray.$$added(snap, prevChild), function(rec) {
             firebaseArray.$$process('child_added', rec, prevChild);
