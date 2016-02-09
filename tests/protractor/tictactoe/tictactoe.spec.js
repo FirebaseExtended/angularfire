@@ -65,19 +65,22 @@ describe('TicTacToe App', function () {
     $('#resetRef').click();
 
     // Wait for the board to reset
-    sleep();
+    browser.sleep().then(function() {
+      // Make sure the board has 9 cells
 
-    // Make sure the board has 9 cells
-    var cells = element.all(by.css('.cell'));
-    expect(cells.count()).toBe(9);
+      var cells = element.all(by.css('.cell'));
+      expect(cells.count()).toBe(9);
 
-    // Make sure the board is empty
-    cells.each(function(element) {
-      expect(element.getText()).toBe('');
+      // Make sure the board is empty
+      cells.each(function(element) {
+        expect(element.getText()).toBe('');
+      });
     });
   });
 
   it('updates the board when cells are clicked', function () {
+
+    var cells = element.all(by.css('.cell'));
     // Make sure the board has 9 cells
     expect(cells.count()).toBe(9);
 
@@ -86,20 +89,20 @@ describe('TicTacToe App', function () {
     cells.get(2).click();
     cells.get(6).click();
 
-    sleep();
+    browser.sleep().then(function() {
+      // Make sure the content of each clicked cell is correct
+      expect(cells.get(0).getText()).toBe('X');
+      expect(cells.get(2).getText()).toBe('O');
+      expect(cells.get(6).getText()).toBe('X');
+    });
 
-    // Make sure the content of each clicked cell is correct
-    expect(cells.get(0).getText()).toBe('X');
-    expect(cells.get(2).getText()).toBe('O');
-    expect(cells.get(6).getText()).toBe('X');
   });
 
   it('persists state across refresh', function(done) {
     // Refresh the page, passing the push ID to use for data storage
     browser.get('tictactoe/tictactoe.html?pushId=' + firebaseRef.key()).then(function() {
       // Wait for AngularFire to sync the initial state
-      sleep(2000);
-
+      sleep();
       // Make sure the board has 9 cells
       expect(cells.count()).toBe(9);
 
