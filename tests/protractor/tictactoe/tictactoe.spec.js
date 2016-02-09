@@ -98,8 +98,7 @@ describe('TicTacToe App', function () {
     // Refresh the page, passing the push ID to use for data storage
     browser.get('tictactoe/tictactoe.html?pushId=' + firebaseRef.key()).then(function() {
       // Wait for AngularFire to sync the initial state
-      sleep();
-      sleep();
+      sleep(2000);
 
       // Make sure the board has 9 cells
       expect(cells.count()).toBe(9);
