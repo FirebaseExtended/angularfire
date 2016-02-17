@@ -41,6 +41,16 @@ describe('firebaseRef', function () {
       expect(errorWrapper).toThrow();
     }));
 
+    it('should throw an error when a reserved property is used', inject(function() {
+      function errorWrapper() {
+        firebaseRefProvider.registerUrl({
+          path: 'hello'
+        });
+        firebaseRefProvider.$get();
+      }
+      expect(errorWrapper).toThrow();
+    }));
+
   });
 
 });
