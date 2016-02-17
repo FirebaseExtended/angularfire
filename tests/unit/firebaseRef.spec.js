@@ -15,6 +15,32 @@ describe('firebaseRef', function () {
       expect(firebaseRefProvider.$get()).toBeAFirebaseRef();
     }));
 
+    it('creates a default reference with a config object', inject(function() {
+      firebaseRefProvider.registerUrl({
+        default: MOCK_URL
+      });
+      var firebaseRef = firebaseRefProvider.$get();
+      expect(firebaseRef).toBeAFirebaseRef();
+    }));
+
+    it('creates multiple references with a config object', inject(function() {
+      firebaseRefProvider.registerUrl({
+        default: MOCK_URL,
+        messages: MOCK_URL + 'messages'
+      });
+      var firebaseRef = firebaseRefProvider.$get();
+      expect(firebaseRef).toBeAFirebaseRef();
+      expect(firebaseRef.messages).toBeAFirebaseRef();
+    }));
+
+    it('should throw an error when no url is provided', inject(function () {
+      function errorWrapper() {
+        firebaseRefProvider.registerUrl();
+        firebaseRefProvider.$get();
+      }
+      expect(errorWrapper).toThrow();
+    }));
+
   });
 
 });
