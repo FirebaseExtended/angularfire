@@ -10,18 +10,15 @@ FirebaseRefNotProvidedError.prototype.constructor = FirebaseRefNotProvidedError;
 
 function FirebaseRef() {
   this.urls = null;
-  this.singleUrl = false;
   this.registerUrl = function registerUrl(urlOrConfig) {
 
     if (typeof urlOrConfig === 'string') {
       this.urls = {};
       this.urls.default = urlOrConfig;
-      this.singleUrl = true;
     }
 
     if (angular.isObject(urlOrConfig)) {
       this.urls = urlOrConfig;
-      this.singleUrl = false;
     }
 
   };
@@ -32,13 +29,7 @@ function FirebaseRef() {
     }
   };
 
-  this.$$createSingleRef = function $$createSingleRef(defaultUrl) {
-    var error = this.$$checkUrls(defaultUrl);
-    if (error) { throw error; }
-    return new Firebase(defaultUrl);
-  };
-
-  this.$$createMultipleRefs = function $$createMultipleRefs(urlConfig) {
+  this.$$createRefsFromUrlConfig = function $$createMultipleRefs(urlConfig) {
     var error = this.$$checkUrls(urlConfig);
     if (error) { throw error; }
     var defaultUrl = urlConfig.default;
@@ -55,13 +46,7 @@ function FirebaseRef() {
   };
 
   this.$get = function FirebaseRef_$get() {
-
-    if (this.singleUrl) {
-      return this.$$createSingleRef(this.urls.default);
-    } else {
-      return this.$$createMultipleRefs(this.urls);
-    }
-
+    return this.$$createRefsFromUrlConfig(this.urls);
   };
 }
 
