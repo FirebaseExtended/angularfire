@@ -15,10 +15,13 @@ describe('TicTacToe App', function () {
   var flow = protractor.promise.controlFlow();
 
   function waitOne() {
-    return protractor.promise.delayed(500);
+    return protractor.promise.delayed(1500);
   }
 
   function sleep() {
+    // flow.execute takes a function and if the
+    // function returns a promise it waits for it
+    // to be resolved
     flow.execute(waitOne);
   }
 
@@ -65,22 +68,19 @@ describe('TicTacToe App', function () {
     $('#resetRef').click();
 
     // Wait for the board to reset
-    browser.sleep().then(function() {
-      // Make sure the board has 9 cells
+    sleep();
 
-      var cells = element.all(by.css('.cell'));
-      expect(cells.count()).toBe(9);
+    // Make sure the board has 9 cells
+    var cells = element.all(by.css('.cell'));
+    expect(cells.count()).toBe(9);
 
-      // Make sure the board is empty
-      cells.each(function(element) {
-        expect(element.getText()).toBe('');
-      });
+    // Make sure the board is empty
+    cells.each(function(element) {
+      expect(element.getText()).toBe('');
     });
   });
 
   it('updates the board when cells are clicked', function () {
-
-    var cells = element.all(by.css('.cell'));
     // Make sure the board has 9 cells
     expect(cells.count()).toBe(9);
 
@@ -89,13 +89,12 @@ describe('TicTacToe App', function () {
     cells.get(2).click();
     cells.get(6).click();
 
-    browser.sleep().then(function() {
-      // Make sure the content of each clicked cell is correct
-      expect(cells.get(0).getText()).toBe('X');
-      expect(cells.get(2).getText()).toBe('O');
-      expect(cells.get(6).getText()).toBe('X');
-    });
+    sleep();
 
+    // Make sure the content of each clicked cell is correct
+    expect(cells.get(0).getText()).toBe('X');
+    expect(cells.get(2).getText()).toBe('O');
+    expect(cells.get(6).getText()).toBe('X');
   });
 
   it('persists state across refresh', function(done) {
@@ -103,6 +102,8 @@ describe('TicTacToe App', function () {
     browser.get('tictactoe/tictactoe.html?pushId=' + firebaseRef.key()).then(function() {
       // Wait for AngularFire to sync the initial state
       sleep();
+      sleep();
+
       // Make sure the board has 9 cells
       expect(cells.count()).toBe(9);
 
