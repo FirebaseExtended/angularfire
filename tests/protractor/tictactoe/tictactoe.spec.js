@@ -15,10 +15,13 @@ describe('TicTacToe App', function () {
   var flow = protractor.promise.controlFlow();
 
   function waitOne() {
-    return protractor.promise.delayed(500);
+    return protractor.promise.delayed(1500);
   }
 
   function sleep() {
+    // flow.execute takes a function and if the
+    // function returns a promise it waits for it
+    // to be resolved
     flow.execute(waitOne);
   }
 

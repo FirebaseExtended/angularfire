@@ -1,5 +1,6 @@
 var app = angular.module('tictactoe', ['firebase']);
 app.controller('TicTacToeCtrl', function Chat($scope, $firebaseObject) {
+  $scope.board = {};
   // Get a reference to the Firebase
   var boardRef = new Firebase('https://angularfire.firebaseio-demo.com/tictactoe');
 
