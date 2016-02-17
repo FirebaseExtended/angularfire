@@ -22,6 +22,10 @@
         };
       }
     ])
+    
+    .factory('$fireAuth', ['rootRef', '$firebaseAuth', function(rootRef, $firebaseAuth) {
+      return $firebaseAuth(rootRef);
+    }])
 
     .factory('$firebaseUtils', ["$q", "$timeout", "$rootScope",
       function($q, $timeout, $rootScope) {
