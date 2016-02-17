@@ -44,11 +44,11 @@ function FirebaseRef() {
     var defaultUrl = urlConfig.default;
     var defaultRef = new Firebase(defaultUrl);
     delete urlConfig.default;
-    angular.forEach(urlConfig, function(value) {
-      if (!defaultRef.hasOwnProperty(value)) {
-        defaultRef[value] = new Firebase(value);
+    angular.forEach(urlConfig, function(value, key) {
+      if (!defaultRef.hasOwnProperty(key)) {
+        defaultRef[key] = new Firebase(value);
       } else {
-        throw new Error(value + ' is a reserved property name on firebaseRef.');
+        throw new Error(key + ' is a reserved property name on firebaseRef.');
       }
     });
     return defaultRef;
