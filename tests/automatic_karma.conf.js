@@ -4,7 +4,7 @@
 module.exports = function(config) {
   config.set({
     frameworks: ['jasmine'],
-    browsers: ['PhantomJS'],
+    browsers: ['Chrome'],
     reporters: ['spec', 'failed', 'coverage'],
     autowatch: false,
     singleRun: true,
@@ -40,4 +40,19 @@ module.exports = function(config) {
       'unit/**/*.spec.js'
     ]
   });
+
+  var configuration = {
+      customLaunchers: {
+          Chrome_travis_ci: {
+              base: 'Chrome',
+              flags: ['--no-sandbox']
+          }
+      },
+  };
+
+  if (process.env.TRAVIS) {
+      configuration.browsers = ['Chrome_travis_ci'];
+  }
+
+  config.set(configuration);
 };
