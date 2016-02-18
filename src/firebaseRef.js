@@ -18,7 +18,7 @@
 
     this.$$checkUrls = function $$checkUrls(urlConfig) {
       if (!urlConfig) {
-        return new Error('No Firebase URL registered. Use firebaseRefProvider.registerUrl() in the config phase to set up a root reference.');
+        return new Error('No Firebase URL registered. Use firebaseRefProvider.registerUrl() in the config phase. This is required if you are using $firebaseAuthService.');
       }
     };
 
@@ -45,5 +45,5 @@
 
   angular.module('firebase')
     .provider('firebaseRef', FirebaseRef);
-    
+
 })();
