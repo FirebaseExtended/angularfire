@@ -1,13 +1,5 @@
 "use strict";
 
-function FirebaseRefNotProvidedError() {
-  this.name = 'FirebaseRefNotProvidedError';
-  this.message = 'No Firebase URL registered. Use firebaseRefProvider.registerUrl() in the config phase to set up a root reference.';
-  this.stack = (new Error()).stack;
-}
-FirebaseRefNotProvidedError.prototype = Object.create(Error.prototype);
-FirebaseRefNotProvidedError.prototype.constructor = FirebaseRefNotProvidedError;
-
 function FirebaseRef() {
   this.urls = null;
   this.registerUrl = function registerUrl(urlOrConfig) {
@@ -25,7 +17,7 @@ function FirebaseRef() {
 
   this.$$checkUrls = function $$checkUrls(urlConfig) {
     if (!urlConfig) {
-      return new FirebaseRefNotProvidedError();
+      return new Error('No Firebase URL registered. Use firebaseRefProvider.registerUrl() in the config phase to set up a root reference.');
     }
   };
 
