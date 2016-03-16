@@ -18,7 +18,7 @@ describe('$firebaseAuthService', function () {
       });
     });
 
-    it('should exist based on using firebaseRefProvider.registerUrl()', inject(function() {
+    it('should exist because we called firebaseRefProvider.registerUrl()', inject(function() {
       expect($firebaseAuthService).not.toBe(null);
     }));
     
