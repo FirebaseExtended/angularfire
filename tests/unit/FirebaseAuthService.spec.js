@@ -1,11 +1,11 @@
 'use strict';
 describe('$firebaseAuthService', function () {
-  var firebaseRefProvider;
+  var $firebaseRefProvider;
   var MOCK_URL = 'https://stub.firebaseio-demo.com/'
 
-  beforeEach(module('firebase', function(_firebaseRefProvider_) {
-    firebaseRefProvider = _firebaseRefProvider_;
-    firebaseRefProvider.registerUrl(MOCK_URL);
+  beforeEach(module('firebase', function(_$firebaseRefProvider_) {
+    $firebaseRefProvider = _$firebaseRefProvider_;
+    $firebaseRefProvider.registerUrl(MOCK_URL);
   }));
 
   describe('<constructor>', function() {
@@ -18,7 +18,7 @@ describe('$firebaseAuthService', function () {
       });
     });
 
-    it('should exist because we called firebaseRefProvider.registerUrl()', inject(function() {
+    it('should exist because we called $firebaseRefProvider.registerUrl()', inject(function() {
       expect($firebaseAuthService).not.toBe(null);
     }));
     

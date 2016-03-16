@@ -41,6 +41,6 @@
   }
 
   angular.module('firebase')
-    .provider('firebaseRef', FirebaseRef);
+    .provider('$firebaseRef', FirebaseRef);
 
 })();
