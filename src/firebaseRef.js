@@ -20,6 +20,9 @@
       if (!urlConfig) {
         return new Error('No Firebase URL registered. Use firebaseRefProvider.registerUrl() in the config phase. This is required if you are using $firebaseAuthService.');
       }
+      if (!urlConfig.default) {
+        return new Error('No default Firebase URL registered. Use firebaseRefProvider.registerUrl({ default: "https://<my-firebase-app>.firebaseio.com/"}).');
+      }
     };
 
     this.$$createRefsFromUrlConfig = function $$createMultipleRefs(urlConfig) {

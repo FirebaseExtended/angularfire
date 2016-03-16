@@ -32,7 +32,7 @@ describe('firebaseRef', function () {
       expect(firebaseRef.default).toBeAFirebaseRef();
       expect(firebaseRef.messages).toBeAFirebaseRef();
     }));
-
+    
     it('should throw an error when no url is provided', inject(function () {
       function errorWrapper() {
         firebaseRefProvider.registerUrl();
@@ -40,6 +40,15 @@ describe('firebaseRef', function () {
       }
       expect(errorWrapper).toThrow();
     }));
+
+    it('should throw an error when no default url is provided', inject(function() {
+      function errorWrapper() {
+        firebaseRefProvider.registerUrl({ messages: MOCK_URL + 'messages' });
+        firebaseRefProvider.$get();
+      }
+      expect(errorWrapper).toThrow();      
+    }));
+
 
   });
 
