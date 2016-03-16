@@ -12,7 +12,7 @@ describe('firebaseRef', function () {
 
     it('creates a single reference with a url', inject(function() {
       firebaseRefProvider.registerUrl(MOCK_URL);
-      expect(firebaseRefProvider.$get()).toBeAFirebaseRef();
+      expect(firebaseRefProvider.$get().default).toBeAFirebaseRef();
     }));
 
     it('creates a default reference with a config object', inject(function() {
@@ -20,7 +20,7 @@ describe('firebaseRef', function () {
         default: MOCK_URL
       });
       var firebaseRef = firebaseRefProvider.$get();
-      expect(firebaseRef).toBeAFirebaseRef();
+      expect(firebaseRef.default).toBeAFirebaseRef();
     }));
 
     it('creates multiple references with a config object', inject(function() {
@@ -29,23 +29,13 @@ describe('firebaseRef', function () {
         messages: MOCK_URL + 'messages'
       });
       var firebaseRef = firebaseRefProvider.$get();
-      expect(firebaseRef).toBeAFirebaseRef();
+      expect(firebaseRef.default).toBeAFirebaseRef();
       expect(firebaseRef.messages).toBeAFirebaseRef();
     }));
 
     it('should throw an error when no url is provided', inject(function () {
       function errorWrapper() {
         firebaseRefProvider.registerUrl();
-        firebaseRefProvider.$get();
-      }
-      expect(errorWrapper).toThrow();
-    }));
-
-    it('should throw an error when a reserved property is used', inject(function() {
-      function errorWrapper() {
-        firebaseRefProvider.registerUrl({
-          path: 'hello'
-        });
         firebaseRefProvider.$get();
       }
       expect(errorWrapper).toThrow();

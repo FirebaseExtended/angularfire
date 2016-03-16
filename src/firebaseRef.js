@@ -23,19 +23,13 @@
     };
 
     this.$$createRefsFromUrlConfig = function $$createMultipleRefs(urlConfig) {
+      var refs = {};
       var error = this.$$checkUrls(urlConfig);
       if (error) { throw error; }
-      var defaultUrl = urlConfig.default;
-      var defaultRef = new Firebase(defaultUrl);
-      delete urlConfig.default;
       angular.forEach(urlConfig, function(value, key) {
-        if (!defaultRef.hasOwnProperty(key)) {
-          defaultRef[key] = new Firebase(value);
-        } else {
-          throw new Error(key + ' is a reserved property name on firebaseRef.');
-        }
+        refs[key] = new Firebase(value);
       });
-      return defaultRef;
+      return refs;
     };
 
     this.$get = function FirebaseRef_$get() {
