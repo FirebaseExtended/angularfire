@@ -1,2 +1,0 @@
-feature - Added `$firebaseRefProvider` for injecting Firebase references.
-feature - Added `$firebaseAuthService` for simplified authentication.
