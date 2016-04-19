@@ -4,6 +4,7 @@
 [![Build Status](https://travis-ci.org/firebase/angularfire.svg?branch=master)](https://travis-ci.org/firebase/angularfire)
 [![Coverage Status](https://coveralls.io/repos/firebase/angularfire/badge.svg?branch=master&service=github)](https://coveralls.io/github/firebase/angularfire?branch=master)
 [![Version](https://badge.fury.io/gh/firebase%2Fangularfire.svg)](http://badge.fury.io/gh/firebase%2Fangularfire)
+[![Join Slack](https://img.shields.io/badge/slack-join-brightgreen.svg)](https://firebase-community.appspot.com/)
 
 AngularFire is the officially supported [AngularJS](http://angularjs.org/) binding for
 [Firebase](http://www.firebase.com/?utm_medium=web&utm_source=angularfire). Firebase is a
