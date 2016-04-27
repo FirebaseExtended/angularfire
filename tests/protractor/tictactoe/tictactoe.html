@@ -7,7 +7,16 @@
     <script src="../../../node_modules/angular/angular.js"></script>
 
     <!-- Firebase -->
-    <script src="../../../node_modules/firebase/lib/firebase-web.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/3.0.0-eap.6/firebase.js"></script>
+    <script>
+      // Initialize Firebase Authentication
+      var config = {
+        apiKey: "AIzaSyDOlKivprJ3SquwbMUoBB0uK7V_FjUWAqI",
+        authDomain: "topstory.firebaseapp.com",
+        databaseURL: "https://topstory.firebaseio.com"
+      };
+      firebase.initializeApp(config);
+    </script>
 
     <!-- AngularFire -->
     <script src="../../../dist/angularfire.js"></script>

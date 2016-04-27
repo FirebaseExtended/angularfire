@@ -110,7 +110,7 @@
         $add: function(data) {
           this._assertNotDestroyed('$add');
           var def = $firebaseUtils.defer();
-          var ref = this.$ref().ref().push();
+          var ref = this.$ref().ref.push();
           ref.set($firebaseUtils.toJSON(data), $firebaseUtils.makeNodeResolver(def));
           return def.promise.then(function() {
             return ref;
@@ -137,7 +137,7 @@
           var item = self._resolveItem(indexOrItem);
           var key = self.$keyAt(item);
           if( key !== null ) {
-            var ref = self.$ref().ref().child(key);
+            var ref = self.$ref().ref.child(key);
             var data = $firebaseUtils.toJSON(item);
             return $firebaseUtils.doSet(ref, data).then(function() {
               self.$$notify('child_changed', key);
@@ -167,7 +167,7 @@
           this._assertNotDestroyed('$remove');
           var key = this.$keyAt(indexOrItem);
           if( key !== null ) {
-            var ref = this.$ref().ref().child(key);
+            var ref = this.$ref().ref.child(key);
             return $firebaseUtils.doRemove(ref).then(function() {
               return ref;
             });

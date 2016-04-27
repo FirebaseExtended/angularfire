@@ -1,13 +1,13 @@
 var app = angular.module('chat', ['firebase']);
 app.controller('ChatCtrl', function Chat($scope, $firebaseObject, $firebaseArray) {
   // Get a reference to the Firebase
-  var rootRef = new Firebase('https://angularfire.firebaseio-demo.com');
+  var rootRef = firebase.database().ref();
 
   // Store the data at a random push ID
   var chatRef = rootRef.child('chat').push();
 
   // Put the random push ID into the DOM so that the test suite can grab it
-  document.getElementById('pushId').innerHTML = chatRef.key();
+  document.getElementById('pushId').innerHTML = chatRef.key;
 
   var messagesRef = chatRef.child('messages').limitToLast(2);
 

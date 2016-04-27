@@ -130,8 +130,8 @@
 
           assertValidRef: function(ref, msg) {
             if( !angular.isObject(ref) ||
-              typeof(ref.ref) !== 'function' ||
-              typeof(ref.ref().transaction) !== 'function' ) {
+              typeof(ref.ref) !== 'object' ||
+              typeof(ref.ref.transaction) !== 'function' ) {
               throw new Error(msg || 'Invalid Firebase reference');
             }
           },
@@ -318,7 +318,7 @@
            * 1.x.x is dropped in AngularFire, this helper can be removed.
            */
           getKey: function(refOrSnapshot) {
-            return (typeof refOrSnapshot.key === 'function') ? refOrSnapshot.key() : refOrSnapshot.name();
+            return refOrSnapshot.key;
           },
 
           /**
