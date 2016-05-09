@@ -19,7 +19,7 @@ We could fetch this profile using AngularFire's `$firebaseObject()` service. In 
 // define our app and dependencies (remember to include firebase!)
 var app = angular.module("sampleApp", ["firebase"]);
 // inject $firebaseObject into our controller
-app.controller("ProfileCtrl", ["$scope", $firebaseObject",
+app.controller("ProfileCtrl", ["$scope", "$firebaseObject",
   function($scope, $firebaseObject) {
     var ref = new Firebase("https://<YOUR-FIREBASE-APP>.firebaseio.com");
     // download physicsmarie's profile data into a local object
