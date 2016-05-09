@@ -1,6 +1,6 @@
 # AngularFire Guide
 
-1. [Introduction to AngularFire](introduction-to-angularfire,md) - Learn about what AngularFire is and how to integrate it into your Angular app.
+1. [Introduction to AngularFire](introduction-to-angularfire.md) - Learn about what AngularFire is and how to integrate it into your Angular app.
 2. [Synchronized Objects](synchronized-objects.md) - Create synchronized objects and experience three-way data binding.
 3. [Synchronized Arrays](synchronized-arrays.md) - Create and modify arrays which stay in sync with the database.
 4. [User Authentication](user-auth.md) - AngularFire handles user authentication and session management for you.
