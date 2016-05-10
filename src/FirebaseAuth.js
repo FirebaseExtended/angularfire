@@ -12,20 +12,22 @@
        * @return {object} An object containing methods for authenticating clients, retrieving
        * authentication state, and managing users.
        */
-      return function(ref) {
-        var auth = new FirebaseAuth($q, $firebaseUtils, ref);
-        return auth.construct();
+      return function(auth) {
+        auth = auth || firebase.auth();
+
+        var firebaseAuth = new FirebaseAuth($q, $firebaseUtils, auth);
+        return firebaseAuth.construct();
       };
     }
   ]);
 
-  FirebaseAuth = function($q, $firebaseUtils, ref) {
+  FirebaseAuth = function($q, $firebaseUtils, auth) {
     this._q = $q;
     this._utils = $firebaseUtils;
     if (typeof ref === 'string') {
       throw new Error('Please provide a Firebase reference instead of a URL when creating a `$firebaseAuth` object.');
     }
-    this._ref = ref;
+    this._auth = auth;
     this._initialAuthResolver = this._initAuthResolver();
   };
 
@@ -33,26 +35,28 @@
     construct: function() {
       this._object = {
         // Authentication methods
-        $authWithCustomToken: this.authWithCustomToken.bind(this),
-        $authAnonymously: this.authAnonymously.bind(this),
-        $authWithPassword: this.authWithPassword.bind(this),
-        $authWithOAuthPopup: this.authWithOAuthPopup.bind(this),
-        $authWithOAuthRedirect: this.authWithOAuthRedirect.bind(this),
-        $authWithOAuthToken: this.authWithOAuthToken.bind(this),
-        $unauth: this.unauth.bind(this),
+        $signInWithCustomToken: this.signInWithCustomToken.bind(this),
+        $signInAnonymously: this.signInAnonymously.bind(this),
+        $signInWithEmailAndPassword: this.signInWithEmailAndPassword.bind(this),
+        $signInWithPopup: this.signInWithPopup.bind(this),
+        $signInWithRedirect: this.signInWithRedirect.bind(this),
+        $signInWithCredential: this.signInWithCredential.bind(this),
+        $signOut: this.signOut.bind(this),
 
         // Authentication state methods
-        $onAuth: this.onAuth.bind(this),
+        $onAuthStateChanged: this.onAuthStateChanged.bind(this),
         $getAuth: this.getAuth.bind(this),
         $requireAuth: this.requireAuth.bind(this),
         $waitForAuth: this.waitForAuth.bind(this),
 
         // User management methods
-        $createUser: this.createUser.bind(this),
-        $changePassword: this.changePassword.bind(this),
-        $changeEmail: this.changeEmail.bind(this),
-        $removeUser: this.removeUser.bind(this),
-        $resetPassword: this.resetPassword.bind(this)
+        $createUserWithEmailAndPassword: this.createUserWithEmailAndPassword.bind(this),
+        $updatePassword: this.updatePassword.bind(this),
+        $updateEmail: this.updateEmail.bind(this),
+        $deleteUser: this.deleteUser.bind(this),
+        $sendPasswordResetEmail: this.sendPasswordResetEmail.bind(this),
+
+        _: this
       };
 
       return this._object;
@@ -69,81 +73,40 @@
      * @param {string} authToken An authentication token or a Firebase Secret. A Firebase Secret
      * should only be used for authenticating a server process and provides full read / write
      * access to the entire Firebase.
-     * @param {Object} [options] An object containing optional client arguments, such as configuring
-     * session persistence.
      * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
      */
-    authWithCustomToken: function(authToken, options) {
-      var deferred = this._q.defer();
-
-      try {
-        this._ref.authWithCustomToken(authToken, this._utils.makeNodeResolver(deferred), options);
-      } catch (error) {
-        deferred.reject(error);
-      }
-
-      return deferred.promise;
+    signInWithCustomToken: function(authToken) {
+      return this._utils.Q(this._auth.signInWithCustomToken(authToken).then);
     },
 
     /**
      * Authenticates the Firebase reference anonymously.
      *
-     * @param {Object} [options] An object containing optional client arguments, such as configuring
-     * session persistence.
      * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
      */
-    authAnonymously: function(options) {
-      var deferred = this._q.defer();
-
-      try {
-        this._ref.authAnonymously(this._utils.makeNodeResolver(deferred), options);
-      } catch (error) {
-        deferred.reject(error);
-      }
-
-      return deferred.promise;
+    signInAnonymously: function() {
+      return this._utils.Q(this._auth.signInAnonymously().then);
     },
 
     /**
      * Authenticates the Firebase reference with an email/password user.
      *
-     * @param {Object} credentials An object containing email and password attributes corresponding
-     * to the user account.
-     * @param {Object} [options] An object containing optional client arguments, such as configuring
-     * session persistence.
+     * @param {String} email An email address for the new user.
+     * @param {String} password A password for the new email.
      * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
      */
-    authWithPassword: function(credentials, options) {
-      var deferred = this._q.defer();
-
-      try {
-        this._ref.authWithPassword(credentials, this._utils.makeNodeResolver(deferred), options);
-      } catch (error) {
-        deferred.reject(error);
-      }
-
-      return deferred.promise;
+    signInWithEmailAndPassword: function(email, password) {
+      return this._utils.Q(this._auth.signInWithEmailAndPassword(email, password).then);
     },
 
     /**
      * Authenticates the Firebase reference with the OAuth popup flow.
      *
-     * @param {string} provider The unique string identifying the OAuth provider to authenticate
-     * with, e.g. google.
-     * @param {Object} [options] An object containing optional client arguments, such as configuring
-     * session persistence.
+     * @param {object} provider A firebase.auth.AuthProvider or a unique provider ID like 'facebook'
      * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
      */
-    authWithOAuthPopup: function(provider, options) {
-      var deferred = this._q.defer();
-
-      try {
-        this._ref.authWithOAuthPopup(provider, this._utils.makeNodeResolver(deferred), options);
-      } catch (error) {
-        deferred.reject(error);
-      }
-
-      return deferred.promise;
+    signInWithPopup: function(provider) {
+      return this._utils.Q(this._auth.signInWithPopup(this._getProvider(provider)).then);
     },
 
     /**
@@ -155,48 +118,25 @@
      * session persistence.
      * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
      */
-    authWithOAuthRedirect: function(provider, options) {
-      var deferred = this._q.defer();
-
-      try {
-        this._ref.authWithOAuthRedirect(provider, this._utils.makeNodeResolver(deferred), options);
-      } catch (error) {
-        deferred.reject(error);
-      }
-
-      return deferred.promise;
+    signInWithRedirect: function(provider, options) {
+      return this._utils.Q(this._auth.signInWithRedirect(this._getProvider(provider)).then);
     },
 
     /**
      * Authenticates the Firebase reference with an OAuth token.
      *
-     * @param {string} provider The unique string identifying the OAuth provider to authenticate
-     * with, e.g. google.
-     * @param {string|Object} credentials Either a string, such as an OAuth 2.0 access token, or an
-     * Object of key / value pairs, such as a set of OAuth 1.0a credentials.
-     * @param {Object} [options] An object containing optional client arguments, such as configuring
-     * session persistence.
+     * @param {firebase.auth.AuthCredential} credential The Firebase credential.
      * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
      */
-    authWithOAuthToken: function(provider, credentials, options) {
-      var deferred = this._q.defer();
-
-      try {
-        this._ref.authWithOAuthToken(provider, credentials, this._utils.makeNodeResolver(deferred), options);
-      } catch (error) {
-        deferred.reject(error);
-      }
-
-      return deferred.promise;
+    signInWithCredential: function(credential) {
+      return this._utils.Q(this._auth.signInWithCredential(credential).then);
     },
 
     /**
      * Unauthenticates the Firebase reference.
      */
-    unauth: function() {
-      if (this.getAuth() !== null) {
-        this._ref.unauth();
-      }
+    signOut: function() {
+      this._auth.signOut();
     },
 
 
@@ -213,18 +153,17 @@
      * data according to the provider used to authenticate. Otherwise, it will be passed null.
      * @param {string} [context] If provided, this object will be used as this when calling your
      * callback.
-     * @return {function} A function which can be used to deregister the provided callback.
+     * @return {Promise<Function>} A promised fulfilled with a function which can be used to
+     * deregister the provided callback.
      */
-    onAuth: function(callback, context) {
+    onAuthStateChanged: function(callback, context) {
       var self = this;
 
       var fn = this._utils.debounce(callback, context, 0);
-      this._ref.onAuth(fn);
+      var off = this._auth.onAuthStateChanged(fn);
 
       // Return a method to detach the `onAuth()` callback.
-      return function() {
-        self._ref.offAuth(fn);
-      };
+      return off;
     },
 
     /**
@@ -233,7 +172,7 @@
      * @return {Object} The client's authentication data.
      */
     getAuth: function() {
-      return this._ref.getAuth();
+      return this._auth.currentUser;
     },
 
     /**
@@ -245,14 +184,15 @@
      * rejected if the client is unauthenticated and rejectIfAuthDataIsNull is true.
      */
     _routerMethodOnAuthPromise: function(rejectIfAuthDataIsNull) {
-      var ref = this._ref, utils = this._utils;
+      var utils = this._utils, self = this;
+
       // wait for the initial auth state to resolve; on page load we have to request auth state
       // asynchronously so we don't want to resolve router methods or flash the wrong state
       return this._initialAuthResolver.then(function() {
         // auth state may change in the future so rather than depend on the initially resolved state
         // we also check the auth data (synchronously) if a new promise is requested, ensuring we resolve
         // to the current auth state and not a stale/initial state
-        var authData = ref.getAuth(), res = null;
+        var authData = self.getAuth(), res = null;
         if (rejectIfAuthDataIsNull && authData === null) {
           res = utils.reject("AUTH_REQUIRED");
         }
@@ -264,20 +204,39 @@
     },
 
     /**
+     * Helper method to turn provider names into AuthProvider instances
+     *
+     * @param {object} stringOrProvider Provider ID string to AuthProvider instance
+     * @return {firebdase.auth.AuthProvider} A valid AuthProvider instance
+     */
+    _getProvider: function (stringOrProvider) {
+      var provider;
+      if (typeof stringOrProvider == "string") {
+        var providerID = stringOrProvider.slice(0, 1).toUpperCase() + stringOrProvider.slice(1);
+        provider = new firebase.auth[providerID+"AuthProvider"]();
+      } else {
+        provider = stringOrProvider;
+      }
+      return provider;
+    },
+
+    /**
      * Helper that returns a promise which resolves when the initial auth state has been
      * fetched from the Firebase server. This never rejects and resolves to undefined.
      *
      * @return {Promise<Object>} A promise fulfilled when the server returns initial auth state.
      */
     _initAuthResolver: function() {
-      var ref = this._ref;
+      var auth = this._auth;
+
       return this._utils.promise(function(resolve) {
+        var off;
         function callback() {
-          // Turn off this onAuth() callback since we just needed to get the authentication data once.
-          ref.offAuth(callback);
+          // Turn off this onAuthStateChanged callback since we just needed to get the authentication data once.
+          off();
           resolve();
         }
-        ref.onAuth(callback);
+        off = auth.onAuthStateChanged(callback);
       });
     },
 
@@ -289,7 +248,7 @@
      * state or rejected if the client is not authenticated.
      */
     requireAuth: function() {
-      return this._routerMethodOnAuthPromise(true);
+      return this._routerMethodOnAuthPromise(true, this);
     },
 
     /**
@@ -300,7 +259,7 @@
      * state, which will be null if the client is not authenticated.
      */
     waitForAuth: function() {
-      return this._routerMethodOnAuthPromise(false);
+      return this._routerMethodOnAuthPromise(false, this);
     },
 
 
@@ -312,122 +271,74 @@
      * wish to log in as the newly created user, call $authWithPassword() after the promise for
      * this method has been resolved.
      *
-     * @param {Object} credentials An object containing the email and password of the user to create.
+     * @param {string} email An email for this user.
+     * @param {string} password A password for this user.
      * @return {Promise<Object>} A promise fulfilled with the user object, which contains the
      * uid of the created user.
      */
-    createUser: function(credentials) {
-      var deferred = this._q.defer();
-
-      // Throw an error if they are trying to pass in separate string arguments
-      if (typeof credentials === "string") {
-        throw new Error("$createUser() expects an object containing 'email' and 'password', but got a string.");
-      }
-
-      try {
-        this._ref.createUser(credentials, this._utils.makeNodeResolver(deferred));
-      } catch (error) {
-        deferred.reject(error);
-      }
-
-      return deferred.promise;
+    createUserWithEmailAndPassword: function(email, password) {
+      return this._utils.Q(this._auth.createUserWithEmailAndPassword(email, password).then);
     },
 
     /**
      * Changes the password for an email/password user.
      *
-     * @param {Object} credentials An object containing the email, old password, and new password of
-     * the user whose password is to change.
+     * @param {string} password A new password for the current user
      * @return {Promise<>} An empty promise fulfilled once the password change is complete.
      */
-    changePassword: function(credentials) {
-      var deferred = this._q.defer();
-
-      // Throw an error if they are trying to pass in separate string arguments
-      if (typeof credentials === "string") {
-        throw new Error("$changePassword() expects an object containing 'email', 'oldPassword', and 'newPassword', but got a string.");
+    updatePassword: function(password) {
+      var user = this.getAuth();
+      if (user) {
+        return this._utils.Q(user.updatePassword(password).then);
+      } else {
+        var badDeferred = this._utils.defer();
+        badDeferred.reject("No current user to change password of.");
+        return badDeferred.promise;
       }
-
-      try {
-        this._ref.changePassword(credentials, this._utils.makeNodeResolver(deferred));
-      } catch (error) {
-        deferred.reject(error);
-      }
-
-      return deferred.promise;
     },
 
     /**
      * Changes the email for an email/password user.
      *
-     * @param {Object} credentials An object containing the old email, new email, and password of
-     * the user whose email is to change.
+     * @param {String} email The new email for the currently logged in user.
      * @return {Promise<>} An empty promise fulfilled once the email change is complete.
      */
-    changeEmail: function(credentials) {
-      var deferred = this._q.defer();
-
-      if (typeof this._ref.changeEmail !== 'function') {
-        throw new Error("$firebaseAuth.$changeEmail() requires Firebase version 2.1.0 or greater.");
-      } else if (typeof credentials === 'string') {
-        throw new Error("$changeEmail() expects an object containing 'oldEmail', 'newEmail', and 'password', but got a string.");
+    updateEmail: function(email) {
+      var user = this.getAuth();
+      if (user) {
+        return this._utils.Q(user.updateEmail(email).then);
+      } else {
+        var badDeferred = this._utils.defer();
+        badDeferred.reject("No current user to change email of.");
+        return badDeferred.promise;
       }
-
-      try {
-        this._ref.changeEmail(credentials, this._utils.makeNodeResolver(deferred));
-      } catch (error) {
-        deferred.reject(error);
-      }
-
-      return deferred.promise;
     },
 
     /**
-     * Removes an email/password user.
+     * Deletes the currently logged in user.
      *
-     * @param {Object} credentials An object containing the email and password of the user to remove.
      * @return {Promise<>} An empty promise fulfilled once the user is removed.
      */
-    removeUser: function(credentials) {
-      var deferred = this._q.defer();
-
-      // Throw an error if they are trying to pass in separate string arguments
-      if (typeof credentials === "string") {
-        throw new Error("$removeUser() expects an object containing 'email' and 'password', but got a string.");
+    deleteUser: function() {
+      var user = this.getAuth();
+      if (user) {
+        return this._utils.Q(user.delete().then);
+      } else {
+        var badDeferred = this._utils.defer();
+        badDeferred.reject("No current user to delete.");
+        return badDeferred.promise;
       }
-
-      try {
-        this._ref.removeUser(credentials, this._utils.makeNodeResolver(deferred));
-      } catch (error) {
-        deferred.reject(error);
-      }
-
-      return deferred.promise;
     },
 
 
     /**
      * Sends a password reset email to an email/password user.
      *
-     * @param {Object} credentials An object containing the email of the user to send a reset
-     * password email to.
+     * @param {string} email An email address to send a password reset to.
      * @return {Promise<>} An empty promise fulfilled once the reset password email is sent.
      */
-    resetPassword: function(credentials) {
-      var deferred = this._q.defer();
-
-      // Throw an error if they are trying to pass in a string argument
-      if (typeof credentials === "string") {
-        throw new Error("$resetPassword() expects an object containing 'email', but got a string.");
-      }
-
-      try {
-        this._ref.resetPassword(credentials, this._utils.makeNodeResolver(deferred));
-      } catch (error) {
-        deferred.reject(error);
-      }
-
-      return deferred.promise;
+    sendPasswordResetEmail: function(email) {
+      return this._utils.Q(this._auth.sendPasswordResetEmail(email).then);
     }
   };
 })();

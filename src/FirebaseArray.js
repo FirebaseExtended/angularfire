@@ -109,12 +109,25 @@
          */
         $add: function(data) {
           this._assertNotDestroyed('$add');
+          var self = this;
           var def = $firebaseUtils.defer();
           var ref = this.$ref().ref.push();
-          ref.set($firebaseUtils.toJSON(data), $firebaseUtils.makeNodeResolver(def));
-          return def.promise.then(function() {
-            return ref;
-          });
+          var dataJSON;
+
+          try {
+            dataJSON = $firebaseUtils.toJSON(data)
+          } catch (err) {
+            def.reject(err);
+          }
+
+          if (dataJSON) {
+            $firebaseUtils.doSet(ref, dataJSON).then(function() {
+              self.$$notify();
+              def.resolve(ref);
+            });
+          }
+
+          return def.promise;
         },
 
         /**
@@ -136,17 +149,32 @@
           var self = this;
           var item = self._resolveItem(indexOrItem);
           var key = self.$keyAt(item);
+          var def = $firebaseUtils.defer();
+
           if( key !== null ) {
             var ref = self.$ref().ref.child(key);
-            var data = $firebaseUtils.toJSON(item);
-            return $firebaseUtils.doSet(ref, data).then(function() {
-              self.$$notify('child_changed', key);
-              return ref;
-            });
+            var data;
+
+            try {
+              data = $firebaseUtils.toJSON(item);
+            } catch (err) {
+              def.reject(err);
+            }
+
+            if (data) {
+              $firebaseUtils.doSet(ref, data).then(function() {
+                self.$$notify('child_changed', key);
+                def.resolve(ref);
+              }).catch(function (err) {
+                def.reject(err);
+              });  
+            }
           }
           else {
-            return $firebaseUtils.reject('Invalid record; could determine key for '+indexOrItem);
+            def.reject('Invalid record; could determine key for '+indexOrItem);
           }
+
+          return def.promise;
         },
 
         /**

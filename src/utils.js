@@ -49,6 +49,7 @@
         }
 
         var utils = {
+          Q: Q,
           /**
            * Returns a function which, each time it is invoked, will gather up the values until
            * the next "tick" in the Angular compiler process. Then they are all run at the same
@@ -191,6 +192,7 @@
                 if(arguments.length > 2){
                   result = Array.prototype.slice.call(arguments,1);
                 }
+
                 deferred.resolve(result);
               }
               else {
@@ -355,7 +357,7 @@
             }
             angular.forEach(dat, function(v,k) {
               if (k.match(/[.$\[\]#\/]/) && k !== '.value' && k !== '.priority' ) {
-                throw new Error('Invalid key ' + k + ' (cannot contain .$[]#)');
+                throw new Error('Invalid key ' + k + ' (cannot contain .$[]#/)');
               }
               else if( angular.isUndefined(v) ) {
                 throw new Error('Key '+k+' was undefined. Cannot pass undefined in JSON. Use null instead.');
@@ -368,7 +370,12 @@
             var def = utils.defer();
             if( angular.isFunction(ref.set) || !angular.isObject(data) ) {
               // this is not a query, just do a flat set
-              ref.set(data, utils.makeNodeResolver(def));
+              try {
+                ref.set(data, utils.makeNodeResolver(def));
+              } catch (err) {
+                def.reject(err);
+              }
+
             }
             else {
               var dataCopy = angular.extend({}, data);
@@ -381,7 +388,7 @@
                     dataCopy[utils.getKey(ss)] = null;
                   }
                 });
-                ref.ref().update(dataCopy, utils.makeNodeResolver(def));
+                ref.ref.update(dataCopy, utils.makeNodeResolver(def));
               }, function(err) {
                 def.reject(err);
               });
@@ -403,7 +410,7 @@
                 snap.forEach(function(ss) {
                   var d = utils.defer();
                   promises.push(d.promise);
-                  ss.ref().remove(utils.makeNodeResolver(def));
+                  ss.ref.remove(utils.makeNodeResolver(def));
                 });
                 utils.allPromises(promises)
                   .then(function() {

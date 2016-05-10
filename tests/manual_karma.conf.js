@@ -12,7 +12,7 @@ module.exports = function(config) {
     files: [
       '../node_modules/angular/angular.js',
       '../node_modules/angular-mocks/angular-mocks.js',
-      '../node_modules/firebase/lib/firebase-web.js',
+      '../firebase.js',
       '../src/module.js',
       '../src/**/*.js',
       'manual/**/*.spec.js'

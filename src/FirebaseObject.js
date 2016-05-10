@@ -73,11 +73,25 @@
         $save: function () {
           var self = this;
           var ref = self.$ref();
-          var data = $firebaseUtils.toJSON(self);
-          return $firebaseUtils.doSet(ref, data).then(function() {
-            self.$$notify();
-            return self.$ref();
-          });
+          var def = $firebaseUtils.defer();
+          var data;
+
+          try {
+            data = $firebaseUtils.toJSON(self);
+          } catch (e) {
+            def.reject(e);
+          }
+
+          if (data) {
+            $firebaseUtils.doSet(ref, data).then(function() {
+              self.$$notify();
+              def.resolve(self.$ref());
+            }).catch(function (e) {
+              def.reject(e);
+            });
+          }
+
+          return def.promise;
         },
 
         /**

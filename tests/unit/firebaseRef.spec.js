@@ -2,7 +2,7 @@
 describe('firebaseRef', function () {
 
   var $firebaseRefProvider;
-  var MOCK_URL = 'https://stub.firebaseio-demo.com/'
+  var MOCK_URL = 'https://topstory.firebaseio.com/'
 
   beforeEach(module('firebase', function(_$firebaseRefProvider_) {
     $firebaseRefProvider = _$firebaseRefProvider_;
@@ -32,7 +32,7 @@ describe('firebaseRef', function () {
       expect(firebaseRef.default).toBeAFirebaseRef();
       expect(firebaseRef.messages).toBeAFirebaseRef();
     }));
-    
+
     it('should throw an error when no url is provided', inject(function () {
       function errorWrapper() {
         $firebaseRefProvider.registerUrl();
@@ -46,7 +46,7 @@ describe('firebaseRef', function () {
         $firebaseRefProvider.registerUrl({ messages: MOCK_URL + 'messages' });
         $firebaseRefProvider.$get();
       }
-      expect(errorWrapper).toThrow();      
+      expect(errorWrapper).toThrow();
     }));
 
 

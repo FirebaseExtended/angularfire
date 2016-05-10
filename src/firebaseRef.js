@@ -30,7 +30,7 @@
       var error = this.$$checkUrls(urlConfig);
       if (error) { throw error; }
       angular.forEach(urlConfig, function(value, key) {
-        refs[key] = new Firebase(value);
+        refs[key] = firebase.database().refFromURL(value);
       });
       return refs;
     };
