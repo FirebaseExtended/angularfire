@@ -5,14 +5,14 @@ the entire Firebase client library's API.
 
 There are plenty of use cases for dropping down to the SDK level and using it directly. This
 section will cover a few best practices and techniques for grabbing data directly from our
-database using the <a href="/docs/web">JavaScript client library</a>.
+database using the JavaScript client library.
 
 This is easiest to accomplish with an example, so read the comments carefully.
 
 ```js
-app.controller("SampleCtrl", ["$scope", "$timeout", "$window", function($scope, $timeout, $window) {
+app.controller("SampleCtrl", ["$scope", "$timeout", function($scope, $timeout) {
   // create a reference to our Firebase database
-  var ref = new $window.Firebase("https://<YOUR-FIREBASE-APP>.firebaseio.com/foo");
+  var ref = firebase.database.ref();
 
   // read data from the database into a local scope variable
   ref.on("value", function(snapshot) {
@@ -55,16 +55,15 @@ deploy your Angular applications free, fast, and without fuss, do it Firebase st
 production-grade hosting service serves your content over HTTPS and is backed by a global CDN.
 You can deploy your application for free at your very own subdomain of `firebaseapp.com`
 or you can host it at any custom domain on one of our paid plans. Check out
-[Firebase Hosting](https://firebase.com/docs/hosting) for more information.
+[Firebase Hosting](https://firebase.google.com/docs/hosting/) for more information.
 
 # Next Steps
 There are many additional resources for learning about using Firebase with Angular applications:
-* Do the [AngularFire tutorial](https://firebase.com/tutorial/#tutorial/angular/0).
-* Browse the [AngularFire API documentation](https:/firebase.com//docs/web/libraries/angular/api.html).
+* Browse the [AngularFire API documentation](https://angularfire.firebaseapp.com/api.html).
 * The [`angularFire-seed`](https://github.com/firebase/angularfire-seed)</a>
 repo contains a template project to help you get started.
 * Check out the [various examples that use
-AngularFire](https://firebase.com/docs/web/libraries/angular/examples.html).
+AngularFire](docs/README.md).
 * Join our [AngularFire mailing
 list](https://groups.google.com/forum/#!forum/firebase-angular) to keep up to date with any announcements and learn from the AngularFire community.
 * The [`angularfire`](http://stackoverflow.com/questions/tagged/angularfire)

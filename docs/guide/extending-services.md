@@ -33,7 +33,7 @@ set when `$$added` is invoked.
 remote value at a path is `"foo"`, and that path is synchronized into a local `$firebaseObject`,
 the locally synchronized object will have a JSON structure `{ "$value": "foo" }`. Similarly, if a
 remote path does not exist, the local object would have the JSON structure `{ "$value": null }`.
-See [Working with Primitives](synchronized-object.html#section-primitives) for more details.
+See [Working with Primitives](docs/guide/synchronized-object.md) for more details.
 
 By default, data stored on a synchronized object or a record in a synchronized array exists
 as a direct attribute of the object. We denote any methods or data which should *not* be
@@ -59,10 +59,11 @@ app.factory("User", ["$firebaseObject",
     });
 
     return function(userId) {
-      var ref = new Firebase("https://<YOUR-FIREBASE-APP>.firebaseio.com/users/").child(userId);
+      var userRef = firebase.database().ref()
+        .child("users").child(userId);
 
       // create an instance of User (the new operator is required)
-      return new User(ref);
+      return new User(userRef);
     }
   }
 ]);
@@ -73,7 +74,7 @@ The `new` operator is required for child classes created with the `$extend()` me
 The following special `$$` methods are used by the `$firebaseObject` service
 to notify itself of any server changes. They can be overridden to transform how data is stored
 locally, and what is returned to the server. Read more about them in the
-[API documentation](https://firebase.com/docs/web/libraries/angular/api.html#extending-the-services).
+[API documentation](https://angularfire.firebaseapp.com/api.html#extending-the-services).
 
 | Method | Description |
 |--------|-------------|
@@ -120,7 +121,7 @@ The `new` operator is required for child classes created with the `$extend()` me
 The following special `$$` methods are called internally whenever AngularFire receives a notification
 of a server-side change. They can be overridden to transform how data is stored
 locally, and what is returned to the server. Read more about them in the
-[API documentation](https://firebase.com/docs/web/libraries/angular/api.html#extending-the-services).
+[API documentation](https://angularfire.firebaseapp.com/api.html#extending-the-services).
 
 | Method | Description |
 |--------|-------------|

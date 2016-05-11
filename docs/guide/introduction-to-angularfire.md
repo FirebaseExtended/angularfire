@@ -3,18 +3,18 @@
 Firebase provides several key advantages for [Angular](http://www.angularjs.org/) applications:
 
 1. **Lightning-fast data synchronization:** Firebase can serve as your entire backend service, not only persisting your data, but synchronizing it instantly between millions of connected clients.
-2. **No backend server:** Utilizing only the Firebase JavaScript SDK and AngularFire, combined with our [flexible security](https://www.firebase.com/docs/security/quickstart.html) rules, you can have complete control of your data without any server-side hardware or code.
-3. **Built-in authentication:** Firebase provides an [authentication and user management service](https://www.firebase.com/docs/web/guide/user-auth.html) which interfaces with OAuth service providers like Facebook and Twitter, as well as anonymous and email / password authentication tools. You can even integrate with an existing authentication service using Firebase custom authentication.
-4. **Free hosting:** Every Firebase app comes with [free hosting](https://www.firebase.com/docs/hosting/quickstart.html) served over a secure SSL connection and backed by a global CDN. You can deploy your static HTML, JavaScript, and CSS files to the web in seconds.
+2. **No backend server:** Utilizing only the Firebase JavaScript SDK and AngularFire, combined with our [flexible security](https://firebase.google.com/docs/database/security/) rules, you can have complete control of your data without any server-side hardware or code.
+3. **Built-in authentication:** Firebase provides an [authentication and user management service](https://firebase.google.com/docs/database/security/) which interfaces with OAuth service providers like Facebook and Twitter, as well as anonymous and email / password authentication tools. You can even integrate with an existing authentication service using Firebase custom authentication.
+4. **Free hosting:** Every Firebase app comes with [free hosting](https://firebase.google.com/docs/hosting/) served over a secure SSL connection and backed by a global CDN. You can deploy your static HTML, JavaScript, and CSS files to the web in seconds.
 5. **Magical data bindings:** Our AngularFire library works like *glue* between Angular's two-way bindings and Firebase's scalable synchronization platform.
 
 # The Role of AngularFire
 
 AngularFire is an [open source library](https://github.com/firebase/angularfire) maintained by the Firebase team and our amazing community of developers. It provides three-way communication between your Firebase database and Angular's DOM - JavaScript bindings.
 
-If you are unfamiliar with Firebase, we suggest you start by reading through the [Firebase web guide](Firebase web guide). It is important to understand the fundamental principles of how to structure data in your Firebase database and how to read and write from it before diving into AngularFire. These bindings are meant to complement the core Firebase client library, not replace it entirely by adding `$` signs in front of the methods.
+If you are unfamiliar with Firebase, we suggest you start by reading through the [Firebase web guide](https://firebase.google.com/docs/database/web/start). It is important to understand the fundamental principles of how to structure data in your Firebase database and how to read and write from it before diving into AngularFire. These bindings are meant to complement the core Firebase client library, not replace it entirely by adding `$` signs in front of the methods.
 
-AngularFire is also not ideal for synchronizing deeply nested collections inside of collections. In general, deeply nested collections [should typically be avoided](https://www.firebase.com/docs/web/guide/structuring-data.html#section-denormalizing-data) in distributed systems.
+AngularFire is also not ideal for synchronizing deeply nested collections inside of collections. In general, deeply nested collections [should typically be avoided](https://firebase.google.com/docs/database/web/structure-data) in distributed systems.
 
 While AngularFire abstracts a lot of complexities involved in synchronizing data, it is not required to use Angular with Firebase. Alternatives are covered in the [Beyond AngularFire](guide/beyond-angularfire.md) section of this guide.
 
@@ -58,7 +58,7 @@ app.factory("chatMessages", ["$firebaseArray",
   function($firebaseArray) {
     // create a reference to the database location where we will store our data
     var randomRoomId = Math.round(Math.random() * 100000000);
-    var ref = new Firebase("https://docs-sandbox.firebaseio.com/af/intro/demo/" + randomRoomId);
+    var ref = firebase.database().ref();
 
     // this uses AngularFire to create the synchronized array
     return $firebaseArray(ref);
@@ -120,7 +120,7 @@ The primary purpose of AngularFire is to manage synchronized data, which is expo
 It's not always necessary to set up AngularFire bindings to interact with the database. This is particularly true when just writing data, and not synchronizing it locally. Since you already have a `Firebase` reference handy, it is perfectly acceptable to simply use the vanilla Firebase client library API methods.
 
 ```js
-var ref = new Firebase("https://<YOUR-FIREBASE-APP>.firebaseio.com");
+var ref = firebase.database().ref();
 // We don't always need AngularFire!
 //var obj = $firebaseObject(ref);
 // For example, if we just want to increment a counter, which we aren't displaying locally,
@@ -140,10 +140,10 @@ The easiest way to log the data is to print it within the view using Angular's `
 <pre>{{ data | json }}</pre>
 ```
 
-It's also possible to do this directly in the controller by using the [`$loaded()`](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-firebaseobject-loaded) method. However, this method should be used with care as it's only called once after initial load. Using it for anything but debugging is usually a poor practice.
+It's also possible to do this directly in the controller by using the [`$loaded()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-loaded) method. However, this method should be used with care as it's only called once after initial load. Using it for anything but debugging is usually a poor practice.
 
 ```js
-var ref = new Firebase("https://<YOUR-FIREBASE-APP>.firebaseio.com");
+var ref = firebase.database().ref();
 $scope.data = $firebaseObject(ref);
 // this waits for the data to load and then logs the output. Therefore,
 // data from the server will now appear in the logged output. Use this with care!
@@ -159,7 +159,7 @@ $scope.data.$loaded()
 When working directly with the SDK, it's important to notify Angular's compiler after the data has been loaded.
 
 ```js
-var ref = new Firebase("https://<YOUR-FIREBASE-APP>.firebaseio.com");
+var ref = firebase().database().ref();
 ref.on("value", function(snapshot) {
   // This isn't going to show up in the DOM immediately, because
   // Angular does not know we have changed this in memory.

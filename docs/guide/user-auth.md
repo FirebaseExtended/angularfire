@@ -1,18 +1,18 @@
 # Overview
 
-Firebase provides [a hosted authentication service](https://www.firebase.com/docs/web/guide/user-auth.html) which provides a completely client-side solution to account management and authentication. It supports anonymous authentication, email / password login, and login via several OAuth providers, including Facebook, GitHub, Google, and Twitter.
+Firebase provides [a hosted authentication service](https://firebase.google.com/docs/database/security/user-security) which provides a completely client-side solution to account management and authentication. It supports anonymous authentication, email / password login, and login via several OAuth providers, including Facebook, GitHub, Google, and Twitter.
 
 Each provider has to be configured individually and also enabled from the **Login & Auth** tab of your App Dashboard. Select a provider from the table below to learn more.
 
 | Provider | Description |
 |----------|-------------|
-| [Custom](https://www.firebase.com/docs/web/guide/login/custom.html) | Generate your own login tokens. Use this to integrate with existing authentication systems. You can also use this to authenticate server-side workers. |
-| [Email & Password](https://www.firebase.com/docs/web/guide/login/password.html) | Let Firebase manage passwords for you. Register and authenticate users by email & password. |
-| [Anonymous](https://www.firebase.com/docs/web/guide/login/anonymous.html) | Build user-centric functionality without requiring users to share their personal information. Anonymous authentication generates a unique identifier for each user that lasts as long as their session. |
-| [Facebook](https://www.firebase.com/docs/web/guide/login/facebook.html) | Authenticate users with Facebook by writing only client-side code. |
-| [Twitter](https://www.firebase.com/docs/web/guide/login/twitter.html) |	Authenticate users with Twitter by writing only client-side code. |
-| [GitHub](https://www.firebase.com/docs/web/guide/login/github.html) |	Authenticate users with GitHub by writing only client-side code. |
-| [Google](https://www.firebase.com/docs/web/guide/login/google.html) |	Authenticate users with Google by writing only client-side code. |
+| [Custom](https://firebase.google.com/docs/auth/web/custom-auth) | Generate your own login tokens. Use this to integrate with existing authentication systems. You can also use this to authenticate server-side workers. |
+| [Email & Password](https://firebase.google.com/docs/auth/web/password-auth) | Let Firebase manage passwords for you. Register and authenticate users by email & password. |
+| [Anonymous](https://firebase.google.com/docs/auth/web/anonymous-auth) | Build user-centric functionality without requiring users to share their personal information. Anonymous authentication generates a unique identifier for each user that lasts as long as their session. |
+| [Facebook](https://firebase.google.com/docs/auth/web/facebook-login) | Authenticate users with Facebook by writing only client-side code. |
+| [Twitter](https://firebase.google.com/docs/auth/web/github-auth) |	Authenticate users with Twitter by writing only client-side code. |
+| [GitHub](https://firebase.google.com/docs/auth/web/github-auth) |	Authenticate users with GitHub by writing only client-side code. |
+| [Google](https://firebase.google.com/docs/auth/web/google-signin) |	Authenticate users with Google by writing only client-side code. |
 
 AngularFire provides a service named `$firebaseAuth` which wraps the authentication methods provided by the Firebase client library. It can be injected into any controller, service, or factory.
 
@@ -22,7 +22,7 @@ var app = angular.module("sampleApp", ["firebase"]);
 // inject $firebaseAuth into our controller
 app.controller("SampleCtrl", ["$scope", "$firebaseAuth",
   function($scope, $firebaseAuth) {
-    var ref = new Firebase("https://<YOUR-FIREBASE-APP>.firebaseio.com");
+    var ref = firebase().database().ref();
     var auth = $firebaseAuth(ref);
   }
 ]);
@@ -30,21 +30,21 @@ app.controller("SampleCtrl", ["$scope", "$firebaseAuth",
 
 # Logging Users In
 
-The `$firebaseAuth` service has methods for each authentication type. For example, to authenticate an anonymous user, you can use `$authAnonymously()`:
+The `$firebaseAuth` service has methods for each authentication type. For example, to authenticate an anonymous user, you can use `$signInAnonymously()`:
 
 ```js
 var app = angular.module("sampleApp", ["firebase"]);
 
 app.controller("SampleCtrl", ["$scope", "$firebaseAuth",
   function($scope, $firebaseAuth) {
-    var ref = new Firebase("https://docs-sandbox.firebaseio.com");
+    var ref = firebase.database().ref();
     auth = $firebaseAuth(ref);
 
     $scope.login = function() {
       $scope.authData = null;
       $scope.error = null;
 
-      auth.$authAnonymously().then(function(authData) {
+      auth.$signInAnonymously().then(function(authData) {
         $scope.authData = authData;
       }).catch(function(error) {
         $scope.error = error;
@@ -69,7 +69,7 @@ app.controller("SampleCtrl", ["$scope", "$firebaseAuth",
 
 # Managing Users
 
-The `$firebaseAuth` service also provides [a full suite of methods](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-users-and-authentication) for managing email / password accounts. This includes methods for creating and removing accounts, changing an account's email or password, and sending password reset emails. The following example gives you a taste of just how easy this is:
+The `$firebaseAuth` service also provides [a full suite of methods](https://angularfire.firebaseapp.com/api.html#angularfire-users-and-authentication) for managing email / password accounts. This includes methods for creating and removing accounts, changing an account's email or password, and sending password reset emails. The following example gives you a taste of just how easy this is:
 
 ```js
 var app = angular.module("sampleApp", ["firebase"]);
@@ -77,7 +77,7 @@ var app = angular.module("sampleApp", ["firebase"]);
 // let's create a re-usable factory that generates the $firebaseAuth instance
 app.factory("Auth", ["$firebaseAuth",
   function($firebaseAuth) {
-    var ref = new Firebase("https://docs-sandbox.firebaseio.com");
+    var ref = firebase.database().ref();
     return $firebaseAuth(ref);
   }
 ]);
@@ -140,9 +140,9 @@ app.controller("SampleCtrl", ["$scope", "Auth",
 
 # Retrieving Authentication State
 
-Whenever a user is authenticated, you can use the synchronous [`$getAuth()`](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-users-and-authentication-getauth) method to retrieve the client's current authentication state. This includes the authenticated user's `uid` (a user identifier which is unique across all providers) and the `provider` used to authenticate. Additional variables are included for each specific provider and are covered in the provider-specific links in the table above.
+Whenever a user is authenticated, you can use the synchronous [`$getAuth()`](https://angularfire.firebaseapp.com/api.html#angularfire-users-and-authentication-getauth) method to retrieve the client's current authentication state. This includes the authenticated user's `uid` (a user identifier which is unique across all providers) and the `provider` used to authenticate. Additional variables are included for each specific provider and are covered in the provider-specific links in the table above.
 
-In addition to the synchronous `$getAuth()` method, there is also an asynchronous [`$onAuth()`](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-users-and-authentication-onauthcallback-context) method which fires a user-provided callback every time authentication state changes. This is often more convenient than using `$getAuth()` since it gives you a single, consistent place to handle updates to authentication state, including users logging in or out and sessions expiring.
+In addition to the synchronous `$getAuth()` method, there is also an asynchronous [`$onAuthStateChanged()`](https://angularfire.firebaseapp.com/api.html#angularfire-users-and-authentication-onauthcallback-context) method which fires a user-provided callback every time authentication state changes. This is often more convenient than using `$getAuth()` since it gives you a single, consistent place to handle updates to authentication state, including users logging in or out and sessions expiring.
 
 Pulling some of these concepts together, we can create a login form with dynamic content based on the user's current authentication state:
 
@@ -151,7 +151,7 @@ var app = angular.module("sampleApp", ["firebase"]);
 
 app.factory("Auth", ["$firebaseAuth",
   function($firebaseAuth) {
-    var ref = new Firebase("https://docs-sandbox.firebaseio.com", "example3");
+    var ref = firebase.database().ref().child("example3");
     return $firebaseAuth(ref);
   }
 ]);
@@ -161,7 +161,7 @@ app.controller("SampleCtrl", ["$scope", "Auth",
     $scope.auth = Auth;
 
     // any time auth status updates, add the user data to scope
-    $scope.auth.$onAuth(function(authData) {
+    $scope.auth.$onAuthStateChanged(function(authData) {
       $scope.authData = authData;
     });
   }
@@ -176,11 +176,11 @@ app.controller("SampleCtrl", ["$scope", "Auth",
 <div ng-app="sampleApp" ng-controller="SampleCtrl">
   <div ng-show="authData">
     <p>Hello, {{ authData.facebook.displayName }}</p>
-    <button ng-click="auth.$unauth()">Logout</button>
+    <button ng-click="auth.$signOut()">Logout</button>
   </div>
   <div ng-hide="authData">
     <p>Welcome, please log in.</p>
-    <button ng-click="auth.$authWithOAuthPopup('facebook')">Login With Facebook</button>
+    <button ng-click="auth.$signInWithPopup('facebook')">Login With Facebook</button>
   </div>
 </div>
 ```
@@ -191,7 +191,7 @@ The `ng-show` and `ng-hide` directives dynamically change out the content based 
 
 Authenticating users is only one piece of making an application secure. It is critical to configure Security and Firebase Rules before going into production. These declarative rules dictate when and how data may be read or written.
 
-Within our [Firebase and Security Rules](https://www.firebase.com/docs/security/), the predefined `auth` variable is `null` before authentication takes place. Once a user is authenticated, it will contain the following attributes:
+Within our [Firebase and Security Rules](https://firebase.google.com/docs/database/security/), the predefined `auth` variable is `null` before authentication takes place. Once a user is authenticated, it will contain the following attributes:
 
 | Key | Description |
 |-----|-------------|
@@ -215,19 +215,19 @@ We can then use the `auth` variable within our rules. For example, we can grant 
 }
 ```
 
-For a more in-depth explanation of this important feature, check out the web guide on [user-based security](https://www.firebase.com/docs/security/guide/user-security.html).
+For a more in-depth explanation of this important feature, check out the web guide on [user-based security](https://firebase.google.com/docs/database/security/user-security).
 
 # Authenticating With Routers
 
 Checking to make sure the client has authenticated can be cumbersome and lead to a lot of `if` / `else` logic in our controllers. In addition, apps which use authentication often have issues upon initial page load with the logged out state flickering into view temporarily before the authentication check completes. We can abstract away these complexities by taking advantage of the `resolve()` method of Angular routers.
 
-AngularFire provides two helper methods to use with Angular routers. The first is [`$waitForAuth()`](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-users-and-authentication-waitforauth) which returns a promise fulfilled with the current authentication state. This is useful when you want to grab the authentication state before the route is rendered. The second helper method is [`$requireAuth()`](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-users-and-authentication-requireauth) which resolves the promise successfully if a user is authenticated and rejects otherwise. This is useful in cases where you want to require a route to have an authenticated user. You can catch the rejected promise and redirect the unauthenticated user to a different page, such as the login page. Both of these methods work well with the `resolve()` methods of `ngRoute` and `ui-router`.
+AngularFire provides two helper methods to use with Angular routers. The first is [`$waitForSignIn()`](https://angularfire.firebaseapp.com/api.html#angularfire-users-and-authentication-waitforsignin) which returns a promise fulfilled with the current authentication state. This is useful when you want to grab the authentication state before the route is rendered. The second helper method is [`$requireSignIn()`](https://angularfire.firebaseapp.com/api.html#angularfire-users-and-authentication-requiresignin) which resolves the promise successfully if a user is authenticated and rejects otherwise. This is useful in cases where you want to require a route to have an authenticated user. You can catch the rejected promise and redirect the unauthenticated user to a different page, such as the login page. Both of these methods work well with the `resolve()` methods of `ngRoute` and `ui-router`.
 
 ## ngRoute Example
 ```js
 app.run(["$rootScope", "$location", function($rootScope, $location) {
 $rootScope.$on("$routeChangeError", function(event, next, previous, error) {
-  // We can catch the error thrown when the $requireAuth promise is rejected
+  // We can catch the error thrown when the $requireSignIn promise is rejected
   // and redirect the user back to the home page
   if (error === "AUTH_REQUIRED") {
     $location.path("/home");
@@ -240,11 +240,11 @@ $routeProvider.when("/home", {
   controller: "HomeCtrl",
   templateUrl: "views/home.html",
   resolve: {
-    // controller will not be loaded until $waitForAuth resolves
+    // controller will not be loaded until $waitForSignIn resolves
     // Auth refers to our $firebaseAuth wrapper in the example above
     "currentAuth": ["Auth", function(Auth) {
-      // $waitForAuth returns a promise so the resolve waits for it to complete
-      return Auth.$waitForAuth();
+      // $waitForSignIn returns a promise so the resolve waits for it to complete
+      return Auth.$waitForSignIn();
     }]
   }
 }).when("/account", {
@@ -252,12 +252,12 @@ $routeProvider.when("/home", {
   controller: "AccountCtrl",
   templateUrl: "views/account.html",
   resolve: {
-    // controller will not be loaded until $requireAuth resolves
+    // controller will not be loaded until $requireSignIn resolves
     // Auth refers to our $firebaseAuth wrapper in the example above
     "currentAuth": ["Auth", function(Auth) {
-      // $requireAuth returns a promise so the resolve waits for it to complete
+      // $requireSignIn returns a promise so the resolve waits for it to complete
       // If the promise is rejected, it will throw a $stateChangeError (see above)
-      return Auth.$requireAuth();
+      return Auth.$requireSignIn();
     }]
   }
 });
@@ -277,7 +277,7 @@ app.controller("AccountCtrl", ["currentAuth", function(currentAuth) {
 // for ui-router
 app.run(["$rootScope", "$state", function($rootScope, $state) {
 $rootScope.$on("$stateChangeError", function(event, toState, toParams, fromState, fromParams, error) {
-  // We can catch the error thrown when the $requireAuth promise is rejected
+  // We can catch the error thrown when the $requireSignIn promise is rejected
   // and redirect the user back to the home page
   if (error === "AUTH_REQUIRED") {
     $state.go("home");
@@ -291,11 +291,11 @@ $stateProvider
     controller: "HomeCtrl",
     templateUrl: "views/home.html",
     resolve: {
-      // controller will not be loaded until $waitForAuth resolves
+      // controller will not be loaded until $waitForSignIn resolves
       // Auth refers to our $firebaseAuth wrapper in the example above
       "currentAuth": ["Auth", function(Auth) {
-        // $waitForAuth returns a promise so the resolve waits for it to complete
-        return Auth.$waitForAuth();
+        // $waitForSignIn returns a promise so the resolve waits for it to complete
+        return Auth.$waitForSignIn();
       }]
     }
   })
@@ -304,12 +304,12 @@ $stateProvider
     controller: "AccountCtrl",
     templateUrl: "views/account.html",
     resolve: {
-      // controller will not be loaded until $requireAuth resolves
+      // controller will not be loaded until $requireSignIn resolves
       // Auth refers to our $firebaseAuth wrapper in the example above
       "currentAuth": ["Auth", function(Auth) {
-        // $requireAuth returns a promise so the resolve waits for it to complete
+        // $requireSignIn returns a promise so the resolve waits for it to complete
         // If the promise is rejected, it will throw a $stateChangeError (see above)
-        return Auth.$requireAuth();
+        return Auth.$requireSignIn();
       }]
     }
   });
@@ -325,4 +325,4 @@ app.controller("AccountCtrl", ["currentAuth", function(currentAuth) {
 ```
 Keep in mind that, even when using `ng-annotate` or `grunt-ngmin` to minify code, that these tools cannot peer inside of functions. So even though we don't need the array notation to declare our injected dependencies for our controllers, services, etc., we still need to use an array and explicitly state our dependencies for the routes, since they are inside of a function.
 
-We have covered the three services AngularFire provides: [`$firebaseObject`](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-firebaseobject), [`$firebaseArray`](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-firebasearray), and [`$firebaseAuth`](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-users-and-authentication). In the [next section](extending-services.md) we will discuss the advanced topic of extending the functionality of the `$firebaseObject` and `$firebaseArray` services.
+We have covered the three services AngularFire provides: [`$firebaseObject`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject), [`$firebaseArray`](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray), and [`$firebaseAuth`](https://angularfire.firebaseapp.com/api.html#angularfire-users-and-authentication). In the [next section](extending-services.md) we will discuss the advanced topic of extending the functionality of the `$firebaseObject` and `$firebaseArray` services.

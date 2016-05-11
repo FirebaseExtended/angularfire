@@ -4,7 +4,7 @@ AngularFire is the officially supported AngularJS binding for Firebase. The comb
 
 ## 1. Create an Account
 The first thing we need to do is [sign
-up for a free Firebase account](https://firebase.com/login/). A brand new Firebase app will automatically be created with its own unique URL ending in ```firebaseio.com```. We'll use this URL
+up for a free Firebase account](https://firebase.google.com/). A brand new Firebase app will automatically be created with its own unique URL ending in ```firebaseio.com```. We'll use this URL
 to authenticate users and store and sync data with [AngularFire](https://github.com/firebase/angularfire).
 
 ## 2. Add Script Dependencies
@@ -157,7 +157,7 @@ app.controller("SampleCtrl", function($scope, $firebaseArray) {
 ```
 
 ## 6. Add Authentication
-Firebase provides a [hosted authentication service](https://www.firebase.com/docs/web/guide/user-auth.html) which offers a completely client-side solution to account management and authentication. It supports anonymous authentication, email / password login, and login via several OAuth providers, including Facebook, GitHub, Google, and Twitter.
+Firebase provides a [hosted authentication service](https://firebase-dot-devsite.googleplex.com/docs/database/security/) which offers a completely client-side solution to account management and authentication. It supports anonymous authentication, email / password login, and login via several OAuth providers, including Facebook, GitHub, Google, and Twitter.
 
 AngularFire provides a service named `$firebaseAuth` which wraps the authentication methods provided by the Firebase client library. It can be injected into any controller, service, or factory.
 
@@ -176,8 +176,6 @@ app.controller("SampleCtrl", function($scope, $firebaseAuth) {
 ```
 
 ## 7. Next Steps
-Want a more hands-on guide? Our Five Minute Tutorial covers this same material. [Try it out!](https://www.firebase.com/tutorial/#tutorial/angular/0)
-
 This was just a quick run through of the basics of AngularFire. For a more in-depth explanation of how to use the library as well as a handful of live code examples, [continue reading the AngularFire Guide](guide/).
 
-To deploy your Angular applications free, fast, and without fuss, do it Firebase style! Check out [Firebase Hosting](https://www.firebase.com/docs/hosting) for more information.
+To deploy your Angular applications free, fast, and without fuss, do it Firebase style! Check out [Firebase Hosting](https://firebase.google.com/docs/hosting/) for more information.

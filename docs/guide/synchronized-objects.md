@@ -21,7 +21,7 @@ var app = angular.module("sampleApp", ["firebase"]);
 // inject $firebaseObject into our controller
 app.controller("ProfileCtrl", ["$scope", "$firebaseObject",
   function($scope, $firebaseObject) {
-    var ref = new Firebase("https://<YOUR-FIREBASE-APP>.firebaseio.com");
+    var ref = firebase.database.ref();
     // download physicsmarie's profile data into a local object
     // all server changes are applied in realtime
     $scope.profile = $firebaseObject(ref.child('profiles').child('physicsmarie'));
@@ -35,7 +35,7 @@ The data will be requested from the server and, when it returns, AngularFire wil
 <pre>{{ profile | json }}</pre>
 ```
 
-Changes can be saved back to the server using the [`$save()`](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-firebaseobject-save) method. This could, for example, be attached to an event in the DOM view, such as `ng-click` or `ng-change`.
+Changes can be saved back to the server using the [`$save()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-save) method. This could, for example, be attached to an event in the DOM view, such as `ng-click` or `ng-change`.
 
 ```html
 <input ng-model="profile.name" ng-change="profile.$save()" type="text" />
@@ -47,10 +47,10 @@ The synchronized object is created with several special $ properties, all of whi
 
 | Method  | Description |
 | ------------- | ------------- |
-| [$save()](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-firebaseobject-save) |	Synchronizes local changes back to the remote database. |
-| [$remove()](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-firebaseobject-remove)	| Removes the object from the database, deletes the local object's keys, and sets the local object's `$value` to `null`. It's important to note that the object still exists locally, it is simply empty and we are now treating it as a primitive with a value of `null`. |
-| [$loaded()](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-firebaseobject-loaded) |	Returns a promise which is resolved when the initial server data has been downloaded. |
-| [$bindTo()](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-firebaseobject-bindtoscope-varname) |	Creates a three-way data binding. Covered below in the [Three-way Data Bindings](https://www.firebase.com/docs/web/libraries/angular/guide/synchronized-objects.html#section-three-way-bindings) section. |
+| [$save()](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-save) |	Synchronizes local changes back to the remote database. |
+| [$remove()](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-remove)	| Removes the object from the database, deletes the local object's keys, and sets the local object's `$value` to `null`. It's important to note that the object still exists locally, it is simply empty and we are now treating it as a primitive with a value of `null`. |
+| [$loaded()](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-loaded) |	Returns a promise which is resolved when the initial server data has been downloaded. |
+| [$bindTo()](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-bindtoscope-varname) |	Creates a three-way data binding. Covered below in the [Three-way Data Bindings](https://angularfire.firebaseapp.com/guide/synchronized-objects.html#section-three-way-bindings) section. |
 
 # Meta Fields on the Object
 
@@ -58,9 +58,9 @@ The synchronized object is created with several special `$` properties, all of w
 
 | Method  | Description |
 | ------------- | ------------- |
-| [$id](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-firebaseobject-id) |	The key for this record. This is equivalent to this object's path in our database as it would be returned by `ref.key()`. |
-| [$priority](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-firebaseobject-priority) |	The priority of each child node is stored here for reference. Changing this value and then calling `$save()` on the record will also change the object's priority on the server. |
-| [$value](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-firebaseobject-value) |	If the data in our database is a primitive (number, string, or boolean), the `$firebaseObject()` service will still return an object. The primitive value will be stored under `$value` and can be changed and saved like any other child node. See [Working with Primitives](guide/synchronized-objects.md#section-primitives) for more details. |
+| [$id](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-id) |	The key for this record. This is equivalent to this object's path in our database as it would be returned by `ref.key()`. |
+| [$priority](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-priority) |	The priority of each child node is stored here for reference. Changing this value and then calling `$save()` on the record will also change the object's priority on the server. |
+| [$value](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-value) |	If the data in our database is a primitive (number, string, or boolean), the `$firebaseObject()` service will still return an object. The primitive value will be stored under `$value` and can be changed and saved like any other child node. See [Working with Primitives](guide/synchronized-objects.md#section-primitives) for more details. |
 
 # Full Example
 
@@ -76,7 +76,7 @@ app.factory("Profile", ["$firebaseObject",
     return function(username) {
       // create a reference to the database node where we will store our data
       var randomRoomId = Math.round(Math.random() * 100000000);
-      var ref = new Firebase("https://docs-sandbox.firebaseio.com/af/obj/full/" + randomRoomId);
+      var ref = firebase.database.ref().child("rooms").push();
       var profileRef = ref.child(username);
 
       // return it as a synchronized object
@@ -142,7 +142,7 @@ app.factory("Profile", ["$firebaseObject",
     return function(username) {
       // create a reference to the database where we will store our data
       var randomRoomId = Math.round(Math.random() * 100000000);
-      var ref = new Firebase("https://docs-sandbox.firebaseio.com/af/obj/bindto/" + randomRoomId);
+      var ref = firebase.database().ref().child("rooms").push();
       var profileRef = ref.child(username);
 
       // return it as a synchronized object
@@ -196,7 +196,7 @@ Consider the following data structure in Firebase:
 If we attempt to synchronize `foo/` into a `$firebaseObject`, the special `$value` key is created to store the primitive. This key only exists when the path contains no child nodes. For a path that doesn't exist, `$value` would be set to `null`.
 
 ```js
-var ref = new Firebase("https://<YOUR_FIREBASE_APP>.firebaseio.com/foo");
+var ref = firebase.database().ref().child("push");
 var obj = new $firebaseObject(ref);
 obj.$loaded().then(function() {
   console.log(obj.$value); // "bar"
@@ -212,4 +212,4 @@ obj.$remove().then(function() {
 });
 ```
 
-Head on over to the [API reference](https://www.firebase.com/docs/web/libraries/angular/api.html#angularfire-firebaseobject) for `$firebaseObject` to see more details for each API method provided by the service. But not all of your data is going to fit nicely into a plain JavaScript object. Many times you will have lists of data instead. In those cases, you should use AngularFire's `$firebaseArray` service, which we will discuss in the [next section](synchronized-arrays.md).
+Head on over to the [API reference](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject) for `$firebaseObject` to see more details for each API method provided by the service. But not all of your data is going to fit nicely into a plain JavaScript object. Many times you will have lists of data instead. In those cases, you should use AngularFire's `$firebaseArray` service, which we will discuss in the [next section](synchronized-arrays.md).

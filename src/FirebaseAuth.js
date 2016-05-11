@@ -46,8 +46,8 @@
         // Authentication state methods
         $onAuthStateChanged: this.onAuthStateChanged.bind(this),
         $getAuth: this.getAuth.bind(this),
-        $requireAuth: this.requireAuth.bind(this),
-        $waitForAuth: this.waitForAuth.bind(this),
+        $requireSignIn: this.requireSignIn.bind(this),
+        $waitForSignIn: this.waitForSignIn.bind(this),
 
         // User management methods
         $createUserWithEmailAndPassword: this.createUserWithEmailAndPassword.bind(this),
@@ -247,7 +247,7 @@
      * @returns {Promise<Object>} A promise fulfilled with the client's current authentication
      * state or rejected if the client is not authenticated.
      */
-    requireAuth: function() {
+    requireSignIn: function() {
       return this._routerMethodOnAuthPromise(true, this);
     },
 
@@ -258,7 +258,7 @@
      * @returns {Promise<Object|null>} A promise fulfilled with the client's current authentication
      * state, which will be null if the client is not authenticated.
      */
-    waitForAuth: function() {
+    waitForSignIn: function() {
       return this._routerMethodOnAuthPromise(false, this);
     },
 

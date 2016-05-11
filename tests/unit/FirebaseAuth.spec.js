@@ -312,13 +312,13 @@ describe('FirebaseAuth',function(){
     });
   });
 
-  describe('$requireAuth()',function(){
+  describe('$requireSignIn()',function(){
     it('will be resolved if user is logged in', function(done){
       spyOn(authService._, 'getAuth').and.callFake(function () {
         return {provider: 'facebook'};
       });
 
-      authService.$requireAuth()
+      authService.$requireSignIn()
         .then(function (result) {
           expect(result).toEqual({provider:'facebook'});
           done();
@@ -336,7 +336,7 @@ describe('FirebaseAuth',function(){
         return null;
       });
 
-      authService.$requireAuth()
+      authService.$requireSignIn()
         .catch(function (error) {
           expect(error).toEqual("AUTH_REQUIRED");
           done();
@@ -347,13 +347,13 @@ describe('FirebaseAuth',function(){
     });
   });
 
-  describe('$waitForAuth()',function(){
+  describe('$waitForSignIn()',function(){
     it('will be resolved with authData if user is logged in', function(done){
       spyOn(authService._, 'getAuth').and.callFake(function () {
         return {provider: 'facebook'};
       });
 
-      wrapPromise(authService.$waitForAuth());
+      wrapPromise(authService.$waitForSignIn());
 
       fakePromiseResolve({provider: 'facebook'});
       tick(function () {
@@ -367,7 +367,7 @@ describe('FirebaseAuth',function(){
         return;
       });
 
-      wrapPromise(authService.$waitForAuth());
+      wrapPromise(authService.$waitForSignIn());
 
       fakePromiseResolve();
       tick(function () {
@@ -379,13 +379,13 @@ describe('FirebaseAuth',function(){
     // TODO: Replace this test
     // it('promise resolves with current value if auth state changes after onAuth() completes', function() {
     //   ref.getAuth.and.returnValue({provider:'facebook'});
-    //   wrapPromise(auth.$waitForAuth());
+    //   wrapPromise(auth.$waitForSignIn());
     //   callback('onAuth')();
     //   $timeout.flush();
     //   expect(result).toEqual({provider:'facebook'});
     //
     //   ref.getAuth.and.returnValue(null);
-    //   wrapPromise(auth.$waitForAuth());
+    //   wrapPromise(auth.$waitForSignIn());
     //   $timeout.flush();
     //   expect(result).toBe(null);
     // });

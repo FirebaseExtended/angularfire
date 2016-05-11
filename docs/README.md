@@ -7,6 +7,7 @@ AngularFire is the officially supported AngularJS binding for Firebase. The comb
 * [API Reference](https://angularfire.firebaseapp.com/api.html)
 
 ## Migrating
+* [Migrating from AngularFire 1.x.x to 2.x.x](migration/1XX-to-2XX.md)
 * [Migrating from AngularFire 0.9.x to 1.x.x](migration/09X-to-1XX.md)
 
 ## Examples

@@ -1,6 +1,6 @@
 # Migrating from AngularFire 0.9.x to 1.x.x
 
-This migration plan will walk through some of the major breaking mentioned in the [AngularFire 1.0.0 change log](https://www.firebase.com/docs/web/libraries/angular/changelog.html) and provide you with code samples and guidance to upgrade your existing application.
+This migration plan will walk through some of the major breaking changes with code samples and guidance to upgrade your existing application.
 
 ## Removal of $firebase
 
