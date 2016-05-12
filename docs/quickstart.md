@@ -36,7 +36,7 @@ Now the `$firebaseObject`, `$firebaseArray`, and `$firebaseAuth` services are av
 
 ```js
 app.controller("SampleCtrl", function($scope, $firebaseObject) {
-  var ref = new Firebase("https://<YOUR-FIREBASE-APP>.firebaseio.com");
+  var ref = firebase.database().ref();
   // download the data into a local object
   $scope.data = $firebaseObject(ref);
   // putting a console.log here won't work, see below
@@ -53,7 +53,7 @@ To set up this three-way data binding, we use the `$firebaseObject` service intr
 ```js
 var app = angular.module("sampleApp", ["firebase"]);
 app.controller("SampleCtrl", function($scope, $firebaseObject) {
-  var ref = new Firebase("https://<YOUR-FIREBASE-APP>.firebaseio.com/data");
+  var ref = firebase.database().ref().child("data");
   // download the data into a local object
   var syncObject = $firebaseObject(ref);
   // synchronize the object with a three-way data binding
@@ -87,7 +87,7 @@ We synchronize a list of messages into a read-only array by using the `$firebase
 ```js
 var app = angular.module("sampleApp", ["firebase"]);
 app.controller("SampleCtrl", function($scope, $firebaseArray) {
-  var ref = new Firebase("https://<YOUR-FIREBASE-APP>.firebaseio.com/messages");
+  var ref = firebase.database().ref().child("messages");
   // create a synchronized array
   // click on `index.html` above to see it used in the DOM!
   $scope.messages = $firebaseArray(ref);
@@ -117,7 +117,7 @@ Instead, AngularFire provides a set of methods compatible with manipulating sync
 ```js
 var app = angular.module("sampleApp", ["firebase"]);
 app.controller("SampleCtrl", function($scope, $firebaseArray) {
-  var ref = new Firebase("https://<YOUR-FIREBASE-APP>.firebaseio.com/messages");
+  var ref = firebase.database().ref().child("messages");
   // create a synchronized array
   $scope.messages = $firebaseArray(ref);
   // add new items to the array
@@ -163,7 +163,7 @@ AngularFire provides a service named `$firebaseAuth` which wraps the authenticat
 
 ```js
 app.controller("SampleCtrl", function($scope, $firebaseAuth) {
-  var ref = new Firebase("https://<YOUR-FIREBASE-APP>.firebaseio.com");
+  var ref = firebase.database().ref();
   // create an instance of the authentication service
   var auth = $firebaseAuth(ref);
   // login with Facebook
