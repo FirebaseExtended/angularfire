@@ -157,7 +157,7 @@ app.controller("SampleCtrl", function($scope, $firebaseArray) {
 ```
 
 ## 6. Add Authentication
-Firebase provides a [hosted authentication service](https://firebase-dot-devsite.googleplex.com/docs/database/security/) which offers a completely client-side solution to account management and authentication. It supports anonymous authentication, email / password login, and login via several OAuth providers, including Facebook, GitHub, Google, and Twitter.
+Firebase provides a [hosted authentication service](https://firebase.google.com/docs/database/security/) which offers a completely client-side solution to account management and authentication. It supports anonymous authentication, email / password login, and login via several OAuth providers, including Facebook, GitHub, Google, and Twitter.
 
 AngularFire provides a service named `$firebaseAuth` which wraps the authentication methods provided by the Firebase client library. It can be injected into any controller, service, or factory.
 
