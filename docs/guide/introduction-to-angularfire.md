@@ -26,9 +26,9 @@ Adding Firebase to your application is easy. Simply include the Firebase JavaScr
 <!-- Angular -->
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
 <!-- Firebase -->
-<script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.0.0/firebase.js"></script>
 <!-- AngularFire -->
-<script src="https://cdn.firebase.com/libs/angularfire/1.2.0/angularfire.min.js"></script>
+<script src="https://cdn.firebase.com/libs/angularfire/1.3.0/angularfire.min.js"></script>
 ```
 *Firebase and AngularFire are available via npm and Bower as `firebase` and `angularfire`, respectively. A Yeoman generator is also available.
 Once we have our libraries installed, we can include the AngularFire services by declaring firebase as a module dependency in our application.*
