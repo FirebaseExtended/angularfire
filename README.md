@@ -26,10 +26,10 @@ In order to use AngularFire in your project, you need to include the following f
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular.min.js"></script>
 
 <!-- Firebase -->
-<script src="https://cdn.firebase.com/js/client/2.4.0/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.0.0/firebase.js"></script>
 
 <!-- AngularFire -->
-<script src="https://cdn.firebase.com/libs/angularfire/1.2.0/angularfire.min.js"></script>
+<script src="https://cdn.firebase.com/libs/angularfire/1.3.0/angularfire.min.js"></script>
 ```
 
 Use the URL above to download both the minified and non-minified versions of AngularFire from the
