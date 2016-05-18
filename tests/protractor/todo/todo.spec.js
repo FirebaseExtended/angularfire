@@ -1,5 +1,5 @@
 var protractor = require('protractor');
-var Firebase = require('firebase');
+var firebase = require('firebase');
 
 describe('Todo App', function () {
   // Reference to the Firebase which stores the data for this demo

@@ -1,5 +1,5 @@
 var protractor = require('protractor');
-var Firebase = require('firebase');
+var firebase = require('firebase');
 
 describe('Priority App', function () {
   // Reference to the message repeater
