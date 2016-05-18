@@ -1,13 +1,6 @@
 var protractor = require('protractor');
 var firebase = require('firebase');
-
-var config = {
-  apiKey: "AIzaSyCcB9Ozrh1M-WzrwrSMB6t5y1flL8yXYmY",
-  authDomain: "angularfire-dae2e.firebaseapp.com",
-  databaseURL: "https://angularfire-dae2e.firebaseio.com",
-  storageBucket: "angularfire-dae2e.appspot.com",
-};
-firebase.initializeApp(config);
+require("../../initialize-node.js");
 
 describe('Chat App', function () {
   // Reference to the Firebase which stores the data for this demo
@@ -109,7 +102,7 @@ describe('Chat App', function () {
       // Simulate a message being deleted remotely
       var onCallback = firebaseRef.child('messages').limitToLast(1).on('child_added', function(childSnapshot) {
         firebaseRef.child('messages').off('child_added', onCallback);
-        childSnapshot.ref().remove(function(err) {
+        childSnapshot.ref.remove(function(err) {
           if( err ) { def.reject(err); }
           else { def.fulfill(); }
         });

@@ -1,20 +1,13 @@
 var protractor = require('protractor');
 var firebase = require('firebase');
-
-var config = {
-  apiKey: "AIzaSyCcB9Ozrh1M-WzrwrSMB6t5y1flL8yXYmY",
-  authDomain: "angularfire-dae2e.firebaseapp.com",
-  databaseURL: "https://angularfire-dae2e.firebaseio.com",
-  storageBucket: "angularfire-dae2e.appspot.com",
-};
-firebase.initializeApp(config);
+require("../../initialize-node.js");
 
 describe('Priority App', function () {
   // Reference to the message repeater
   var messages = element.all(by.repeater('message in messages'));
 
   // Reference to the Firebase which stores the data for this demo
-  var firebaseRef = firebase.database().ref();
+  var firebaseRef = firebase.database().ref("priority");
   firebaseRef.remove();
 
   // Boolean used to load the page on the first test only
@@ -101,6 +94,7 @@ describe('Priority App', function () {
     flow.execute(moveRecords);
     flow.execute(waitOne);
 
+
     expect(messages.count()).toBe(3);
     expect($('.message:nth-of-type(1) .priority').getText()).toEqual('0');
     expect($('.message:nth-of-type(2) .priority').getText()).toEqual('1');
@@ -110,6 +104,7 @@ describe('Priority App', function () {
     expect($('.message:nth-of-type(1) .content').getText()).toEqual('Pretty fantastic!');
     expect($('.message:nth-of-type(2) .content').getText()).toEqual('Oh, hi. How are you?');
     expect($('.message:nth-of-type(3) .content').getText()).toEqual('Hey there!');
+
 
     function moveRecords() {
       return setPriority(null, 4)
@@ -124,9 +119,9 @@ describe('Priority App', function () {
         //todo makeItChange just forces Angular to update the dom since it won't change
         //todo when a $ variable updates
         data.makeItChange = true;
-        snap.ref().setWithPriority(data, pri, function(err) {
+        snap.ref.setWithPriority(data, pri, function(err) {
           if( err ) { def.reject(err); }
-          else { def.fulfill(snap.key()); }
+          else { def.fulfill(snap.key); }
         })
       }, def.reject);
       return def.promise;

@@ -1,17 +1,10 @@
 var protractor = require('protractor');
 var firebase = require('firebase');
-
-var config = {
-  apiKey: "AIzaSyCcB9Ozrh1M-WzrwrSMB6t5y1flL8yXYmY",
-  authDomain: "angularfire-dae2e.firebaseapp.com",
-  databaseURL: "https://angularfire-dae2e.firebaseio.com",
-  storageBucket: "angularfire-dae2e.appspot.com",
-};
-firebase.initializeApp(config);
+require("../../initialize-node.js");
 
 describe('TicTacToe App', function () {
   // Reference to the Firebase which stores the data for this demo
-  var firebaseRef = firebase.database().ref();
+  var firebaseRef = firebase.database().ref("tictactoe");
   firebaseRef.remove();
 
   // Boolean used to load the page on the first test only
@@ -108,7 +101,7 @@ describe('TicTacToe App', function () {
 
   it('persists state across refresh', function(done) {
     // Refresh the page, passing the push ID to use for data storage
-    browser.get('tictactoe/tictactoe.html?pushId=' + firebaseRef.key()).then(function() {
+    browser.get('tictactoe/tictactoe.html?pushId=' + firebaseRef.key).then(function() {
       // Wait for AngularFire to sync the initial state
       sleep();
       sleep();

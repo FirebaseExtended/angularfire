@@ -659,11 +659,17 @@
 
         var def     = $firebaseUtils.defer();
         var created = function(snap, prevChild) {
+          if (!firebaseArray) {
+            return;
+          }
           waitForResolution(firebaseArray.$$added(snap, prevChild), function(rec) {
             firebaseArray.$$process('child_added', rec, prevChild);
           });
         };
         var updated = function(snap) {
+          if (!firebaseArray) {
+            return;
+          }
           var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
           if( rec ) {
             waitForResolution(firebaseArray.$$updated(snap), function() {
@@ -672,6 +678,9 @@
           }
         };
         var moved   = function(snap, prevChild) {
+          if (!firebaseArray) {
+            return;
+          }
           var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
           if( rec ) {
             waitForResolution(firebaseArray.$$moved(snap, prevChild), function() {
@@ -680,6 +689,9 @@
           }
         };
         var removed = function(snap) {
+          if (!firebaseArray) {
+            return;
+          }
           var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
           if( rec ) {
             waitForResolution(firebaseArray.$$removed(snap), function() {

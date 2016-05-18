@@ -632,6 +632,7 @@ describe('$firebaseObject', function() {
 
     it('should trigger a value event for $watch listeners', function(done) {
       var spy = jasmine.createSpy('$watch listener');
+
       obj.$watch(spy);
       obj.$remove().then(function () {
         expect(spy).toHaveBeenCalledWith({ event: 'value', key: obj.$id });
@@ -837,7 +838,7 @@ describe('$firebaseObject', function() {
   }
 
   function stubRef() {
-    return firebase.database().ref().child('data').child(DEFAULT_ID).push();
+    return firebase.database().ref().push();
   }
 
   function makeObject(initialData, ref) {

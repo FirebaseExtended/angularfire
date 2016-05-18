@@ -1084,7 +1084,7 @@ describe('$firebaseArray', function () {
   })();
 
   function stubRef() {
-    return firebase.database().ref().child('data').child(DEFAULT_ID).push();
+    return firebase.database().ref().push();
   }
 
   function stubArray(initialData, Factory, ref) {
