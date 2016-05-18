@@ -112,13 +112,10 @@
     /**
      * Authenticates the Firebase reference with the OAuth redirect flow.
      *
-     * @param {string} provider The unique string identifying the OAuth provider to authenticate
-     * with, e.g. google.
-     * @param {Object} [options] An object containing optional client arguments, such as configuring
-     * session persistence.
+     * @param {object} provider A firebase.auth.AuthProvider or a unique provider ID like 'facebook'
      * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
      */
-    signInWithRedirect: function(provider, options) {
+    signInWithRedirect: function(provider) {
       return this._utils.Q(this._auth.signInWithRedirect(this._getProvider(provider)).then);
     },
 
@@ -157,8 +154,6 @@
      * deregister the provided callback.
      */
     onAuthStateChanged: function(callback, context) {
-      var self = this;
-
       var fn = this._utils.debounce(callback, context, 0);
       var off = this._auth.onAuthStateChanged(fn);
 

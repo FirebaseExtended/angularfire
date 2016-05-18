@@ -115,7 +115,7 @@
           var dataJSON;
 
           try {
-            dataJSON = $firebaseUtils.toJSON(data)
+            dataJSON = $firebaseUtils.toJSON(data);
           } catch (err) {
             def.reject(err);
           }
@@ -167,7 +167,7 @@
                 def.resolve(ref);
               }).catch(function (err) {
                 def.reject(err);
-              });  
+              });
             }
           }
           else {

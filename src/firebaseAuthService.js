@@ -1,7 +1,7 @@
 (function() {
   "use strict";
 
-  function FirebaseAuthService($firebaseAuth, $firebaseRef) {
+  function FirebaseAuthService($firebaseAuth  ) {
     return $firebaseAuth();
   }
   FirebaseAuthService.$inject = ['$firebaseAuth', '$firebaseRef'];
