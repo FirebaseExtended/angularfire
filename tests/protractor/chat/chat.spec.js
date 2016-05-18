@@ -3,7 +3,8 @@ var Firebase = require('firebase');
 
 describe('Chat App', function () {
   // Reference to the Firebase which stores the data for this demo
-  var firebaseRef = new Firebase('https://angularfire.firebaseio-demo.com/chat');
+  var firebaseRef = firebase.database().ref();
+  firebaseRef.remove();
 
   // Boolean used to load the page on the first test only
   var isPageLoaded = false;

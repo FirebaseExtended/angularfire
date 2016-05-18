@@ -6,7 +6,8 @@ describe('Priority App', function () {
   var messages = element.all(by.repeater('message in messages'));
 
   // Reference to the Firebase which stores the data for this demo
-  var firebaseRef = new Firebase('https://topstory.firebaseio.com/priority');
+  var firebaseRef = firebase.database().ref();
+  firebaseRef.remove();
 
   // Boolean used to load the page on the first test only
   var isPageLoaded = false;

@@ -3,7 +3,7 @@ var Firebase = require('firebase');
 
 describe('Todo App', function () {
   // Reference to the Firebase which stores the data for this demo
-  var firebaseRef = new Firebase('https://topstory.firebaseio.com/todo');
+  var firebaseRef = firebase.database().ref();
   firebaseRef.remove();
 
   // Boolean used to load the page on the first test only

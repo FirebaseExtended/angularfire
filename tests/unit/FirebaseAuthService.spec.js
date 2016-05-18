@@ -1,7 +1,7 @@
 'use strict';
 describe('$firebaseAuthService', function () {
   var $firebaseRefProvider;
-  var URL = 'https://topstory.firebaseio.com/'
+  var URL = 'https://angularfire-dae2e.firebaseio.com'
 
   beforeEach(module('firebase', function(_$firebaseRefProvider_) {
     $firebaseRefProvider = _$firebaseRefProvider_;
