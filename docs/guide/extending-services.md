@@ -142,6 +142,6 @@ The methods below are also part of extensible portion of `$firebaseArray`, and a
 
 You can read more about extending the `$firebaseObject` and `$firebaseArray`
 services in the
-[API reference](https://firebase.com/docs/web/libraries/angular/api.html#angularfire-extending-the-services).
+[API reference](https://angularfire.firebaseapp.com/api.html#angularfire-extending-the-services).
 
 The sections of this guide so far have taken us on a tour through the functionality provided by the AngularFire library, but there is still more that can be done with the combination of Firebase and Angular. The [next section](beyond-angularfire.md) takes us beyond AngularFire to see what else is possible.
