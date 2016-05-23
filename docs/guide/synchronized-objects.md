@@ -1,6 +1,19 @@
-# Overview
+# Synchronized Objects | AngularFire Guide
 
-Objects are useful for storing key / value pairs and singular records that are not used as a collection. Consider the following user profile for `physicsmarie`:
+## Table of Contents
+
+* [Overview](#overview)
+* [API Summary](#api-summary)
+* [Meta Fields on the Object](#meta-fields-on-the-object)
+* [Full Example](#full-example)
+* [Three-way Data Bindings](#three-way-data-bindings)
+* [Working With Primitives](#working-with-primitives)
+
+
+## Overview
+
+Objects are useful for storing key / value pairs and singular records that are not used as a
+collection. Consider the following user profile for `physicsmarie`:
 
 ```js
 {
@@ -13,7 +26,9 @@ Objects are useful for storing key / value pairs and singular records that are n
 }
 ```
 
-We could fetch this profile using AngularFire's `$firebaseObject()` service. In addition to several helper methods prefixed with `$`, the returned object would contain all of the child keys for that record (i.e. `name` and `dob`).
+We could fetch this profile using AngularFire's `$firebaseObject()` service. In addition to several
+helper methods prefixed with `$`, the returned object would contain all of the child keys for that
+record (i.e. `name` and `dob`).
 
 ```js
 // define our app and dependencies (remember to include firebase!)
@@ -29,40 +44,47 @@ app.controller("ProfileCtrl", ["$scope", "$firebaseObject",
 ]);
 ```
 
-The data will be requested from the server and, when it returns, AngularFire will notify the Angular compiler to render the new content. So we can use this in our views normally. For example, the code below would print the content of the profile in JSON format.
+The data will be requested from the server and, when it returns, AngularFire will notify the Angular
+compiler to render the new content. So we can use this in our views normally. For example, the code
+below would print the content of the profile in JSON format.
 
 ```html
 <pre>{{ profile | json }}</pre>
 ```
 
-Changes can be saved back to the server using the [`$save()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-save) method. This could, for example, be attached to an event in the DOM view, such as `ng-click` or `ng-change`.
+Changes can be saved back to the server using the
+[`$save()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-save) method.
+This could, for example, be attached to an event in the DOM view, such as `ng-click` or `ng-change`.
 
 ```html
 <input ng-model="profile.name" ng-change="profile.$save()" type="text" />
 ```
 
-# API Summary
+
+## API Summary
 
 The synchronized object is created with several special $ properties, all of which are listed in the following table:
 
 | Method  | Description |
 | ------------- | ------------- |
-| [$save()](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-save) |	Synchronizes local changes back to the remote database. |
-| [$remove()](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-remove)	| Removes the object from the database, deletes the local object's keys, and sets the local object's `$value` to `null`. It's important to note that the object still exists locally, it is simply empty and we are now treating it as a primitive with a value of `null`. |
-| [$loaded()](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-loaded) |	Returns a promise which is resolved when the initial server data has been downloaded. |
-| [$bindTo()](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-bindtoscope-varname) |	Creates a three-way data binding. Covered below in the [Three-way Data Bindings](https://angularfire.firebaseapp.com/guide/synchronized-objects.html#section-three-way-bindings) section. |
+| [`$save()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-save) |	Synchronizes local changes back to the remote database. |
+| [`$remove()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-remove)	| Removes the object from the database, deletes the local object's keys, and sets the local object's `$value` to `null`. It's important to note that the object still exists locally, it is simply empty and we are now treating it as a primitive with a value of `null`. |
+| [`$loaded()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-loaded) |	Returns a promise which is resolved when the initial server data has been downloaded. |
+| [`$bindTo()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-bindtoscope-varname) |	Creates a three-way data binding. Covered below in the [Three-way Data Bindings](#three-way-data-bindings) section. |
 
-# Meta Fields on the Object
+
+## Meta Fields on the Object
 
 The synchronized object is created with several special `$` properties, all of which are listed in the following table:
 
 | Method  | Description |
 | ------------- | ------------- |
-| [$id](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-id) |	The key for this record. This is equivalent to this object's path in our database as it would be returned by `ref.key()`. |
-| [$priority](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-priority) |	The priority of each child node is stored here for reference. Changing this value and then calling `$save()` on the record will also change the object's priority on the server. |
-| [$value](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-value) |	If the data in our database is a primitive (number, string, or boolean), the `$firebaseObject()` service will still return an object. The primitive value will be stored under `$value` and can be changed and saved like any other child node. See [Working with Primitives](guide/synchronized-objects.md#section-primitives) for more details. |
+| [`$id`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-id) |	The key for this record. This is equivalent to this object's path in our database as it would be returned by `ref.key()`. |
+| [`$priority`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-priority) |	The priority of each child node is stored here for reference. Changing this value and then calling `$save()` on the record will also change the object's priority on the server. |
+| [`$value`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-value) |	If the data in our database is a primitive (number, string, or boolean), the `$firebaseObject()` service will still return an object. The primitive value will be stored under `$value` and can be changed and saved like any other child node. See [Working with Primitives](#working-with-primitives) for more details. |
 
-# Full Example
+
+## Full Example
 
 Putting all of that together, we can generate a page for editing user profiles:
 
@@ -101,11 +123,8 @@ app.controller("ProfileCtrl", ["$scope", "Profile",
   }
 ]);
 ```
-```html
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
-<script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
-<script src="https://cdn.firebase.com/libs/angularfire/2.0.0/angularfire.min.js"></script>
 
+```html
 <div ng-app="sampleApp" ng-controller="ProfileCtrl">
   <!-- $id is a special meta variable containing the object's key in our Firebase database.
   In this case, it would be "physicsmarie" -->
@@ -124,11 +143,16 @@ app.controller("ProfileCtrl", ["$scope", "Profile",
 </div>
 ```
 
-# Three-way Data Bindings
 
-Synchronizing changes from the server is pretty magical. However, shouldn't an awesome tool like AngularFire have some way to detect local changes as well so we don't have to call `$save()`? Of course. We call this a *three-way data binding*.
+## Three-way Data Bindings
 
-Simply call `$bindTo()` on a synchronized object and now any changes in the DOM are pushed to Angular, and then automatically to our database. And inversely, any changes on the server get pushed into Angular and straight to the DOM.
+Synchronizing changes from the server is pretty magical. However, shouldn't an awesome tool like
+AngularFire have some way to detect local changes as well so we don't have to call `$save()`? Of
+course. We call this a *three-way data binding*.
+
+Simply call `$bindTo()` on a synchronized object and now any changes in the DOM are pushed to
+Angular, and then automatically to our database. And inversely, any changes on the server get pushed
+into Angular and straight to the DOM.
 
 Let's revise our previous example to get rid of the pesky save button and the `$save()` method:
 
@@ -160,10 +184,6 @@ app.controller("ProfileCtrl", ["$scope", "Profile",
 ```
 
 ```html
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
-<script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
-<script src="https://cdn.firebase.com/libs/angularfire/2.0.0/angularfire.min.js"></script>
-
 <div ng-app="sampleApp" ng-controller="ProfileCtrl">
   <!-- $id is a special meta variable containing the object's key in our Firebase database.
   In this case, it would be "physicsmarie" -->
@@ -179,11 +199,17 @@ app.controller("ProfileCtrl", ["$scope", "Profile",
 </div>
 ```
 
-In this example, we've used `$bindTo()` to automatically synchronize data between the database and `$scope.profile`. We don't need an `ng-submit` to call `$save()` anymore. AngularFire takes care of all this automatically!
+In this example, we've used `$bindTo()` to automatically synchronize data between the database and
+`$scope.profile`. We don't need an `ng-submit` to call `$save()` anymore. AngularFire takes care of
+all this automatically!
 
-**While three-way data bindings can be extremely convenient, be careful of trying to use them against deeply nested tree structures. For performance reasons, stick to practical uses like synchronizing key / value pairs that aren't changed simultaneously by several users. Do not try to use `$bindTo()` to synchronize collections or lists of data.**
+**While three-way data bindings can be extremely convenient, be careful of trying to use them
+against deeply nested tree structures. For performance reasons, stick to practical uses like
+synchronizing key / value pairs that aren't changed simultaneously by several users. Do not try to
+use `$bindTo()` to synchronize collections or lists of data.**
 
-# Working with Primitives
+
+## Working With Primitives
 
 Consider the following data structure in Firebase:
 
@@ -193,7 +219,9 @@ Consider the following data structure in Firebase:
 }
 ```
 
-If we attempt to synchronize `foo/` into a `$firebaseObject`, the special `$value` key is created to store the primitive. This key only exists when the path contains no child nodes. For a path that doesn't exist, `$value` would be set to `null`.
+If we attempt to synchronize `foo/` into a `$firebaseObject`, the special `$value` key is created to
+store the primitive. This key only exists when the path contains no child nodes. For a path that
+doesn't exist, `$value` would be set to `null`.
 
 ```js
 var ref = firebase.database().ref().child("push");
@@ -212,4 +240,8 @@ obj.$remove().then(function() {
 });
 ```
 
-Head on over to the [API reference](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject) for `$firebaseObject` to see more details for each API method provided by the service. But not all of your data is going to fit nicely into a plain JavaScript object. Many times you will have lists of data instead. In those cases, you should use AngularFire's `$firebaseArray` service, which we will discuss in the [next section](synchronized-arrays.md).
+Head on over to the [API reference](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject)
+for `$firebaseObject` to see more details for each API method provided by the service. But not all
+of your data is going to fit nicely into a plain JavaScript object. Many times you will have lists
+of data instead. In those cases, you should use AngularFire's `$firebaseArray` service, which we
+will discuss in the [next section](synchronized-arrays.md).

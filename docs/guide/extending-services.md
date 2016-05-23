@@ -1,4 +1,14 @@
-# Overview
+# Extending Services | AngularFire Guide
+
+## Table of Contents
+
+* [Overview](#overview)
+* [Naming Conventions](#naming-conventions)
+* [Extending `$firebaseObject`](#extending-firebaseobject)
+* [Extending `$firebaseArray`](#extending-firebasearray)
+
+
+## Overview
 
 **This section is intended for experienced Angular users. [Skip ahead](beyond-angularfire.md) if you are just getting started.**
 
@@ -8,7 +18,8 @@ This allows us to transform data and add additional methods onto our synchronize
 arrays. Before we jump into how exactly to do this, let's discuss some naming conventions used
 within the AngularFire library.
 
-# Naming Conventions
+
+## Naming Conventions
 
 Methods in `$firebaseArray` and `$firebaseObject` are named using
 `$`, `$$` or `_` prefixes, according to the following
@@ -33,7 +44,7 @@ set when `$$added` is invoked.
 remote value at a path is `"foo"`, and that path is synchronized into a local `$firebaseObject`,
 the locally synchronized object will have a JSON structure `{ "$value": "foo" }`. Similarly, if a
 remote path does not exist, the local object would have the JSON structure `{ "$value": null }`.
-See [Working with Primitives](docs/guide/synchronized-object.md) for more details.
+See [Working with Primitives](../guide/synchronized-object.md#working-with-primitives) for more details.
 
 By default, data stored on a synchronized object or a record in a synchronized array exists
 as a direct attribute of the object. We denote any methods or data which should *not* be
@@ -42,7 +53,8 @@ removed from JSON data before synchronizing this data back to the database.
 Developers may use those prefixes to add additional data / methods to an object or a record
 which they do not want synchronized.
 
-# Extending $firebaseObject
+
+## Extending `$firebaseObject`
 
 The following `User` factory retrieves a synchronized user object, and
 adds a special `getFullName()` method.
@@ -78,10 +90,10 @@ locally, and what is returned to the server. Read more about them in the
 
 | Method | Description |
 |--------|-------------|
-| $$updated(snapshot) | Called with a snapshot any time the value in the database changes. It returns a boolean indicating whether any changes were applied. |
-| $$error(Object) | Called if there is a permissions error accessing remote data. Generally these errors are unrecoverable (the data will no longer by synchronized). |
-| $$defaults(Object) | A key / value pair that can be used to create default values for any fields which are not found in the server data (i.e. `undefined` fields). By default, they are applied each time the `$$updated` method is invoked. |
-| toJSON() | If this method exists, it is used by `JSON.stringify()` to parse the data sent back to the server. |
+| `$$updated(snapshot)` | Called with a snapshot any time the value in the database changes. It returns a boolean indicating whether any changes were applied. |
+| `$$error(Object)` | Called if there is a permissions error accessing remote data. Generally these errors are unrecoverable (the data will no longer by synchronized). |
+| `$$defaults(Object)` | A key / value pair that can be used to create default values for any fields which are not found in the server data (i.e. `undefined` fields). By default, they are applied each time the `$$updated` method is invoked. |
+| `toJSON()` | If this method exists, it is used by `JSON.stringify()` to parse the data sent back to the server. |
 
 If you view a `$firebaseObject` in the JavaScript debugger, you may notice a special `$$conf`
 variable. This internal property is used to track internal bindings and state. It is non-enumerable (i.e. it won't
@@ -89,7 +101,8 @@ be iterated by `for` or by `angular.forEach()`) and is also read-only. It is nev
 saved back to the server (all `$$` properties are ignored), and it should not be modified or used
 by extending services.
 
-# Extending $firebaseArray
+
+## Extending `$firebaseArray`
 
 The following `ListWithTotal` service extends `$firebaseArray` to include a `getTotal()` method.
 
@@ -125,20 +138,21 @@ locally, and what is returned to the server. Read more about them in the
 
 | Method | Description |
 |--------|-------------|
-| $$added(snapshot, prevChildKey) | Called any time a `child_added` event is received. Returns the new record that should be added to the array. The `$getRecord()` method depends on $$added to set the special `$id` variable on each record to the Firebase key. This is used for finding records in the list during `$$added`, `$$updated`, and `$$deleted` events. It is possible to use fields other than `$id` by also overriding how `$getRecord()` matches keys to record in the array. |
-| $$updated(snapshot) | Called any time a `child_updated` event is received. Applies the changes and returns `true` if any local data was modified. Uses the `$getRecord()` method to find the correct record in the array for applying updates. Should return `false` if no changes occurred or if the record does not exist in the array. |
-| $$moved(snapshot, prevChildKey) | Called any time a `child_moved` event is received. Returns `true` if the record should be moved. The actual move event takes place inside the `$$process` method. |
-| $$removed(snapshot) | Called with a snapshot any time a `child_removed` event is received. Depends on the `$getRecord()` method to find the correct record in the array. Returns `true` if the record should be removed. The actual splicing of the array takes place in the `$$process` method. The only responsibility of `$$removed` is deciding if the remove request is valid and if the record exists. |
-| $$error(errorObject) | Called if there is a permissions error accessing remote data. Generally these errors are unrecoverable (the data will no longer by synchronized). |
+| `$$added(snapshot, prevChildKey)` | Called any time a `child_added` event is received. Returns the new record that should be added to the array. The `$getRecord()` method depends on $$added to set the special `$id` variable on each record to the Firebase key. This is used for finding records in the list during `$$added`, `$$updated`, and `$$deleted` events. It is possible to use fields other than `$id` by also overriding how `$getRecord()` matches keys to record in the array. |
+| `$$updated(snapshot)` | Called any time a `child_updated` event is received. Applies the changes and returns `true` if any local data was modified. Uses the `$getRecord()` method to find the correct record in the array for applying updates. Should return `false` if no changes occurred or if the record does not exist in the array. |
+| `$$moved(snapshot, prevChildKey)` | Called any time a `child_moved` event is received. Returns `true` if the record should be moved. The actual move event takes place inside the `$$process` method. |
+| `$$removed(snapshot)` | Called with a snapshot any time a `child_removed` event is received. Depends on the `$getRecord()` method to find the correct record in the array. Returns `true` if the record should be removed. The actual splicing of the array takes place in the `$$process` method. The only responsibility of `$$removed` is deciding if the remove request is valid and if the record exists. |
+| `$$error(errorObject)` | Called if there is a permissions error accessing remote data. Generally these errors are unrecoverable (the data will no longer by synchronized). |
 
-The methods below are also part of extensible portion of `$firebaseArray`, and are used by the event methods above, and when saving data back to the Firebase database.
+The methods below are also part of extensible portion of `$firebaseArray`, and are used by the event
+methods above, and when saving data back to the Firebase database.
 
 | Method | Description |
 |--------|-------------|
-| $$defaults(Object) | A key / value pair that can be used to create default values for any fields which are not found in the server data (i.e. `undefined` fields). By default, they are applied each time the `$add()`, `$$added()`, or `$$updated()`, methods are invoked. |
-| toJSON() | If this method exists on a record **in the array**, it is used to parse the data sent back to the server. Thus, by overriding `$$added` to create a toJSON() method on individual records, one can manipulate what data is sent back to Firebase and how it is processed before saving. |
-| $$process(event, record, prevChildKey) | This is a mostly internal method and should generally not be overridden. It abstracts some common functionality between the various event types. It's responsible for all inserts, deletes, and splicing of the array element elements, and for calling `$$notify` to trigger notification events. It is called immediately after any server event (`$$added`, `$$updated`, `$$moved` or `$$removed`), assuming those methods do not cancel the event by returning `false` or `null`. |
-| $$notify(event, recordKey) | This is a mostly internal method and should generally not be overridden. It triggers notification events for listeners established by `$watch` and is called internally by `$$process`. |
+| `$$defaults(Object)` | A key / value pair that can be used to create default values for any fields which are not found in the server data (i.e. `undefined` fields). By default, they are applied each time the `$add()`, `$$added()`, or `$$updated()`, methods are invoked. |
+| `toJSON()` | If this method exists on a record **in the array**, it is used to parse the data sent back to the server. Thus, by overriding `$$added` to create a toJSON() method on individual records, one can manipulate what data is sent back to Firebase and how it is processed before saving. |
+| `$$process(event, record, prevChildKey)` | This is a mostly internal method and should generally not be overridden. It abstracts some common functionality between the various event types. It's responsible for all inserts, deletes, and splicing of the array element elements, and for calling `$$notify` to trigger notification events. It is called immediately after any server event (`$$added`, `$$updated`, `$$moved` or `$$removed`), assuming those methods do not cancel the event by returning `false` or `null`. |
+| `$$notify(event, recordKey)` | This is a mostly internal method and should generally not be overridden. It triggers notification events for listeners established by `$watch` and is called internally by `$$process`. |
 
 You can read more about extending the `$firebaseObject` and `$firebaseArray`
 services in the

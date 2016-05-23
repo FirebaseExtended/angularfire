@@ -1,4 +1,15 @@
-# Overview
+# Beyond AngularFire | AngularFire Guide
+
+## Table of Contents
+
+* [Overview](#overview)
+* [Best Practices](#best-practices)
+* [Deploying Your App](#deploying-your-app)
+* [Next Steps](#next-steps)
+
+
+## Overview
+
 AngularFire greatly simplifies bindings and abstracts a lot of the internal workings of Angular,
 such as how to notify the compiler when changes occur. However, it does not attempt to replicate
 the entire Firebase client library's API.
@@ -34,22 +45,26 @@ bare-bones work needed to synchronize an array, examine
 [Firebase.getAsArray()](https://github.com/katowulf/Firebase.getAsArray) for a more
 fully functional synchronized array implementation and the work involved.
 
-# Best Practices
+
+## Best Practices
+
 When using the vanilla Firebase client library with Angular, it is best to keep the following things
 in mind:
 
 * **Wrap events in `$timeout()`**: Wrap all server notifications in
 `$timeout()` to ensure the Angular compiler is notified of changes.
-**Use `$window.Firebase`**: This allows test units and end-to-end
+* **Use `$window.Firebase`**: This allows test units and end-to-end
 tests to spy on the Firebase client library and replace it with mock functions. It also avoids the linter warnings about
 globals.
-**Mock Firebase for testing**: Use mocks for unit tests. A non-supported,
+* **Mock Firebase for testing**: Use mocks for unit tests. A non-supported,
 third-party mock of the Firebase classes can be
 [found here](https://github.com/katowulf/mockfirebase). The
 [AngularFire unit tests](https://github.com/firebase/angularfire/blob/master/tests/unit)
 can be used as an example of mocking `Firebase` classes.
 
-# Deploying Your App
+
+## Deploying Your App
+
 Once you are done building your application, you'll need a way to share it with the world. To
 deploy your Angular applications free, fast, and without fuss, do it Firebase style! Our
 production-grade hosting service serves your content over HTTPS and is backed by a global CDN.
@@ -57,14 +72,16 @@ You can deploy your application for free at your very own subdomain of `firebase
 or you can host it at any custom domain on one of our paid plans. Check out
 [Firebase Hosting](https://firebase.google.com/docs/hosting/) for more information.
 
-# Next Steps
+
+## Next Steps
+
 There are many additional resources for learning about using Firebase with Angular applications:
+
 * Browse the [AngularFire API documentation](https://angularfire.firebaseapp.com/api.html).
-* The [`angularFire-seed`](https://github.com/firebase/angularfire-seed)</a>
-repo contains a template project to help you get started.
-* Check out the [various examples that use
-AngularFire](docs/README.md).
-* Join our [AngularFire mailing
-list](https://groups.google.com/forum/#!forum/firebase-angular) to keep up to date with any announcements and learn from the AngularFire community.
-* The [`angularfire`](http://stackoverflow.com/questions/tagged/angularfire)
-tag on Stack Overflow has answers to a lot of code-related questions.
+* The [`angularfire-seed`](https://github.com/firebase/angularfire-seed) repo contains a template
+project to help you get started.
+* Check out the [various examples that use AngularFire](../README.md).
+* Join our [AngularFire mailing list](https://groups.google.com/forum/#!forum/firebase-angular) to
+keep up to date with any announcements and learn from the AngularFire community.
+* The [`angularfire` tag on Stack Overflow](http://stackoverflow.com/questions/tagged/angularfire)
+has answers to a lot of code-related questions.

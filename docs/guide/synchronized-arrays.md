@@ -1,10 +1,30 @@
-# Overview
+# Synchronized Arrays | AngularFire Guide
 
-Synchronized arrays should be used for any list of objects that will be sorted, iterated, and which have unique IDs. The synchronized array assumes that items are added using [`$add()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-addnewdata), and that they will therefore be keyed using Firebase [push IDs](https://firebase.google.com/docs/database/web/save-data).
+## Table of Contents
 
-We create a synchronized array with the `$firebaseArray` service. The array is [sorted in the same order](https://firebase.google.com/docs/database/web/save-data) as the records on the server. In other words, we can pass a [query](https://firebase.google.com/docs/database/web/save-data#section-queries) into the synchronized array, and the records will be sorted according to query criteria.
+* [Overview](#overview)
+* [API Summary](#api-summary)
+* [Meta Fields on the Array](#meta-fields-on-the-array)
+* [Modifying the Synchronized Array](#modifying-the-synchronized-array)
+* [Full Example](#full-example)
 
-While the array isn't technically read-only, it has some special requirements for modifying the structure (removing and adding items) which we will cover below. Please read through this entire section before trying any slicing or dicing of the array.
+
+## Overview
+
+Synchronized arrays should be used for any list of objects that will be sorted, iterated, and which
+have unique IDs. The synchronized array assumes that items are added using
+[`$add()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-addnewdata), and
+that they will therefore be keyed using Firebase
+[push IDs](https://firebase.google.com/docs/database/web/save-data).
+
+We create a synchronized array with the `$firebaseArray` service. The array is [sorted in the same
+order](https://firebase.google.com/docs/database/web/save-data) as the records on the server. In
+other words, we can pass a [query](https://firebase.google.com/docs/database/web/save-data#section-queries)
+into the synchronized array, and the records will be sorted according to query criteria.
+
+While the array isn't technically read-only, it has some special requirements for modifying the
+structure (removing and adding items) which we will cover below. Please read through this entire
+section before trying any slicing or dicing of the array.
 
 ```js
 // define our app and dependencies (remember to include firebase!)
@@ -32,7 +52,8 @@ We can now utilize this array as expected with Angular directives.
 </ul>
 ```
 
-To add a button for removing messages, we can make use of `$remove()`, passing it the message we want to remove:
+To add a button for removing messages, we can make use of `$remove()`, passing it the message we
+want to remove:
 
 ```html
 <ul>
@@ -53,33 +74,44 @@ We also have access to the key for the node where each message is located via `$
 </ul>
 ```
 
-# API Summary
 
-The table below highlights some of the common methods on the synchronized array. The complete list of methods can be found in the [API documentation](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray) for `$firebaseArray`.
+## API Summary
+
+The table below highlights some of the common methods on the synchronized array. The complete list
+of methods can be found in the
+[API documentation](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray) for
+`$firebaseArray`.
 
 | Method  | Description |
 | ------------- | ------------- |
-| [$add(data)](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-addnewdata) | Creates a new record in the array. Should be used in place of `push()` or `splice()`. |
-| [$remove(recordOrIndex)](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-removerecordorindex) | Removes an existing item from the array. Should be used in place of `pop()` or `splice()`. |
-| [$save(recordOrIndex)](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-saverecordorindex) | Saves an existing item in the array. |
-| [$getRecord(key)](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-getrecordkey) | Given a Firebase database key, returns the corresponding item from the array. It is also possible to find the index with `$indexFor(key)`. |
-| [$loaded()](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-loaded) | Returns a promise which resolves after the initial records have been downloaded from our database. This is only called once and should be used with care. See [Extending the Services](extending-services.md) for more ways to hook into server events. |
+| [`$add(data)`](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-addnewdata) | Creates a new record in the array. Should be used in place of `push()` or `splice()`. |
+| [`$remove(recordOrIndex)`](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-removerecordorindex) | Removes an existing item from the array. Should be used in place of `pop()` or `splice()`. |
+| [`$save(recordOrIndex)`](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-saverecordorindex) | Saves an existing item in the array. |
+| [`$getRecord(key)`](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-getrecordkey) | Given a Firebase database key, returns the corresponding item from the array. It is also possible to find the index with `$indexFor(key)`. |
+| [`$loaded()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-loaded) | Returns a promise which resolves after the initial records have been downloaded from our database. This is only called once and should be used with care. See [Extending Services](extending-services.md) for more ways to hook into server events. |
 
-# Meta Fields on the Object
+
+## Meta Fields on the Array
 
 Similar to synchronized objects, each item in a synchronized array will contain the following special attributes:
 
 | Method  | Description |
 | ------------- | ------------- |
-| $id | The key for each record. This is equivalent to each record's path in our database as it would be returned by `ref.key()`. |
-| $priority | The [priority](https://firebase.google.com/docs/database/web/retrieve-data#ordering-by-priority) of each child node is stored here for reference. Changing this value and then calling `$save()` on the record will also change the priority on the server and potentially move the record in the array. |
-| $value | If the data for this child node is a primitive (number, string, or boolean), then the record itself will still be an object. The primitive value will be stored under `$value` and can be changed and saved like any other field. |
+| `$id` | The key for each record. This is equivalent to each record's path in our database as it would be returned by `ref.key()`. |
+| `$priority` | The [priority](https://firebase.google.com/docs/database/web/retrieve-data#ordering-by-priority) of each child node is stored here for reference. Changing this value and then calling `$save()` on the record will also change the priority on the server and potentially move the record in the array. |
+| `$value` | If the data for this child node is a primitive (number, string, or boolean), then the record itself will still be an object. The primitive value will be stored under `$value` and can be changed and saved like any other field. |
 
-# Modifying the Synchronized Array
 
-The contents of this array are synchronized with a remote server, and AngularFire handles adding, removing, and ordering the elements. Because of this special arrangement, AngularFire provides the concurrency safe `$add()`, `$remove()`, and `$save()` methods to modify the array and its elements.
+## Modifying the Synchronized Array
 
-Using methods like `splice()`, `pop()`, `push()`, `shift()`, and `unshift()` will probably work for modifying the local content, but those methods are not monitored by AngularFire and changes introduced won't affect the content or order on the remote server. Therefore, to change the remote data, the concurrency-safe methods should be used instead.
+The contents of this array are synchronized with a remote server, and AngularFire handles adding,
+removing, and ordering the elements. Because of this special arrangement, AngularFire provides the
+concurrency safe `$add()`, `$remove()`, and `$save()` methods to modify the array and its elements.
+
+Using methods like `splice()`, `pop()`, `push()`, `shift()`, and `unshift()` will probably work for
+modifying the local content, but those methods are not monitored by AngularFire and changes
+introduced won't affect the content or order on the remote server. Therefore, to change the remote
+data, the concurrency-safe methods should be used instead.
 
 ```js
 var messages = $FirebaseArray(ref);
@@ -98,9 +130,11 @@ messages.$save(item).then(function() {
 });
 ```
 
-# Full Example
 
-Using those methods together, we can synchronize collections between multiple clients, and manipulate the records in the collection:
+## Full Example
+
+Using those methods together, we can synchronize collections between multiple clients, and
+manipulate the records in the collection:
 
 ```js
 var app = angular.module("sampleApp", ["firebase"]);
@@ -147,10 +181,6 @@ app.controller("ChatCtrl", ["$scope", "chatMessages",
 ```
 
 ```html
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
-<script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
-<script src="https://cdn.firebase.com/libs/angularfire/2.0.0/angularfire.min.js"></script>
-
 <div ng-app="sampleApp" ng-controller="ChatCtrl">
   <p>
     Sort by:
@@ -180,4 +210,7 @@ app.controller("ChatCtrl", ["$scope", "chatMessages",
 </div>
 ```
 
-Head on over to the [API reference](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray) for `$firebaseArray` to see more details for each API method provided by the service. Now that we have a grasp of synchronizing data with AngularFire, the [next section](user-auth.md) of this guide moves on to a different aspect of building applications: user authentication.
+Head on over to the [API reference](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray)
+for `$firebaseArray` to see more details for each API method provided by the service. Now that we
+have a grasp of synchronizing data with AngularFire, the [next section](user-auth.md) of this guide
+moves on to a different aspect of building applications: user authentication.

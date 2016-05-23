@@ -1,14 +1,21 @@
-# Migrating from AngularFire 0.9.x to 1.x.x
+# Migrating from AngularFire `0.9.x` to `1.x.x`
 
-This migration plan will walk through some of the major breaking changes with code samples and guidance to upgrade your existing application.
+This migration guide will walk through some of the major breaking changes with code samples and
+guidance to upgrade your existing application from AngularFire version `0.9.x` to `1.x.x`.
 
-## Removal of $firebase
 
-The largest breaking change in AngularFire 1.0.0 is the removal of the `$firebase` service. The service did not provide any capabilities beyond what already existed in the vanilla Firebase SDK. However, sometimes you do need to quickly write data from your database without first going through the process of creating a synchronized array or object. Let's walk through some examples of migrating away from the now defunct `$firebase` service.
+## Removal of `$firebase`
 
-To write data to your database, we should now use the Firebase SDK's `set()` method instead of the removed `$set()` method.
+The largest breaking change in AngularFire `1.0.0` is the removal of the `$firebase` service. The
+service did not provide any capabilities beyond what already existed in the vanilla Firebase SDK.
+However, sometimes you do need to quickly write data from your database without first going through
+the process of creating a synchronized array or object. Let's walk through some examples of
+migrating away from the now defunct `$firebase` service.
 
-### AngularFire 0.9.X
+To write data to your database, we should now use the Firebase SDK's `set()` method instead of the
+removed `$set()` method.
+
+### AngularFire `0.9.X`
 ```js
 app.controller("SampleCtrl", ["$scope", "$firebase",
   function($scope, $firebase) {
@@ -23,7 +30,7 @@ app.controller("SampleCtrl", ["$scope", "$firebase",
 ]);
 ```
 
-### AngularFire 1.X.X
+### AngularFire `1.X.X`
 ```js
 app.controller("SampleCtrl", ["$scope",
   function($scope) {
@@ -39,9 +46,10 @@ app.controller("SampleCtrl", ["$scope",
 ]);
 ```
 
-We should similarly use the Firebase SDK's `remove()` method to easily replace the `$remove()` method provided by the `$firebase` service.
+We should similarly use the Firebase SDK's `remove()` method to easily replace the `$remove()`
+method provided by the `$firebase` service.
 
-### AngularFire 0.9.X
+### AngularFire `0.9.X`
 ```js
 app.controller("SampleCtrl", ["$scope", "$firebase",
   function($scope, $firebase) {
@@ -56,7 +64,7 @@ app.controller("SampleCtrl", ["$scope", "$firebase",
 ]);
 ```
 
-### AngularFire 1.X.X
+### AngularFire `1.X.X`
 ```js
 app.controller("SampleCtrl", ["$scope",
   function($scope) {
@@ -71,13 +79,17 @@ app.controller("SampleCtrl", ["$scope",
   }
 ]);
 ```
+
 Replacements for the `$asArray()` and `$asObject()` methods are given below.
 
-## Replacement of $asObject() with $firebaseObject
 
-Due to the removal of `$firebase`, the process of creating an instance of a synchronized object has changed. Instead of creating an instance of the `$firebase` service and calling its `$asObject()` method, use the renamed `$firebaseObject` service directly.
+## Replacement of `$asObject()` with `$firebaseObject`
 
-### AngularFire 0.9.X
+Due to the removal of `$firebase`, the process of creating an instance of a synchronized object has
+changed. Instead of creating an instance of the `$firebase` service and calling its `$asObject()`
+method, use the renamed `$firebaseObject` service directly.
+
+### AngularFire `0.9.X`
 ```js
 app.controller("SampleCtrl", ["$scope", "$firebase",
   function($scope, $firebase) {
@@ -88,7 +100,7 @@ app.controller("SampleCtrl", ["$scope", "$firebase",
 ]);
 ```
 
-### AngularFire 1.X.X
+### AngularFire `1.X.X`
 ```js
 // Inject $firebaseObject instead of $firebase
 app.controller("SampleCtrl", ["$scope", "$firebaseObject",
@@ -100,11 +112,13 @@ app.controller("SampleCtrl", ["$scope", "$firebaseObject",
 ]);
 ```
 
-## Replacement of $asArray() with $firebaseArray
+## Replacement of `$asArray()` with `$firebaseArray`
 
-Due to the removal of `$firebase`, the process of creating an instance of a synchronized array has changed. Instead of creating an instance of the `$firebase` service and calling its `$asArray()` method, use the renamed `$firebaseArray` service directly.
+Due to the removal of `$firebase`, the process of creating an instance of a synchronized array has
+changed. Instead of creating an instance of the `$firebase` service and calling its `$asArray()`
+method, use the renamed `$firebaseArray` service directly.
 
-### AngularFire 0.9.X
+### AngularFire `0.9.X`
 ```js
 app.controller("SampleCtrl", ["$scope", "$firebase",
   function($scope, $firebase) {
@@ -115,7 +129,7 @@ app.controller("SampleCtrl", ["$scope", "$firebase",
 ]);
 ```
 
-### AngularFire 1.X.X
+### AngularFire `1.X.X`
 ```js
 // Inject $firebaseArray instead of $firebase
 app.controller("SampleCtrl", ["$scope", "$firebaseArray",
@@ -127,10 +141,15 @@ app.controller("SampleCtrl", ["$scope", "$firebaseArray",
 ]);
 ```
 
-## Replacement of $inst() with $ref()
-Due to the removal of `$firebase`, the `$inst()` methods off of the old `$FirebaseObject` and `$FirebaseArray` factories were no longer meaningful. They have been replaced with `$ref()` methods off of the new `$firebaseObject` and `$firebaseArray` services which return the underlying `Firebase` reference used to instantiate an instance of the services.
 
-### AngularFire 0.9.X
+## Replacement of `$inst()` with `$ref()`
+
+Due to the removal of `$firebase`, the `$inst()` methods off of the old `$FirebaseObject` and
+`$FirebaseArray` factories were no longer meaningful. They have been replaced with `$ref()` methods
+off of the new `$firebaseObject` and `$firebaseArray` services which return the underlying
+`Firebase` reference used to instantiate an instance of the services.
+
+### AngularFire `0.9.X`
 ```js
 // $FirebaseObject
 var objSync = $firebase(ref);
@@ -142,7 +161,7 @@ var list = sync.$asArray();
 listSync === list.$inst();  // true
 ```
 
-### AngularFire 1.X.X
+### AngularFire `1.X.X`
 ```js
 // $firebaseObject
 var obj = $firebaseObject(ref);
@@ -152,11 +171,13 @@ var list = $firebaseArray(ref);
 list.$ref() === ref;  // true
 ```
 
+
 ## Changes to argument lists for user management methods
 
-The previously deprecated ability to pass in credentials to the user management methods of `$firebaseAuth` as individual arguments has been removed in favor of a single credentials argument
+The previously deprecated ability to pass in credentials to the user management methods of
+`$firebaseAuth` as individual arguments has been removed in favor of a single credentials argument
 
-### AngularFire 0.9.X
+### AngularFire `0.9.X`
 ```js
 var auth = $firebaseAuth(ref);
 auth.$changePassword("foo@bar.com", "somepassword", "otherpassword").then(function() {
@@ -166,7 +187,7 @@ auth.$changePassword("foo@bar.com", "somepassword", "otherpassword").then(functi
 });
 ```
 
-### AngularFire 1.X.X
+### AngularFire `1.X.X`
 ```js
 var auth = $firebaseAuth(ref);
 auth.$changePassword({
@@ -180,11 +201,13 @@ auth.$changePassword({
 });
 ```
 
-## Replacement of $sendPasswordResetEmail() with $resetPassword()
 
-The `$sendPasswordResetEmail()` method has been removed in favor of the functionally equivalent `$resetPassword()` method.
+## Replacement of `$sendPasswordResetEmail()` with `$resetPassword()`
 
-### AngularFire 0.9.X
+The `$sendPasswordResetEmail()` method has been removed in favor of the functionally equivalent
+`$resetPassword()` method.
+
+### AngularFire `0.9.X`
 ```js
 var auth = $firebaseAuth(ref);
 auth.$sendPasswordResetEmail("foo@bar.com").then(function() {
@@ -194,7 +217,7 @@ auth.$sendPasswordResetEmail("foo@bar.com").then(function() {
 });
 ```
 
-### AngularFire 1.X.X
+### AngularFire `1.X.X`
 ```js
 var auth = $firebaseAuth(ref);
 auth.$resetPassword("foo@bar.com").then(function() {
