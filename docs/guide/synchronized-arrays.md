@@ -149,7 +149,7 @@ app.controller("ChatCtrl", ["$scope", "chatMessages",
 ```html
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
 <script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
-<script src="https://cdn.firebase.com/libs/angularfire/1.2.0/angularfire.min.js"></script>
+<script src="https://cdn.firebase.com/libs/angularfire/2.0.0/angularfire.min.js"></script>
 
 <div ng-app="sampleApp" ng-controller="ChatCtrl">
   <p>
