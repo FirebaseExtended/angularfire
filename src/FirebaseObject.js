@@ -435,7 +435,7 @@
           ref.on('value', applyUpdate, error);
           ref.once('value', function(snap) {
             if (angular.isArray(snap.val())) {
-              $log.warn('Storing data using array indices in Firebase can result in unexpected behavior. See https://www.firebase.com/docs/web/guide/understanding-data.html#section-arrays-in-firebase for more information. Also note that you probably wanted $firebaseArray and not $firebaseObject.');
+              $log.warn('Storing data using array indices in Firebase can result in unexpected behavior. See https://firebase.google.com/docs/database/web/structure-data for more information. Also note that you probably wanted $firebaseArray and not $firebaseObject.');
             }
 
             initComplete(null);
