@@ -145,7 +145,7 @@
             });
           }
           else {
-            return $firebaseUtils.reject('Invalid record; could determine key for '+indexOrItem);
+            return $firebaseUtils.reject('Invalid record; could not determine key for '+indexOrItem);
           }
         },
 
