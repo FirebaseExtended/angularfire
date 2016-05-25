@@ -7,7 +7,7 @@
 [![Join Slack](https://img.shields.io/badge/slack-join-brightgreen.svg)](https://firebase-community.appspot.com/)
 
 AngularFire is the officially supported [AngularJS](http://angularjs.org/) binding for
-[Firebase](http://www.firebase.com/?utm_medium=web&utm_source=angularfire). Firebase is a
+[Firebase](https://firebase.google.com/). Firebase is a
 backend service that provides data storage, authentication, and static website hosting for your Angular app.
 
 AngularFire is a complement to the core Firebase client. It provides you with three Angular
@@ -35,7 +35,7 @@ In order to use AngularFire in your project, you need to include the following f
 Use the URL above to download both the minified and non-minified versions of AngularFire from the
 Firebase CDN. You can also download them from the
 [releases page of this GitHub repository](https://github.com/firebase/angularfire/releases).
-[Firebase](https://www.firebase.com/docs/web/quickstart.html?utm_medium=web&utm_source=angularfire) and
+[Firebase](https://firebase.google.com/docs/web/setup) and
 [Angular](https://angularjs.org/) libraries can be downloaded directly from their respective websites.
 
 You can also install AngularFire via npm and Bower and its dependencies will be downloaded
@@ -56,22 +56,17 @@ the `$firebase` service.
 ## Getting Started with Firebase
 
 AngularFire uses Firebase for data storage and authentication. You can [sign up here for a free
-account](https://www.firebase.com/signup/?utm_medium=web&utm_source=angularfire).
+account](https://console.firebase.google.com/).
 
 
 ## Documentation
 
-The Firebase docs have a [quickstart](https://www.firebase.com/docs/web/bindings/angular/quickstart.html?utm_medium=web&utm_source=angularfire),
-[guide](https://www.firebase.com/docs/web/bindings/angular/guide?utm_medium=web&utm_source=angularfire),
-and [full API reference](https://www.firebase.com/docs/web/bindings/angular/api.html?utm_medium=web&utm_source=angularfire)
-for AngularFire.
-
-We also have a [tutorial](https://www.firebase.com/tutorial/#tutorial/angular/0?utm_medium=web&utm_source=angularfire)
-to help you get started with AngularFire.
+The Firebase docs have [quickstart samples](https://firebase.google.com/docs/samples/),
+[feature guides](https://firebase.google.com/docs/),
+and a [full API reference](https://firebase.google.com/docs/reference/).
 
 Join our [Firebase + Angular Google Group](https://groups.google.com/forum/#!forum/firebase-angular)
 to ask questions, provide feedback, and share apps you've built with AngularFire.
-
 
 ## Contributing
 
