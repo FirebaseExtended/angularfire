@@ -1,4 +1,4 @@
-# AngularFire Quickstart
+# Quickstart | AngularFire
 
 AngularFire is the officially supported AngularJS binding for Firebase. The combination of Angular
 and Firebase provides a three-way data binding between your HTML, your JavaScript, and the Firebase
@@ -8,7 +8,7 @@ database.
 ## 1. Create an Account
 The first thing we need to do is [sign up for a free Firebase account](https://firebase.google.com/).
 A brand new Firebase project will automatically be created for you which you will use in conjunction
-with [AngularFire](https://github.com/firebase/angularfire) to authenticate users and store and sync data with
+with AngularFire to authenticate users and store and sync data.
 
 
 ## 2. Add Script Dependencies
@@ -20,7 +20,7 @@ In order to use AngularFire in a project, include the following script tags:
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
 
 <!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/3.0.2/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.0.3/firebase.js"></script>
 
 <!-- AngularFire -->
 <script src="https://cdn.firebase.com/libs/angularfire/2.0.0/angularfire.min.js"></script>
@@ -31,7 +31,27 @@ respectively. A [Yeoman generator](https://github.com/firebase/generator-angular
 available.
 
 
-## 3. Inject the AngularFire Services
+## 3. Initialize the Firebase SDK
+
+We'll need to initialize the Firebase SDK before we can use it. You can find more details on the
+[web](https://firebase.google.com/docs/web/setup) or
+[Node](https://firebase.google.com/docs/server/setup) setup guides.
+
+```js
+<script>
+  // Initialize the Firebase SDK
+  var config = {
+    apiKey: '<your-api-key>',
+    authDomain: '<your-auth-domain>',
+    databaseURL: '<your-database-url>',
+    storageBucket: '<your-storage-bucket>'
+  };
+  firebase.initializeApp(config);
+</script>
+```
+
+
+## 4. Inject the AngularFire Services
 
 Before we can use AngularFire with dependency injection, we need to register `firebase` as a module
 in our application.
@@ -59,7 +79,7 @@ won't be downloaded yet, so the object will appear to be empty. Read the section
 [Asynchronous Operations](guide/introduction-to-angularfire.html#handling-asynchronous-operations) for more details.
 
 
-## 4. Add Three-Way, Object Bindings
+## 5. Add Three-Way, Object Bindings
 
 Angular is known for its two-way data binding between JavaScript models and the DOM, and Firebase
 has a lightning-fast, realtime database. For synchronizing simple key / value pairs, AngularFire can
@@ -99,7 +119,7 @@ app.controller("SampleCtrl", function($scope, $firebaseObject) {
 ```
 
 
-## 5. Synchronize Collections as Arrays
+## 6. Synchronize Collections as Arrays
 
 Three-way data bindings are amazing for simple key / value data. However, there are many times when
 an array would be more practical, such as when managing a collection of messages. This is done using
@@ -185,7 +205,7 @@ app.controller("SampleCtrl", function($scope, $firebaseArray) {
 ```
 
 
-## 6. Add Authentication
+## 7. Add Authentication
 
 Firebase provides a [hosted authentication service](https://firebase.google.com/docs/auth/) which
 offers a completely client-side solution to account management and authentication. It supports
@@ -210,11 +230,11 @@ app.controller("SampleCtrl", function($scope, $firebaseAuth) {
 ```
 
 
-## 7. Next Steps
+## 8. Next Steps
 
 This was just a quick run through of the basics of AngularFire. For a more in-depth explanation of
 how to use the library as well as a handful of live code examples, [continue reading the AngularFire
-Guide](guide/).
+Guide](guide/README.md).
 
 To deploy your Angular applications free, fast, and without fuss, do it Firebase style! Check out
 [Firebase Hosting](https://firebase.google.com/docs/hosting/) for more information.
