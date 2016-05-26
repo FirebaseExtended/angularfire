@@ -60,7 +60,7 @@ AngularFire bindings from our CDN:
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
 
 <!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/3.0.2/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.0.3/firebase.js"></script>
 
 <!-- AngularFire -->
 <script src="https://cdn.firebase.com/libs/angularfire/2.0.0/angularfire.min.js"></script>

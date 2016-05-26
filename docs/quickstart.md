@@ -103,12 +103,6 @@ app.controller("SampleCtrl", function($scope, $firebaseObject) {
 
 ```html
 <html ng-app="sampleApp">
-  <head>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
-    <script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
-    <script src="https://cdn.firebase.com/libs/angularfire/2.0.0/angularfire.min.js"></script>
-    <script src="app.js"></script>
-  </head>
   <body ng-controller="SampleCtrl">
     <!-- anything typed in here is magically saved to our Firebase database! -->
     <input type="text" ng-model="data.text"/>
@@ -140,12 +134,6 @@ app.controller("SampleCtrl", function($scope, $firebaseArray) {
 
 ```html
 <html ng-app="sampleApp">
-  <head>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
-    <script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
-    <script src="https://cdn.firebase.com/libs/angularfire/2.0.0/angularfire.min.js"></script>
-    <script src="app.js"></script>
-  </head>
   <body ng-controller="SampleCtrl">
     <ul>
       <li ng-repeat="message in messages">{{ message.text }}</li>
@@ -181,11 +169,6 @@ app.controller("SampleCtrl", function($scope, $firebaseArray) {
 
 ```html
 <html ng-app="sampleApp">
-  <head>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
-    <script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
-    <script src="https://cdn.firebase.com/libs/angularfire/2.0.0/angularfire.min.js"></script>
-  </head>
   <body ng-controller="SampleCtrl">
     <ul>
       <li ng-repeat="message in messages">
