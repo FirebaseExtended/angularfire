@@ -2,7 +2,7 @@ angular.module('testutils', ['firebase'])
   .factory('testutils', function($firebaseUtils) {
     var utils = {
       ref: function(key, base) {
-        var ref = firebase.database().ref().child(base||'data');
+        var ref = firebase.database().ref(base||'data');
         if( key ) { ref = ref.child(key); }
         return ref;
       },

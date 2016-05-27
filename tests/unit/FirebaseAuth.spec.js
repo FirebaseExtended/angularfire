@@ -289,9 +289,18 @@ describe('FirebaseAuth',function(){
   });
 
   describe('$signOut()',function(){
-    it('will call signOut() on backing auth instance',function(){
-      authService.$signOut();
-      expect(auth.signOut).toHaveBeenCalled();
+    it('will call signOut() on backing auth instance',function(done){
+      console.log('a');
+      authService.$signInAnonymously().then(function() {
+        console.log('b');
+        authService.$signOut();
+        console.log('c');
+        expect(auth.signOut).toHaveBeenCalled();
+        console.log('d');
+        done();
+      });
+
+      tick();
     });
   });
 

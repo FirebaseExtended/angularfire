@@ -185,6 +185,7 @@ beforeEach(function() {
 
   function isFirebaseRef(obj) {
     return extendedTypeOf(obj) === 'object' &&
+      typeof obj.ref === 'object' &&
       typeof obj.set === 'function' &&
       typeof obj.on === 'function' &&
       typeof obj.once === 'function' &&

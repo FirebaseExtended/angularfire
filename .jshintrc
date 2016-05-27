@@ -1,7 +1,6 @@
 {
   "predef": [
     "angular",
-    "Firebase",
     "firebase"
   ],
   "bitwise": true,

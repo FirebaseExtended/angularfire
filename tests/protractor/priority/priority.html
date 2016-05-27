@@ -7,20 +7,13 @@
     <script src="../../../node_modules/angular/angular.min.js"></script>
 
     <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/live/3.0/firebase.js"></script>
-    <script>
-      // Initialize Firebase Authentication
-      var config = {
-        apiKey: "AIzaSyCcB9Ozrh1M-WzrwrSMB6t5y1flL8yXYmY",
-        authDomain: "angularfire-dae2e.firebaseapp.com",
-        databaseURL: "https://angularfire-dae2e.firebaseio.com",
-        storageBucket: "angularfire-dae2e.appspot.com",
-      };
-      firebase.initializeApp(config);
-    </script>
+    <script src="../../node_modules/firebase/firebase-browser.js"></script>
 
     <!-- AngularFire -->
     <script src="../../../dist/angularfire.js"></script>
+
+    <!-- Initialize the Firebase SDK -->
+    <script src="../../initalize.js"></script>
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="priority.css">

@@ -56,7 +56,7 @@
           value: this.$$conf
         });
 
-        this.$id = $firebaseUtils.getKey(ref.ref);
+        this.$id = ref.ref.key;
         this.$priority = null;
 
         $firebaseUtils.applyDefaults(this, this.$$defaults);
@@ -74,21 +74,19 @@
           var self = this;
           var ref = self.$ref();
           var def = $firebaseUtils.defer();
-          var data;
+          var dataJSON;
 
           try {
-            data = $firebaseUtils.toJSON(self);
+            dataJSON = $firebaseUtils.toJSON(self);
           } catch (e) {
             def.reject(e);
           }
 
-          if (data) {
-            $firebaseUtils.doSet(ref, data).then(function() {
+          if (dataJSON) {
+            $firebaseUtils.doSet(ref, dataJSON).then(function() {
               self.$$notify();
               def.resolve(self.$ref());
-            }).catch(function (e) {
-              def.reject(e);
-            });
+            }).catch(def.reject);
           }
 
           return def.promise;

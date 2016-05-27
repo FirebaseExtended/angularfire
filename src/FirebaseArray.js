@@ -122,9 +122,9 @@
 
           if (dataJSON) {
             $firebaseUtils.doSet(ref, dataJSON).then(function() {
-              self.$$notify();
+              self.$$notify('child_added', ref.key);
               def.resolve(ref);
-            });
+            }).catch(def.reject);
           }
 
           return def.promise;
@@ -153,21 +153,19 @@
 
           if( key !== null ) {
             var ref = self.$ref().ref.child(key);
-            var data;
+            var dataJSON;
 
             try {
-              data = $firebaseUtils.toJSON(item);
+              dataJSON = $firebaseUtils.toJSON(item);
             } catch (err) {
               def.reject(err);
             }
 
-            if (data) {
-              $firebaseUtils.doSet(ref, data).then(function() {
+            if (dataJSON) {
+              $firebaseUtils.doSet(ref, dataJSON).then(function() {
                 self.$$notify('child_changed', key);
                 def.resolve(ref);
-              }).catch(function (err) {
-                def.reject(err);
-              });
+              }).catch(def.reject);
             }
           }
           else {
@@ -333,14 +331,14 @@
          */
         $$added: function(snap/*, prevChild*/) {
           // check to make sure record does not exist
-          var i = this.$indexFor($firebaseUtils.getKey(snap));
+          var i = this.$indexFor(snap.key);
           if( i === -1 ) {
             // parse data and create record
             var rec = snap.val();
             if( !angular.isObject(rec) ) {
               rec = { $value: rec };
             }
-            rec.$id = $firebaseUtils.getKey(snap);
+            rec.$id = snap.key;
             rec.$priority = snap.getPriority();
             $firebaseUtils.applyDefaults(rec, this.$$defaults);
 
@@ -360,7 +358,7 @@
          * @protected
          */
         $$removed: function(snap) {
-          return this.$indexFor($firebaseUtils.getKey(snap)) > -1;
+          return this.$indexFor(snap.key) > -1;
         },
 
         /**
@@ -378,7 +376,7 @@
          */
         $$updated: function(snap) {
           var changed = false;
-          var rec = this.$getRecord($firebaseUtils.getKey(snap));
+          var rec = this.$getRecord(snap.key);
           if( angular.isObject(rec) ) {
             // apply changes to the record
             changed = $firebaseUtils.updateRec(rec, snap);
@@ -402,7 +400,7 @@
          * @protected
          */
         $$moved: function(snap/*, prevChild*/) {
-          var rec = this.$getRecord($firebaseUtils.getKey(snap));
+          var rec = this.$getRecord(snap.key);
           if( angular.isObject(rec) ) {
             rec.$priority = snap.getPriority();
             return true;
@@ -670,7 +668,7 @@
           if (!firebaseArray) {
             return;
           }
-          var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
+          var rec = firebaseArray.$getRecord(snap.key);
           if( rec ) {
             waitForResolution(firebaseArray.$$updated(snap), function() {
               firebaseArray.$$process('child_changed', rec);
@@ -681,7 +679,7 @@
           if (!firebaseArray) {
             return;
           }
-          var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
+          var rec = firebaseArray.$getRecord(snap.key);
           if( rec ) {
             waitForResolution(firebaseArray.$$moved(snap, prevChild), function() {
               firebaseArray.$$process('child_moved', rec, prevChild);
@@ -692,7 +690,7 @@
           if (!firebaseArray) {
             return;
           }
-          var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
+          var rec = firebaseArray.$getRecord(snap.key);
           if( rec ) {
             waitForResolution(firebaseArray.$$removed(snap), function() {
                firebaseArray.$$process('child_removed', rec);

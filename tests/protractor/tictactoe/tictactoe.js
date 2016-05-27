@@ -2,7 +2,7 @@ var app = angular.module('tictactoe', ['firebase']);
 app.controller('TicTacToeCtrl', function Chat($scope, $firebaseObject) {
   $scope.board = {};
   // Get a reference to the Firebase
-  var boardRef = firebase.database().ref().child("tictactoe");
+  var boardRef = firebase.database().ref('tictactoe');
 
   // If the query string contains a push ID, use that as the child for data storage;
   // otherwise, generate a new random push ID

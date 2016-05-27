@@ -94,9 +94,6 @@ module.exports = function(grunt) {
       options: {
         configFile: 'tests/automatic_karma.conf.js'
       },
-      manual: {
-        configFile: 'tests/manual_karma.conf.js'
-      },
       singlerun: {},
       watch: {
          autowatch: true,
@@ -145,7 +142,6 @@ module.exports = function(grunt) {
   grunt.registerTask('test', ['test:unit', 'test:e2e']);
   grunt.registerTask('test:unit', ['karma:singlerun']);
   grunt.registerTask('test:e2e', ['concat', 'connect:testserver', 'protractor:singlerun']);
-  //grunt.registerTask('test:manual', ['karma:manual']);
 
   // Travis CI testing
   //grunt.registerTask('test:travis', ['build', 'test:unit', 'connect:testserver', 'protractor:saucelabs']);

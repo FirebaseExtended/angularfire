@@ -1,11 +1,10 @@
 var protractor = require('protractor');
 var firebase = require('firebase');
-require("../../initialize-node.js");
+require('../../initialize-node.js');
 
 describe('Chat App', function () {
   // Reference to the Firebase which stores the data for this demo
-  var firebaseRef = firebase.database().ref();
-  firebaseRef.remove();
+  var firebaseRef = firebase.database().ref('chat');
 
   // Boolean used to load the page on the first test only
   var isPageLoaded = false;

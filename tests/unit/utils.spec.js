@@ -278,13 +278,6 @@ describe('$firebaseUtils', function () {
     });
   });
 
-  describe('#getKey', function() {
-    it('should return the key name given a DataSnapshot', function() {
-      var snapshot = testutils.snap('data', 'foo');
-      expect($utils.getKey(snapshot)).toEqual('foo');
-    });
-  });
-
   describe('#makeNodeResolver', function(){
     var deferred, callback;
     beforeEach(function(){

@@ -1,11 +1,10 @@
 var protractor = require('protractor');
 var firebase = require('firebase');
-require("../../initialize-node.js");
+require('../../initialize-node.js');
 
 describe('TicTacToe App', function () {
   // Reference to the Firebase which stores the data for this demo
-  var firebaseRef = firebase.database().ref("tictactoe");
-  firebaseRef.remove();
+  var firebaseRef = firebase.database().ref('tictactoe');
 
   // Boolean used to load the page on the first test only
   var isPageLoaded = false;

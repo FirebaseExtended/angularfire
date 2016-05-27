@@ -2,6 +2,6 @@ dist/
 node_modules/
 bower_components/
 tests/coverage/
-.idea
 
-credentials.json
+.idea
+tests/key.json

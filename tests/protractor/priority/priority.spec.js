@@ -1,14 +1,13 @@
 var protractor = require('protractor');
 var firebase = require('firebase');
-require("../../initialize-node.js");
+require('../../initialize-node.js');
 
 describe('Priority App', function () {
   // Reference to the message repeater
   var messages = element.all(by.repeater('message in messages'));
 
   // Reference to the Firebase which stores the data for this demo
-  var firebaseRef = firebase.database().ref("priority");
-  firebaseRef.remove();
+  var firebaseRef = firebase.database().ref('priority');
 
   // Boolean used to load the page on the first test only
   var isPageLoaded = false;

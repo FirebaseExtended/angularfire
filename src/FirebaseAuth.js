@@ -4,7 +4,7 @@
 
   // Define a service which provides user authentication and management.
   angular.module('firebase').factory('$firebaseAuth', [
-    '$q', '$firebaseUtils', function($q, $firebaseUtils) {
+    '$firebaseUtils', function($firebaseUtils) {
       /**
        * This factory returns an object allowing you to manage the client's authentication state.
        *
@@ -15,14 +15,13 @@
       return function(auth) {
         auth = auth || firebase.auth();
 
-        var firebaseAuth = new FirebaseAuth($q, $firebaseUtils, auth);
+        var firebaseAuth = new FirebaseAuth($firebaseUtils, auth);
         return firebaseAuth.construct();
       };
     }
   ]);
 
-  FirebaseAuth = function($q, $firebaseUtils, auth) {
-    this._q = $q;
+  FirebaseAuth = function($firebaseUtils, auth) {
     this._utils = $firebaseUtils;
     if (typeof ref === 'string') {
       throw new Error('Please provide a Firebase reference instead of a URL when creating a `$firebaseAuth` object.');
@@ -56,6 +55,7 @@
         $deleteUser: this.deleteUser.bind(this),
         $sendPasswordResetEmail: this.sendPasswordResetEmail.bind(this),
 
+        // Hack: needed for tests
         _: this
       };
 
@@ -102,7 +102,7 @@
     /**
      * Authenticates the Firebase reference with the OAuth popup flow.
      *
-     * @param {object} provider A firebase.auth.AuthProvider or a unique provider ID like 'facebook'
+     * @param {object|string} provider A firebase.auth.AuthProvider or a unique provider ID like 'facebook'.
      * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
      */
     signInWithPopup: function(provider) {
@@ -112,7 +112,7 @@
     /**
      * Authenticates the Firebase reference with the OAuth redirect flow.
      *
-     * @param {object} provider A firebase.auth.AuthProvider or a unique provider ID like 'facebook'
+     * @param {object|string} provider A firebase.auth.AuthProvider or a unique provider ID like 'facebook'.
      * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
      */
     signInWithRedirect: function(provider) {
@@ -133,7 +133,9 @@
      * Unauthenticates the Firebase reference.
      */
     signOut: function() {
-      this._auth.signOut();
+      if (this.getAuth() !== null) {
+        this._auth.signOut();
+      }
     },
 
 
@@ -157,7 +159,7 @@
       var fn = this._utils.debounce(callback, context, 0);
       var off = this._auth.onAuthStateChanged(fn);
 
-      // Return a method to detach the `onAuth()` callback.
+      // Return a method to detach the `onAuthStateChanged()` callback.
       return off;
     },
 
@@ -171,7 +173,7 @@
     },
 
     /**
-     * Helper onAuth() callback method for the two router-related methods.
+     * Helper onAuthStateChanged() callback method for the two router-related methods.
      *
      * @param {boolean} rejectIfAuthDataIsNull Determines if the returned promise should be
      * resolved or rejected upon an unauthenticated client.
@@ -227,7 +229,7 @@
       return this._utils.promise(function(resolve) {
         var off;
         function callback() {
-          // Turn off this onAuthStateChanged callback since we just needed to get the authentication data once.
+          // Turn off this onAuthStateChanged() callback since we just needed to get the authentication data once.
           off();
           resolve();
         }
@@ -243,7 +245,7 @@
      * state or rejected if the client is not authenticated.
      */
     requireSignIn: function() {
-      return this._routerMethodOnAuthPromise(true, this);
+      return this._routerMethodOnAuthPromise(true);
     },
 
     /**
@@ -254,7 +256,7 @@
      * state, which will be null if the client is not authenticated.
      */
     waitForSignIn: function() {
-      return this._routerMethodOnAuthPromise(false, this);
+      return this._routerMethodOnAuthPromise(false);
     },
 
 
@@ -278,7 +280,7 @@
     /**
      * Changes the password for an email/password user.
      *
-     * @param {string} password A new password for the current user
+     * @param {string} password A new password for the current user.
      * @return {Promise<>} An empty promise fulfilled once the password change is complete.
      */
     updatePassword: function(password) {
@@ -286,9 +288,7 @@
       if (user) {
         return this._utils.Q(user.updatePassword(password).then);
       } else {
-        var badDeferred = this._utils.defer();
-        badDeferred.reject("No current user to change password of.");
-        return badDeferred.promise;
+        return this._utils.reject("Cannot update password since there is no logged in user.");
       }
     },
 
@@ -303,9 +303,7 @@
       if (user) {
         return this._utils.Q(user.updateEmail(email).then);
       } else {
-        var badDeferred = this._utils.defer();
-        badDeferred.reject("No current user to change email of.");
-        return badDeferred.promise;
+        return this._utils.reject("Cannot update email since there is no logged in user.");
       }
     },
 
@@ -319,9 +317,7 @@
       if (user) {
         return this._utils.Q(user.delete().then);
       } else {
-        var badDeferred = this._utils.defer();
-        badDeferred.reject("No current user to delete.");
-        return badDeferred.promise;
+        return this._utils.reject("Cannot delete user since there is no logged in user.");
       }
     },
 
