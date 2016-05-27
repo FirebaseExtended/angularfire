@@ -1,8 +1,10 @@
 var app = angular.module('tictactoe', ['firebase']);
 app.controller('TicTacToeCtrl', function Chat($scope, $firebaseObject) {
   $scope.board = {};
+
   // Get a reference to the Firebase
-  var boardRef = firebase.database().ref('tictactoe');
+  var rootRef = firebase.database().ref('tictactoe');
+  var boardRef;
 
   // If the query string contains a push ID, use that as the child for data storage;
   // otherwise, generate a new random push ID
@@ -10,14 +12,16 @@ app.controller('TicTacToeCtrl', function Chat($scope, $firebaseObject) {
   if (window.location && window.location.search) {
     pushId = window.location.search.substr(1).split('=')[1];
   }
+
   if (pushId) {
-    boardRef = boardRef.child(pushId);
+    boardRef = rootRef.child(pushId);
   } else {
-    boardRef = boardRef.push();
+    // Store the data at a random push ID
+    boardRef = rootRef.push();
   }
 
-  // Put the random push ID into the DOM so that the test suite can grab it
-  document.getElementById('pushId').innerHTML = boardRef.key;
+  // Put the Firebase URL into the scope so the tests can grab it.
+  $scope.url = boardRef.toString()
 
   // Get the board as an AngularFire object
   $scope.boardObject = $firebaseObject(boardRef);
@@ -33,11 +37,11 @@ app.controller('TicTacToeCtrl', function Chat($scope, $firebaseObject) {
 
   /* Resets the tictactoe Firebase reference */
   $scope.resetRef = function () {
-    ["x0", "x1", "x2"].forEach(function (xCoord) {
+    ['x0', 'x1', 'x2'].forEach(function (xCoord) {
       $scope.board[xCoord] = {
-        y0: "",
-        y1: "",
-        y2: ""
+        y0: '',
+        y1: '',
+        y2: ''
       };
     });
   };
@@ -46,7 +50,7 @@ app.controller('TicTacToeCtrl', function Chat($scope, $firebaseObject) {
   /* Makes a move at the current cell */
   $scope.makeMove = function(rowId, columnId) {
     // Only make a move if the current cell is not already taken
-    if ($scope.board[rowId][columnId] === "") {
+    if ($scope.board[rowId][columnId] === '') {
       // Update the board
       $scope.board[rowId][columnId] = $scope.whoseTurn;
 
