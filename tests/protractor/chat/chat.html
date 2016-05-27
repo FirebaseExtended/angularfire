@@ -7,21 +7,21 @@
     <script src="../../../node_modules/angular/angular.min.js"></script>
 
     <!-- Firebase -->
-    <script src="../../node_modules/firebase/firebase-browser.js"></script>
+    <script src="../../../node_modules/firebase/firebase.js"></script>
 
     <!-- AngularFire -->
     <script src="../../../dist/angularfire.js"></script>
 
     <!-- Initialize the Firebase SDK -->
-    <script src="../../initalize.js"></script>
+    <script src="../../initialize.js"></script>
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="chat.css">
   </head>
 
   <body ng-controller="ChatCtrl">
-    <!-- Firebase push ID where data is stored (used by the test spec to know where data is stored) -->
-    <p id="pushId"></p>
+    <!-- Firebase URL where data is stored (used by the test spec to know where data is stored) -->
+    URL: <span id="url" ng-bind="url"></span>
 
     <!-- Clear Firebase button -->
     <button id="clearRef" ng-click="clearRef()">Clear Ref</button>
@@ -39,6 +39,7 @@
 
     <!-- Add message form -->
     <form ng-submit="addMessage()">
+      <input id="username" type="text" ng-model="username" placeholder="Username...">
       <input id="message" type="text" ng-model="message" placeholder="Message..." autofocus>
       <input id="submit" type="submit" value="Submit">
     </form>

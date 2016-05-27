@@ -1,13 +1,14 @@
 var app = angular.module('chat', ['firebase']);
+
 app.controller('ChatCtrl', function Chat($scope, $firebaseObject, $firebaseArray) {
   // Get a reference to the Firebase
   var rootRef = firebase.database().ref();
 
   // Store the data at a random push ID
   var chatRef = rootRef.child('chat').push();
-
-  // Put the random push ID into the DOM so that the test suite can grab it
-  document.getElementById('pushId').innerHTML = chatRef.key;
+  
+  // Put the Firebase URL into the scope so the tests can grab it.
+  $scope.url = chatRef.toString()
 
   var messagesRef = chatRef.child('messages').limitToLast(2);
 
@@ -23,7 +24,7 @@ app.controller('ChatCtrl', function Chat($scope, $firebaseObject, $firebaseArray
 
   // Initialize $scope variables
   $scope.message = '';
-  $scope.username = 'Guest' + Math.floor(Math.random() * 101);
+  $scope.username = 'Default Guest';
 
   /* Clears the chat Firebase reference */
   $scope.clearRef = function () {
