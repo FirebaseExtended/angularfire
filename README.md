@@ -6,7 +6,7 @@ AngularFire is the officially supported [AngularJS](https://angularjs.org/) bind
 backend service that provides data storage, authentication, and static website hosting for your
 Angular app.
 
-<span class=".red">WARNING: AngularFire 2 has not been released yet. Using the quickstart below will return a 404 error. Please remain using the old libraries (Firebase 2.x.x and AngularFire 1.x.x) until we release AngularFire 2.0.</span>
+**WARNING: AngularFire 2 has not been released yet. Using the quickstart below will return a 404 error. Please remain using the old libraries (Firebase 2.x.x and AngularFire 1.x.x) until we release AngularFire 2.0.**
 
 AngularFire is a complement to the core Firebase client. It provides you with three Angular
 services:
