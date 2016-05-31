@@ -28,7 +28,7 @@ to ask questions, provide feedback, and share apps you've built with AngularFire
 
 ## Getting Started With Firebase
 
-ReactFire requires [Firebase](https://firebase.google.com/) in order to authenticate users and sync
+AngularFire requires [Firebase](https://firebase.google.com/) in order to authenticate users and sync
 and store data. Firebase is a suite of integrated products designed to help you develop your app,
 grow your user base, and earn money. You can [sign up here for a free account](https://console.firebase.google.com/).
 
