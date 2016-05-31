@@ -129,14 +129,12 @@ describe('Todo App', function () {
         firebaseRef.off("child_added", onCallback);
 
         childSnapshot.ref.remove(function(err) {
-          console.log('REMOVED')
           if( err ) { def.reject(err); }
           else { def.fulfill(); }
         });
       });
       return def.promise;
     }).then(function () {
-      console.log('CHECKED')
       expect(todos.count()).toBe(3);
       done();
     });
