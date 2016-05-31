@@ -289,18 +289,20 @@ describe('FirebaseAuth',function(){
   });
 
   describe('$signOut()',function(){
-    it('will call signOut() on backing auth instance',function(done){
-      console.log('a');
-      authService.$signInAnonymously().then(function() {
-        console.log('b');
-        authService.$signOut();
-        console.log('c');
-        expect(auth.signOut).toHaveBeenCalled();
-        console.log('d');
-        done();
+    it('will call signOut() on backing auth instance when user is signed in',function(){
+      spyOn(authService._, 'getAuth').and.callFake(function () {
+        return {provider: 'facebook'};
       });
+      authService.$signOut();
+      expect(auth.signOut).toHaveBeenCalled();
+    });
 
-      tick();
+    it('will call not signOut() on backing auth instance when user is not signed in',function(){
+      spyOn(authService._, 'getAuth').and.callFake(function () {
+        return null;
+      });
+      authService.$signOut();
+      expect(auth.signOut).not.toHaveBeenCalled();
     });
   });
 

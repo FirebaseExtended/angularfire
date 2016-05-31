@@ -6,7 +6,7 @@ app.controller('ChatCtrl', function Chat($scope, $firebaseObject, $firebaseArray
 
   // Store the data at a random push ID
   var chatRef = rootRef.child('chat').push();
-  
+
   // Put the Firebase URL into the scope so the tests can grab it.
   $scope.url = chatRef.toString()
 

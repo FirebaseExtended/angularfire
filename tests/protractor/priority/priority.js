@@ -4,7 +4,7 @@ app.controller('PriorityCtrl', function Chat($scope, $firebaseArray, $firebaseOb
   var rootRef = firebase.database().ref();
 
   // Store the data at a random push ID
-  var messagesRef = rootRef.child('chat').push();
+  var messagesRef = rootRef.child('priority').push();
 
   // Put the Firebase URL into the scope so the tests can grab it.
   $scope.url = messagesRef.toString()

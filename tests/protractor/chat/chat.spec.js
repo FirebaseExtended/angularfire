@@ -75,12 +75,8 @@ describe('Chat App', function () {
     }
   });
 
-  it('loads', function (done) {
+  it('loads', function () {
     expect(browser.getTitle()).toEqual('AngularFire Chat e2e Test');
-    element(by.id('url')).evaluate('url').then(function (text) {
-      console.log('>', text);
-      done();
-    })
   });
 
   it('starts with an empty list of messages', function () {
