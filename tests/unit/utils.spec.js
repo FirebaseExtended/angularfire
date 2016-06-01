@@ -400,15 +400,15 @@ describe('$firebaseUtils', function () {
     });
 
     it('removes the data', function(done) {
-      $utils.doRemove(ref)
-        .then(function () {
-          ref.once("value", function (ss) {
-            expect(ss.val()).toBe(null);
-          });
-          done();
-        });
-
-      tick();
+      return ref.set(MOCK_DATA).then(function() {
+        tick();
+        return $utils.doRemove(ref);
+      }).then(function () {
+        return ref.once('value');
+      }).then(function(snapshot) {
+        expect(snapshot.val()).toBe(null);
+        done();
+      });
     });
 
     it('rejects promise if write fails', function(done) {
@@ -431,44 +431,24 @@ describe('$firebaseUtils', function () {
       tick();
     });
 
-    it('only removes keys in query when query is used', function(done) {
-      ref.set(MOCK_DATA);
+    it('only removes keys in query when query is used', function(done){
+      return ref.set(MOCK_DATA).then(function() {
+        tick();
+        var query = ref.limitToFirst(2);
+        return $utils.doRemove(query);
+      }).then(function() {
+        return ref.once('value');
+      }).then(function(snapshot) {
+        var val = snapshot.val();
 
-      var query = ref.limitToFirst(2);
+        expect(val.a).not.toBeDefined();
+        expect(val.b).not.toBeDefined();
+        expect(val.c).toBeDefined();
+        expect(val.d).toBeDefined();
+        expect(val.e).toBeDefined();
 
-      $utils.doRemove(query)
-        .then(function () {
-          ref.once("value", function (ss) {
-            var val = ss.val();
-
-            expect(val.a).not.toBeDefined();
-            expect(val.b).not.toBeDefined();
-            expect(val.c).toBeDefined();
-            expect(val.d).toBeDefined();
-            expect(val.e).toBeDefined();
-            done();
-          });
-        });
-
-      tick();
-    });
-
-    it('waits to resolve promise until data is actually deleted', function(done){
-      ref.set(MOCK_DATA);
-      var query = ref.limitToFirst(2);
-      var deleted = false;
-
-      query.on("value", function (ss) {
-        var val = ss.val();
-        deleted = !(val && (val.a || val.b));
-      });
-
-      $utils.doRemove(query).then(function(){
-        expect(deleted).toBe(true);
         done();
       });
-
-      tick();
     });
   });
 

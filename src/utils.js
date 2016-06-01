@@ -360,12 +360,12 @@
             var def = utils.defer();
             if( angular.isFunction(ref.set) || !angular.isObject(data) ) {
               // this is not a query, just do a flat set
+              // Use try / catch to handle being passed data which is undefined or has invalid keys
               try {
                 ref.set(data, utils.makeNodeResolver(def));
               } catch (err) {
                 def.reject(err);
               }
-
             }
             else {
               var dataCopy = angular.extend({}, data);
@@ -398,9 +398,7 @@
               ref.once('value', function(snap) {
                 var promises = [];
                 snap.forEach(function(ss) {
-                  var d = utils.defer();
-                  promises.push(d.promise);
-                  ss.ref.remove(utils.makeNodeResolver(def));
+                  promises.push(ss.ref.remove());
                 });
                 utils.allPromises(promises)
                   .then(function() {

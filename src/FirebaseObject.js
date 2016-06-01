@@ -82,7 +82,7 @@
             def.reject(e);
           }
 
-          if (dataJSON) {
+          if (typeof dataJSON !== 'undefined') {
             $firebaseUtils.doSet(ref, dataJSON).then(function() {
               self.$$notify();
               def.resolve(self.$ref());

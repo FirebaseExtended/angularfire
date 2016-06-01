@@ -120,7 +120,7 @@
             def.reject(err);
           }
 
-          if (dataJSON) {
+          if (typeof dataJSON !== 'undefined') {
             $firebaseUtils.doSet(ref, dataJSON).then(function() {
               self.$$notify('child_added', ref.key);
               def.resolve(ref);
@@ -161,7 +161,7 @@
               def.reject(err);
             }
 
-            if (dataJSON) {
+            if (typeof dataJSON !== 'undefined') {
               $firebaseUtils.doSet(ref, dataJSON).then(function() {
                 self.$$notify('child_changed', key);
                 def.resolve(ref);

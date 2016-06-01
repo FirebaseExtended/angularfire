@@ -86,13 +86,13 @@ describe('$firebaseArray', function () {
     });
 
     it('should resolve to ref for new record', function(done) {
+      tick();
+
       arr.$add({foo: 'bar'})
         .then(function (ref) {
           expect(ref.toString()).toBe(arr.$ref().child(ref.key).toString())
           done();
         });
-
-      tick();
     });
 
     it('should wait for promise resolution to update array', function () {
