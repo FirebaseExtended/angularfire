@@ -8,7 +8,7 @@ change log](https://github.com/firebase/angularfire/releases/tag/v2.0.0).
 to use Firebase with Angular 2.
 
 
-## Upgrade your Firebase SDK
+## Upgrade to the Firebase `3.x.x` SDK
 
 Ensure you're using a `3.x.x` version of the Firebase SDK in your project. Version `2.x.x` of the
 Firebase SDK is no longer supported with AngularFire version `2.x.x`.
@@ -18,10 +18,13 @@ Firebase SDK is no longer supported with AngularFire version `2.x.x`.
 | 3.x.x | 2.x.x |
 | 2.x.x | 1.x.x |
 
+Consult the Firebase [web / Node.js migration guide](https://firebase.google.com/support/guides/firebase-web)
+for details on how to upgrade to the Firebase `3.x.x` SDK.
 
-## `$firebaseAuth` Updates
 
-Several authentication methods have been renamed and / or have different return values.
+## `$firebaseAuth` Method Renames / Signature Changes
+
+Several authentication methods have been renamed and / or have different method signatures:
 
 | Old Method | New Method | Notes |
 |------------|------------|------------------|
@@ -30,16 +33,16 @@ Several authentication methods have been renamed and / or have different return 
 | `$authWithOAuthPopup(provider[, options])` | `$signInWithPopup(provider)` | `options` can be provided by passing a configured `firebase.database.AuthProvider` instead of a `provider` string |
 | `$authWithOAuthRedirect(provider[, options])` | `$signInWithRedirect(provider)` | `options` can be provided by passing a configured `firebase.database.AuthProvider` instead of a `provider` string |
 | `$createUser(credentials)` | `$createUserWithEmailAndPassword(email, password)` | |
-| `$removeUser(credentials)` | `$deleteUser()` | Deletes the currently logged in user |
-| `$changeEmail(credentials)` | `$updateEmail(newEmail)` | Changes the email of the currently logged in user |
-| `$changePassword(credentials)` | `$updatePassword(newPassword)` | Changes the password of the currently logged in user |
+| `$removeUser(credentials)` | `$deleteUser()` | Deletes the currently signed in user |
+| `$changeEmail(credentials)` | `$updateEmail(newEmail)` | Changes the email of the currently signed in user |
+| `$changePassword(credentials)` | `$updatePassword(newPassword)` | Changes the password of the currently signed in user |
 | `$resetPassword(credentials)` | `$sendPasswordResetEmail(email)` | |
 | `$unauth()` | `$signOut()` | |
 | `$onAuth(callback)` | `$onAuthStateChanged(callback)` | &nbsp; |
 
 
-## Auth Payload Notes
+## Auth Payload Format Changes
 
 Although all your promises and `$getAuth()` calls will continue to function, the auth payload will
 differ slightly. Ensure that your code is expecting the new payload that is documented in the
-[Firebase Authentication for Web documentation](https://firebase.google.com/docs/auth/).
+[Firebase Authentication guide](https://firebase.google.com/docs/auth/).
