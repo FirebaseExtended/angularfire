@@ -1,0 +1,5 @@
+important - See the [migration guide](https://github.com/firebase/angularfire/blob/master/docs/migration/1XX-to-2XX.md) for detailed instructions on how to upgrade.
+feature - Upgraded the `firebase` dependency to `3.x.x`. AngularFire will no longer work with Firebase `2.x.x`.
+changed - `angular` and `firebase` are now listed as peer dependencies in the `package.json`.
+changed - Several auth methods have been renamed and have had their method signatures changed. See the [migration guide](https://github.com/firebase/angularfire/blob/master/docs/migration/1XX-to-2XX.md) for the full details.
+changed - The auth payload returned from the authentication methods has changed format. See the new [authentication documentation](https://firebase.google.com/docs/auth/) for details.
