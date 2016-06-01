@@ -19,8 +19,9 @@ which just ask about usage will be closed. Here are some resources to get help:
 - Read the full [API reference](https://angularfire.firebaseapp.com/api.html)
 - Try out some [examples](../README.md#examples)
 
-If the official documentation doesn't help, try asking a question through our
-[official support channels](https://firebase.google.com/support/).
+If the official documentation doesn't help, try asking a question on the
+[AngularFire Google Group](https://groups.google.com/forum/#!forum/firebase-angular) or one of our
+other [official support channels](https://firebase.google.com/support/).
 
 **Please avoid double posting across multiple channels!**
 
