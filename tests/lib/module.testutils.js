@@ -2,7 +2,7 @@ angular.module('testutils', ['firebase'])
   .factory('testutils', function($firebaseUtils) {
     var utils = {
       ref: function(key, base) {
-        var ref = new MockFirebase().child(base||'data');
+        var ref = firebase.database().ref(base||'data');
         if( key ) { ref = ref.child(key); }
         return ref;
       },
@@ -35,11 +35,9 @@ angular.module('testutils', ['firebase'])
           getPriority: function () {
             return angular.isDefined(pri) ? pri : null;
           },
-          key: function() {
-            return ref.ref().key();
-          },
+          key: ref.ref.key,
           name: function () {
-            return ref.ref().key();
+            return ref.ref.key;
           },
           child: function (key) {
             var childData = angular.isObject(data) && data.hasOwnProperty(key) ? data[key] : null;

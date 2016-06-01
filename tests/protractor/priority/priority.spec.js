@@ -1,12 +1,29 @@
 var protractor = require('protractor');
-var Firebase = require('firebase');
+var firebase = require('firebase');
+require('../../initialize-node.js');
+
+// Various messages sent to demo
+const MESSAGES_PREFAB = [
+  {
+    from: "Default Guest 1",
+    content: 'Hey there!'
+  },
+  {
+    from: "Default Guest 2",
+    content: 'Oh Hi, how are you?'
+  },
+  {
+    from: "Default Guest 1",
+    content: "Pretty fantastic!"
+  }
+];
 
 describe('Priority App', function () {
   // Reference to the message repeater
   var messages = element.all(by.repeater('message in messages'));
 
   // Reference to the Firebase which stores the data for this demo
-  var firebaseRef = new Firebase('https://angularfire.firebaseio-demo.com/priority');
+  var firebaseRef;
 
   // Boolean used to load the page on the first test only
   var isPageLoaded = false;
@@ -41,15 +58,19 @@ describe('Priority App', function () {
 
       // Navigate to the priority app
       browser.get('priority/priority.html').then(function() {
+        return browser.waitForAngular()
+      }).then(function() {
+        return element(by.id('url')).evaluate('url');
+      }).then(function (url) {
         // Get the random push ID where the data is being stored
-        return $('#pushId').getText();
-      }).then(function(pushId) {
+        return firebase.database().refFromURL(url);
+      }).then(function(ref) {
         // Update the Firebase ref to point to the random push ID
-        firebaseRef = firebaseRef.child(pushId);
+        firebaseRef = ref;
 
         // Clear the Firebase ref
         return clearFirebaseRef();
-      }).then(done);
+      }).then(done)
     } else {
       done();
     }
@@ -67,10 +88,14 @@ describe('Priority App', function () {
 
   it('adds new messages with the correct priority', function () {
     // Add three new messages by typing into the input and pressing enter
+    var usernameInput = element(by.model('username'));
     var newMessageInput = element(by.model('message'));
-    newMessageInput.sendKeys('Hey there!\n');
-    newMessageInput.sendKeys('Oh, hi. How are you?\n');
-    newMessageInput.sendKeys('Pretty fantastic!\n');
+
+    MESSAGES_PREFAB.forEach(function (msg) {
+      usernameInput.clear();
+      usernameInput.sendKeys(msg.from);
+      newMessageInput.sendKeys(msg.content + '\n');
+    });
 
     sleep();
 
@@ -83,14 +108,15 @@ describe('Priority App', function () {
     expect($('.message:nth-of-type(3) .priority').getText()).toEqual('2');
 
     // Make sure the content of each message is correct
-    expect($('.message:nth-of-type(1) .content').getText()).toEqual('Hey there!');
-    expect($('.message:nth-of-type(2) .content').getText()).toEqual('Oh, hi. How are you?');
-    expect($('.message:nth-of-type(3) .content').getText()).toEqual('Pretty fantastic!');
+    expect($('.message:nth-of-type(1) .content').getText()).toEqual(MESSAGES_PREFAB[0].content);
+    expect($('.message:nth-of-type(2) .content').getText()).toEqual(MESSAGES_PREFAB[1].content);
+    expect($('.message:nth-of-type(3) .content').getText()).toEqual(MESSAGES_PREFAB[2].content);
   });
 
   it('responds to external priority updates', function () {
     flow.execute(moveRecords);
     flow.execute(waitOne);
+
 
     expect(messages.count()).toBe(3);
     expect($('.message:nth-of-type(1) .priority').getText()).toEqual('0');
@@ -98,9 +124,10 @@ describe('Priority App', function () {
     expect($('.message:nth-of-type(3) .priority').getText()).toEqual('4');
 
     // Make sure the content of each message is correct
-    expect($('.message:nth-of-type(1) .content').getText()).toEqual('Pretty fantastic!');
-    expect($('.message:nth-of-type(2) .content').getText()).toEqual('Oh, hi. How are you?');
-    expect($('.message:nth-of-type(3) .content').getText()).toEqual('Hey there!');
+    expect($('.message:nth-of-type(1) .content').getText()).toEqual(MESSAGES_PREFAB[2].content);
+    expect($('.message:nth-of-type(2) .content').getText()).toEqual(MESSAGES_PREFAB[1].content);
+    expect($('.message:nth-of-type(3) .content').getText()).toEqual(MESSAGES_PREFAB[0].content);
+
 
     function moveRecords() {
       return setPriority(null, 4)
@@ -115,9 +142,9 @@ describe('Priority App', function () {
         //todo makeItChange just forces Angular to update the dom since it won't change
         //todo when a $ variable updates
         data.makeItChange = true;
-        snap.ref().setWithPriority(data, pri, function(err) {
+        snap.ref.setWithPriority(data, pri, function(err) {
           if( err ) { def.reject(err); }
-          else { def.fulfill(snap.key()); }
+          else { def.fulfill(snap.key); }
         })
       }, def.reject);
       return def.promise;

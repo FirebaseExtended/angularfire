@@ -1,11 +1,14 @@
 var app = angular.module('todo', ['firebase']);
 app. controller('TodoCtrl', function Todo($scope, $firebaseArray) {
   // Get a reference to the Firebase
-  var todosRef = new Firebase('https://angularfire.firebaseio-demo.com/todo').push();
+  var rootRef = firebase.database().ref();
 
-  // Put the random push ID into the DOM so that the test suite can grab it
-  document.getElementById('pushId').innerHTML = todosRef.key();
+  // Store the data at a random push ID
+  var todosRef = rootRef.child('todo').push();
 
+  // Put the Firebase URL into the scope so the tests can grab it.
+  $scope.url = todosRef.toString()
+  
   // Get the todos as an array
   $scope.todos = $firebaseArray(todosRef);
 

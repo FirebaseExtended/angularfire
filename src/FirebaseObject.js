@@ -56,7 +56,7 @@
           value: this.$$conf
         });
 
-        this.$id = $firebaseUtils.getKey(ref.ref());
+        this.$id = ref.ref.key;
         this.$priority = null;
 
         $firebaseUtils.applyDefaults(this, this.$$defaults);
@@ -73,11 +73,23 @@
         $save: function () {
           var self = this;
           var ref = self.$ref();
-          var data = $firebaseUtils.toJSON(self);
-          return $firebaseUtils.doSet(ref, data).then(function() {
-            self.$$notify();
-            return self.$ref();
-          });
+          var def = $firebaseUtils.defer();
+          var dataJSON;
+
+          try {
+            dataJSON = $firebaseUtils.toJSON(self);
+          } catch (e) {
+            def.reject(e);
+          }
+
+          if (typeof dataJSON !== 'undefined') {
+            $firebaseUtils.doSet(ref, dataJSON).then(function() {
+              self.$$notify();
+              def.resolve(self.$ref());
+            }).catch(def.reject);
+          }
+
+          return def.promise;
         },
 
         /**
@@ -421,7 +433,7 @@
           ref.on('value', applyUpdate, error);
           ref.once('value', function(snap) {
             if (angular.isArray(snap.val())) {
-              $log.warn('Storing data using array indices in Firebase can result in unexpected behavior. See https://www.firebase.com/docs/web/guide/understanding-data.html#section-arrays-in-firebase for more information. Also note that you probably wanted $firebaseArray and not $firebaseObject.');
+              $log.warn('Storing data using array indices in Firebase can result in unexpected behavior. See https://firebase.google.com/docs/database/web/structure-data for more information. Also note that you probably wanted $firebaseArray and not $firebaseObject.');
             }
 
             initComplete(null);

@@ -1,20 +1,36 @@
+# AngularFire [![Build Status](https://travis-ci.org/firebase/angularfire.svg?branch=master)](https://travis-ci.org/firebase/angularfire) [![Coverage Status](https://coveralls.io/repos/firebase/angularfire/badge.svg?branch=master&service=github)](https://coveralls.io/github/firebase/angularfire?branch=master) [![Version](https://badge.fury.io/gh/firebase%2Fangularfire.svg)](http://badge.fury.io/gh/firebase%2Fangularfire)
 
-# AngularFire
 
-[![Build Status](https://travis-ci.org/firebase/angularfire.svg?branch=master)](https://travis-ci.org/firebase/angularfire)
-[![Coverage Status](https://coveralls.io/repos/firebase/angularfire/badge.svg?branch=master&service=github)](https://coveralls.io/github/firebase/angularfire?branch=master)
-[![Version](https://badge.fury.io/gh/firebase%2Fangularfire.svg)](http://badge.fury.io/gh/firebase%2Fangularfire)
-[![Join Slack](https://img.shields.io/badge/slack-join-brightgreen.svg)](https://firebase-community.appspot.com/)
-
-AngularFire is the officially supported [AngularJS](http://angularjs.org/) binding for
-[Firebase](http://www.firebase.com/?utm_medium=web&utm_source=angularfire). Firebase is a
-backend service that provides data storage, authentication, and static website hosting for your Angular app.
+AngularFire is the officially supported [AngularJS](https://angularjs.org/) binding for
+[Firebase](https://firebase.google.com/). Firebase is a
+backend service that provides data storage, authentication, and static website hosting for your
+Angular app.
 
 AngularFire is a complement to the core Firebase client. It provides you with three Angular
 services:
   * `$firebaseObject` - synchronized objects
   * `$firebaseArray` - synchronized collections
   * `$firebaseAuth` - authentication, user management, routing
+
+Join our [Firebase + Angular Google Group](https://groups.google.com/forum/#!forum/firebase-angular)
+to ask questions, provide feedback, and share apps you've built with AngularFire.
+
+
+## Table of Contents
+
+ * [Getting Started With Firebase](#getting-started-with-firebase)
+ * [Downloading AngularFire](#downloading-angularfire)
+ * [Documentation](#documentation)
+ * [Examples](#examples)
+ * [Migration Guides](#migration-guides)
+ * [Contributing](#contributing)
+
+
+## Getting Started With Firebase
+
+AngularFire requires [Firebase](https://firebase.google.com/) in order to authenticate users and sync
+and store data. Firebase is a suite of integrated products designed to help you develop your app,
+grow your user base, and earn money. You can [sign up here for a free account](https://console.firebase.google.com/).
 
 
 ## Downloading AngularFire
@@ -26,17 +42,11 @@ In order to use AngularFire in your project, you need to include the following f
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular.min.js"></script>
 
 <!-- Firebase -->
-<script src="https://cdn.firebase.com/js/client/2.4.0/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.0.3/firebase.js"></script>
 
 <!-- AngularFire -->
-<script src="https://cdn.firebase.com/libs/angularfire/1.2.0/angularfire.min.js"></script>
+<script src="https://cdn.firebase.com/libs/angularfire/2.0.0/angularfire.min.js"></script>
 ```
-
-Use the URL above to download both the minified and non-minified versions of AngularFire from the
-Firebase CDN. You can also download them from the
-[releases page of this GitHub repository](https://github.com/firebase/angularfire/releases).
-[Firebase](https://www.firebase.com/docs/web/quickstart.html?utm_medium=web&utm_source=angularfire) and
-[Angular](https://angularjs.org/) libraries can be downloaded directly from their respective websites.
 
 You can also install AngularFire via npm and Bower and its dependencies will be downloaded
 automatically:
@@ -49,28 +59,34 @@ $ npm install angularfire --save
 $ bower install angularfire --save
 ```
 
-Once you've included AngularFire and its dependencies into your project, you will have access to
-the `$firebase` service.
-
-
-## Getting Started with Firebase
-
-AngularFire uses Firebase for data storage and authentication. You can [sign up here for a free
-account](https://www.firebase.com/signup/?utm_medium=web&utm_source=angularfire).
-
 
 ## Documentation
 
-The Firebase docs have a [quickstart](https://www.firebase.com/docs/web/bindings/angular/quickstart.html?utm_medium=web&utm_source=angularfire),
-[guide](https://www.firebase.com/docs/web/bindings/angular/guide?utm_medium=web&utm_source=angularfire),
-and [full API reference](https://www.firebase.com/docs/web/bindings/angular/api.html?utm_medium=web&utm_source=angularfire)
-for AngularFire.
+* [Quickstart](docs/quickstart.md)
+* [Guide](docs/guide/README.md)
+* [API Reference](https://angularfire.firebaseapp.com/api.html)
 
-We also have a [tutorial](https://www.firebase.com/tutorial/#tutorial/angular/0?utm_medium=web&utm_source=angularfire)
-to help you get started with AngularFire.
 
-Join our [Firebase + Angular Google Group](https://groups.google.com/forum/#!forum/firebase-angular)
-to ask questions, provide feedback, and share apps you've built with AngularFire.
+## Examples
+
+### Full Examples
+
+* [Wait And Eat](https://github.com/gordonmzhu/angular-course-demo-app-v2)
+* [TodoMVC](https://github.com/tastejs/todomvc/tree/master/examples/firebase-angular)
+* [Tic-Tac-Tic-Tac-Toe](https://github.com/jwngr/tic-tac-tic-tac-toe/)
+* [Firereader](http://github.com/firebase/firereader)
+* [Firepoker](https://github.com/Wizehive/Firepoker)
+
+### Recipes
+
+* [Date Object To A Firebase Timestamp Using `$extend`](http://jsfiddle.net/katowulf/syuzw9k1/)
+* [Filter a `$FirebaseArray`](http://jsfiddle.net/firebase/ku8uL0pr/)
+
+
+## Migration Guides
+
+* [Migrating from AngularFire `1.x.x` to `2.x.x`](docs/migration/1XX-to-2XX.md)
+* [Migrating from AngularFire `0.9.x` to `1.x.x`](docs/migration/09X-to-1XX.md)
 
 
 ## Contributing

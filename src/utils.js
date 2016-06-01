@@ -49,6 +49,7 @@
         }
 
         var utils = {
+          Q: Q,
           /**
            * Returns a function which, each time it is invoked, will gather up the values until
            * the next "tick" in the Angular compiler process. Then they are all run at the same
@@ -130,8 +131,8 @@
 
           assertValidRef: function(ref, msg) {
             if( !angular.isObject(ref) ||
-              typeof(ref.ref) !== 'function' ||
-              typeof(ref.ref().transaction) !== 'function' ) {
+              typeof(ref.ref) !== 'object' ||
+              typeof(ref.ref.transaction) !== 'function' ) {
               throw new Error(msg || 'Invalid Firebase reference');
             }
           },
@@ -191,6 +192,7 @@
                 if(arguments.length > 2){
                   result = Array.prototype.slice.call(arguments,1);
                 }
+
                 deferred.resolve(result);
               }
               else {
@@ -312,16 +314,6 @@
           },
 
           /**
-           * A utility for retrieving a Firebase reference or DataSnapshot's
-           * key name. This is backwards-compatible with `name()` from Firebase
-           * 1.x.x and `key()` from Firebase 2.0.0+. Once support for Firebase
-           * 1.x.x is dropped in AngularFire, this helper can be removed.
-           */
-          getKey: function(refOrSnapshot) {
-            return (typeof refOrSnapshot.key === 'function') ? refOrSnapshot.key() : refOrSnapshot.name();
-          },
-
-          /**
            * A utility for converting records to JSON objects
            * which we can save into Firebase. It asserts valid
            * keys and strips off any items prefixed with $.
@@ -355,7 +347,7 @@
             }
             angular.forEach(dat, function(v,k) {
               if (k.match(/[.$\[\]#\/]/) && k !== '.value' && k !== '.priority' ) {
-                throw new Error('Invalid key ' + k + ' (cannot contain .$[]#)');
+                throw new Error('Invalid key ' + k + ' (cannot contain .$[]#/)');
               }
               else if( angular.isUndefined(v) ) {
                 throw new Error('Key '+k+' was undefined. Cannot pass undefined in JSON. Use null instead.');
@@ -368,7 +360,12 @@
             var def = utils.defer();
             if( angular.isFunction(ref.set) || !angular.isObject(data) ) {
               // this is not a query, just do a flat set
-              ref.set(data, utils.makeNodeResolver(def));
+              // Use try / catch to handle being passed data which is undefined or has invalid keys
+              try {
+                ref.set(data, utils.makeNodeResolver(def));
+              } catch (err) {
+                def.reject(err);
+              }
             }
             else {
               var dataCopy = angular.extend({}, data);
@@ -377,11 +374,11 @@
               // the entire Firebase path
               ref.once('value', function(snap) {
                 snap.forEach(function(ss) {
-                  if( !dataCopy.hasOwnProperty(utils.getKey(ss)) ) {
-                    dataCopy[utils.getKey(ss)] = null;
+                  if( !dataCopy.hasOwnProperty(ss.key) ) {
+                    dataCopy[ss.key] = null;
                   }
                 });
-                ref.ref().update(dataCopy, utils.makeNodeResolver(def));
+                ref.ref.update(dataCopy, utils.makeNodeResolver(def));
               }, function(err) {
                 def.reject(err);
               });
@@ -401,9 +398,7 @@
               ref.once('value', function(snap) {
                 var promises = [];
                 snap.forEach(function(ss) {
-                  var d = utils.defer();
-                  promises.push(d.promise);
-                  ss.ref().remove(utils.makeNodeResolver(def));
+                  promises.push(ss.ref.remove());
                 });
                 utils.allPromises(promises)
                   .then(function() {

@@ -109,12 +109,25 @@
          */
         $add: function(data) {
           this._assertNotDestroyed('$add');
+          var self = this;
           var def = $firebaseUtils.defer();
-          var ref = this.$ref().ref().push();
-          ref.set($firebaseUtils.toJSON(data), $firebaseUtils.makeNodeResolver(def));
-          return def.promise.then(function() {
-            return ref;
-          });
+          var ref = this.$ref().ref.push();
+          var dataJSON;
+
+          try {
+            dataJSON = $firebaseUtils.toJSON(data);
+          } catch (err) {
+            def.reject(err);
+          }
+
+          if (typeof dataJSON !== 'undefined') {
+            $firebaseUtils.doSet(ref, dataJSON).then(function() {
+              self.$$notify('child_added', ref.key);
+              def.resolve(ref);
+            }).catch(def.reject);
+          }
+
+          return def.promise;
         },
 
         /**
@@ -136,17 +149,30 @@
           var self = this;
           var item = self._resolveItem(indexOrItem);
           var key = self.$keyAt(item);
+          var def = $firebaseUtils.defer();
+
           if( key !== null ) {
-            var ref = self.$ref().ref().child(key);
-            var data = $firebaseUtils.toJSON(item);
-            return $firebaseUtils.doSet(ref, data).then(function() {
-              self.$$notify('child_changed', key);
-              return ref;
-            });
+            var ref = self.$ref().ref.child(key);
+            var dataJSON;
+
+            try {
+              dataJSON = $firebaseUtils.toJSON(item);
+            } catch (err) {
+              def.reject(err);
+            }
+
+            if (typeof dataJSON !== 'undefined') {
+              $firebaseUtils.doSet(ref, dataJSON).then(function() {
+                self.$$notify('child_changed', key);
+                def.resolve(ref);
+              }).catch(def.reject);
+            }
           }
           else {
-            return $firebaseUtils.reject('Invalid record; could not determine key for '+indexOrItem);
+            def.reject('Invalid record; could not determine key for '+indexOrItem);
           }
+
+          return def.promise;
         },
 
         /**
@@ -167,7 +193,7 @@
           this._assertNotDestroyed('$remove');
           var key = this.$keyAt(indexOrItem);
           if( key !== null ) {
-            var ref = this.$ref().ref().child(key);
+            var ref = this.$ref().ref.child(key);
             return $firebaseUtils.doRemove(ref).then(function() {
               return ref;
             });
@@ -305,14 +331,14 @@
          */
         $$added: function(snap/*, prevChild*/) {
           // check to make sure record does not exist
-          var i = this.$indexFor($firebaseUtils.getKey(snap));
+          var i = this.$indexFor(snap.key);
           if( i === -1 ) {
             // parse data and create record
             var rec = snap.val();
             if( !angular.isObject(rec) ) {
               rec = { $value: rec };
             }
-            rec.$id = $firebaseUtils.getKey(snap);
+            rec.$id = snap.key;
             rec.$priority = snap.getPriority();
             $firebaseUtils.applyDefaults(rec, this.$$defaults);
 
@@ -332,7 +358,7 @@
          * @protected
          */
         $$removed: function(snap) {
-          return this.$indexFor($firebaseUtils.getKey(snap)) > -1;
+          return this.$indexFor(snap.key) > -1;
         },
 
         /**
@@ -350,7 +376,7 @@
          */
         $$updated: function(snap) {
           var changed = false;
-          var rec = this.$getRecord($firebaseUtils.getKey(snap));
+          var rec = this.$getRecord(snap.key);
           if( angular.isObject(rec) ) {
             // apply changes to the record
             changed = $firebaseUtils.updateRec(rec, snap);
@@ -374,7 +400,7 @@
          * @protected
          */
         $$moved: function(snap/*, prevChild*/) {
-          var rec = this.$getRecord($firebaseUtils.getKey(snap));
+          var rec = this.$getRecord(snap.key);
           if( angular.isObject(rec) ) {
             rec.$priority = snap.getPriority();
             return true;
@@ -613,7 +639,7 @@
           // determine when initial load is completed
           ref.once('value', function(snap) {
             if (angular.isArray(snap.val())) {
-              $log.warn('Storing data using array indices in Firebase can result in unexpected behavior. See https://www.firebase.com/docs/web/guide/understanding-data.html#section-arrays-in-firebase for more information.');
+              $log.warn('Storing data using array indices in Firebase can result in unexpected behavior. See https://firebase.google.com/docs/database/web/structure-data for more information.');
             }
 
             initComplete(null, $list);
@@ -631,12 +657,18 @@
 
         var def     = $firebaseUtils.defer();
         var created = function(snap, prevChild) {
+          if (!firebaseArray) {
+            return;
+          }
           waitForResolution(firebaseArray.$$added(snap, prevChild), function(rec) {
             firebaseArray.$$process('child_added', rec, prevChild);
           });
         };
         var updated = function(snap) {
-          var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
+          if (!firebaseArray) {
+            return;
+          }
+          var rec = firebaseArray.$getRecord(snap.key);
           if( rec ) {
             waitForResolution(firebaseArray.$$updated(snap), function() {
               firebaseArray.$$process('child_changed', rec);
@@ -644,7 +676,10 @@
           }
         };
         var moved   = function(snap, prevChild) {
-          var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
+          if (!firebaseArray) {
+            return;
+          }
+          var rec = firebaseArray.$getRecord(snap.key);
           if( rec ) {
             waitForResolution(firebaseArray.$$moved(snap, prevChild), function() {
               firebaseArray.$$process('child_moved', rec, prevChild);
@@ -652,7 +687,10 @@
           }
         };
         var removed = function(snap) {
-          var rec = firebaseArray.$getRecord($firebaseUtils.getKey(snap));
+          if (!firebaseArray) {
+            return;
+          }
+          var rec = firebaseArray.$getRecord(snap.key);
           if( rec ) {
             waitForResolution(firebaseArray.$$removed(snap), function() {
                firebaseArray.$$process('child_removed', rec);

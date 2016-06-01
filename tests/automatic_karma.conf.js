@@ -31,12 +31,13 @@ module.exports = function(config) {
     files: [
       '../node_modules/angular/angular.js',
       '../node_modules/angular-mocks/angular-mocks.js',
-      '../node_modules/mockfirebase/browser/mockfirebase.js',
+      '../node_modules/firebase/firebase.js',
       'lib/**/*.js',
       '../src/module.js',
       '../src/**/*.js',
       'mocks/**/*.js',
       "fixtures/**/*.json",
+      'initialize.js',
       'unit/**/*.spec.js'
     ]
   });

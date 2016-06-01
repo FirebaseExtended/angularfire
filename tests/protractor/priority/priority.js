@@ -1,10 +1,13 @@
 var app = angular.module('priority', ['firebase']);
 app.controller('PriorityCtrl', function Chat($scope, $firebaseArray, $firebaseObject) {
   // Get a reference to the Firebase
-  var messagesRef = new Firebase('https://angularfire.firebaseio-demo.com/priority').push();
+  var rootRef = firebase.database().ref();
 
-  // Put the random push ID into the DOM so that the test suite can grab it
-  document.getElementById('pushId').innerHTML = messagesRef.key();
+  // Store the data at a random push ID
+  var messagesRef = rootRef.child('priority').push();
+
+  // Put the Firebase URL into the scope so the tests can grab it.
+  $scope.url = messagesRef.toString()
 
   // Get the chat messages as an array
   $scope.messages = $firebaseArray(messagesRef);
@@ -14,7 +17,7 @@ app.controller('PriorityCtrl', function Chat($scope, $firebaseArray, $firebaseOb
 
   // Initialize $scope variables
   $scope.message = '';
-  $scope.username = 'Guest' + Math.floor(Math.random() * 101);
+  $scope.username = 'Default Guest';
 
   /* Clears the priority Firebase reference */
   $scope.clearRef = function () {

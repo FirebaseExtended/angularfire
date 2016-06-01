@@ -2,7 +2,7 @@
 describe('firebaseRef', function () {
 
   var $firebaseRefProvider;
-  var MOCK_URL = 'https://stub.firebaseio-demo.com/'
+  var MOCK_URL = 'https://angularfire-dae2e.firebaseio.com'
 
   beforeEach(module('firebase', function(_$firebaseRefProvider_) {
     $firebaseRefProvider = _$firebaseRefProvider_;
@@ -26,13 +26,13 @@ describe('firebaseRef', function () {
     it('creates multiple references with a config object', inject(function() {
       $firebaseRefProvider.registerUrl({
         default: MOCK_URL,
-        messages: MOCK_URL + 'messages'
+        messages: MOCK_URL + '/messages'
       });
       var firebaseRef = $firebaseRefProvider.$get();
       expect(firebaseRef.default).toBeAFirebaseRef();
       expect(firebaseRef.messages).toBeAFirebaseRef();
     }));
-    
+
     it('should throw an error when no url is provided', inject(function () {
       function errorWrapper() {
         $firebaseRefProvider.registerUrl();
@@ -43,10 +43,10 @@ describe('firebaseRef', function () {
 
     it('should throw an error when no default url is provided', inject(function() {
       function errorWrapper() {
-        $firebaseRefProvider.registerUrl({ messages: MOCK_URL + 'messages' });
+        $firebaseRefProvider.registerUrl({ messages: MOCK_URL + '/messages' });
         $firebaseRefProvider.$get();
       }
-      expect(errorWrapper).toThrow();      
+      expect(errorWrapper).toThrow();
     }));
 
 

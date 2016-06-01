@@ -4,21 +4,24 @@
     <title>AngularFire TicTacToe e2e Test</title>
 
     <!-- Angular -->
-    <script src="../../../node_modules/angular/angular.js"></script>
+    <script src="../../../node_modules/angular/angular.min.js"></script>
 
     <!-- Firebase -->
-    <script src="../../../node_modules/firebase/lib/firebase-web.js"></script>
+    <script src="../../../node_modules/firebase/firebase.js"></script>
 
     <!-- AngularFire -->
     <script src="../../../dist/angularfire.js"></script>
+
+    <!-- Initialize the Firebase SDK -->
+    <script src="../../initialize.js"></script>
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="tictactoe.css">
   </head>
 
   <body ng-controller="TicTacToeCtrl">
-    <!-- Firebase push ID where data is stored (used by the test spec to know where data is stored) -->
-    <p id="pushId"></p>
+    <!-- Firebase URL where data is stored (used by the test spec to know where data is stored) -->
+    URL: <span id="url" ng-bind="url"></span>
 
     <!-- Reset Firebase button -->
     <button id="resetRef" ng-click="resetRef()">Reset Ref</button>

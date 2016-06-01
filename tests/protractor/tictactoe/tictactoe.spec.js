@@ -1,9 +1,10 @@
 var protractor = require('protractor');
-var Firebase = require('firebase');
+var firebase = require('firebase');
+require('../../initialize-node.js');
 
 describe('TicTacToe App', function () {
   // Reference to the Firebase which stores the data for this demo
-  var firebaseRef = new Firebase('https://angularfire.firebaseio-demo.com/tictactoe');
+  var firebaseRef;
 
   // Boolean used to load the page on the first test only
   var isPageLoaded = false;
@@ -45,15 +46,19 @@ describe('TicTacToe App', function () {
 
       // Navigate to the tictactoe app
       browser.get('tictactoe/tictactoe.html').then(function() {
+        return browser.waitForAngular()
+      }).then(function() {
+        return element(by.id('url')).evaluate('url');
+      }).then(function (url) {
         // Get the random push ID where the data is being stored
-        return $('#pushId').getText();
-      }).then(function(pushId) {
+        return firebase.database().refFromURL(url);
+      }).then(function(ref) {
         // Update the Firebase ref to point to the random push ID
-        firebaseRef = firebaseRef.child(pushId);
+        firebaseRef = ref;
 
         // Clear the Firebase ref
         return clearFirebaseRef();
-      }).then(done);
+      }).then(done)
     } else {
       done();
     }
@@ -99,7 +104,7 @@ describe('TicTacToe App', function () {
 
   it('persists state across refresh', function(done) {
     // Refresh the page, passing the push ID to use for data storage
-    browser.get('tictactoe/tictactoe.html?pushId=' + firebaseRef.key()).then(function() {
+    browser.get('tictactoe/tictactoe.html?pushId=' + firebaseRef.key).then(function() {
       // Wait for AngularFire to sync the initial state
       sleep();
       sleep();

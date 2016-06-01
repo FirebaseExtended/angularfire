@@ -1,9 +1,10 @@
 var protractor = require('protractor');
-var Firebase = require('firebase');
+var firebase = require('firebase');
+require('../../initialize-node.js');
 
 describe('Todo App', function () {
   // Reference to the Firebase which stores the data for this demo
-  var firebaseRef = new Firebase('https://angularfire.firebaseio-demo.com/todo');
+  var firebaseRef;
 
   // Boolean used to load the page on the first test only
   var isPageLoaded = false;
@@ -40,15 +41,19 @@ describe('Todo App', function () {
 
       // Navigate to the todo app
       browser.get('todo/todo.html').then(function() {
+        return browser.waitForAngular()
+      }).then(function() {
+        return element(by.id('url')).evaluate('url');
+      }).then(function (url) {
         // Get the random push ID where the data is being stored
-        return $('#pushId').getText();
-      }).then(function(pushId) {
+        return firebase.database().refFromURL(url);
+      }).then(function(ref) {
         // Update the Firebase ref to point to the random push ID
-        firebaseRef = firebaseRef.child(pushId);
+        firebaseRef = ref;
 
         // Clear the Firebase ref
         return clearFirebaseRef();
-      }).then(done);
+      }).then(done)
     } else {
       done();
     }
@@ -96,7 +101,7 @@ describe('Todo App', function () {
     expect(todos.count()).toBe(4);
   });
 
-  it('updates when a new Todo is added remotely', function () {
+  it('updates when a new Todo is added remotely', function (done) {
     // Simulate a todo being added remotely
     flow.execute(function() {
       var def = protractor.promise.defer();
@@ -108,11 +113,14 @@ describe('Todo App', function () {
         else { def.fulfill(); }
       });
       return def.promise;
+    }).then(function () {
+      expect(todos.count()).toBe(6);
+      done();
     });
     expect(todos.count()).toBe(5);
-  });
+  })
 
-  it('updates when an existing Todo is removed remotely', function () {
+  it('updates when an existing Todo is removed remotely', function (done) {
     // Simulate a todo being removed remotely
     flow.execute(function() {
       var def = protractor.promise.defer();
@@ -120,12 +128,15 @@ describe('Todo App', function () {
         // Make sure we only remove a child once
         firebaseRef.off("child_added", onCallback);
 
-        childSnapshot.ref().remove(function(err) {
+        childSnapshot.ref.remove(function(err) {
           if( err ) { def.reject(err); }
           else { def.fulfill(); }
         });
       });
       return def.promise;
+    }).then(function () {
+      expect(todos.count()).toBe(3);
+      done();
     });
     expect(todos.count()).toBe(4);
   });

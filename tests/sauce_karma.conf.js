@@ -24,6 +24,7 @@ module.exports = function(config) {
       'lib/**/*.js',
       '../dist/angularfire.js',
       'mocks/**/*.js',
+      'initialize.js',
       'unit/**/*.spec.js'
     ],
 

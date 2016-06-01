@@ -55,9 +55,7 @@ beforeEach(function() {
           var objType = extendedTypeOf(obj);
           var pass =
             objType === 'object' &&
-            typeof obj.then === 'function' &&
-            typeof obj.catch === 'function' &&
-            typeof obj.finally === 'function';
+            typeof obj.then === 'function';
           var notText = pass? ' not' : '';
           var msg = 'Expected ' + objType + notText + ' to be a promise';
           return {pass: pass, message: msg};
@@ -187,7 +185,7 @@ beforeEach(function() {
 
   function isFirebaseRef(obj) {
     return extendedTypeOf(obj) === 'object' &&
-      typeof obj.ref === 'function' &&
+      typeof obj.ref === 'object' &&
       typeof obj.set === 'function' &&
       typeof obj.on === 'function' &&
       typeof obj.once === 'function' &&
