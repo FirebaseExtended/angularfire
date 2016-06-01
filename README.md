@@ -15,6 +15,7 @@ services:
 Join our [Firebase + Angular Google Group](https://groups.google.com/forum/#!forum/firebase-angular)
 to ask questions, provide feedback, and share apps you've built with AngularFire.
 
+**Looking for Angular 2 support?** Visit the AngularFire2 project [here](https://github.com/angular/angularfire2).
 
 ## Table of Contents
 
