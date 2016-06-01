@@ -33,9 +33,9 @@ Several authentication methods have been renamed and / or have different method 
 | `$authWithOAuthPopup(provider[, options])` | `$signInWithPopup(provider)` | `options` can be provided by passing a configured `firebase.database.AuthProvider` instead of a `provider` string |
 | `$authWithOAuthRedirect(provider[, options])` | `$signInWithRedirect(provider)` | `options` can be provided by passing a configured `firebase.database.AuthProvider` instead of a `provider` string |
 | `$createUser(credentials)` | `$createUserWithEmailAndPassword(email, password)` | |
-| `$removeUser(credentials)` | `$deleteUser()` | Deletes the currently logged in user |
-| `$changeEmail(credentials)` | `$updateEmail(newEmail)` | Changes the email of the currently logged in user |
-| `$changePassword(credentials)` | `$updatePassword(newPassword)` | Changes the password of the currently logged in user |
+| `$removeUser(credentials)` | `$deleteUser()` | Deletes the currently signed in user |
+| `$changeEmail(credentials)` | `$updateEmail(newEmail)` | Changes the email of the currently signed in user |
+| `$changePassword(credentials)` | `$updatePassword(newPassword)` | Changes the password of the currently signed in user |
 | `$resetPassword(credentials)` | `$sendPasswordResetEmail(email)` | |
 | `$unauth()` | `$signOut()` | |
 | `$onAuth(callback)` | `$onAuthStateChanged(callback)` | &nbsp; |
@@ -45,4 +45,4 @@ Several authentication methods have been renamed and / or have different method 
 
 Although all your promises and `$getAuth()` calls will continue to function, the auth payload will
 differ slightly. Ensure that your code is expecting the new payload that is documented in the
-[Firebase Authentication for Web documentation](https://firebase.google.com/docs/auth/).
+[Firebase Authentication guide](https://firebase.google.com/docs/auth/).
