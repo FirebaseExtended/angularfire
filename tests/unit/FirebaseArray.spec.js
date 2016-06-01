@@ -40,13 +40,20 @@ describe('$firebaseArray', function () {
       $utils = $firebaseUtils;
       $rootScope = _$rootScope_;
       $q = _$q_;
-      tick = function (cb) {
+
+      firebase.database.enableLogging(function () {tick()});
+      tick = function () {
         setTimeout(function() {
           $q.defer();
           $rootScope.$digest();
-          cb && cb();
-        }, 1000)
+          try {
+            $timeout.flush();
+          } catch (err) {
+            // This throws an error when there is nothing to flush...
+          }
+        })
       };
+      
       arr = stubArray(STUB_DATA);
     });
   });
@@ -86,7 +93,7 @@ describe('$firebaseArray', function () {
     });
 
     it('should resolve to ref for new record', function(done) {
-      tick();
+      //tick();
 
       arr.$add({foo: 'bar'})
         .then(function (ref) {
@@ -158,7 +165,7 @@ describe('$firebaseArray', function () {
           done();
         });
 
-      tick();
+      // tick();
     });
 
     it('should work with a primitive value', function(done) {
@@ -169,7 +176,7 @@ describe('$firebaseArray', function () {
         });
       });
 
-      tick();
+      // tick();
     });
 
     it('should throw error if array is destroyed', function() {
@@ -208,7 +215,7 @@ describe('$firebaseArray', function () {
           });
         });
 
-      tick();
+      // tick();
     });
 
     it('should work on a query', function() {
@@ -216,7 +223,7 @@ describe('$firebaseArray', function () {
       var query = ref.limitToLast(2);
       var arr = $firebaseArray(query);
       addAndProcess(arr, testutils.snap('one', 'b', 1), null);
-      tick();
+      // tick();
       expect(arr.length).toBe(1);
     });
   });
@@ -237,7 +244,7 @@ describe('$firebaseArray', function () {
         });
       });
 
-      tick();
+      // tick();
     });
 
     it('should accept an item from the array', function(done) {
@@ -250,7 +257,7 @@ describe('$firebaseArray', function () {
         });
       });
 
-      tick();
+      // tick();
     });
 
     it('should return a promise', function() {
@@ -265,7 +272,7 @@ describe('$firebaseArray', function () {
       });
       expect(spy).not.toHaveBeenCalled();
 
-      tick();
+      // tick();
     });
 
     it('should reject promise on failure', function(done) {
@@ -280,7 +287,7 @@ describe('$firebaseArray', function () {
           done();
         });
 
-      tick();
+      // tick();
     });
 
     it('should reject promise on bad index', function(done) {
@@ -295,7 +302,7 @@ describe('$firebaseArray', function () {
           done();
         })
 
-      tick();
+      // tick();
     });
 
     it('should reject promise on bad object', function(done) {
@@ -307,7 +314,7 @@ describe('$firebaseArray', function () {
         done();
       });
 
-      tick();
+      // tick();
     });
 
     it('should accept a primitive', function() {
@@ -320,7 +327,7 @@ describe('$firebaseArray', function () {
         })
       });
 
-      tick();
+      // tick();
     });
 
     it('should throw error if object is destroyed', function() {
@@ -353,7 +360,8 @@ describe('$firebaseArray', function () {
 
       var query = ref.limitToLast(5);
       var arr = $firebaseArray(query);
-      tick(function () {
+
+      arr.$loaded().then(function () {
         var key = arr.$keyAt(1);
         arr[1].foo = 'watchtest';
 
@@ -362,9 +370,7 @@ describe('$firebaseArray', function () {
           expect(blackSpy).not.toHaveBeenCalled();
           done();
         });
-
-        tick();
-      });
+      })
     });
   });
 
@@ -382,7 +388,7 @@ describe('$firebaseArray', function () {
         });
       });
 
-      tick();
+      // tick();
     });
 
     it('should return a promise', function() {
@@ -402,7 +408,7 @@ describe('$firebaseArray', function () {
         done();
       });
 
-      tick();
+      // tick();
     });
 
     it('should reject promise on failure', function() {
@@ -422,7 +428,7 @@ describe('$firebaseArray', function () {
           done();
         });
 
-      tick();
+      // tick();
     });
 
     it('should reject promise if bad int', function(done) {
@@ -436,7 +442,7 @@ describe('$firebaseArray', function () {
           done();
         });
 
-      tick();
+      // tick();
     });
 
     it('should reject promise if bad object', function() {
@@ -449,7 +455,7 @@ describe('$firebaseArray', function () {
           expect(blackSpy).toHaveBeenCalled();
           expect(blackSpy.calls.argsFor(0)[0]).toMatch(/invalid/i);
         });
-      tick();
+      // tick();
     });
 
     it('should work on a query', function(done) {
@@ -466,7 +472,7 @@ describe('$firebaseArray', function () {
       arr.$loaded()
         .then(function () {
           var p = arr.$remove(1);
-          tick();
+          // tick();
           return p;
         })
         .then(whiteSpy, blackSpy)
@@ -476,7 +482,7 @@ describe('$firebaseArray', function () {
           done();
         });
 
-      tick();
+      // tick();
     });
 
     it('should throw Error if array destroyed', function() {
@@ -596,7 +602,7 @@ describe('$firebaseArray', function () {
           done();
         });
 
-      tick();
+      // tick();
     });
 
     it('should resolve if function passed directly into $loaded', function(done) {
@@ -623,7 +629,7 @@ describe('$firebaseArray', function () {
         done();
       });
 
-      tick();
+      // tick();
     });
   });
 

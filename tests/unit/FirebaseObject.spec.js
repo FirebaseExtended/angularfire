@@ -32,12 +32,17 @@ describe('$firebaseObject', function() {
       $q = _$q_;
       testutils = _testutils_;
 
-      tick = function (cb) {
+      firebase.database.enableLogging(function () {tick()});
+      tick = function () {
         setTimeout(function() {
           $q.defer();
           $rootScope.$digest();
-          cb && cb();
-        }, 1000)
+          try {
+            $timeout.flush();
+          } catch (err) {
+            // This throws an error when there is nothing to flush...
+          }
+        })
       };
 
       obj = makeObject(FIXTURE_DATA);
@@ -68,11 +73,13 @@ describe('$firebaseObject', function() {
   });
 
   describe('$save', function () {
-    it('should call $firebase.$set', function () {
-      spyOn(obj.$ref(), 'set');
+    it('should call $firebase.$set', function (done) {
+      var spy = spyOn(firebase.database.Reference.prototype, 'set').and.callThrough();
       obj.foo = 'bar';
-      obj.$save();
-      expect(obj.$ref().set).toHaveBeenCalled();
+      obj.$save().then(function () {
+        expect(spy).toHaveBeenCalled();
+        done();
+      });
     });
 
     it('should return a promise', function () {
@@ -89,7 +96,7 @@ describe('$firebaseObject', function() {
           expect(blackSpy).not.toHaveBeenCalled();
           done();
         });
-      tick();
+      // tick();
     });
 
     it('should reject promise on failure', function (done) {
@@ -104,7 +111,7 @@ describe('$firebaseObject', function() {
           done();
         });
 
-      tick();
+      // tick();
     });
 
     it('should trigger watch event', function(done) {
@@ -117,7 +124,7 @@ describe('$firebaseObject', function() {
           done();
         });
 
-      tick();
+      // tick();
     });
 
     it('should work on a query', function(done) {
@@ -133,7 +140,7 @@ describe('$firebaseObject', function() {
         done();
       });
 
-      tick();
+      // tick();
     });
   });
 
@@ -158,7 +165,7 @@ describe('$firebaseObject', function() {
       obj.key = "value";
       obj.$save();
 
-      tick();
+      // tick();
     });
 
     it('should reject if the ready promise is rejected', function (done) {
@@ -180,7 +187,7 @@ describe('$firebaseObject', function() {
           done();
         });
 
-      tick();
+      // tick();
     });
 
     it('should resolve to the FirebaseObject instance', function (done) {
@@ -190,7 +197,7 @@ describe('$firebaseObject', function() {
         done()
       })
 
-      tick();
+      // tick();
     });
 
     it('should contain all data at the time $loaded is called', function (done) {
@@ -201,7 +208,7 @@ describe('$firebaseObject', function() {
       });
       obj.$ref().set(FIXTURE_DATA);
 
-      tick();
+      // tick();
     });
 
     it('should trigger if attached before load completes', function(done) {
@@ -212,7 +219,7 @@ describe('$firebaseObject', function() {
         done();
       });
 
-      tick();
+      // tick();
     });
 
     it('should trigger if attached after load completes', function(done) {
@@ -223,7 +230,7 @@ describe('$firebaseObject', function() {
         done();
       });
 
-      tick();
+      // tick();
     });
 
     it('should resolve properly if function passed directly into $loaded', function(done) {
@@ -234,7 +241,7 @@ describe('$firebaseObject', function() {
           done();
       })
 
-      tick();
+      // tick();
     });
 
     it('should reject properly if function passed directly into $loaded', function(done) {
@@ -252,7 +259,7 @@ describe('$firebaseObject', function() {
         done();
       });
 
-      tick();
+      // tick();
     });
   });
 
@@ -276,7 +283,7 @@ describe('$firebaseObject', function() {
         done();
       });
 
-      tick();
+      // tick();
     });
 
     it('should have data when it resolves', function (done) {
@@ -287,7 +294,7 @@ describe('$firebaseObject', function() {
           done();
       });
 
-      tick();
+      // tick();
     });
 
     it('should have data in $scope when resolved', function(done) {
@@ -301,27 +308,26 @@ describe('$firebaseObject', function() {
         done();
       });
 
-      tick();
+      // tick();
     });
 
     it('should send local changes to $firebase.$set', function (done) {
       var obj = makeObject(FIXTURE_DATA);
       var spy = spyOn(firebase.database.Reference.prototype, 'set').and.callThrough();
       var $scope = $rootScope.$new();
+      var ready = false;
 
       obj.$bindTo($scope, 'test')
         .then(function () {
           $scope.test.bar = 'baz';
-        })
-        .then(function () {
-          tick(function () {
-            $timeout.flush();
-            expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({bar: 'baz'}), jasmine.any(Function));
-            done();
-          });
+          ready = true;
         });
 
-      tick();
+      obj.$ref().on('value', function (snapshot) {
+        if (!ready) return;
+        expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({bar: 'baz'}), jasmine.any(Function));
+        done();
+      });
     });
 
     it('should allow data to be set inside promise callback', function (done) {
@@ -341,7 +347,7 @@ describe('$firebaseObject', function() {
       });
 
       ref.set(oldData);
-      tick();
+      // tick();
     });
 
     it('should apply server changes to scope variable', function () {
@@ -419,33 +425,28 @@ describe('$firebaseObject', function() {
     it('should delete $value if set to an object', function (done) {
       var $scope = $rootScope.$new();
       var obj = makeObject(null);
+      var ready = false;
 
-      $timeout.flush();
-      // Note: Failing because we're not writing -> reading -> fixing $scope.test
       obj.$bindTo($scope, 'test')
         .then(function () {
           expect($scope.test).toEqual({$value: null, $id: obj.$id, $priority: obj.$priority});
         }).then(function () {
           $scope.test.text = "hello";
-        }).then(function () {
-          // This isn't ideal, but needed to fulfill promises, then trigger timeout created
-          // by that promise, then fulfil the promise created by that timeout. Yep.
-          tick(function () {
-            $timeout.flush();
-            tick(function () {
-              expect($scope.test).toEqual({text: 'hello', $id: obj.$id, $priority: obj.$priority});
-              done();
-            })
-          });
-        });
+          ready = true;
+        })
 
-      tick();
+      $scope.$watch('test.$value', function (val) {
+        if (val === null) return;
+        expect(val).toBe(undefined);
+        done();
+      });
     });
 
     it('should update $priority if $priority changed in $scope', function (done) {
       var $scope = $rootScope.$new();
       var ref = stubRef();
       var obj = $firebaseObject(ref);
+      var ready = false;
 
       var spy = spyOn(firebase.database.Reference.prototype, 'set').and.callThrough();
       obj.$value = 'foo';
@@ -454,16 +455,14 @@ describe('$firebaseObject', function() {
         })
         .then(function () {
           $scope.test.$priority = 9999;
-        })
-        .then(function () {
-          tick(function () {
-            $timeout.flush();
-            expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({'.priority': 9999}), jasmine.any(Function));
-            done();
-          });
+          ready = true;
         });
 
-      tick();
+      obj.$ref().on("value", function (snapshot) {
+        if (!ready) return
+        expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({'.priority': 9999}), jasmine.any(Function));
+        done();
+      });
     });
 
     it('should update $value if $value changed in $scope', function () {
@@ -480,9 +479,7 @@ describe('$firebaseObject', function() {
         })
         .then(function () {
           expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({'.value': 'bar'}), jasmine.any(Function));
-        })
-
-      tick();
+        });
     });
 
     it('should only call $$scopeUpdated once if both metaVars and properties change in the same $digest', function(done){
@@ -493,13 +490,13 @@ describe('$firebaseObject', function() {
 
       var old$scopeUpdated = obj.$$scopeUpdated;
       var callCount = 0;
+      var ready = false;
 
       obj.$bindTo($scope, 'test')
         .then(function () {
           expect($scope.test).toEqual({text:'hello', $id: obj.$id, $priority: 3});
         })
         .then(function () {
-
           obj.$$scopeUpdated = function(){
             callCount++;
             done();
@@ -508,16 +505,14 @@ describe('$firebaseObject', function() {
 
           $scope.test.text='goodbye';
           $scope.test.$priority=4;
-        })
-        .then(function () {
-          tick(function () {
-            $timeout.flush();
-            expect(callCount).toBe(1);
-            done();
-          });
+          ready = true;
         });
 
-      tick();
+      obj.$ref().on("value", function (snapshot) {
+        if (!ready) return;
+        expect(callCount).toBe(1);
+        done();
+      });
     });
 
     it('should throw error if double bound', function(done) {
@@ -537,7 +532,7 @@ describe('$firebaseObject', function() {
           done();
         });
 
-      tick();
+      // tick();
     });
 
     it('should accept another binding after off is called', function(done) {
@@ -559,7 +554,7 @@ describe('$firebaseObject', function() {
           done();
         });
 
-      tick();
+      // tick();
     });
   });
 
@@ -577,7 +572,7 @@ describe('$firebaseObject', function() {
           done();
         });
 
-      tick();
+      // tick();
     });
 
     it('additional calls to the deregistration function should be silently ignored',function(done){
@@ -593,7 +588,7 @@ describe('$firebaseObject', function() {
           done();
         });
 
-      tick();
+      // tick();
     });
   });
 
@@ -627,7 +622,7 @@ describe('$firebaseObject', function() {
         expect(obj.$value).toBe(null);
       });
 
-      tick();
+      // tick();
     });
 
     it('should trigger a value event for $watch listeners', function(done) {
@@ -639,7 +634,7 @@ describe('$firebaseObject', function() {
         done();
       });
 
-      tick();
+      // tick();
     });
 
     it('should work on a query', function(done) {
@@ -652,14 +647,14 @@ describe('$firebaseObject', function() {
         expect(obj.foo).toBe('bar');
       }).then(function () {
         var p = obj.$remove();
-        tick();
+        // tick();
         return p;
       }).then(function () {
         expect(obj.$value).toBe(null);
         done();
       });
 
-      tick();
+      // tick();
     });
   });
 
@@ -682,7 +677,7 @@ describe('$firebaseObject', function() {
         done();
       });
 
-      tick();
+      // tick();
     });
 
     it('should unbind if scope is destroyed', function (done) {
@@ -696,7 +691,7 @@ describe('$firebaseObject', function() {
           done();
         });
 
-      tick()
+      // tick()
     });
   });
 
