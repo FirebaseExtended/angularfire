@@ -169,7 +169,7 @@
             }
           }
           else {
-            def.reject('Invalid record; could determine key for '+indexOrItem);
+            def.reject('Invalid record; could not determine key for '+indexOrItem);
           }
 
           return def.promise;
