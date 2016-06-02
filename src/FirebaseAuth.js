@@ -8,7 +8,7 @@
       /**
        * This factory returns an object allowing you to manage the client's authentication state.
        *
-       * @param {object} auth A Firebase auth instance to authenticate.
+       * @param {Firebase.auth.Auth} auth A Firebase auth instance to authenticate.
        * @return {object} An object containing methods for authenticating clients, retrieving
        * authentication state, and managing users.
        */
