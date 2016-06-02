@@ -73,7 +73,7 @@ and details.
 
 ## Table of Contents
 
-### [`$firebaseObject`](#firebaseobject)
+### [`$firebaseObject`](#firebaseobject-1)
  * [`$remove()`](#remove)
  * [`$save()`](#save)
  * [`$loaded()`](#loaded)
@@ -82,7 +82,7 @@ and details.
  * [`$watch(callback, context)`](#watchcallback-context)
  * [`$destroy()`](#destroy)
 
-### [`$firebaseArray`](#firebasearray)
+### [`$firebaseArray`](#firebasearray-1)
  * [`$add(newData)`](#addnewdata)
  * [`$remove(recordOrIndex)`](#removerecordorindex)
  * [`$getRecord(key)`](#getrecordkey)
@@ -93,7 +93,7 @@ and details.
  * [`$watch(cb[, context])`](#watchcb-context)
  * [`$destroy()`](#destroy-1)
 
-### [`$firebaseAuth`](#firebaseauth)
+### [`$firebaseAuth`](#firebaseauth-1)
  * [`$signInWithCustomToken(authToken)`]($signInWithCustomToken(authToken))
  * [`$signInAnonymously()`](#signinanonymously)
  * [`$signInWithEmailAndPassword(email, password)`](#signinwithemailandpasswordemail-password)
@@ -111,7 +111,7 @@ and details.
  * [`$deleteUser()`](#deleteuser)
  * [`$sendPasswordResetEmail(email)`](#sendpasswordresetemailemail)
 
-### [Extending the Services](#extending-the-services)
+### [Extending the Services](#extending-the-services-1)
 * [`$extend(object)`](#firebaseobjectextend)
 * [`$extend(object)`](#firebasearrayextend)
 * [Passing a Class into $extend](#passing-a-class-into-extend)
