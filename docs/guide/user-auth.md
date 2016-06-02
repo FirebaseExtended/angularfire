@@ -42,8 +42,7 @@ var app = angular.module("sampleApp", ["firebase"]);
 // inject $firebaseAuth into our controller
 app.controller("SampleCtrl", ["$scope", "$firebaseAuth",
   function($scope, $firebaseAuth) {
-    var ref = firebase().database().ref();
-    var auth = $firebaseAuth(ref);
+   var auth = $firebaseAuth();
   }
 ]);
 ```
@@ -59,8 +58,7 @@ var app = angular.module("sampleApp", ["firebase"]);
 
 app.controller("SampleCtrl", ["$scope", "$firebaseAuth",
   function($scope, $firebaseAuth) {
-    var ref = firebase.database().ref();
-    auth = $firebaseAuth(ref);
+   var auth = $firebaseAuth();
 
     $scope.login = function() {
       $scope.authData = null;
@@ -100,8 +98,7 @@ var app = angular.module("sampleApp", ["firebase"]);
 // let's create a re-usable factory that generates the $firebaseAuth instance
 app.factory("Auth", ["$firebaseAuth",
   function($firebaseAuth) {
-    var ref = firebase.database().ref();
-    return $firebaseAuth(ref);
+   return $firebaseAuth();
   }
 ]);
 
@@ -181,8 +178,7 @@ var app = angular.module("sampleApp", ["firebase"]);
 
 app.factory("Auth", ["$firebaseAuth",
   function($firebaseAuth) {
-    var ref = firebase.database().ref().child("example3");
-    return $firebaseAuth(ref);
+   return $firebaseAuth();
   }
 ]);
 
