@@ -918,7 +918,7 @@ There are several powerful techniques for transforming the data downloaded and s
 by `$firebaseArray` and `$firebaseObject`. **These techniques should only be attempted
 by advanced Angular users who know their way around the code.**
 
-### `$firebaseObject.$extend`
+### $firebaseObject.$extend
 
 You can create a new factory from a `$firebaseObject`. It can add additional methods or override any existing method.
 
