@@ -96,7 +96,6 @@ describe('$firebaseObject', function() {
           expect(blackSpy).not.toHaveBeenCalled();
           done();
         });
-      // tick();
     });
 
     it('should reject promise on failure', function (done) {
@@ -110,8 +109,6 @@ describe('$firebaseObject', function() {
           expect(whiteSpy).not.toHaveBeenCalled();
           done();
         });
-
-      // tick();
     });
 
     it('should trigger watch event', function(done) {
@@ -123,8 +120,6 @@ describe('$firebaseObject', function() {
           expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({event: 'value', key: obj.$id}));
           done();
         });
-
-      // tick();
     });
 
     it('should work on a query', function(done) {
@@ -139,8 +134,6 @@ describe('$firebaseObject', function() {
         expect(spy).toHaveBeenCalledWith({foo: 'bar'}, jasmine.any(Function));
         done();
       });
-
-      // tick();
     });
   });
 
@@ -164,8 +157,6 @@ describe('$firebaseObject', function() {
 
       obj.key = "value";
       obj.$save();
-
-      // tick();
     });
 
     it('should reject if the ready promise is rejected', function (done) {
@@ -186,8 +177,6 @@ describe('$firebaseObject', function() {
           expect(blackSpy).toHaveBeenCalledWith(err);
           done();
         });
-
-      // tick();
     });
 
     it('should resolve to the FirebaseObject instance', function (done) {
@@ -195,9 +184,7 @@ describe('$firebaseObject', function() {
       obj.$loaded().then(spy).then(function () {
         expect(spy).toHaveBeenCalledWith(obj);
         done()
-      })
-
-      // tick();
+      });
     });
 
     it('should contain all data at the time $loaded is called', function (done) {
@@ -207,8 +194,6 @@ describe('$firebaseObject', function() {
         done();
       });
       obj.$ref().set(FIXTURE_DATA);
-
-      // tick();
     });
 
     it('should trigger if attached before load completes', function(done) {
@@ -218,8 +203,6 @@ describe('$firebaseObject', function() {
         expect(data).toEqual(jasmine.objectContaining(FIXTURE_DATA));
         done();
       });
-
-      // tick();
     });
 
     it('should trigger if attached after load completes', function(done) {
@@ -229,8 +212,6 @@ describe('$firebaseObject', function() {
         expect(data).toEqual(jasmine.objectContaining(FIXTURE_DATA));
         done();
       });
-
-      // tick();
     });
 
     it('should resolve properly if function passed directly into $loaded', function(done) {
@@ -239,9 +220,7 @@ describe('$firebaseObject', function() {
       obj.$loaded(function (data) {
           expect(data).toEqual(jasmine.objectContaining(FIXTURE_DATA));
           done();
-      })
-
-      // tick();
+      });
     });
 
     it('should reject properly if function passed directly into $loaded', function(done) {
@@ -258,8 +237,6 @@ describe('$firebaseObject', function() {
         expect(whiteSpy).not.toHaveBeenCalled();
         done();
       });
-
-      // tick();
     });
   });
 
@@ -282,8 +259,6 @@ describe('$firebaseObject', function() {
         expect(off).toBeA('function');
         done();
       });
-
-      // tick();
     });
 
     it('should have data when it resolves', function (done) {
@@ -293,8 +268,6 @@ describe('$firebaseObject', function() {
           expect(obj).toEqual(jasmine.objectContaining(FIXTURE_DATA));
           done();
       });
-
-      // tick();
     });
 
     it('should have data in $scope when resolved', function(done) {
@@ -307,8 +280,6 @@ describe('$firebaseObject', function() {
         expect($scope.test.$id).toBe(obj.$id);
         done();
       });
-
-      // tick();
     });
 
     it('should send local changes to $firebase.$set', function (done) {
@@ -347,7 +318,6 @@ describe('$firebaseObject', function() {
       });
 
       ref.set(oldData);
-      // tick();
     });
 
     it('should apply server changes to scope variable', function () {
@@ -356,7 +326,6 @@ describe('$firebaseObject', function() {
       $timeout.flush();
       obj.$$updated(fakeSnap({foo: 'bar'}));
       obj.$$notify();
-      //1:flushAll();
       expect($scope.test).toEqual({foo: 'bar', $id: obj.$id, $priority: obj.$priority});
     });
 
@@ -366,7 +335,6 @@ describe('$firebaseObject', function() {
       $timeout.flush();
       obj.$$updated(fakeSnap({foo: 'bar'}));
       obj.$$notify();
-      //1:flushAll();
       var oldTest = $scope.test;
       obj.$$updated(fakeSnap({foo: 'baz'}));
       obj.$$notify();
@@ -379,7 +347,6 @@ describe('$firebaseObject', function() {
       $timeout.flush();
       obj.$$updated(fakeSnap({foo: 'bar'}));
       obj.$$notify();
-      //1:flushAll();
       var oldTest = $scope.test;
       obj.$$updated(fakeSnap({foo: 'bar'}));
       obj.$$notify();
@@ -407,7 +374,6 @@ describe('$firebaseObject', function() {
       var $scope = $rootScope.$new();
       $scope.test = {foo: true};
       obj.$bindTo($scope, 'test');
-      //1:flushAll();
       expect($utils.scopeData(obj)).toEqual(origValue);
     });
 
@@ -531,8 +497,6 @@ describe('$firebaseObject', function() {
           expect(bReject).toHaveBeenCalled();
           done();
         });
-
-      // tick();
     });
 
     it('should accept another binding after off is called', function(done) {
@@ -553,8 +517,6 @@ describe('$firebaseObject', function() {
           expect(bFail).not.toHaveBeenCalled();
           done();
         });
-
-      // tick();
     });
   });
 
@@ -571,8 +533,6 @@ describe('$firebaseObject', function() {
           expect(spy).not.toHaveBeenCalled();
           done();
         });
-
-      // tick();
     });
 
     it('additional calls to the deregistration function should be silently ignored',function(done){
@@ -587,8 +547,6 @@ describe('$firebaseObject', function() {
           expect(spy).not.toHaveBeenCalled();
           done();
         });
-
-      // tick();
     });
   });
 
@@ -621,8 +579,6 @@ describe('$firebaseObject', function() {
       obj.$remove().then(function () {
         expect(obj.$value).toBe(null);
       });
-
-      // tick();
     });
 
     it('should trigger a value event for $watch listeners', function(done) {
@@ -633,8 +589,6 @@ describe('$firebaseObject', function() {
         expect(spy).toHaveBeenCalledWith({ event: 'value', key: obj.$id });
         done();
       });
-
-      // tick();
     });
 
     it('should work on a query', function(done) {
@@ -646,15 +600,11 @@ describe('$firebaseObject', function() {
       obj.$loaded().then(function () {
         expect(obj.foo).toBe('bar');
       }).then(function () {
-        var p = obj.$remove();
-        // tick();
-        return p;
+        return obj.$remove();
       }).then(function () {
         expect(obj.$value).toBe(null);
         done();
       });
-
-      // tick();
     });
   });
 
@@ -676,8 +626,6 @@ describe('$firebaseObject', function() {
         expect($scope.$watch.$$$offSpy).toHaveBeenCalled();
         done();
       });
-
-      // tick();
     });
 
     it('should unbind if scope is destroyed', function (done) {
@@ -690,8 +638,6 @@ describe('$firebaseObject', function() {
           expect($scope.$watch.$$$offSpy).toHaveBeenCalled();
           done();
         });
-
-      // tick()
     });
   });
 
@@ -757,7 +703,7 @@ describe('$firebaseObject', function() {
         expect(obj).toHaveKey(k);
       });
       obj.$$updated(fakeSnap(null));
-      //1:flushAll();
+
       keys.forEach(function (k) {
         expect(obj).not.toHaveKey(k);
       });
