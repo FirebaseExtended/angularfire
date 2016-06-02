@@ -111,12 +111,12 @@ and details.
  * [`$deleteUser()`](#deleteuser)
  * [`$sendPasswordResetEmail(email)`](#sendpasswordresetemailemail)
 
- ### [Extending the Services](#extending-the-services)
-  * [`$extend(object)`](#firebaseobjectextend)
-  * [`$extend(object)`](#firebasearrayextend)
-  * [Passing a Class into $extend](#passing-a-class-into-extend)
-  * [Decorating the Services](#decorating-the-services)
-  * [Creating AngularFire Services](creating-angularfire-services)
+### [Extending the Services](#extending-the-services)
+* [`$extend(object)`](#firebaseobjectextend)
+* [`$extend(object)`](#firebasearrayextend)
+* [Passing a Class into $extend](#passing-a-class-into-extend)
+* [Decorating the Services](#decorating-the-services)
+* [Creating AngularFire Services](creating-angularfire-services)
 
 $firebaseObject
 ---------------
