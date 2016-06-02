@@ -19,8 +19,9 @@ which just ask about usage will be closed. Here are some resources to get help:
 - Read the full [API reference](https://angularfire.firebaseapp.com/api.html)
 - Try out some [examples](../README.md#examples)
 
-If the official documentation doesn't help, try asking a question through our
-[official support channels](https://firebase.google.com/support/).
+If the official documentation doesn't help, try asking a question on the
+[AngularFire Google Group](https://groups.google.com/forum/#!forum/firebase-angular) or one of our
+other [official support channels](https://firebase.google.com/support/).
 
 **Please avoid double posting across multiple channels!**
 
@@ -109,9 +110,9 @@ $ grunt            # lint, build, and test
 
 $ grunt build      # lint and build
 
-$ gulp test        # run unit and e2e tests
-$ gulp test:unit   # run unit tests
-$ gulp test:e2e    # run e2e tests (via Protractor)
+$ grunt test       # run unit and e2e tests
+$ grunt test:unit  # run unit tests
+$ grunt test:e2e   # run e2e tests (via Protractor)
 
 $ grunt watch      # lint, build, and test whenever source files change
 ```
