@@ -24,16 +24,17 @@ for details on how to upgrade to the Firebase `3.x.x` SDK.
 
 ## `$firebaseAuth` Method Renames / Signature Changes
 
-Initializing `$firebaseAuth` has changed to accept an optional Firebase `auth` instance.
+The `$firebaseAuth` service now accepts an optional Firebase `auth` instance instead of a Firebase
+Database reference.
 
 ```js
 // Old
-$firebaseAuth(ref)
+$firebaseAuth(ref);
 
 // New
-$firebaseAuth()
+$firebaseAuth();
 // Or if you need to explicitly provide an auth instance
-$firebaseAuth(firebase.auth())
+$firebaseAuth(firebase.auth());
 ```
 
 Several authentication methods have been renamed and / or have different method signatures:
@@ -41,7 +42,7 @@ Several authentication methods have been renamed and / or have different method 
 | Old Method | New Method | Notes |
 |------------|------------|------------------|
 | `$authAnonymously(options)` | `$signInAnonymously()` | No longer takes any arguments |
-| `$authWithPassword(credentials)` | `$signInWithEmailAndPassword(email, password)` | &nbsp; |
+| `$authWithPassword(credentials)` | `$signInWithEmailAndPassword(email, password)` | |
 | `$authWithCustomToken(token)` | `$signInWithCustomToken(token)` | |
 | `$authWithOAuthPopup(provider[, options])` | `$signInWithPopup(provider)` | `options` can be provided by passing a configured `firebase.database.AuthProvider` instead of a `provider` string |
 | `$authWithOAuthRedirect(provider[, options])` | `$signInWithRedirect(provider)` | `options` can be provided by passing a configured `firebase.database.AuthProvider` instead of a `provider` string |
@@ -52,7 +53,7 @@ Several authentication methods have been renamed and / or have different method 
 | `$changePassword(credentials)` | `$updatePassword(newPassword)` | Changes the password of the currently signed in user |
 | `$resetPassword(credentials)` | `$sendPasswordResetEmail(email)` | |
 | `$unauth()` | `$signOut()` | |
-| `$onAuth(callback)` | `$onAuthStateChanged(callback)` | &nbsp; |
+| `$onAuth(callback)` | `$onAuthStateChanged(callback)` | |
 
 
 ## Auth Payload Format Changes

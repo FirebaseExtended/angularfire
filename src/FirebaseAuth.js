@@ -24,9 +24,12 @@
   FirebaseAuth = function($firebaseUtils, auth) {
     this._utils = $firebaseUtils;
 
-    if (typeof auth === 'string' || auth.ref) {
-      throw new Error('Please provide a Firebase auth instance (or nothing) instead of a URL or Database reference when creating a `$firebaseAuth` object.');
+    if (typeof auth === 'string') {
+      throw new Error('The $firebaseAuth service accepts a Firebase auth instance (or nothing) instead of a URL.');
+    } else if (typeof auth.ref !== 'undefined') {
+      throw new Error('The $firebaseAuth service accepts a Firebase auth instance (or nothing) instead of a Database reference.');
     }
+
     this._auth = auth;
     this._initialAuthResolver = this._initAuthResolver();
   };
