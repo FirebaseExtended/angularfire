@@ -110,9 +110,9 @@ $ grunt            # lint, build, and test
 
 $ grunt build      # lint and build
 
-$ gulp test        # run unit and e2e tests
-$ gulp test:unit   # run unit tests
-$ gulp test:e2e    # run e2e tests (via Protractor)
+$ grunt test       # run unit and e2e tests
+$ grunt test:unit  # run unit tests
+$ grunt test:e2e   # run e2e tests (via Protractor)
 
 $ grunt watch      # lint, build, and test whenever source files change
 ```
