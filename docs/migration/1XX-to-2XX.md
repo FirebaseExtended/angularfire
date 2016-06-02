@@ -24,7 +24,17 @@ for details on how to upgrade to the Firebase `3.x.x` SDK.
 
 ## `$firebaseAuth` Method Renames / Signature Changes
 
-Initializing `$firebaseAuth` has changed to accept a Firebase `auth` instance (or nothing)
+Initializing `$firebaseAuth` has changed to accept an optional Firebase `auth` instance.
+
+```js
+// Old
+$firebaseAuth(ref)
+
+// New
+$firebaseAuth()
+// Or if you need to explicitly provide an auth instance
+$firebaseAuth(firebase.auth())
+```
 
 Several authentication methods have been renamed and / or have different method signatures:
 
