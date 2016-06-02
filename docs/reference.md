@@ -93,14 +93,7 @@ and details.
  * [`$watch(cb[, context])`](#watchcb-context)
  * [`$destroy()`](#destroy-1)
 
-### [Extending the Services](#extending-the-services)
- * [`$extend(object)`](#firebaseobjectextend)
- * [`$extend(object)`](#firebasearrayextend)
- * [Passing a Class into $extend](#passing-a-class-into-extend)
- * [Decorating the Services](#decorating-the-services)
- * [Creating AngularFire Services](creating-angularfire-services)
-
-### [$firebaseAuth](#firebaseAuth)
+### [`$firebaseAuth`](#firebaseauth)
  * [`$signInWithCustomToken(authToken)`]($signInWithCustomToken(authToken))
  * [`$signInAnonymously()`](#signinanonymously)
  * [`$signInWithEmailAndPassword(email, password)`](#signinwithemailandpasswordemail-password)
@@ -118,6 +111,12 @@ and details.
  * [`$deleteUser()`](#deleteuser)
  * [`$sendPasswordResetEmail(email)`](#sendpasswordresetemailemail)
 
+ ### [Extending the Services](#extending-the-services)
+  * [`$extend(object)`](#firebaseobjectextend)
+  * [`$extend(object)`](#firebasearrayextend)
+  * [Passing a Class into $extend](#passing-a-class-into-extend)
+  * [Decorating the Services](#decorating-the-services)
+  * [Creating AngularFire Services](creating-angularfire-services)
 
 $firebaseObject
 ---------------
@@ -601,6 +600,316 @@ Stop listening for events and free memory used by this array (empties the local 
 Changes are no longer synchronized to or from the database.
 
 
+$firebaseAuth
+------------------------
+
+AngularFire includes support for [user authentication and management](/docs/web/guide/user-auth.html)
+with the `$firebaseAuth` service.
+
+The `$firebaseAuth` factory takes an optional Firebase auth instance (`firebase.auth()`) as its only
+argument. Note that the authentication state is global to your application, even if multiple
+`$firebaseAuth` objects are created unless you use multiple Firebase apps.
+
+```js
+app.controller("MyAuthCtrl", ["$scope", "$firebaseAuth",
+  function($scope, $firebaseAuth) {
+    $scope.authObj = $firebaseAuth();
+  }
+]);
+```
+
+The authentication object returned by `$firebaseAuth` contains several methods for authenticating
+users, responding to changes in authentication state, and managing user accounts for email /
+password users.
+
+### $signInWithCustomToken(authToken)
+
+Authenticates the client using a [custom authentication token](https://firebase-dot-devsite.googleplex.com/docs/auth/web/custom-auth).
+This function takes two arguments: an authentication token or a Firebase Secret and an object containing optional
+client arguments, such as configuring session persistence.
+
+```js
+$scope.authObj.$signInWithCustomToken("<CUSTOM_AUTH_TOKEN>").then(function(authData) {
+  console.log("Logged in as:", authData.uid);
+}).catch(function(error) {
+  console.error("Authentication failed:", error);
+});
+```
+
+This method returns a promise which is resolved or rejected when the authentication attempt is
+completed. If successful, the promise will be fulfilled with an object containing the payload of
+the authentication token. If unsuccessful, the promise will be rejected with an `Error` object.
+
+Read [our documentation on Custom Login](https://firebase-dot-devsite.googleplex.com/docs/auth/web/custom-auth)
+for more details about generating your own custom authentication tokens.
+
+### $signInAnonymously()
+
+Authenticates the client using a new, temporary guest account.
+
+```js
+$scope.authObj.$signInAnonymously().then(function(authData) {
+  console.log("Logged in as:", authData.uid);
+}).catch(function(error) {
+  console.error("Authentication failed:", error);
+});
+```
+
+This method returns a promise which is resolved or rejected when the authentication attempt is
+completed. If successful, the promise will be fulfilled with an object containing authentication
+data about the logged-in user. If unsuccessful, the promise will be rejected with an `Error` object.
+
+Read [our documentation on anonymous authentication](https://firebase-dot-devsite.googleplex.com/docs/auth/web/anonymous-auth)
+for more details about anonymous authentication.
+
+### $signInWithEmailAndPassword(email, password)
+
+Authenticates the client using an email / password combination. This function takes two
+arguments: an object containing `email` and `password` attributes corresponding to the user account
+and an object containing optional client arguments, such as configuring session persistence.
+
+```js
+$scope.authObj.$signInWithEmailAndPassword("my@email.com", "password").then(function(authData) {
+  console.log("Logged in as:", authData.uid);
+}).catch(function(error) {
+  console.error("Authentication failed:", error);
+});
+```
+
+This method returns a promise which is resolved or rejected when the authentication attempt is
+completed. If successful, the promise will be fulfilled with an object containing authentication
+data about the logged-in user. If unsuccessful, the promise will be rejected with an `Error` object.
+
+Read [our documentation on email / password authentication](https://firebase-dot-devsite.googleplex.com/docs/auth/web/password-auth)
+for more details about email / password authentication.
+
+### $signInWithPopup(provider)
+
+Authenticates the client using a popup-based OAuth flow. This function takes two
+arguments: the unique string identifying the OAuth provider to authenticate with (e.g. `"google"`).
+
+Optionally, you can pass a provider object (like `new firebase.auth().GoogleProvider()`, etc)
+which can be configured with additional options.
+
+```js
+$scope.authObj.$signInWithPopup("google").then(function(authData) {
+  console.log("Logged in as:", authData.uid);
+}).catch(function(error) {
+  console.error("Authentication failed:", error);
+});
+```
+
+This method returns a promise which is resolved or rejected when the authentication attempt is
+completed. If successful, the promise will be fulfilled with an object containing authentication
+data about the logged-in user. If unsuccessful, the promise will be rejected with an `Error` object.
+
+Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to
+[authentication documentation](https://firebase-dot-devsite.googleplex.com/docs/auth/)
+for information about configuring each provider.
+
+### $signInWithRedirect(provider[, options])
+
+Authenticates the client using a redirect-based OAuth flow. This function takes two
+arguments: the unique string identifying the OAuth provider to authenticate with (e.g. `"google"`).
+
+Optionally, you can pass a provider object (like `new firebase.auth().GoogleProvider()`, etc)
+which can be configured with additional options.
+
+```js
+$scope.authObj.$signInWithRedirect("google").then(function(authData) {
+  console.log("Logged in as:", authData.uid);
+}).then(function() {
+  // Never called because of page redirect
+}).catch(function(error) {
+  console.error("Authentication failed:", error);
+});
+```
+
+This method returns a rejected promise with an `Error` object if the authentication attempt fails.
+Upon successful authentication, the browser will be redirected as part of the OAuth authentication
+flow. As such, the returned promise will never be fulfilled. Instead, you should use the `$onAuthStateChanged()`
+method to detect when the authentication has been successfully completed.
+
+Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to
+[authentication documentation](https://firebase-dot-devsite.googleplex.com/docs/auth/)
+for information about configuring each provider.
+
+### $signInWithCredentials(credentials)
+
+Authenticates the client using credentials (potentially created from OAuth Tokens). This function takes one
+arguments: the credentials object. This may be obtained from individual auth providers under `firebase.auth()`;
+
+```js
+$scope.authObj.$signInWithCredentials(credentials).then(function(authData) {
+  console.log("Logged in as:", authData.uid);
+}).catch(function(error) {
+  console.error("Authentication failed:", error);
+});
+```
+
+This method returns a promise which is resolved or rejected when the authentication attempt is
+completed. If successful, the promise will be fulfilled with an object containing authentication
+data about the logged-in user. If unsuccessful, the promise will be rejected with an `Error` object.
+
+Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to
+[authentication documentation](https://firebase-dot-devsite.googleplex.com/docs/auth/)
+for information about configuring each provider.
+
+### $getAuth()
+
+Synchronously retrieves the current authentication state of the client. If the user is
+authenticated, an object containing the fields `uid` (the unique user ID), `provider` (string
+identifying the provider), `auth` (the authentication token payload), and `expires` (expiration
+time in seconds since the Unix epoch) - and more, depending upon the provider used to authenticate -
+will be returned. Otherwise, the return value will be `null`.
+
+```js
+var authData = $scope.authObj.$getAuth();
+
+if (authData) {
+  console.log("Logged in as:", authData.uid);
+} else {
+  console.log("Logged out");
+}
+```
+
+### $onAuthStateChanged(callback[, context])
+
+Listens for changes to the client's authentication state. The provided `callback` will fire when
+the client's authenticate state changes. If authenticated, the callback will be passed an object
+containing the fields `uid` (the unique user ID), `provider` (string identifying the provider),
+`auth` (the authentication token payload), and `expires` (expiration time in seconds since the Unix
+epoch) - and more, depending upon the provider used to authenticate. Otherwise, the callback will
+be passed `null`.
+
+```js
+$scope.authObj.$onAuthStateChanged(function(authData) {
+  if (authData) {
+    console.log("Logged in as:", authData.uid);
+  } else {
+    console.log("Logged out");
+  }
+});
+```
+
+This method can also take an optional second argument which, if provided, will be used as `this`
+when calling your callback.
+
+This method returns a function which can be used to unregister the provided `callback`. Once the
+`callback` is unregistered, changes in authentication state will not cause the `callback` to fire.
+
+```js
+var offAuth = $scope.authObj.$onAuthStateChanged(callback);
+
+// ... sometime later, unregister the callback
+offAuth();
+```
+
+### $signOut()
+
+Unauthenticates a client from the Firebase database. It takes no arguments and returns no value. When logout is called, the
+`$onAuthStateChanged()` callback(s) will be fired.
+
+```html
+<span ng-show="authData">
+  {{ authData.name }} | <a href="#" ng-click="authObj.$signOut()">Logout</a>
+</span>
+```
+
+### $waitForSignIn()
+
+Helper method which returns a promise fulfilled with the current authentication state. This is
+intended to be used in the `resolve()` method of Angular routers. See the
+["Using Authentication with Routers"](https://github.com/firebase/angularfire/blob/master/docs/guide/user-auth.md#authenticating-with-routers)
+section of our AngularFire guide for more information and a full example.
+
+### $requireSignIn()
+
+Helper method which returns a promise fulfilled with the current authentication state if the user
+is authenticated but otherwise rejects the promise. This is intended to be used in the `resolve()`
+method of Angular routers to prevented unauthenticated users from seeing authenticated pages
+momentarily during page load. See the
+["Using Authentication with Routers"](https://github.com/firebase/angularfire/blob/master/docs/guide/user-auth.md#authenticating-with-routers)
+section of our AngularFire guide for more information and a full example.
+
+### $createUserWithEmailAndPassword(email, password)
+
+Creates a new user account using an email / password combination. This function returns a promise
+that is resolved with an object containing user data about the created user. Currently, the object
+only contains the created user's `uid`.
+
+```js
+$scope.authObj.$createUserWithEmailAndPassword(
+  "my@email.com",
+  "mypassword"
+).then(function(userData) {
+  console.log("User " + userData.uid + " created successfully!");
+}).then(function(authData) {
+  console.log("Logged in as:", authData.uid);
+}).catch(function(error) {
+  console.error("Error: ", error);
+});
+```
+
+Note that this function both creates the new user and authenticates as the new user.
+
+### $updatePassword(password)
+
+Changes the password of the currently logged in user. This function
+returns a promise that is resolved when the password has been successfully changed on the Firebase
+authentication servers.
+
+```text
+$scope.authObj.$updatePassword("newPassword").then(function() {
+  console.log("Password changed successfully!");
+}).catch(function(error) {
+  console.error("Error: ", error);
+});
+```
+
+### $updateEmail(email)
+
+Changes the email of the currently logged in user. This function returns
+a promise that is resolved when the email has been successfully changed on the Firebase Authentication servers.
+
+```text
+$scope.authObj.$updateEmail("new@email.com")
+.then(function() {
+  console.log("Email changed successfully!");
+}).catch(function(error) {
+  console.error("Error: ", error);
+});
+```
+
+### $deleteUser()
+
+Removes the currently authenticated user. This function returns a
+promise that is resolved when the user has been successfully removed on the Firebase Authentication servers.
+
+```js
+$scope.authObj.$deleteUser().then(function() {
+  console.log("User removed successfully!");
+}).catch(function(error) {
+  console.error("Error: ", error);
+});
+```
+
+Note that removing a user also logs that user out and will therefor fire any `onAuthStateChanged()` callbacks
+that you have created.
+
+### $sendPasswordResetEmail(email)
+
+Sends a password-reset email to the owner of the account, containing a token that may be used to
+authenticate and change the user's password. This function returns a promise that is resolved when
+the email notification has been sent successfully.
+
+```js
+$scope.authObj.$sendPasswordResetEmail("my@email.com").then(function() {
+  console.log("Password reset email sent successfully!");
+}).catch(function(error) {
+  console.error("Error: ", error);
+});
+```
 Extending the Services
 -----------------------
 
@@ -928,316 +1237,5 @@ app.factory("MessageList", function(MessageFactory) {
   return function(ref) {
     return new MessageFactory(ref);
   }
-});
-```
-
-$firebaseAuth
-------------------------
-
-AngularFire includes support for [user authentication and management](/docs/web/guide/user-auth.html)
-with the `$firebaseAuth` service.
-
-The `$firebaseAuth` factory takes an optional Firebase auth instance (`firebase.auth()`) as its only
-argument. Note that the authentication state is global to your application, even if multiple
-`$firebaseAuth` objects are created unless you use multiple Firebase apps.
-
-```js
-app.controller("MyAuthCtrl", ["$scope", "$firebaseAuth",
-  function($scope, $firebaseAuth) {
-    $scope.authObj = $firebaseAuth();
-  }
-]);
-```
-
-The authentication object returned by `$firebaseAuth` contains several methods for authenticating
-users, responding to changes in authentication state, and managing user accounts for email /
-password users.
-
-### $signInWithCustomToken(authToken)
-
-Authenticates the client using a [custom authentication token](https://firebase-dot-devsite.googleplex.com/docs/auth/web/custom-auth).
-This function takes two arguments: an authentication token or a Firebase Secret and an object containing optional
-client arguments, such as configuring session persistence.
-
-```js
-$scope.authObj.$signInWithCustomToken("<CUSTOM_AUTH_TOKEN>").then(function(authData) {
-  console.log("Logged in as:", authData.uid);
-}).catch(function(error) {
-  console.error("Authentication failed:", error);
-});
-```
-
-This method returns a promise which is resolved or rejected when the authentication attempt is
-completed. If successful, the promise will be fulfilled with an object containing the payload of
-the authentication token. If unsuccessful, the promise will be rejected with an `Error` object.
-
-Read [our documentation on Custom Login](https://firebase-dot-devsite.googleplex.com/docs/auth/web/custom-auth)
-for more details about generating your own custom authentication tokens.
-
-### $signInAnonymously()
-
-Authenticates the client using a new, temporary guest account.
-
-```js
-$scope.authObj.$signInAnonymously().then(function(authData) {
-  console.log("Logged in as:", authData.uid);
-}).catch(function(error) {
-  console.error("Authentication failed:", error);
-});
-```
-
-This method returns a promise which is resolved or rejected when the authentication attempt is
-completed. If successful, the promise will be fulfilled with an object containing authentication
-data about the logged-in user. If unsuccessful, the promise will be rejected with an `Error` object.
-
-Read [our documentation on anonymous authentication](https://firebase-dot-devsite.googleplex.com/docs/auth/web/anonymous-auth)
-for more details about anonymous authentication.
-
-### $signInWithEmailAndPassword(email, password)
-
-Authenticates the client using an email / password combination. This function takes two
-arguments: an object containing `email` and `password` attributes corresponding to the user account
-and an object containing optional client arguments, such as configuring session persistence.
-
-```js
-$scope.authObj.$signInWithEmailAndPassword("my@email.com", "password").then(function(authData) {
-  console.log("Logged in as:", authData.uid);
-}).catch(function(error) {
-  console.error("Authentication failed:", error);
-});
-```
-
-This method returns a promise which is resolved or rejected when the authentication attempt is
-completed. If successful, the promise will be fulfilled with an object containing authentication
-data about the logged-in user. If unsuccessful, the promise will be rejected with an `Error` object.
-
-Read [our documentation on email / password authentication](https://firebase-dot-devsite.googleplex.com/docs/auth/web/password-auth)
-for more details about email / password authentication.
-
-### $signInWithPopup(provider)
-
-Authenticates the client using a popup-based OAuth flow. This function takes two
-arguments: the unique string identifying the OAuth provider to authenticate with (e.g. `"google"`).
-
-Optionally, you can pass a provider object (like `new firebase.auth().GoogleProvider()`, etc)
-which can be configured with additional options.
-
-```js
-$scope.authObj.$signInWithPopup("google").then(function(authData) {
-  console.log("Logged in as:", authData.uid);
-}).catch(function(error) {
-  console.error("Authentication failed:", error);
-});
-```
-
-This method returns a promise which is resolved or rejected when the authentication attempt is
-completed. If successful, the promise will be fulfilled with an object containing authentication
-data about the logged-in user. If unsuccessful, the promise will be rejected with an `Error` object.
-
-Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to
-[authentication documentation](https://firebase-dot-devsite.googleplex.com/docs/auth/)
-for information about configuring each provider.
-
-### $signInWithRedirect(provider[, options])
-
-Authenticates the client using a redirect-based OAuth flow. This function takes two
-arguments: the unique string identifying the OAuth provider to authenticate with (e.g. `"google"`).
-
-Optionally, you can pass a provider object (like `new firebase.auth().GoogleProvider()`, etc)
-which can be configured with additional options.
-
-```js
-$scope.authObj.$signInWithRedirect("google").then(function(authData) {
-  console.log("Logged in as:", authData.uid);
-}).then(function() {
-  // Never called because of page redirect
-}).catch(function(error) {
-  console.error("Authentication failed:", error);
-});
-```
-
-This method returns a rejected promise with an `Error` object if the authentication attempt fails.
-Upon successful authentication, the browser will be redirected as part of the OAuth authentication
-flow. As such, the returned promise will never be fulfilled. Instead, you should use the `$onAuthStateChanged()`
-method to detect when the authentication has been successfully completed.
-
-Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to
-[authentication documentation](https://firebase-dot-devsite.googleplex.com/docs/auth/)
-for information about configuring each provider.
-
-### $signInWithCredentials(credentials)
-
-Authenticates the client using credentials (potentially created from OAuth Tokens). This function takes one
-arguments: the credentials object. This may be obtained from individual auth providers under `firebase.auth()`;
-
-```js
-$scope.authObj.$signInWithCredentials(credentials).then(function(authData) {
-  console.log("Logged in as:", authData.uid);
-}).catch(function(error) {
-  console.error("Authentication failed:", error);
-});
-```
-
-This method returns a promise which is resolved or rejected when the authentication attempt is
-completed. If successful, the promise will be fulfilled with an object containing authentication
-data about the logged-in user. If unsuccessful, the promise will be rejected with an `Error` object.
-
-Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to
-[authentication documentation](https://firebase-dot-devsite.googleplex.com/docs/auth/)
-for information about configuring each provider.
-
-### $getAuth()
-
-Synchronously retrieves the current authentication state of the client. If the user is
-authenticated, an object containing the fields `uid` (the unique user ID), `provider` (string
-identifying the provider), `auth` (the authentication token payload), and `expires` (expiration
-time in seconds since the Unix epoch) - and more, depending upon the provider used to authenticate -
-will be returned. Otherwise, the return value will be `null`.
-
-```js
-var authData = $scope.authObj.$getAuth();
-
-if (authData) {
-  console.log("Logged in as:", authData.uid);
-} else {
-  console.log("Logged out");
-}
-```
-
-### $onAuthStateChanged(callback[, context])
-
-Listens for changes to the client's authentication state. The provided `callback` will fire when
-the client's authenticate state changes. If authenticated, the callback will be passed an object
-containing the fields `uid` (the unique user ID), `provider` (string identifying the provider),
-`auth` (the authentication token payload), and `expires` (expiration time in seconds since the Unix
-epoch) - and more, depending upon the provider used to authenticate. Otherwise, the callback will
-be passed `null`.
-
-```js
-$scope.authObj.$onAuthStateChanged(function(authData) {
-  if (authData) {
-    console.log("Logged in as:", authData.uid);
-  } else {
-    console.log("Logged out");
-  }
-});
-```
-
-This method can also take an optional second argument which, if provided, will be used as `this`
-when calling your callback.
-
-This method returns a function which can be used to unregister the provided `callback`. Once the
-`callback` is unregistered, changes in authentication state will not cause the `callback` to fire.
-
-```js
-var offAuth = $scope.authObj.$onAuthStateChanged(callback);
-
-// ... sometime later, unregister the callback
-offAuth();
-```
-
-### $signOut()
-
-Unauthenticates a client from the Firebase database. It takes no arguments and returns no value. When logout is called, the
-`$onAuthStateChanged()` callback(s) will be fired.
-
-```html
-<span ng-show="authData">
-  {{ authData.name }} | <a href="#" ng-click="authObj.$signOut()">Logout</a>
-</span>
-```
-
-### $waitForSignIn()
-
-Helper method which returns a promise fulfilled with the current authentication state. This is
-intended to be used in the `resolve()` method of Angular routers. See the
-["Using Authentication with Routers"](https://github.com/firebase/angularfire/blob/master/docs/guide/user-auth.md#authenticating-with-routers)
-section of our AngularFire guide for more information and a full example.
-
-### $requireSignIn()
-
-Helper method which returns a promise fulfilled with the current authentication state if the user
-is authenticated but otherwise rejects the promise. This is intended to be used in the `resolve()`
-method of Angular routers to prevented unauthenticated users from seeing authenticated pages
-momentarily during page load. See the
-["Using Authentication with Routers"](https://github.com/firebase/angularfire/blob/master/docs/guide/user-auth.md#authenticating-with-routers)
-section of our AngularFire guide for more information and a full example.
-
-### $createUserWithEmailAndPassword(email, password)
-
-Creates a new user account using an email / password combination. This function returns a promise
-that is resolved with an object containing user data about the created user. Currently, the object
-only contains the created user's `uid`.
-
-```js
-$scope.authObj.$createUserWithEmailAndPassword(
-  "my@email.com",
-  "mypassword"
-).then(function(userData) {
-  console.log("User " + userData.uid + " created successfully!");
-}).then(function(authData) {
-  console.log("Logged in as:", authData.uid);
-}).catch(function(error) {
-  console.error("Error: ", error);
-});
-```
-
-Note that this function both creates the new user and authenticates as the new user.
-
-### $updatePassword(password)
-
-Changes the password of the currently logged in user. This function
-returns a promise that is resolved when the password has been successfully changed on the Firebase
-authentication servers.
-
-```text
-$scope.authObj.$updatePassword("newPassword").then(function() {
-  console.log("Password changed successfully!");
-}).catch(function(error) {
-  console.error("Error: ", error);
-});
-```
-
-### $updateEmail(email)
-
-Changes the email of the currently logged in user. This function returns
-a promise that is resolved when the email has been successfully changed on the Firebase Authentication servers.
-
-```text
-$scope.authObj.$updateEmail("new@email.com")
-.then(function() {
-  console.log("Email changed successfully!");
-}).catch(function(error) {
-  console.error("Error: ", error);
-});
-```
-
-### $deleteUser()
-
-Removes the currently authenticated user. This function returns a
-promise that is resolved when the user has been successfully removed on the Firebase Authentication servers.
-
-```js
-$scope.authObj.$deleteUser().then(function() {
-  console.log("User removed successfully!");
-}).catch(function(error) {
-  console.error("Error: ", error);
-});
-```
-
-Note that removing a user also logs that user out and will therefor fire any `onAuthStateChanged()` callbacks
-that you have created.
-
-### $sendPasswordResetEmail(email)
-
-Sends a password-reset email to the owner of the account, containing a token that may be used to
-authenticate and change the user's password. This function returns a promise that is resolved when
-the email notification has been sent successfully.
-
-```js
-$scope.authObj.$sendPasswordResetEmail("my@email.com").then(function() {
-  console.log("Password reset email sent successfully!");
-}).catch(function(error) {
-  console.error("Error: ", error);
 });
 ```
