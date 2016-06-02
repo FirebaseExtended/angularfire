@@ -100,7 +100,7 @@ and details.
  * [Decorating the Services](#decorating-the-services)
  * [Creating AngularFire Services](creating-angularfire-services)
 
-### [Users and Authentication](users-and-authentication)
+### [$firebaseAuth](#firebaseAuth)
  * [`$signInWithCustomToken(authToken)`]($signInWithCustomToken(authToken))
  * [`$signInAnonymously()`](#signinanonymously)
  * [`$signInWithEmailAndPassword(email, password)`](#signinwithemailandpasswordemail-password)
@@ -119,7 +119,7 @@ and details.
  * [`$sendPasswordResetEmail(email)`](#sendpasswordresetemailemail)
 
 
-`$firebaseObject`
+$firebaseObject
 ---------------
 
 The `$firebaseObject` service takes an optional [`firebase.database.Reference`](https://firebase.google.com/docs/reference/js/#firebase.database.Reference) or
@@ -160,11 +160,11 @@ app.controller("MyCtrl", ["$scope", "$firebaseObject",
 ]);
 ```
 
-#### `$id`
+#### $id
 
 The key where this record is stored. The same as `obj.$ref().key`.
 
-#### `$priority`
+#### $priority
 
 The priority for this record according to the last update we received. Modifying this value
 and then calling `$save()` will also update the server's priority.
@@ -174,7 +174,7 @@ this field inside the `$bindTo()` function will not trigger an update unless a f
 prefix is also updated. It is best to avoid using `$bindTo()` for editing `$` variables and just
 rely on the `$save()` method.
 
-#### `$value`
+#### $value
 
 If the value in the database is a primitive (boolean, string, or number) then the value will
 be stored under this `$value` key. Modifying this value and then calling `$save()` will also
@@ -193,7 +193,7 @@ this field inside the `$bindTo()` function will not trigger an update unless a f
 prefix is also updated. It is best to avoid using `$bindTo()` for editing `$` variables and just
 rely on the `$save()` method.
 
-### `$remove()`
+### $remove()
 
 Removes the entire object locally and from the database. This method returns a promise that will be
 fulfilled when the data has been removed from the server. The promise will be resolved with a
@@ -208,7 +208,7 @@ obj.$remove().then(function(ref) {
 });
 ```
 
-### `$save()`
+### $save()
 
 If changes are made to data, then calling `$save()` will push those changes to the server. This
 method returns a promise that will resolve with this object's `Firebase` reference when the write
@@ -224,7 +224,7 @@ obj.$save().then(function(ref) {
 });
 ```
 
-### `$loaded()`
+### $loaded()
 
 Returns a promise which is resolved when the initial object data has been downloaded from the database.
 The promise resolves to the `$firebaseObject` itself.
@@ -254,7 +254,7 @@ obj.$loaded(
 );
 ```
 
-### `$ref()`
+### $ref()
 
 Returns the `Firebase` reference used to create this object.
 
@@ -263,7 +263,7 @@ var ob = $firebaseObject(ref);
 obj.$ref() === ref; // true
 ```
 
-### `$bindTo(scope, varName)`
+### $bindTo(scope, varName)
 
 Creates a three-way binding between a scope variable and the database data. When the `scope` data is
 updated, changes are pushed to the database, and when changes occur in the database, they are pushed
@@ -320,7 +320,7 @@ obj.$bindTo($scope, "data").then(function(unbind) {
 });
 ```
 
-### `$watch(callback, context)`
+### $watch(callback, context)
 
 Registers an event listener which will be notified any time there is a change to the data. Returns
 an unregister function that, when invoked, will stop notifying the callback of changes.
@@ -335,13 +335,13 @@ var unwatch = obj.$watch(function() {
 unwatch();
 ```
 
-### `$destroy()`
+### $destroy()
 
 Calling this method cancels event listeners and frees memory used by this object (deletes the
 local data). Changes are no longer synchronized to or from the database.
 
 
-`$firebaseArray`
+$firebaseArray
 --------------
 
 The `$firebaseArray` service takes an optional [`firebase.database.Reference`](https://firebase.google.com/docs/reference/js/#firebase.database.Reference) or
@@ -417,7 +417,7 @@ list.$save(2);
 </li>
 ```
 
-### `$add(newData)`
+### $add(newData)
 
 Creates a new record in the database and adds the record to our local synchronized array.
 
@@ -434,7 +434,7 @@ list.$add({ foo: "bar" }).then(function(ref) {
 });
 ```
 
-### `$remove(recordOrIndex)`
+### $remove(recordOrIndex)
 
 Remove a record from the database and from the local array. This method returns a promise that
 resolves after the record is deleted at the server. It will contain a `Firebase` reference to
@@ -449,7 +449,7 @@ list.$remove(item).then(function(ref) {
 });
 ```
 
-### `$save(recordOrIndex)`
+### $save(recordOrIndex)
 
 The array itself cannot be modified, but records in the array can be updated and saved back
 to the database individually. This method saves an existing, modified local record back to the database.
@@ -477,7 +477,7 @@ list.$save(2).then(function(ref) {
 });
 ```
 
-### `$getRecord(key)`
+### $getRecord(key)
 
 Returns the record from the array for the given key. If the key is not found, returns `null`.
 This method utilizes `$indexFor(key)` to find the appropriate record.
@@ -487,7 +487,7 @@ var list = $firebaseArray(ref);
 var rec = list.$getRecord("foo"); // record with $id === "foo" or null
 ```
 
-### `$keyAt(recordOrIndex)`
+### $keyAt(recordOrIndex)
 
 Returns the key for a record in the array. It accepts either an array index or
 a reference to an item that exists in the array.
@@ -499,7 +499,7 @@ list.$keyAt(1); // bravo
 list.$keyAt( list[1] ); // bravo
 ```
 
-### `$indexFor(key)`
+### $indexFor(key)
 
 The inverse of `$keyAt()`, this method takes a key and finds the associated record in the array.
 If the record does not exist, -1 is returned.
@@ -512,7 +512,7 @@ list.$indexFor("bravo"); // 1
 list.$indexFor("zulu"); // -1
 ```
 
-### `$loaded()`
+### $loaded()
 
 Returns a promise which is resolved when the initial array data has been downloaded from the
 database. The promise resolves to the `$firebaseArray`.
@@ -540,7 +540,7 @@ list.$loaded(
   });
 ```
 
-### `$ref()`
+### $ref()
 
 Returns the `Firebase` reference used to create this array.
 
@@ -549,7 +549,7 @@ var list = $firebaseArray(ref);
 sync === list.$ref(); // true
 ```
 
-### `$watch(cb[, context])`
+### $watch(cb[, context])
 
 Any callback passed here will be invoked each time data in the array is updated from the server.
 The callback receives an object with the following keys:
@@ -595,7 +595,7 @@ function compare(a, b) {
 }
 ```
 
-### `$destroy()`
+### $destroy()
 
 Stop listening for events and free memory used by this array (empties the local copy).
 Changes are no longer synchronized to or from the database.
@@ -653,7 +653,7 @@ var FactoryWithCounter = $firebaseObject.$extend({
 });
 ```
 
-### `$firebaseArray.$extend`
+### $firebaseArray.$extend
 
 You can create a new factory from a `$firebaseArray`. It can add additional methods or override any existing method.
 
@@ -931,15 +931,15 @@ app.factory("MessageList", function(MessageFactory) {
 });
 ```
 
-Users and Authentication
+$firebaseAuth
 ------------------------
 
 AngularFire includes support for [user authentication and management](/docs/web/guide/user-auth.html)
 with the `$firebaseAuth` service.
 
-The `$firebaseAuth` factory takes a `Firebase` reference as its only
+The `$firebaseAuth` factory takes an optional Firebase auth instance (`firebase.auth()`) as its only
 argument. Note that the authentication state is global to your application, even if multiple
-`$firebaseAuth` objects are created.
+`$firebaseAuth` objects are created unless you use multiple Firebase apps.
 
 ```js
 app.controller("MyAuthCtrl", ["$scope", "$firebaseAuth",
@@ -953,7 +953,7 @@ The authentication object returned by `$firebaseAuth` contains several methods f
 users, responding to changes in authentication state, and managing user accounts for email /
 password users.
 
-### `$signInWithCustomToken(authToken)`
+### $signInWithCustomToken(authToken)
 
 Authenticates the client using a [custom authentication token](https://firebase-dot-devsite.googleplex.com/docs/auth/web/custom-auth).
 This function takes two arguments: an authentication token or a Firebase Secret and an object containing optional
@@ -974,7 +974,7 @@ the authentication token. If unsuccessful, the promise will be rejected with an 
 Read [our documentation on Custom Login](https://firebase-dot-devsite.googleplex.com/docs/auth/web/custom-auth)
 for more details about generating your own custom authentication tokens.
 
-### `$signInAnonymously()`
+### $signInAnonymously()
 
 Authenticates the client using a new, temporary guest account.
 
@@ -993,7 +993,7 @@ data about the logged-in user. If unsuccessful, the promise will be rejected wit
 Read [our documentation on anonymous authentication](https://firebase-dot-devsite.googleplex.com/docs/auth/web/anonymous-auth)
 for more details about anonymous authentication.
 
-### `$signInWithEmailAndPassword(email, password)`
+### $signInWithEmailAndPassword(email, password)
 
 Authenticates the client using an email / password combination. This function takes two
 arguments: an object containing `email` and `password` attributes corresponding to the user account
@@ -1014,7 +1014,7 @@ data about the logged-in user. If unsuccessful, the promise will be rejected wit
 Read [our documentation on email / password authentication](https://firebase-dot-devsite.googleplex.com/docs/auth/web/password-auth)
 for more details about email / password authentication.
 
-### `$signInWithPopup(provider)`
+### $signInWithPopup(provider)
 
 Authenticates the client using a popup-based OAuth flow. This function takes two
 arguments: the unique string identifying the OAuth provider to authenticate with (e.g. `"google"`).
@@ -1038,7 +1038,7 @@ Firebase currently supports Facebook, GitHub, Google, and Twitter authentication
 [authentication documentation](https://firebase-dot-devsite.googleplex.com/docs/auth/)
 for information about configuring each provider.
 
-### `$signInWithRedirect(provider[, options])`
+### $signInWithRedirect(provider[, options])
 
 Authenticates the client using a redirect-based OAuth flow. This function takes two
 arguments: the unique string identifying the OAuth provider to authenticate with (e.g. `"google"`).
@@ -1065,7 +1065,7 @@ Firebase currently supports Facebook, GitHub, Google, and Twitter authentication
 [authentication documentation](https://firebase-dot-devsite.googleplex.com/docs/auth/)
 for information about configuring each provider.
 
-### `$signInWithCredentials(credentials)`
+### $signInWithCredentials(credentials)
 
 Authenticates the client using credentials (potentially created from OAuth Tokens). This function takes one
 arguments: the credentials object. This may be obtained from individual auth providers under `firebase.auth()`;
@@ -1086,7 +1086,7 @@ Firebase currently supports Facebook, GitHub, Google, and Twitter authentication
 [authentication documentation](https://firebase-dot-devsite.googleplex.com/docs/auth/)
 for information about configuring each provider.
 
-### `$getAuth()`
+### $getAuth()
 
 Synchronously retrieves the current authentication state of the client. If the user is
 authenticated, an object containing the fields `uid` (the unique user ID), `provider` (string
@@ -1104,7 +1104,7 @@ if (authData) {
 }
 ```
 
-### `$onAuthStateChanged(callback[, context])`
+### $onAuthStateChanged(callback[, context])
 
 Listens for changes to the client's authentication state. The provided `callback` will fire when
 the client's authenticate state changes. If authenticated, the callback will be passed an object
@@ -1136,7 +1136,7 @@ var offAuth = $scope.authObj.$onAuthStateChanged(callback);
 offAuth();
 ```
 
-### `$signOut()`
+### $signOut()
 
 Unauthenticates a client from the Firebase database. It takes no arguments and returns no value. When logout is called, the
 `$onAuthStateChanged()` callback(s) will be fired.
@@ -1147,14 +1147,14 @@ Unauthenticates a client from the Firebase database. It takes no arguments and r
 </span>
 ```
 
-### `$waitForSignIn()`
+### $waitForSignIn()
 
 Helper method which returns a promise fulfilled with the current authentication state. This is
 intended to be used in the `resolve()` method of Angular routers. See the
 ["Using Authentication with Routers"](https://github.com/firebase/angularfire/blob/master/docs/guide/user-auth.md#authenticating-with-routers)
 section of our AngularFire guide for more information and a full example.
 
-### `$requireSignIn()`
+### $requireSignIn()
 
 Helper method which returns a promise fulfilled with the current authentication state if the user
 is authenticated but otherwise rejects the promise. This is intended to be used in the `resolve()`
@@ -1163,7 +1163,7 @@ momentarily during page load. See the
 ["Using Authentication with Routers"](https://github.com/firebase/angularfire/blob/master/docs/guide/user-auth.md#authenticating-with-routers)
 section of our AngularFire guide for more information and a full example.
 
-### `$createUserWithEmailAndPassword(email, password)`
+### $createUserWithEmailAndPassword(email, password)
 
 Creates a new user account using an email / password combination. This function returns a promise
 that is resolved with an object containing user data about the created user. Currently, the object
@@ -1184,7 +1184,7 @@ $scope.authObj.$createUserWithEmailAndPassword(
 
 Note that this function both creates the new user and authenticates as the new user.
 
-### `$updatePassword(password)`
+### $updatePassword(password)
 
 Changes the password of the currently logged in user. This function
 returns a promise that is resolved when the password has been successfully changed on the Firebase
@@ -1198,7 +1198,7 @@ $scope.authObj.$updatePassword("newPassword").then(function() {
 });
 ```
 
-### `$updateEmail(email)`
+### $updateEmail(email)
 
 Changes the email of the currently logged in user. This function returns
 a promise that is resolved when the email has been successfully changed on the Firebase Authentication servers.
@@ -1212,7 +1212,7 @@ $scope.authObj.$updateEmail("new@email.com")
 });
 ```
 
-### `$deleteUser()`
+### $deleteUser()
 
 Removes the currently authenticated user. This function returns a
 promise that is resolved when the user has been successfully removed on the Firebase Authentication servers.
@@ -1228,7 +1228,7 @@ $scope.authObj.$deleteUser().then(function() {
 Note that removing a user also logs that user out and will therefor fire any `onAuthStateChanged()` callbacks
 that you have created.
 
-### `$sendPasswordResetEmail(email)`
+### $sendPasswordResetEmail(email)
 
 Sends a password-reset email to the owner of the account, containing a token that may be used to
 authenticate and change the user's password. This function returns a promise that is resolved when
