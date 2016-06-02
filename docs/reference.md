@@ -33,13 +33,91 @@ This documentation is for AngularFire 2.0 with Firebase SDK 3.0.0.
 | 3.x.x | 2.x.x |
 | 2.x.x | 1.x.x |
 
+Browser Compatibility
+---------------------
+<table>
+  <tr>
+    <th>Browser</th>
+    <th>Version Supported</th>
+    <th>With Polyfill</th>
+  </tr>
+  <tr>
+    <td>Internet Explorer</td>
+    <td>9+</td>
+    <td>9+ (Angular 1.3 only supports 9+)</td>
+  </tr>
+  <tr>
+    <td>Firefox</td>
+    <td>4.0</td>
+    <td>3.0?</td>
+  </tr>
+  <tr>
+    <td>Chrome</td>
+    <td>7</td>
+    <td>5?</td>
+  </tr>
+  <tr>
+    <td>Safari</td>
+    <td>5.1.4</td>
+    <td>?</td>
+  </tr>
+  <tr>
+    <td>Opera</td>
+    <td>11.6</td>
+    <td>?</td>
+  </tr>
+</table>
+
+Polyfills are automatically included to support older browsers. See `src/polyfills.js` for links
+and details.
+
 ## Table of Contents
 
 ### [`$firebaseObject`](#firebaseobject)
  * [`$remove()`](#remove)
  * [`$save()`](#save)
- * [`$loaded`](#loaded)
- 
+ * [`$loaded()`](#loaded)
+ * [`$ref()`](#ref)
+ * [`$bindTo(scope, varName)`](#bindtoscope-varname)
+ * [`$watch(callback, context)`](#watchcallback-context)
+ * [`$destroy()`](#destroy)
+
+### [`$firebaseArray`](#firebasearray)
+ * [`$add(newData)`](#addnewdata)
+ * [`$remove(recordOrIndex)`](#removerecordorindex)
+ * [`$getRecord(key)`](#getrecordkey)
+ * [`$keyAt(recordOrIndex)`](#keyatrecordorindex)
+ * [`$indexFor(key)`](#indexforkey)
+ * [`$loaded()`](#loaded-1)
+ * [`$ref()`](#ref-1)
+ * [`$watch(cb[, context])`](#watchcb-context)
+ * [`$destroy()`](#destroy-1)
+
+### [Extending the Services](#extending-the-services)
+ * [`$extend(object)`](#firebaseobjectextend)
+ * [`$extend(object)`](#firebasearrayextend)
+ * [Passing a Class into $extend](#passing-a-class-into-extend)
+ * [Decorating the Services](#decorating-the-services)
+ * [Creating AngularFire Services](creating-angularfire-services)
+
+### [Users and Authentication](users-and-authentication)
+ * [`$signInWithCustomToken(authToken)`]($signInWithCustomToken(authToken))
+ * [`$signInAnonymously()`](#signinanonymously)
+ * [`$signInWithEmailAndPassword(email, password)`](#signinwithemailandpasswordemail-password)
+ * [`$signInWithPopup(provider)`](#signinwithpopupprovider)
+ * [`$signInWithRedirect(provider[, options])`](#signinwithredirectprovider-options)
+ * [`$signInWithCredentials(credentials)`](#signinwithcredentialscredentials)
+ * [`$getAuth()`](#getauth)
+ * [`$onAuthStateChanged(callback[, context])`](#onauthstatechangedcallback-context)
+ * [`$signOut()`](#signout)
+ * [`$waitForSignIn()`](#waitforsignin)
+ * [`$requireSignIn()`](#requiresignin)
+ * [`$createUserWithEmailAndPassword(email, password)`](#createuserwithemailandpasswordemail-password)
+ * [`$updatePassword(password)`](#updatepasswordpassword)
+ * [`$updateEmail(email)`](#updateemailemail)
+ * [`$deleteUser()`](#deleteuser)
+ * [`$sendPasswordResetEmail(email)`](#sendpasswordresetemailemail)
+
 
 `$firebaseObject`
 ---------------
@@ -82,11 +160,11 @@ app.controller("MyCtrl", ["$scope", "$firebaseObject",
 ]);
 ```
 
-### `$id`
+#### `$id`
 
 The key where this record is stored. The same as `obj.$ref().key`.
 
-### `$priority`
+#### `$priority`
 
 The priority for this record according to the last update we received. Modifying this value
 and then calling `$save()` will also update the server's priority.
@@ -96,7 +174,7 @@ this field inside the `$bindTo()` function will not trigger an update unless a f
 prefix is also updated. It is best to avoid using `$bindTo()` for editing `$` variables and just
 rely on the `$save()` method.
 
-### `$value`
+#### `$value`
 
 If the value in the database is a primitive (boolean, string, or number) then the value will
 be stored under this `$value` key. Modifying this value and then calling `$save()` will also
@@ -859,8 +937,6 @@ Users and Authentication
 AngularFire includes support for [user authentication and management](/docs/web/guide/user-auth.html)
 with the `$firebaseAuth` service.
 
-### Authentication Service Constructor
-
 The `$firebaseAuth` factory takes a `Firebase` reference as its only
 argument. Note that the authentication state is global to your application, even if multiple
 `$firebaseAuth` objects are created.
@@ -1165,41 +1241,3 @@ $scope.authObj.$sendPasswordResetEmail("my@email.com").then(function() {
   console.error("Error: ", error);
 });
 ```
-
-Browser Compatibility
----------------------
-<table>
-  <tr>
-    <th>Browser</th>
-    <th>Version Supported</th>
-    <th>With Polyfill</th>
-  </tr>
-  <tr>
-    <td>Internet Explorer</td>
-    <td>9+</td>
-    <td>9+ (Angular 1.3 only supports 9+)</td>
-  </tr>
-  <tr>
-    <td>Firefox</td>
-    <td>4.0</td>
-    <td>3.0?</td>
-  </tr>
-  <tr>
-    <td>Chrome</td>
-    <td>7</td>
-    <td>5?</td>
-  </tr>
-  <tr>
-    <td>Safari</td>
-    <td>5.1.4</td>
-    <td>?</td>
-  </tr>
-  <tr>
-    <td>Opera</td>
-    <td>11.6</td>
-    <td>?</td>
-  </tr>
-</table>
-
-Polyfills are automatically included to support older browsers. See `src/polyfills.js` for links
-and details.
