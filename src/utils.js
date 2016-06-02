@@ -25,31 +25,7 @@
 
     .factory('$firebaseUtils', ["$q", "$timeout", "$rootScope",
       function($q, $timeout, $rootScope) {
-
-        // ES6 style promises polyfill for angular 1.2.x
-        // Copied from angular 1.3.x implementation: https://github.com/angular/angular.js/blob/v1.3.5/src/ng/q.js#L539
-        function Q(resolver) {
-          if (!angular.isFunction(resolver)) {
-            throw new Error('missing resolver function');
-          }
-
-          var deferred = $q.defer();
-
-          function resolveFn(value) {
-            deferred.resolve(value);
-          }
-
-          function rejectFn(reason) {
-            deferred.reject(reason);
-          }
-
-          resolver(resolveFn, rejectFn);
-
-          return deferred.promise;
-        }
-
         var utils = {
-          Q: Q,
           /**
            * Returns a function which, each time it is invoked, will gather up the values until
            * the next "tick" in the Angular compiler process. Then they are all run at the same
@@ -183,8 +159,7 @@
 
           resolve: $q.when,
 
-          //TODO: Remove false branch and use only angular implementation when we drop angular 1.2.x support.
-          promise: angular.isFunction($q) ? $q : Q,
+          promise: $q,
 
           makeNodeResolver:function(deferred){
             return function(err,result){
