@@ -8,7 +8,7 @@
       /**
        * This factory returns an object allowing you to manage the client's authentication state.
        *
-       * @param {Firebase} ref A Firebase reference to authenticate.
+       * @param {Firebase.auth.Auth} auth A Firebase auth instance to authenticate.
        * @return {object} An object containing methods for authenticating clients, retrieving
        * authentication state, and managing users.
        */
@@ -24,9 +24,13 @@
   FirebaseAuth = function($q, $firebaseUtils, auth) {
     this._q = $q;
     this._utils = $firebaseUtils;
-    if (typeof ref === 'string') {
-      throw new Error('Please provide a Firebase reference instead of a URL when creating a `$firebaseAuth` object.');
+
+    if (typeof auth === 'string') {
+      throw new Error('The $firebaseAuth service accepts a Firebase auth instance (or nothing) instead of a URL.');
+    } else if (typeof auth.ref !== 'undefined') {
+      throw new Error('The $firebaseAuth service accepts a Firebase auth instance (or nothing) instead of a Database reference.');
     }
+
     this._auth = auth;
     this._initialAuthResolver = this._initAuthResolver();
   };

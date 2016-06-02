@@ -98,6 +98,16 @@ describe('FirebaseAuth',function(){
     });
   });
 
+  it('will throw an error if a database reference is used in place of a Firebase auth instance',function(){
+    expect(function(){
+      $firebaseAuth(firebase.database().ref());
+    }).toThrow();
+  });
+
+  it('will not throw an error if an auth instance is provided',function(){
+      $firebaseAuth(firebase.auth());
+  });
+
   describe('$signInWithCustomToken',function(){
     it('should return a promise', function() {
       expect(authService.$signInWithCustomToken('myToken')).toBeAPromise();
