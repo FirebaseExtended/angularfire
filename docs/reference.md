@@ -85,6 +85,7 @@ and details.
 ### [`$firebaseArray`](#firebasearray-1)
  * [`$add(newData)`](#addnewdata)
  * [`$remove(recordOrIndex)`](#removerecordorindex)
+ * [`$save(recordOrIndex)`](#saverecordorindex)
  * [`$getRecord(key)`](#getrecordkey)
  * [`$keyAt(recordOrIndex)`](#keyatrecordorindex)
  * [`$indexFor(key)`](#indexforkey)

@@ -86,7 +86,7 @@ The `new` operator is required for child classes created with the `$extend()` me
 The following special `$$` methods are used by the `$firebaseObject` service
 to notify itself of any server changes. They can be overridden to transform how data is stored
 locally, and what is returned to the server. Read more about them in the
-[API documentation](https://angularfire.firebaseapp.com/api.html#extending-the-services).
+[API documentation](/docs/reference.md#extending-the-services-1).
 
 | Method | Description |
 |--------|-------------|
@@ -134,7 +134,7 @@ The `new` operator is required for child classes created with the `$extend()` me
 The following special `$$` methods are called internally whenever AngularFire receives a notification
 of a server-side change. They can be overridden to transform how data is stored
 locally, and what is returned to the server. Read more about them in the
-[API documentation](https://angularfire.firebaseapp.com/api.html#extending-the-services).
+[API documentation](/docs/reference.md#extending-the-services-1).
 
 | Method | Description |
 |--------|-------------|
@@ -156,6 +156,6 @@ methods above, and when saving data back to the Firebase database.
 
 You can read more about extending the `$firebaseObject` and `$firebaseArray`
 services in the
-[API reference](https://angularfire.firebaseapp.com/api.html#angularfire-extending-the-services).
+[API reference](/docs/reference.md#extending-the-services-1).
 
 The sections of this guide so far have taken us on a tour through the functionality provided by the AngularFire library, but there is still more that can be done with the combination of Firebase and Angular. The [next section](beyond-angularfire.md) takes us beyond AngularFire to see what else is possible.

@@ -194,7 +194,7 @@ worry about when it be available.
 ```
 
 It's also possible to do this directly in the controller by using the
-[`$loaded()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-loaded) method.
+[`$loaded()`](/docs/reference.md#loaded) method.
 However, this method should be used with care as it's only called once after initial load. Using it
 for anything but debugging is usually a poor practice.
 

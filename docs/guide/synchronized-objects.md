@@ -53,7 +53,7 @@ below would print the content of the profile in JSON format.
 ```
 
 Changes can be saved back to the server using the
-[`$save()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-save) method.
+[`$save()`](/docs/reference.md#save) method.
 This could, for example, be attached to an event in the DOM view, such as `ng-click` or `ng-change`.
 
 ```html
@@ -67,10 +67,10 @@ The synchronized object is created with several special $ properties, all of whi
 
 | Method  | Description |
 | ------------- | ------------- |
-| [`$save()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-save) |	Synchronizes local changes back to the remote database. |
-| [`$remove()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-remove)	| Removes the object from the database, deletes the local object's keys, and sets the local object's `$value` to `null`. It's important to note that the object still exists locally, it is simply empty and we are now treating it as a primitive with a value of `null`. |
-| [`$loaded()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-loaded) |	Returns a promise which is resolved when the initial server data has been downloaded. |
-| [`$bindTo()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-bindtoscope-varname) |	Creates a three-way data binding. Covered below in the [Three-way Data Bindings](#three-way-data-bindings) section. |
+| [`$save()`](/docs/reference.md#save) |	Synchronizes local changes back to the remote database. |
+| [`$remove()`](/docs/reference.md#remove)	| Removes the object from the database, deletes the local object's keys, and sets the local object's `$value` to `null`. It's important to note that the object still exists locally, it is simply empty and we are now treating it as a primitive with a value of `null`. |
+| [`$loaded()`](/docs/reference.md#loaded) |	Returns a promise which is resolved when the initial server data has been downloaded. |
+| [`$bindTo()`](/docs/reference.md#bindtoscope-varname) |	Creates a three-way data binding. Covered below in the [Three-way Data Bindings](#three-way-data-bindings) section. |
 
 
 ## Meta Fields on the Object
@@ -79,9 +79,9 @@ The synchronized object is created with several special `$` properties, all of w
 
 | Method  | Description |
 | ------------- | ------------- |
-| [`$id`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-id) |	The key for this record. This is equivalent to this object's path in our database as it would be returned by `ref.key()`. |
-| [`$priority`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-priority) |	The priority of each child node is stored here for reference. Changing this value and then calling `$save()` on the record will also change the object's priority on the server. |
-| [`$value`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-value) |	If the data in our database is a primitive (number, string, or boolean), the `$firebaseObject()` service will still return an object. The primitive value will be stored under `$value` and can be changed and saved like any other child node. See [Working with Primitives](#working-with-primitives) for more details. |
+| [`$id`](/docs/reference.md#id) |	The key for this record. This is equivalent to this object's path in our database as it would be returned by `ref.key()`. |
+| [`$priority`](/docs/reference.md#priority) |	The priority of each child node is stored here for reference. Changing this value and then calling `$save()` on the record will also change the object's priority on the server. |
+| [`$value`](/docs/reference.md#value) |	If the data in our database is a primitive (number, string, or boolean), the `$firebaseObject()` service will still return an object. The primitive value will be stored under `$value` and can be changed and saved like any other child node. See [Working with Primitives](#working-with-primitives) for more details. |
 
 
 ## Full Example
@@ -240,7 +240,7 @@ obj.$remove().then(function() {
 });
 ```
 
-Head on over to the [API reference](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject)
+Head on over to the [API reference](/docs/reference.md#firebaseobject-1)
 for `$firebaseObject` to see more details for each API method provided by the service. But not all
 of your data is going to fit nicely into a plain JavaScript object. Many times you will have lists
 of data instead. In those cases, you should use AngularFire's `$firebaseArray` service, which we

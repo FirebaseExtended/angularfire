@@ -16,7 +16,7 @@ which just ask about usage will be closed. Here are some resources to get help:
 
 - Start with the [quickstart](../docs/quickstart.md)
 - Go through the [guide](../docs/guide/README.md)
-- Read the full [API reference](https://angularfire.firebaseapp.com/api.html)
+- Read the full [API reference](../docs/reference.md)
 - Try out some [examples](../README.md#examples)
 
 If the official documentation doesn't help, try asking a question on the

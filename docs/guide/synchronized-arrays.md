@@ -13,7 +13,7 @@
 
 Synchronized arrays should be used for any list of objects that will be sorted, iterated, and which
 have unique IDs. The synchronized array assumes that items are added using
-[`$add()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-addnewdata), and
+[`$add()`](/docs/reference.md#addnewdata), and
 that they will therefore be keyed using Firebase
 [push IDs](https://firebase.google.com/docs/database/web/save-data).
 
@@ -79,16 +79,16 @@ We also have access to the key for the node where each message is located via `$
 
 The table below highlights some of the common methods on the synchronized array. The complete list
 of methods can be found in the
-[API documentation](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray) for
+[API documentation](/docs/reference.md#firebasearray-1) for
 `$firebaseArray`.
 
 | Method  | Description |
 | ------------- | ------------- |
-| [`$add(data)`](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-addnewdata) | Creates a new record in the array. Should be used in place of `push()` or `splice()`. |
-| [`$remove(recordOrIndex)`](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-removerecordorindex) | Removes an existing item from the array. Should be used in place of `pop()` or `splice()`. |
-| [`$save(recordOrIndex)`](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-saverecordorindex) | Saves an existing item in the array. |
-| [`$getRecord(key)`](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-getrecordkey) | Given a Firebase database key, returns the corresponding item from the array. It is also possible to find the index with `$indexFor(key)`. |
-| [`$loaded()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray-loaded) | Returns a promise which resolves after the initial records have been downloaded from our database. This is only called once and should be used with care. See [Extending Services](extending-services.md) for more ways to hook into server events. |
+| [`$add(data)`](/docs/reference.md#addnewdata) | Creates a new record in the array. Should be used in place of `push()` or `splice()`. |
+| [`$remove(recordOrIndex)`](/docs/reference.md#removerecordorindex) | Removes an existing item from the array. Should be used in place of `pop()` or `splice()`. |
+| [`$save(recordOrIndex)`](/docs/reference.md) | Saves an existing item in the array. |
+| [`$getRecord(key)`](/docs/reference.md#getrecordkey) | Given a Firebase database key, returns the corresponding item from the array. It is also possible to find the index with `$indexFor(key)`. |
+| [`$loaded()`](/docs/reference.md#loaded-1) | Returns a promise which resolves after the initial records have been downloaded from our database. This is only called once and should be used with care. See [Extending Services](extending-services.md) for more ways to hook into server events. |
 
 
 ## Meta Fields on the Array
@@ -210,7 +210,7 @@ app.controller("ChatCtrl", ["$scope", "chatMessages",
 </div>
 ```
 
-Head on over to the [API reference](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray)
+Head on over to the [API reference](/docs/reference.md#firebasearray-1)
 for `$firebaseArray` to see more details for each API method provided by the service. Now that we
 have a grasp of synchronizing data with AngularFire, the [next section](user-auth.md) of this guide
 moves on to a different aspect of building applications: user authentication.

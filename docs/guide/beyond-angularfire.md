@@ -77,7 +77,7 @@ or you can host it at any custom domain on one of our paid plans. Check out
 
 There are many additional resources for learning about using Firebase with Angular applications:
 
-* Browse the [AngularFire API documentation](https://angularfire.firebaseapp.com/api.html).
+* Browse the [AngularFire API documentation](/docs/reference.md).
 * The [`angularfire-seed`](https://github.com/firebase/angularfire-seed) repo contains a template
 project to help you get started.
 * Check out the [various examples that use AngularFire](../README.md).

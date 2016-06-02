@@ -89,7 +89,7 @@ app.controller("SampleCtrl", ["$scope", "$firebaseAuth",
 ## Managing Users
 
 The `$firebaseAuth` service also provides [a full suite of
-methods](https://angularfire.firebaseapp.com/api.html#angularfire-users-and-authentication) for
+methods](/docs/reference.md#firebaseauth-1) for
 managing email / password accounts. This includes methods for creating and removing accounts,
 changing an account's email or password, and sending password reset emails. The following example
 gives you a taste of just how easy this is:
@@ -161,14 +161,14 @@ app.controller("SampleCtrl", ["$scope", "Auth",
 ## Retrieving Authentication State
 
 Whenever a user is authenticated, you can use the synchronous
-[`$getAuth()`](https://angularfire.firebaseapp.com/api.html#angularfire-users-and-authentication-getauth)
+[`$getAuth()`](/docs/reference.md#getauth)
 method to retrieve the client's current authentication state. This includes the authenticated user's
 `uid` (a user identifier which is unique across all providers) and the `provider` used to
 authenticate. Additional variables are included for each specific provider and are covered in the
 provider-specific links in the table above.
 
 In addition to the synchronous `$getAuth()` method, there is also an asynchronous
-[`$onAuthStateChanged()`](https://angularfire.firebaseapp.com/api.html#angularfire-users-and-authentication-onauthcallback-context) method which fires a
+[`$onAuthStateChanged()`](/docs/reference.md#onauthstatechangedcallback-context) method which fires a
 user-provided callback every time authentication state changes. This is often more convenient than
 using `$getAuth()` since it gives you a single, consistent place to handle updates to authentication
 state, including users logging in or out and sessions expiring.
@@ -262,10 +262,10 @@ authentication check completes. We can abstract away these complexities by takin
 `resolve()` method of Angular routers.
 
 AngularFire provides two helper methods to use with Angular routers. The first is
-[`$waitForSignIn()`](https://angularfire.firebaseapp.com/api.html#angularfire-users-and-authentication-waitforsignin)
+[`$waitForSignIn()`](/docs/reference.md#waitforsignin)
 which returns a promise fulfilled with the current authentication state. This is useful when you
 want to grab the authentication state before the route is rendered. The second helper method is
-[`$requireSignIn()`](https://angularfire.firebaseapp.com/api.html#angularfire-users-and-authentication-requiresignin)
+[`$requireSignIn()`](/docs/reference.md#requiresignin)
 which resolves the promise successfully if a user is authenticated and rejects otherwise. This is
 useful in cases where you want to require a route to have an authenticated user. You can catch the
 rejected promise and redirect the unauthenticated user to a different page, such as the login page.
@@ -386,8 +386,8 @@ injected dependencies for our controllers, services, etc., we still need to use 
 explicitly state our dependencies for the routes, since they are inside of a function.
 
 We have covered the three services AngularFire provides:
-[`$firebaseObject`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject),
-[`$firebaseArray`](https://angularfire.firebaseapp.com/api.html#angularfire-firebasearray), and
-[`$firebaseAuth`](https://angularfire.firebaseapp.com/api.html#angularfire-users-and-authentication).
+[`$firebaseObject`](/docs/reference.md#firebaseobject-1),
+[`$firebaseArray`](/docs/reference.md#firebasearray-1), and
+[`$firebaseAuth`](/docs/reference.md#firebaseauth-1).
 In the [next section](extending-services.md) we will discuss the advanced topic of extending the
 functionality of the `$firebaseObject` and `$firebaseArray` services.
