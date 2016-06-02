@@ -24,14 +24,18 @@ for details on how to upgrade to the Firebase `3.x.x` SDK.
 
 ## `$firebaseAuth` Method Renames / Signature Changes
 
+Initializing `$firebaseAuth` has changed to accept a Firebase `auth` instance (or nothing)
+
 Several authentication methods have been renamed and / or have different method signatures:
 
 | Old Method | New Method | Notes |
 |------------|------------|------------------|
 | `$authAnonymously(options)` | `$signInAnonymously()` | No longer takes any arguments |
+| `$authWithPassword(credentials)` | `$signInWithEmailAndPassword(email, password)` | &nbsp; |
 | `$authWithCustomToken(token)` | `$signInWithCustomToken(token)` | |
 | `$authWithOAuthPopup(provider[, options])` | `$signInWithPopup(provider)` | `options` can be provided by passing a configured `firebase.database.AuthProvider` instead of a `provider` string |
 | `$authWithOAuthRedirect(provider[, options])` | `$signInWithRedirect(provider)` | `options` can be provided by passing a configured `firebase.database.AuthProvider` instead of a `provider` string |
+| `$authWithOAuthToken(provider, token)` | `$signInWithCredential(credential)` | Tokens must now be transformed into provider specific credentials. This is discussed more in the [Firebase Authentication docs](https://firebase.google.com/docs/auth/#key_functions). |
 | `$createUser(credentials)` | `$createUserWithEmailAndPassword(email, password)` | |
 | `$removeUser(credentials)` | `$deleteUser()` | Deletes the currently signed in user |
 | `$changeEmail(credentials)` | `$updateEmail(newEmail)` | Changes the email of the currently signed in user |

@@ -111,8 +111,12 @@ describe('FirebaseAuth',function(){
 
   it('will throw an error if a database instance is used in place of a Firebase auth instance',function(){
     expect(function(){
-      $firebaseAuth(firebase.database());
+      $firebaseAuth(firebase.database().ref());
     }).toThrow();
+  });
+
+  fit('will not throw an error if an auth instance is provided',function(){
+      $firebaseAuth(firebase.auth());
   });
 
   describe('$signInWithCustomToken',function(){
