@@ -153,14 +153,6 @@
             });
           },
 
-          defer: $q.defer,
-
-          reject: $q.reject,
-
-          resolve: $q.when,
-
-          promise: $q,
-
           makeNodeResolver:function(deferred){
             return function(err,result){
               if(err === null){
@@ -332,7 +324,7 @@
           },
 
           doSet: function(ref, data) {
-            var def = utils.defer();
+            var def = $q.defer();
             if( angular.isFunction(ref.set) || !angular.isObject(data) ) {
               // this is not a query, just do a flat set
               // Use try / catch to handle being passed data which is undefined or has invalid keys
@@ -362,7 +354,7 @@
           },
 
           doRemove: function(ref) {
-            var def = utils.defer();
+            var def = $q.defer();
             if( angular.isFunction(ref.remove) ) {
               // ref is not a query, just do a flat remove
               ref.remove(utils.makeNodeResolver(def));
