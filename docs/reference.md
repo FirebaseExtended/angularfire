@@ -3,7 +3,6 @@
 ## Table of Contents
 
 * [Initialization](#initialization)
-
 * [`$firebaseObject`](#firebaseobject)
   * [`$remove()`](#remove)
   * [`$save()`](#save)
@@ -12,7 +11,6 @@
   * [`$bindTo(scope, varName)`](#bindtoscope-varname)
   * [`$watch(callback, context)`](#watchcallback-context)
   * [`$destroy()`](#destroy)
-
 * [`$firebaseArray`](#firebasearray)
   * [`$add(newData)`](#addnewdata)
   * [`$remove(recordOrIndex)`](#removerecordorindex)
@@ -24,34 +22,33 @@
   * [`$ref()`](#ref-1)
   * [`$watch(cb[, context])`](#watchcb-context)
   * [`$destroy()`](#destroy-1)
-
 * [`$firebaseAuth`](#firebaseauth)
-  * [`$signInWithCustomToken(authToken)`]($signInWithCustomToken(authToken))
-  * [`$signInAnonymously()`](#signinanonymously)
-  * [`$signInWithEmailAndPassword(email, password)`](#signinwithemailandpasswordemail-password)
-  * [`$signInWithPopup(provider)`](#signinwithpopupprovider)
-  * [`$signInWithRedirect(provider[, options])`](#signinwithredirectprovider-options)
-  * [`$signInWithCredentials(credentials)`](#signinwithcredentialscredentials)
-  * [`$getAuth()`](#getauth)
-  * [`$onAuthStateChanged(callback[, context])`](#onauthstatechangedcallback-context)
-  * [`$signOut()`](#signout)
-  * [`$waitForSignIn()`](#waitforsignin)
-  * [`$requireSignIn()`](#requiresignin)
-  * [`$createUserWithEmailAndPassword(email, password)`](#createuserwithemailandpasswordemail-password)
-  * [`$updatePassword(password)`](#updatepasswordpassword)
-  * [`$updateEmail(email)`](#updateemailemail)
-  * [`$deleteUser()`](#deleteuser)
-  * [`$sendPasswordResetEmail(email)`](#sendpasswordresetemailemail)
-
+  * Authentication
+    * [`$signInWithCustomToken(authToken)`](#signinwithcustomtokenauthtoken)
+    * [`$signInAnonymously()`](#signinanonymously)
+    * [`$signInWithEmailAndPassword(email, password)`](#signinwithemailandpasswordemail-password)
+    * [`$signInWithPopup(provider)`](#signinwithpopupprovider)
+    * [`$signInWithRedirect(provider[, options])`](#signinwithredirectprovider-options)
+    * [`$signInWithCredentials(credentials)`](#signinwithcredentialscredentials)
+    * [`$getAuth()`](#getauth)
+    * [`$onAuthStateChanged(callback[, context])`](#onauthstatechangedcallback-context)
+    * [`$signOut()`](#signout)
+  * User Management
+    * [`$createUserWithEmailAndPassword(email, password)`](#createuserwithemailandpasswordemail-password)
+    * [`$updatePassword(password)`](#updatepasswordpassword)
+    * [`$updateEmail(email)`](#updateemailemail)
+    * [`$deleteUser()`](#deleteuser)
+    * [`$sendPasswordResetEmail(email)`](#sendpasswordresetemailemail)
+  * Router Helpers
+    * [`$waitForSignIn()`](#waitforsignin)
+    * [`$requireSignIn()`](#requiresignin)
 * [Extending the Services](#extending-the-services)
-  * [`$extend(object)`](#firebaseobjectextend)
-  * [`$extend(object)`](#firebasearrayextend)
+  * [Extending `$firebaseObject`](#extending-firebaseobject)
+  * [Extending `$firebaseArray`](#extending-firebasearray)
   * [Passing a Class into $extend](#passing-a-class-into-extend)
   * [Decorating the Services](#decorating-the-services)
   * [Creating AngularFire Services](#creating-angularfire-services)
-
 * [SDK Compatibility](#sdk-compatibility)
-
 * [Browser Compatibility](#browser-compatibility)
 
 
@@ -766,22 +763,6 @@ Unauthenticates a client from the Firebase database. It takes no arguments and r
 </span>
 ```
 
-### $waitForSignIn()
-
-Helper method which returns a promise fulfilled with the current authentication state. This is
-intended to be used in the `resolve()` method of Angular routers. See the
-["Using Authentication with Routers"](https://github.com/firebase/angularfire/blob/master/docs/guide/user-auth.md#authenticating-with-routers)
-section of our AngularFire guide for more information and a full example.
-
-### $requireSignIn()
-
-Helper method which returns a promise fulfilled with the current authentication state if the user
-is authenticated but otherwise rejects the promise. This is intended to be used in the `resolve()`
-method of Angular routers to prevented unauthenticated users from seeing authenticated pages
-momentarily during page load. See the
-["Using Authentication with Routers"](https://github.com/firebase/angularfire/blob/master/docs/guide/user-auth.md#authenticating-with-routers)
-section of our AngularFire guide for more information and a full example.
-
 ### $createUserWithEmailAndPassword(email, password)
 
 Creates a new user account using an email / password combination. This function returns a promise
@@ -861,6 +842,22 @@ $scope.authObj.$sendPasswordResetEmail("my@email.com").then(function() {
 });
 ```
 
+### $waitForSignIn()
+
+Helper method which returns a promise fulfilled with the current authentication state. This is
+intended to be used in the `resolve()` method of Angular routers. See the
+["Using Authentication with Routers"](https://github.com/firebase/angularfire/blob/master/docs/guide/user-auth.md#authenticating-with-routers)
+section of our AngularFire guide for more information and a full example.
+
+### $requireSignIn()
+
+Helper method which returns a promise fulfilled with the current authentication state if the user
+is authenticated but otherwise rejects the promise. This is intended to be used in the `resolve()`
+method of Angular routers to prevented unauthenticated users from seeing authenticated pages
+momentarily during page load. See the
+["Using Authentication with Routers"](https://github.com/firebase/angularfire/blob/master/docs/guide/user-auth.md#authenticating-with-routers)
+section of our AngularFire guide for more information and a full example.
+
 
 ## Extending the Services
 
@@ -868,7 +865,7 @@ There are several powerful techniques for transforming the data downloaded and s
 by `$firebaseArray` and `$firebaseObject`. **These techniques should only be attempted
 by advanced Angular users who know their way around the code.**
 
-### $firebaseObject.$extend
+### Extending $firebaseObject
 
 You can create a new factory from a `$firebaseObject`. It can add additional methods or override any existing method.
 
@@ -913,7 +910,7 @@ var FactoryWithCounter = $firebaseObject.$extend({
 });
 ```
 
-### $firebaseArray.$extend
+### Extending $firebaseArray
 
 You can create a new factory from a `$firebaseArray`. It can add additional methods or override any existing method.
 
