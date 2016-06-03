@@ -9,7 +9,7 @@ will be closed. Here are some resources to get help:
 
 - Start with the quickstart: https://github.com/firebase/angularfire/blob/master/docs/quickstart.md
 - Go through the guide: https://github.com/firebase/angularfire/blob/master/docs/guide/README.md
-- Read the full API reference: https://angularfire.firebaseapp.com/api.html
+- Read the full API reference: https://github.com/firebase/angularfire/blob/master/docs/reference.md
 - Try out some examples: https://github.com/firebase/angularfire/blob/master/README.md#examples
 
 If the official documentation doesn't help, try asking through our official support channels:

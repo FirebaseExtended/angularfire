@@ -44,7 +44,7 @@ set when `$$added` is invoked.
 remote value at a path is `"foo"`, and that path is synchronized into a local `$firebaseObject`,
 the locally synchronized object will have a JSON structure `{ "$value": "foo" }`. Similarly, if a
 remote path does not exist, the local object would have the JSON structure `{ "$value": null }`.
-See [Working with Primitives](../guide/synchronized-object.md#working-with-primitives) for more details.
+See [Working with Primitives](./synchronized-objects.md#working-with-primitives) for more details.
 
 By default, data stored on a synchronized object or a record in a synchronized array exists
 as a direct attribute of the object. We denote any methods or data which should *not* be
@@ -86,7 +86,7 @@ The `new` operator is required for child classes created with the `$extend()` me
 The following special `$$` methods are used by the `$firebaseObject` service
 to notify itself of any server changes. They can be overridden to transform how data is stored
 locally, and what is returned to the server. Read more about them in the
-[API documentation](https://angularfire.firebaseapp.com/api.html#extending-the-services).
+[API documentation](/docs/reference.md#extending-the-services).
 
 | Method | Description |
 |--------|-------------|
@@ -134,7 +134,7 @@ The `new` operator is required for child classes created with the `$extend()` me
 The following special `$$` methods are called internally whenever AngularFire receives a notification
 of a server-side change. They can be overridden to transform how data is stored
 locally, and what is returned to the server. Read more about them in the
-[API documentation](https://angularfire.firebaseapp.com/api.html#extending-the-services).
+[API documentation](/docs/reference.md#extending-the-services).
 
 | Method | Description |
 |--------|-------------|
@@ -156,6 +156,6 @@ methods above, and when saving data back to the Firebase database.
 
 You can read more about extending the `$firebaseObject` and `$firebaseArray`
 services in the
-[API reference](https://angularfire.firebaseapp.com/api.html#angularfire-extending-the-services).
+[API reference](/docs/reference.md#extending-the-services).
 
 The sections of this guide so far have taken us on a tour through the functionality provided by the AngularFire library, but there is still more that can be done with the combination of Firebase and Angular. The [next section](beyond-angularfire.md) takes us beyond AngularFire to see what else is possible.

@@ -66,7 +66,7 @@ $ bower install angularfire --save
 
 * [Quickstart](docs/quickstart.md)
 * [Guide](docs/guide/README.md)
-* [API Reference](https://angularfire.firebaseapp.com/api.html)
+* [API Reference](docs/reference.md)
 
 
 ## Examples
