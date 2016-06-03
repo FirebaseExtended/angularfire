@@ -1,126 +1,77 @@
-AngularFire
-===========
+# API Reference | AngularFire
 
-AngularFire is the officially supported AngularJS binding for Firebase. This binding lets you
-associate a Firebase Database reference with Angular models so that they will be transparently and
-immediately kept in sync with the database and with all other clients currently using your
-application.
+## Table of Contents
 
-The focus of this library is to abstract much of the boilerplate involved in creating Angular
-bindings from Firebase to Angular, and to make it easy to create services that sync to your database.
-However, this library does not attempt to replace the capabilities of the entire Firebase client library's API
-and that may still be suitable for some advanced usages. Feel free to use the methods provided by
-the core Firebase client library alongside the AngularFire binding.
+* [Initialization](#initialization)
+
+* [`$firebaseObject`](#firebaseobject)
+  * [`$remove()`](#remove)
+  * [`$save()`](#save)
+  * [`$loaded()`](#loaded)
+  * [`$ref()`](#ref)
+  * [`$bindTo(scope, varName)`](#bindtoscope-varname)
+  * [`$watch(callback, context)`](#watchcallback-context)
+  * [`$destroy()`](#destroy)
+
+* [`$firebaseArray`](#firebasearray)
+  * [`$add(newData)`](#addnewdata)
+  * [`$remove(recordOrIndex)`](#removerecordorindex)
+  * [`$save(recordOrIndex)`](#saverecordorindex)
+  * [`$getRecord(key)`](#getrecordkey)
+  * [`$keyAt(recordOrIndex)`](#keyatrecordorindex)
+  * [`$indexFor(key)`](#indexforkey)
+  * [`$loaded()`](#loaded-1)
+  * [`$ref()`](#ref-1)
+  * [`$watch(cb[, context])`](#watchcb-context)
+  * [`$destroy()`](#destroy-1)
+
+* [`$firebaseAuth`](#firebaseauth)
+  * [`$signInWithCustomToken(authToken)`]($signInWithCustomToken(authToken))
+  * [`$signInAnonymously()`](#signinanonymously)
+  * [`$signInWithEmailAndPassword(email, password)`](#signinwithemailandpasswordemail-password)
+  * [`$signInWithPopup(provider)`](#signinwithpopupprovider)
+  * [`$signInWithRedirect(provider[, options])`](#signinwithredirectprovider-options)
+  * [`$signInWithCredentials(credentials)`](#signinwithcredentialscredentials)
+  * [`$getAuth()`](#getauth)
+  * [`$onAuthStateChanged(callback[, context])`](#onauthstatechangedcallback-context)
+  * [`$signOut()`](#signout)
+  * [`$waitForSignIn()`](#waitforsignin)
+  * [`$requireSignIn()`](#requiresignin)
+  * [`$createUserWithEmailAndPassword(email, password)`](#createuserwithemailandpasswordemail-password)
+  * [`$updatePassword(password)`](#updatepasswordpassword)
+  * [`$updateEmail(email)`](#updateemailemail)
+  * [`$deleteUser()`](#deleteuser)
+  * [`$sendPasswordResetEmail(email)`](#sendpasswordresetemailemail)
+
+* [Extending the Services](#extending-the-services)
+  * [`$extend(object)`](#firebaseobjectextend)
+  * [`$extend(object)`](#firebasearrayextend)
+  * [Passing a Class into $extend](#passing-a-class-into-extend)
+  * [Decorating the Services](#decorating-the-services)
+  * [Creating AngularFire Services](#creating-angularfire-services)
+
+* [SDK Compatibility](#sdk-compatibility)
+
+* [Browser Compatibility](#browser-compatibility)
+
+
+## Initialization
 
 ```js
 var app = angular.module("app", ["firebase"]);
-app.config(function () {
+app.config(function() {
   var config = {
-    apiKey: "",       // Your Firebase API key
-    authDomain: "",   // Your Firebase auth domain (*.firebaseapp.com)
-    databaseURL: ""   // Your Firebase database URL (*firebaseio.com)
+    apiKey: "<API_Key>",               // Your Firebase API key
+    authDomain: "<AUTH_DOMAIN>",       // Your Firebase Auth domain ("*.firebaseapp.com")
+    databaseURL: "<DATABASE_URL>",     // Your Firebase Database URL ("https://*.firebaseio.com")
+    storageBucket: "<STORAGE_BUCKET>"  // Your Firebase Storage bucket ("*.appspot.com")
   };
   firebase.initializeApp(config);
 });
 ```
 
-SDK Compatibility
----------------------
-This documentation is for AngularFire 2.0 with Firebase SDK 3.0.0.
 
-| SDK Version | AngularFire Version Supported |
-|-------------|-------------------------------|
-| 3.x.x | 2.x.x |
-| 2.x.x | 1.x.x |
-
-Browser Compatibility
----------------------
-<table>
-  <tr>
-    <th>Browser</th>
-    <th>Version Supported</th>
-    <th>With Polyfill</th>
-  </tr>
-  <tr>
-    <td>Internet Explorer</td>
-    <td>9+</td>
-    <td>9+ (Angular 1.3 only supports 9+)</td>
-  </tr>
-  <tr>
-    <td>Firefox</td>
-    <td>4.0</td>
-    <td>3.0?</td>
-  </tr>
-  <tr>
-    <td>Chrome</td>
-    <td>7</td>
-    <td>5?</td>
-  </tr>
-  <tr>
-    <td>Safari</td>
-    <td>5.1.4</td>
-    <td>?</td>
-  </tr>
-  <tr>
-    <td>Opera</td>
-    <td>11.6</td>
-    <td>?</td>
-  </tr>
-</table>
-
-Polyfills are automatically included to support older browsers. See `src/polyfills.js` for links
-and details.
-
-## Table of Contents
-
-### [`$firebaseObject`](#firebaseobject-1)
- * [`$remove()`](#remove)
- * [`$save()`](#save)
- * [`$loaded()`](#loaded)
- * [`$ref()`](#ref)
- * [`$bindTo(scope, varName)`](#bindtoscope-varname)
- * [`$watch(callback, context)`](#watchcallback-context)
- * [`$destroy()`](#destroy)
-
-### [`$firebaseArray`](#firebasearray-1)
- * [`$add(newData)`](#addnewdata)
- * [`$remove(recordOrIndex)`](#removerecordorindex)
- * [`$save(recordOrIndex)`](#saverecordorindex)
- * [`$getRecord(key)`](#getrecordkey)
- * [`$keyAt(recordOrIndex)`](#keyatrecordorindex)
- * [`$indexFor(key)`](#indexforkey)
- * [`$loaded()`](#loaded-1)
- * [`$ref()`](#ref-1)
- * [`$watch(cb[, context])`](#watchcb-context)
- * [`$destroy()`](#destroy-1)
-
-### [`$firebaseAuth`](#firebaseauth-1)
- * [`$signInWithCustomToken(authToken)`]($signInWithCustomToken(authToken))
- * [`$signInAnonymously()`](#signinanonymously)
- * [`$signInWithEmailAndPassword(email, password)`](#signinwithemailandpasswordemail-password)
- * [`$signInWithPopup(provider)`](#signinwithpopupprovider)
- * [`$signInWithRedirect(provider[, options])`](#signinwithredirectprovider-options)
- * [`$signInWithCredentials(credentials)`](#signinwithcredentialscredentials)
- * [`$getAuth()`](#getauth)
- * [`$onAuthStateChanged(callback[, context])`](#onauthstatechangedcallback-context)
- * [`$signOut()`](#signout)
- * [`$waitForSignIn()`](#waitforsignin)
- * [`$requireSignIn()`](#requiresignin)
- * [`$createUserWithEmailAndPassword(email, password)`](#createuserwithemailandpasswordemail-password)
- * [`$updatePassword(password)`](#updatepasswordpassword)
- * [`$updateEmail(email)`](#updateemailemail)
- * [`$deleteUser()`](#deleteuser)
- * [`$sendPasswordResetEmail(email)`](#sendpasswordresetemailemail)
-
-### [Extending the Services](#extending-the-services-1)
-* [`$extend(object)`](#firebaseobjectextend)
-* [`$extend(object)`](#firebasearrayextend)
-* [Passing a Class into $extend](#passing-a-class-into-extend)
-* [Decorating the Services](#decorating-the-services)
-* [Creating AngularFire Services](creating-angularfire-services)
-
-$firebaseObject
----------------
+## $firebaseObject
 
 The `$firebaseObject` service takes an optional [`firebase.database.Reference`](https://firebase.google.com/docs/reference/js/#firebase.database.Reference) or
 [`firebase.database.Query`](https://firebase.google.com/docs/reference/js/#firebase.database.Query) and returns a JavaScript object which contains the data at the
@@ -341,8 +292,7 @@ Calling this method cancels event listeners and frees memory used by this object
 local data). Changes are no longer synchronized to or from the database.
 
 
-$firebaseArray
---------------
+## $firebaseArray
 
 The `$firebaseArray` service takes an optional [`firebase.database.Reference`](https://firebase.google.com/docs/reference/js/#firebase.database.Reference) or
 [`firebase.database.Query`](https://firebase.google.com/docs/reference/js/#firebase.database.Query) and returns a JavaScript array which contains the data at the
@@ -601,8 +551,7 @@ Stop listening for events and free memory used by this array (empties the local 
 Changes are no longer synchronized to or from the database.
 
 
-$firebaseAuth
-------------------------
+## $firebaseAuth
 
 AngularFire includes support for [user authentication and management](/docs/web/guide/user-auth.html)
 with the `$firebaseAuth` service.
@@ -911,8 +860,9 @@ $scope.authObj.$sendPasswordResetEmail("my@email.com").then(function() {
   console.error("Error: ", error);
 });
 ```
-Extending the Services
------------------------
+
+
+## Extending the Services
 
 There are several powerful techniques for transforming the data downloaded and saved
 by `$firebaseArray` and `$firebaseObject`. **These techniques should only be attempted
@@ -1144,8 +1094,7 @@ app.config(function($provide) {
 });
 ```
 
-Creating AngularFire Services
------------------------------
+### Creating AngularFire Services
 
 With the ability to extend the AngularFire services, services can be built to represent
 our synchronized collections with a minimal amount of code. For example, we can create
@@ -1240,3 +1189,52 @@ app.factory("MessageList", function(MessageFactory) {
   }
 });
 ```
+
+
+## SDK Compatibility
+
+This documentation is for AngularFire 2.x.x with Firebase SDK 3.x.x.
+
+| SDK Version | AngularFire Version Supported |
+|-------------|-------------------------------|
+| 3.x.x | 2.x.x |
+| 2.x.x | 1.x.x |
+
+
+## Browser Compatibility
+
+<table>
+  <tr>
+    <th>Browser</th>
+    <th>Version Supported</th>
+    <th>With Polyfill</th>
+  </tr>
+  <tr>
+    <td>Internet Explorer</td>
+    <td>9+</td>
+    <td>9+ (Angular 1.3 only supports 9+)</td>
+  </tr>
+  <tr>
+    <td>Firefox</td>
+    <td>4.0</td>
+    <td>3.0?</td>
+  </tr>
+  <tr>
+    <td>Chrome</td>
+    <td>7</td>
+    <td>5?</td>
+  </tr>
+  <tr>
+    <td>Safari</td>
+    <td>5.1.4</td>
+    <td>?</td>
+  </tr>
+  <tr>
+    <td>Opera</td>
+    <td>11.6</td>
+    <td>?</td>
+  </tr>
+</table>
+
+Polyfills are automatically included to support older browsers. See `src/polyfills.js` for links
+and details.

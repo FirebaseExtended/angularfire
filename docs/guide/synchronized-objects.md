@@ -240,7 +240,7 @@ obj.$remove().then(function() {
 });
 ```
 
-Head on over to the [API reference](/docs/reference.md#firebaseobject-1)
+Head on over to the [API reference](/docs/reference.md#firebaseobject)
 for `$firebaseObject` to see more details for each API method provided by the service. But not all
 of your data is going to fit nicely into a plain JavaScript object. Many times you will have lists
 of data instead. In those cases, you should use AngularFire's `$firebaseArray` service, which we

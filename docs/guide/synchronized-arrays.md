@@ -18,8 +18,8 @@ that they will therefore be keyed using Firebase
 [push IDs](https://firebase.google.com/docs/database/web/save-data).
 
 We create a synchronized array with the `$firebaseArray` service. The array is [sorted in the same
-order](https://firebase.google.com/docs/database/web/save-data) as the records on the server. In
-other words, we can pass a [query](https://firebase.google.com/docs/database/web/save-data#section-queries)
+order](https://firebase.google.com/docs/database/web/retrieve-data#sort_data) as the records on the server. In
+other words, we can pass a [query](https://firebase.google.com/docs/database/web/retrieve-data#filtering_data)
 into the synchronized array, and the records will be sorted according to query criteria.
 
 While the array isn't technically read-only, it has some special requirements for modifying the
@@ -79,14 +79,14 @@ We also have access to the key for the node where each message is located via `$
 
 The table below highlights some of the common methods on the synchronized array. The complete list
 of methods can be found in the
-[API documentation](/docs/reference.md#firebasearray-1) for
+[API documentation](/docs/reference.md#firebasearray) for
 `$firebaseArray`.
 
 | Method  | Description |
 | ------------- | ------------- |
 | [`$add(data)`](/docs/reference.md#addnewdata) | Creates a new record in the array. Should be used in place of `push()` or `splice()`. |
 | [`$remove(recordOrIndex)`](/docs/reference.md#removerecordorindex) | Removes an existing item from the array. Should be used in place of `pop()` or `splice()`. |
-| [`$save(recordOrIndex)`](/docs/reference.md) | Saves an existing item in the array. |
+| [`$save(recordOrIndex)`](/docs/reference.md#saverecordorindex) | Saves an existing item in the array. |
 | [`$getRecord(key)`](/docs/reference.md#getrecordkey) | Given a Firebase database key, returns the corresponding item from the array. It is also possible to find the index with `$indexFor(key)`. |
 | [`$loaded()`](/docs/reference.md#loaded-1) | Returns a promise which resolves after the initial records have been downloaded from our database. This is only called once and should be used with care. See [Extending Services](extending-services.md) for more ways to hook into server events. |
 
@@ -98,7 +98,7 @@ Similar to synchronized objects, each item in a synchronized array will contain 
 | Method  | Description |
 | ------------- | ------------- |
 | `$id` | The key for each record. This is equivalent to each record's path in our database as it would be returned by `ref.key()`. |
-| `$priority` | The [priority](https://firebase.google.com/docs/database/web/retrieve-data#ordering-by-priority) of each child node is stored here for reference. Changing this value and then calling `$save()` on the record will also change the priority on the server and potentially move the record in the array. |
+| `$priority` | The [priority](https://firebase.google.com/docs/database/web/retrieve-data#sorting_and_filtering_data) of each child node is stored here for reference. Changing this value and then calling `$save()` on the record will also change the priority on the server and potentially move the record in the array. |
 | `$value` | If the data for this child node is a primitive (number, string, or boolean), then the record itself will still be an object. The primitive value will be stored under `$value` and can be changed and saved like any other field. |
 
 
@@ -210,7 +210,7 @@ app.controller("ChatCtrl", ["$scope", "chatMessages",
 </div>
 ```
 
-Head on over to the [API reference](/docs/reference.md#firebasearray-1)
+Head on over to the [API reference](/docs/reference.md#firebasearray)
 for `$firebaseArray` to see more details for each API method provided by the service. Now that we
 have a grasp of synchronizing data with AngularFire, the [next section](user-auth.md) of this guide
 moves on to a different aspect of building applications: user authentication.

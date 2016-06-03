@@ -29,7 +29,7 @@ to learn more.
 | [Email & Password](https://firebase.google.com/docs/auth/web/password-auth) | Let Firebase manage passwords for you. Register and authenticate users by email & password. |
 | [Anonymous](https://firebase.google.com/docs/auth/web/anonymous-auth) | Build user-centric functionality without requiring users to share their personal information. Anonymous authentication generates a unique identifier for each user that lasts as long as their session. |
 | [Facebook](https://firebase.google.com/docs/auth/web/facebook-login) | Authenticate users with Facebook by writing only client-side code. |
-| [Twitter](https://firebase.google.com/docs/auth/web/github-auth) |	Authenticate users with Twitter by writing only client-side code. |
+| [Twitter](https://firebase.google.com/docs/auth/web/twitter-login) |	Authenticate users with Twitter by writing only client-side code. |
 | [GitHub](https://firebase.google.com/docs/auth/web/github-auth) |	Authenticate users with GitHub by writing only client-side code. |
 | [Google](https://firebase.google.com/docs/auth/web/google-signin) |	Authenticate users with Google by writing only client-side code. |
 
@@ -89,7 +89,7 @@ app.controller("SampleCtrl", ["$scope", "$firebaseAuth",
 ## Managing Users
 
 The `$firebaseAuth` service also provides [a full suite of
-methods](/docs/reference.md#firebaseauth-1) for
+methods](/docs/reference.md#firebaseauth) for
 managing email / password accounts. This includes methods for creating and removing accounts,
 changing an account's email or password, and sending password reset emails. The following example
 gives you a taste of just how easy this is:
@@ -386,8 +386,8 @@ injected dependencies for our controllers, services, etc., we still need to use 
 explicitly state our dependencies for the routes, since they are inside of a function.
 
 We have covered the three services AngularFire provides:
-[`$firebaseObject`](/docs/reference.md#firebaseobject-1),
-[`$firebaseArray`](/docs/reference.md#firebasearray-1), and
-[`$firebaseAuth`](/docs/reference.md#firebaseauth-1).
+[`$firebaseObject`](/docs/reference.md#firebaseobject),
+[`$firebaseArray`](/docs/reference.md#firebasearray), and
+[`$firebaseAuth`](/docs/reference.md#firebaseauth).
 In the [next section](extending-services.md) we will discuss the advanced topic of extending the
 functionality of the `$firebaseObject` and `$firebaseArray` services.

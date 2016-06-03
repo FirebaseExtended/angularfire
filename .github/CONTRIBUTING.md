@@ -14,10 +14,10 @@ Thank you for contributing to the Firebase community!
 We get lots of those and we love helping you, but GitHub is not the best place for them. Issues
 which just ask about usage will be closed. Here are some resources to get help:
 
-- Start with the [quickstart](../docs/quickstart.md)
-- Go through the [guide](../docs/guide/README.md)
-- Read the full [API reference](../docs/reference.md)
-- Try out some [examples](../README.md#examples)
+- Start with the [quickstart](/docs/quickstart.md)
+- Go through the [guide](/docs/guide/README.md)
+- Read the full [API reference](/docs/reference.md)
+- Try out some [examples](/README.md#examples)
 
 If the official documentation doesn't help, try asking a question on the
 [AngularFire Google Group](https://groups.google.com/forum/#!forum/firebase-angular) or one of our
@@ -93,7 +93,7 @@ $ grunt install             # install Selenium server for end-to-end tests
 $ export ANGULARFIRE_TEST_DB_URL="https://<YOUR-DATABASE-NAME>.firebaseio.com"
 ```
 
-3. Update the entire `config` variable in [`tests/initialize.js`](../tests/initialize.js) to
+3. Update the entire `config` variable in [`tests/initialize.js`](/tests/initialize.js) to
 correspond to your Firebase project. You can find your `apiKey` and `databaseUrl` by clicking the
 **Web Setup** button at `https://console.firebase.google.com/project/<projectId>/authentication/users`.
 
