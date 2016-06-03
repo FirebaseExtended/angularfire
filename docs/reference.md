@@ -332,7 +332,7 @@ app.controller("MyCtrl", ["$scope", "$firebaseArray",
 ```
 
 The `$firebaseArray` service can also take a
-[query](https://firebase-dot-devsite.googleplex.com/docs/database/web/retrieve-data) to only sync
+[query](https://firebase.google.com/docs/database/web/retrieve-data) to only sync
 a subset of data.
 
 ``` js
@@ -571,7 +571,7 @@ password users.
 
 ### $signInWithCustomToken(authToken)
 
-Authenticates the client using a [custom authentication token](https://firebase-dot-devsite.googleplex.com/docs/auth/web/custom-auth).
+Authenticates the client using a [custom authentication token](https://firebase.google.com/docs/auth/web/custom-auth).
 This function takes two arguments: an authentication token or a Firebase Secret and an object containing optional
 client arguments, such as configuring session persistence.
 
@@ -587,7 +587,7 @@ This method returns a promise which is resolved or rejected when the authenticat
 completed. If successful, the promise will be fulfilled with an object containing the payload of
 the authentication token. If unsuccessful, the promise will be rejected with an `Error` object.
 
-Read [our documentation on Custom Login](https://firebase-dot-devsite.googleplex.com/docs/auth/web/custom-auth)
+Read [our documentation on Custom Login](https://firebase.google.com/docs/auth/web/custom-auth)
 for more details about generating your own custom authentication tokens.
 
 ### $signInAnonymously()
@@ -606,7 +606,7 @@ This method returns a promise which is resolved or rejected when the authenticat
 completed. If successful, the promise will be fulfilled with an object containing authentication
 data about the logged-in user. If unsuccessful, the promise will be rejected with an `Error` object.
 
-Read [our documentation on anonymous authentication](https://firebase-dot-devsite.googleplex.com/docs/auth/web/anonymous-auth)
+Read [our documentation on anonymous authentication](https://firebase.google.com/docs/auth/web/anonymous-auth)
 for more details about anonymous authentication.
 
 ### $signInWithEmailAndPassword(email, password)
@@ -627,7 +627,7 @@ This method returns a promise which is resolved or rejected when the authenticat
 completed. If successful, the promise will be fulfilled with an object containing authentication
 data about the logged-in user. If unsuccessful, the promise will be rejected with an `Error` object.
 
-Read [our documentation on email / password authentication](https://firebase-dot-devsite.googleplex.com/docs/auth/web/password-auth)
+Read [our documentation on email / password authentication](https://firebase.google.com/docs/auth/web/password-auth)
 for more details about email / password authentication.
 
 ### $signInWithPopup(provider)
@@ -651,7 +651,7 @@ completed. If successful, the promise will be fulfilled with an object containin
 data about the logged-in user. If unsuccessful, the promise will be rejected with an `Error` object.
 
 Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to
-[authentication documentation](https://firebase-dot-devsite.googleplex.com/docs/auth/)
+[authentication documentation](https://firebase.google.com/docs/auth/)
 for information about configuring each provider.
 
 ### $signInWithRedirect(provider[, options])
@@ -678,7 +678,7 @@ flow. As such, the returned promise will never be fulfilled. Instead, you should
 method to detect when the authentication has been successfully completed.
 
 Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to
-[authentication documentation](https://firebase-dot-devsite.googleplex.com/docs/auth/)
+[authentication documentation](https://firebase.google.com/docs/auth/)
 for information about configuring each provider.
 
 ### $signInWithCredentials(credentials)
@@ -699,7 +699,7 @@ completed. If successful, the promise will be fulfilled with an object containin
 data about the logged-in user. If unsuccessful, the promise will be rejected with an `Error` object.
 
 Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to
-[authentication documentation](https://firebase-dot-devsite.googleplex.com/docs/auth/)
+[authentication documentation](https://firebase.google.com/docs/auth/)
 for information about configuring each provider.
 
 ### $getAuth()
