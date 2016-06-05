@@ -54,8 +54,6 @@ Several authentication methods have been renamed and / or have different method 
 | `$resetPassword(credentials)` | `$sendPasswordResetEmail(email)` | |
 | `$unauth()` | `$signOut()` | |
 | `$onAuth(callback)` | `$onAuthStateChanged(callback)` | |
-| `$onAuth(callback)` | `$onAuthStateChanged(callback)` | |
-| `$onAuth(callback)` | `$onAuthStateChanged(callback)` | |
 | `$requireAuth()` | `$requireSignIn()` | |
 | `$waitForAuth()` | `$waitForSignIn()` | |
 
