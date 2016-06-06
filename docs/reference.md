@@ -82,7 +82,7 @@ This service automatically keeps local objects in sync with any changes made to 
 to the remote data**. All such changes will have to be performed by updating the object directly and
 then calling `$save()` on the object, or by utilizing `$bindTo()` (see more below).
 
-``` js
+```js
 app.controller("MyCtrl", ["$scope", "$firebaseObject",
   function($scope, $firebaseObject) {
      var ref = firebase.database().ref();
@@ -131,7 +131,7 @@ update the server's value.
 Note that any time other keys exist, this one will be ignored. To change an object to
 a primitive value, delete the other keys and add this key to the object. As a shortcut, we can use:
 
-```text
+```js
 var obj = $firebaseObject(ref); // an object with data keys
 $firebaseUtils.updateRec(obj, newPrimitiveValue); // updateRec will delete the other keys for us
 ```
@@ -790,7 +790,7 @@ Changes the password of the currently logged in user. This function
 returns a promise that is resolved when the password has been successfully changed on the Firebase
 authentication servers.
 
-```text
+```js
 $scope.authObj.$updatePassword("newPassword").then(function() {
   console.log("Password changed successfully!");
 }).catch(function(error) {
@@ -803,7 +803,7 @@ $scope.authObj.$updatePassword("newPassword").then(function() {
 Changes the email of the currently logged in user. This function returns
 a promise that is resolved when the email has been successfully changed on the Firebase Authentication servers.
 
-```text
+```js
 $scope.authObj.$updateEmail("new@email.com")
 .then(function() {
   console.log("Email changed successfully!");
