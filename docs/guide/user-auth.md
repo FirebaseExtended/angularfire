@@ -226,7 +226,7 @@ it will contain the following attributes:
 | `provider` | The authentication method used (e.g. "anonymous" or "google.com"). |
 | `token` | The contents of the authentication token (an OpenID JWT). |
 
-The contents of `auth.token` will further contain the following information:
+The contents of `auth.token` will contain the following information:
 
 ```
 {

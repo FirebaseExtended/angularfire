@@ -753,7 +753,7 @@ offAuth();
 ### $signOut()
 
 Unauthenticates a client from the Firebase Database. It takes no arguments and returns no value.
-When called, the `$onAuthStateChanged()` callback(s) will be fired.
+When called, the `$onAuthStateChanged()` callback(s) will be triggered.
 
 ```html
 <span ng-show="firebaseUser">
