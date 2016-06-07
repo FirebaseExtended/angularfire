@@ -310,6 +310,10 @@ describe('FirebaseAuth',function(){
   });
 
   describe('$signOut()',function(){
+    it('should return a promise', function() {
+      expect(authService.$signOut()).toBeAPromise();
+    });
+
     it('will call signOut() on backing auth instance when user is signed in',function(){
       spyOn(authService._, 'getAuth').and.callFake(function () {
         return {provider: 'facebook'};
