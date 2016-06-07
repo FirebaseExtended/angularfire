@@ -48,9 +48,9 @@ Several authentication methods have been renamed and / or have different method 
 | `$authWithOAuthRedirect(provider[, options])` | `$signInWithRedirect(provider)` | `options` can be provided by passing a configured `firebase.database.AuthProvider` instead of a `provider` string |
 | `$authWithOAuthToken(provider, token)` | `$signInWithCredential(credential)` | Tokens must now be transformed into provider specific credentials. This is discussed more in the [Firebase Authentication guide](https://firebase.google.com/docs/auth/#key_functions). |
 | `$createUser(credentials)` | `$createUserWithEmailAndPassword(email, password)` | |
-| `$removeUser(credentials)` | `$deleteUser()` | Deletes the currently signed in user |
-| `$changeEmail(credentials)` | `$updateEmail(newEmail)` | Changes the email of the currently signed in user |
-| `$changePassword(credentials)` | `$updatePassword(newPassword)` | Changes the password of the currently signed in user |
+| `$removeUser(credentials)` | `$deleteUser()` | Deletes the currently signed-in user |
+| `$changeEmail(credentials)` | `$updateEmail(newEmail)` | Changes the email of the currently signed-in user |
+| `$changePassword(credentials)` | `$updatePassword(newPassword)` | Changes the password of the currently signed-in user |
 | `$resetPassword(credentials)` | `$sendPasswordResetEmail(email)` | |
 | `$unauth()` | `$signOut()` | |
 | `$onAuth(callback)` | `$onAuthStateChanged(callback)` | |
