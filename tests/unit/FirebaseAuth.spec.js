@@ -350,68 +350,66 @@ describe('FirebaseAuth',function(){
   });
 
   describe('$requireSignIn()',function(){
-    // it('will be resolved if user is logged in', function(done){
-    //   spyOn(authService._, 'getAuth').and.callFake(function () {
-    //     return {provider: 'facebook'};
-    //   });
-    //
-    //   authService.$requireSignIn()
-    //     .then(function (result) {
-    //       expect(result).toEqual({provider:'facebook'});
-    //       done();
-    //     });
-    // });
-    //
-    // it('will be rejected if user is not logged in', function(done){
-    //   spyOn(authService._, 'getAuth').and.callFake(function () {
-    //     return null;
-    //   });
-    //
-    //   authService.$requireSignIn()
-    //     .catch(function (error) {
-    //       expect(error).toEqual('AUTH_REQUIRED');
-    //       done();
-    //     });
-    // });
+    it('will be resolved if user is logged in', function(done){
+      spyOn(authService._, 'getAuth').and.callFake(function () {
+        return {provider: 'facebook'};
+      });
+
+      authService.$requireSignIn()
+        .then(function (result) {
+          expect(result).toEqual({provider:'facebook'});
+          done();
+        });
+    });
+
+    it('will be rejected if user is not logged in', function(done){
+      spyOn(authService._, 'getAuth').and.callFake(function () {
+        return null;
+      });
+
+      authService.$requireSignIn()
+        .catch(function (error) {
+          expect(error).toEqual('AUTH_REQUIRED');
+          done();
+        });
+    });
   });
 
   describe('$waitForSignIn()',function(){
-    // TODO: Put these tests back
-    // it('will be resolved with authData if user is logged in', function(done){
-    //   spyOn(authService._, 'getAuth').and.callFake(function () {
-    //     return {provider: 'facebook'};
-    //   });
-    //
-    //   authService.$waitForSignIn().then(function (result) {
-    //     expect(result).toEqual({provider:'facebook'});
-    //     done();
-    //   });
-    // });
-    //
-    // it('will be resolved with null if user is not logged in', function(done){
-    //   spyOn(authService._, 'getAuth').and.callFake(function () {
-    //     return;
-    //   });
-    //
-    //   authService.$waitForSignIn().then(function (result) {
-    //     expect(result).toEqual(undefined);
-    //     done();
-    //   });
-    // });
+    it('will be resolved with authData if user is logged in', function(done){
+      spyOn(authService._, 'getAuth').and.callFake(function () {
+        return {provider: 'facebook'};
+      });
 
-    // TODO: Replace this test
-    // it('promise resolves with current value if auth state changes after onAuth() completes', function() {
-    //   ref.getAuth.and.returnValue({provider:'facebook'});
-    //   wrapPromise(auth.$waitForSignIn());
-    //   callback('onAuth')();
-    //   $timeout.flush();
-    //   expect(result).toEqual({provider:'facebook'});
-    //
-    //   ref.getAuth.and.returnValue(null);
-    //   wrapPromise(auth.$waitForSignIn());
-    //   $timeout.flush();
-    //   expect(result).toBe(null);
-    // });
+      authService.$waitForSignIn().then(function (result) {
+        expect(result).toEqual({provider:'facebook'});
+        done();
+      });
+    });
+
+    it('will be resolved with null if user is not logged in', function(done){
+      spyOn(authService._, 'getAuth').and.callFake(function () {
+        return;
+      });
+
+      authService.$waitForSignIn().then(function (result) {
+        expect(result).toEqual(undefined);
+        done();
+      });
+    });
+
+    it('promise resolves with current value if auth state changes after onAuth() completes', function() {
+      ref.getAuth.and.returnValue({provider:'facebook'});
+      wrapPromise(auth.$waitForSignIn());
+      callback('onAuth')();
+      $timeout.flush();
+      expect(result).toEqual({provider:'facebook'});
+
+      ref.getAuth.and.returnValue(null);
+      wrapPromise(auth.$waitForSignIn());
+      $timeout.flush();
+      expect(result).toBe(null);
+    });
   });
 
   describe('$createUserWithEmailAndPassword()',function(){
