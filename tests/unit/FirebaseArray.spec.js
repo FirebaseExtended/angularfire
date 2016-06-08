@@ -103,7 +103,7 @@ describe('$firebaseArray', function () {
     it('should wait for promise resolution to update array', function () {
       var queue = [];
       function addPromise(snap, prevChild){
-        return new $utils.promise(
+        return $q(
           function(resolve) {
             queue.push(resolve);
           }).then(function(name) {
@@ -126,7 +126,7 @@ describe('$firebaseArray', function () {
     it('should wait to resolve $loaded until $$added promise is resolved', function () {
       var queue = [];
       function addPromise(snap, prevChild){
-        return new $utils.promise(
+        return $q(
           function(resolve) {
             queue.push(resolve);
           }).then(function(name) {

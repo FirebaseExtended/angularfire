@@ -25,31 +25,7 @@
 
     .factory('$firebaseUtils', ["$q", "$timeout", "$rootScope",
       function($q, $timeout, $rootScope) {
-
-        // ES6 style promises polyfill for angular 1.2.x
-        // Copied from angular 1.3.x implementation: https://github.com/angular/angular.js/blob/v1.3.5/src/ng/q.js#L539
-        function Q(resolver) {
-          if (!angular.isFunction(resolver)) {
-            throw new Error('missing resolver function');
-          }
-
-          var deferred = $q.defer();
-
-          function resolveFn(value) {
-            deferred.resolve(value);
-          }
-
-          function rejectFn(reason) {
-            deferred.reject(reason);
-          }
-
-          resolver(resolveFn, rejectFn);
-
-          return deferred.promise;
-        }
-
         var utils = {
-          Q: Q,
           /**
            * Returns a function which, each time it is invoked, will gather up the values until
            * the next "tick" in the Angular compiler process. Then they are all run at the same
@@ -176,15 +152,6 @@
               }
             });
           },
-
-          defer: $q.defer,
-
-          reject: $q.reject,
-
-          resolve: $q.when,
-
-          //TODO: Remove false branch and use only angular implementation when we drop angular 1.2.x support.
-          promise: angular.isFunction($q) ? $q : Q,
 
           makeNodeResolver:function(deferred){
             return function(err,result){
@@ -357,7 +324,7 @@
           },
 
           doSet: function(ref, data) {
-            var def = utils.defer();
+            var def = $q.defer();
             if( angular.isFunction(ref.set) || !angular.isObject(data) ) {
               // this is not a query, just do a flat set
               // Use try / catch to handle being passed data which is undefined or has invalid keys
@@ -387,7 +354,7 @@
           },
 
           doRemove: function(ref) {
-            var def = utils.defer();
+            var def = $q.defer();
             if( angular.isFunction(ref.remove) ) {
               // ref is not a query, just do a flat remove
               ref.remove(utils.makeNodeResolver(def));

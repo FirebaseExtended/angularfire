@@ -79,19 +79,6 @@ describe('FirebaseAuth',function(){
 
   });
 
-  function getArgIndex(callbackName){
-    //In the firebase API, the completion callback is the second argument for all but a few functions.
-    switch (callbackName){
-      case 'authAnonymously':
-      case 'onAuthStateChanged':
-        return 0;
-      case 'authWithOAuthToken':
-        return 2;
-      default :
-        return 0;
-    }
-  }
-
   function wrapPromise(promise){
     promise.then(function(_result_){
       status = 'resolved';
@@ -102,74 +89,94 @@ describe('FirebaseAuth',function(){
     });
   }
 
-  function callback(callbackName, callIndex){
-    callIndex = callIndex || 0; //assume the first call.
-    var argIndex = getArgIndex(callbackName);
-    return auth[callbackName].calls.argsFor(callIndex)[argIndex];
-  }
+  describe('Constructor', function() {
+    it('will throw an error if a string is used in place of a Firebase auth instance',function(){
+      expect(function(){
+        $firebaseAuth('https://some-firebase.firebaseio.com/');
+      }).toThrow();
+    });
 
-  it('will throw an error if a string is used in place of a Firebase auth instance',function(){
+    it('will throw an error if a database instance is used in place of a Firebase auth instance',function(){
+      expect(function(){
+        $firebaseAuth(firebase.database());
+      }).toThrow();
+    });
+  });
+
+  it('will throw an error if a database reference is used in place of a Firebase auth instance',function(){
     expect(function(){
-      $firebaseAuth('https://some-firebase.firebaseio.com/');
+      $firebaseAuth(firebase.database().ref());
     }).toThrow();
   });
 
-  it('will throw an error if a database instance is used in place of a Firebase auth instance',function(){
-    expect(function(){
-      $firebaseAuth(firebase.database());
-    }).toThrow();
+  it('will not throw an error if an auth instance is provided',function(){
+      $firebaseAuth(firebase.auth());
   });
 
   describe('$signInWithCustomToken',function(){
+    it('should return a promise', function() {
+      expect(authService.$signInWithCustomToken('myToken')).toBeAPromise();
+    });
+
     it('passes custom token to underlying method',function(){
       authService.$signInWithCustomToken('myToken');
       expect(auth.signInWithCustomToken).toHaveBeenCalledWith('myToken');
     });
 
     it('will reject the promise if authentication fails',function(){
-      var promise = authService.$signInWithCustomToken('myToken')
+      var promise = authService.$signInWithCustomToken('myToken');
       wrapPromise(promise);
-      fakePromiseReject("myError");
+      fakePromiseReject('myError');
       $timeout.flush();
       expect(failure).toEqual('myError');
     });
 
     it('will resolve the promise upon authentication',function(){
-      var promise = authService.$signInWithCustomToken('myToken')
+      var promise = authService.$signInWithCustomToken('myToken');
       wrapPromise(promise);
-      fakePromiseResolve("myResult");
+      fakePromiseResolve('myResult');
       $timeout.flush();
       expect(result).toEqual('myResult');
     });
   });
 
-  describe('$authAnonymously',function(){
+  describe('$signInAnonymously',function(){
+    it('should return a promise', function() {
+      expect(authService.$signInAnonymously()).toBeAPromise();
+    });
+
     it('passes options object to underlying method',function(){
       authService.$signInAnonymously();
       expect(auth.signInAnonymously).toHaveBeenCalled();
     });
 
     it('will reject the promise if authentication fails',function(){
-      var promise = authService.$signInAnonymously('myToken')
+      var promise = authService.$signInAnonymously('myToken');
       wrapPromise(promise);
-      fakePromiseReject("myError");
+      fakePromiseReject('myError');
       $timeout.flush();
       expect(failure).toEqual('myError');
     });
 
     it('will resolve the promise upon authentication',function(){
-      var promise = authService.$signInAnonymously('myToken')
+      var promise = authService.$signInAnonymously('myToken');
       wrapPromise(promise);
-      fakePromiseResolve("myResult");
+      fakePromiseResolve('myResult');
       $timeout.flush();
       expect(result).toEqual('myResult');
     });
   });
 
   describe('$signInWithEmailWithPassword',function(){
+    it('should return a promise', function() {
+      var email = 'abe@abe.abe';
+      var password = 'abeabeabe';
+      expect(authService.$signInWithEmailAndPassword(email, password)).toBeAPromise();
+    });
+
     it('passes options and credentials object to underlying method',function(){
-      var email = "abe@abe.abe";
-      var password = "abeabeabe";
+      var email = 'abe@abe.abe';
+      var password = 'abeabeabe';
       authService.$signInWithEmailAndPassword(email, password);
       expect(auth.signInWithEmailAndPassword).toHaveBeenCalledWith(
         email, password
@@ -179,7 +186,7 @@ describe('FirebaseAuth',function(){
     it('will reject the promise if authentication fails',function(){
       var promise = authService.$signInWithEmailAndPassword('', '');
       wrapPromise(promise);
-      fakePromiseReject("myError");
+      fakePromiseReject('myError');
       $timeout.flush();
       expect(failure).toEqual('myError');
     });
@@ -187,13 +194,18 @@ describe('FirebaseAuth',function(){
     it('will resolve the promise upon authentication',function(){
       var promise = authService.$signInWithEmailAndPassword('', '');
       wrapPromise(promise);
-      fakePromiseResolve("myResult");
+      fakePromiseResolve('myResult');
       $timeout.flush();
       expect(result).toEqual('myResult');
     });
   });
 
   describe('$signInWithPopup',function(){
+    it('should return a promise', function() {
+      var provider = new firebase.auth.FacebookAuthProvider();
+      expect(authService.$signInWithPopup(provider)).toBeAPromise();
+    });
+
     it('passes AuthProvider to underlying method',function(){
       var provider = new firebase.auth.FacebookAuthProvider();
       authService.$signInWithPopup(provider);
@@ -213,7 +225,7 @@ describe('FirebaseAuth',function(){
     it('will reject the promise if authentication fails',function(){
       var promise = authService.$signInWithPopup('google');
       wrapPromise(promise);
-      fakePromiseReject("myError");
+      fakePromiseReject('myError');
       $timeout.flush();
       expect(failure).toEqual('myError');
     });
@@ -221,13 +233,18 @@ describe('FirebaseAuth',function(){
     it('will resolve the promise upon authentication',function(){
       var promise = authService.$signInWithPopup('google');
       wrapPromise(promise);
-      fakePromiseResolve("myResult");
+      fakePromiseResolve('myResult');
       $timeout.flush();
       expect(result).toEqual('myResult');
     });
   });
 
   describe('$signInWithRedirect',function(){
+    it('should return a promise', function() {
+      var provider = new firebase.auth.FacebookAuthProvider();
+      expect(authService.$signInWithRedirect(provider)).toBeAPromise();
+    });
+
     it('passes AuthProvider to underlying method',function(){
       var provider = new firebase.auth.FacebookAuthProvider();
       authService.$signInWithRedirect(provider);
@@ -247,7 +264,7 @@ describe('FirebaseAuth',function(){
     it('will reject the promise if authentication fails',function(){
       var promise = authService.$signInWithRedirect('google');
       wrapPromise(promise);
-      fakePromiseReject("myError");
+      fakePromiseReject('myError');
       $timeout.flush();
       expect(failure).toEqual('myError');
     });
@@ -255,15 +272,19 @@ describe('FirebaseAuth',function(){
     it('will resolve the promise upon authentication',function(){
       var promise = authService.$signInWithRedirect('google');
       wrapPromise(promise);
-      fakePromiseResolve("myResult");
+      fakePromiseResolve('myResult');
       $timeout.flush();
       expect(result).toEqual('myResult');
     });
   });
 
   describe('$signInWithCredential',function(){
+    it('should return a promise', function() {
+      expect(authService.$signInWithCredential('CREDENTIAL')).toBeAPromise();
+    });
+
     it('passes credential object to underlying method',function(){
-      var credential = "!!!!";
+      var credential = '!!!!';
       authService.$signInWithCredential(credential);
       expect(auth.signInWithCredential).toHaveBeenCalledWith(
         credential
@@ -273,7 +294,7 @@ describe('FirebaseAuth',function(){
     it('will reject the promise if authentication fails',function(){
       var promise = authService.$signInWithCredential('CREDENTIAL');
       wrapPromise(promise);
-      fakePromiseReject("myError");
+      fakePromiseReject('myError');
       $timeout.flush();
       expect(failure).toEqual('myError');
     });
@@ -281,7 +302,7 @@ describe('FirebaseAuth',function(){
     it('will resolve the promise upon authentication',function(){
       var promise = authService.$signInWithCredential('CREDENTIAL');
       wrapPromise(promise);
-      fakePromiseResolve("myResult");
+      fakePromiseResolve('myResult');
       $timeout.flush();
       expect(result).toEqual('myResult');
     });
@@ -348,7 +369,7 @@ describe('FirebaseAuth',function(){
 
       authService.$requireSignIn()
         .catch(function (error) {
-          expect(error).toEqual("AUTH_REQUIRED");
+          expect(error).toEqual('AUTH_REQUIRED');
           done();
         });
     });
@@ -394,6 +415,12 @@ describe('FirebaseAuth',function(){
   });
 
   describe('$createUserWithEmailAndPassword()',function(){
+    it('should return a promise', function() {
+      var email = 'somebody@somewhere.com';
+      var password = '12345';
+      expect(authService.$createUserWithEmailAndPassword(email, password)).toBeAPromise();
+    });
+
     it('passes email/password to method on backing ref',function(){
       var email = 'somebody@somewhere.com';
       var password = '12345';
@@ -405,7 +432,7 @@ describe('FirebaseAuth',function(){
     it('will reject the promise if creation fails',function(){
       var promise = authService.$createUserWithEmailAndPassword('abe@abe.abe', '12345');
       wrapPromise(promise);
-      fakePromiseReject("myError");
+      fakePromiseReject('myError');
       $timeout.flush();
       expect(failure).toEqual('myError');
     });
@@ -413,137 +440,175 @@ describe('FirebaseAuth',function(){
     it('will resolve the promise upon creation',function(){
       var promise = authService.$createUserWithEmailAndPassword('abe@abe.abe', '12345');
       wrapPromise(promise);
-      fakePromiseResolve("myResult");
+      fakePromiseResolve('myResult');
       $timeout.flush();
       expect(result).toEqual('myResult');
     });
   });
 
   describe('$updatePassword()',function() {
+    it('should return a promise', function() {
+      var newPassword = 'CatInDatHat';
+      expect(authService.$updatePassword(newPassword)).toBeAPromise();
+    });
+
     it('passes new password to method on backing auth instance',function(done) {
-      var pass = "CatInDatHat";
       spyOn(authService._, 'getAuth').and.callFake(function () {
-        return {updatePassword: function (password) {
-          expect(password).toBe(pass);
-          done();
-          return {then: function () {}}
-        }};
+        return {
+          updatePassword: function (password) {
+            expect(password).toBe(newPassword);
+            done();
+          }
+        };
       });
-      authService.$updatePassword(pass);
+
+      var newPassword = 'CatInDatHat';
+      authService.$updatePassword(newPassword);
     });
 
     it('will reject the promise if creation fails',function(){
       spyOn(authService._, 'getAuth').and.callFake(function () {
-        return {updatePassword: function (password) {
-          return fakePromise();
-        }};
+        return {
+          updatePassword: function (password) {
+            return fakePromise();
+          }
+        };
       });
 
       var promise = authService.$updatePassword('PASSWORD');
       wrapPromise(promise);
-      fakePromiseReject("myError");
+      fakePromiseReject('myError');
       $timeout.flush();
       expect(failure).toEqual('myError');
     });
 
     it('will resolve the promise upon creation',function(){
       spyOn(authService._, 'getAuth').and.callFake(function () {
-        return {updatePassword: function (password) {
-          return fakePromise();
-        }};
+        return {
+          updatePassword: function (password) {
+            return fakePromise();
+          }
+        };
       });
 
       var promise = authService.$updatePassword('PASSWORD');
       wrapPromise(promise);
-      fakePromiseResolve("myResult");
+      fakePromiseResolve('myResult');
       $timeout.flush();
       expect(result).toEqual('myResult');
     });
   });
 
   describe('$updateEmail()',function() {
+    it('should return a promise', function() {
+      var newEmail = 'abe@abe.abe';
+      expect(authService.$updateEmail(newEmail)).toBeAPromise();
+    });
+
     it('passes new email to method on backing auth instance',function(done) {
-      var pass = "abe@abe.abe";
       spyOn(authService._, 'getAuth').and.callFake(function () {
-        return {updateEmail: function (password) {
-          expect(password).toBe(pass);
-          done();
-        }};
+        return {
+          updateEmail: function (email) {
+            expect(email).toBe(newEmail);
+            done();
+          }
+        };
       });
-      authService.$updateEmail(pass);
+
+      var newEmail = 'abe@abe.abe';
+      authService.$updateEmail(newEmail);
     });
 
     it('will reject the promise if creation fails',function(){
       spyOn(authService._, 'getAuth').and.callFake(function () {
-        return {updateEmail: function (password) {
-          return fakePromise();
-        }};
+        return {
+          updateEmail: function (email) {
+            return fakePromise();
+          }
+        };
       });
 
       var promise = authService.$updateEmail('abe@abe.abe');
       wrapPromise(promise);
-      fakePromiseReject("myError");
+      fakePromiseReject('myError');
       $timeout.flush();
       expect(failure).toEqual('myError');
     });
 
     it('will resolve the promise upon creation',function(){
       spyOn(authService._, 'getAuth').and.callFake(function () {
-        return {updateEmail: function (password) {
-          return fakePromise();
-        }};
+        return {
+          updateEmail: function (email) {
+            return fakePromise();
+          }
+        };
       });
 
       var promise = authService.$updateEmail('abe@abe.abe');
       wrapPromise(promise);
-      fakePromiseResolve("myResult");
+      fakePromiseResolve('myResult');
       $timeout.flush();
       expect(result).toEqual('myResult');
     });
   });
 
   describe('$deleteUser()',function(){
+    it('should return a promise', function() {
+      expect(authService.$deleteUser()).toBeAPromise();
+    });
+
     it('calls delete on backing auth instance',function(done) {
       spyOn(authService._, 'getAuth').and.callFake(function () {
-        return {delete: function () {
-          done();
-        }};
+        return {
+          delete: function () {
+            done();
+          }
+        };
       });
       authService.$deleteUser();
     });
 
     it('will reject the promise if creation fails',function(){
       spyOn(authService._, 'getAuth').and.callFake(function () {
-        return {delete: function (password) {
-          return fakePromise();
-        }};
+        return {
+          delete: function () {
+            return fakePromise();
+          }
+        };
       });
 
       var promise = authService.$deleteUser();
       wrapPromise(promise);
-      fakePromiseReject("myError");
+      fakePromiseReject('myError');
       $timeout.flush();
       expect(failure).toEqual('myError');
     });
 
     it('will resolve the promise upon creation',function(){
       spyOn(authService._, 'getAuth').and.callFake(function () {
-        return {delete: function (password) {
-          return fakePromise();
-        }};
+        return {
+          delete: function () {
+            return fakePromise();
+          }
+        };
       });
 
       var promise = authService.$deleteUser();
       wrapPromise(promise);
-      fakePromiseResolve("myResult");
+      fakePromiseResolve('myResult');
       $timeout.flush();
       expect(result).toEqual('myResult');
     });
   });
 
   describe('$sendPasswordResetEmail()',function(){
+    it('should return a promise', function() {
+      var email = 'somebody@somewhere.com';
+      expect(authService.$sendPasswordResetEmail(email)).toBeAPromise();
+    });
+
     it('passes email to method on backing auth instance',function(){
-      var email = "somebody@somewhere.com";
+      var email = 'somebody@somewhere.com';
       authService.$sendPasswordResetEmail(email);
       expect(auth.sendPasswordResetEmail).toHaveBeenCalledWith(email);
     });
@@ -551,7 +616,7 @@ describe('FirebaseAuth',function(){
     it('will reject the promise if creation fails',function(){
       var promise = authService.$sendPasswordResetEmail('abe@abe.abe');
       wrapPromise(promise);
-      fakePromiseReject("myError");
+      fakePromiseReject('myError');
       $timeout.flush();
       expect(failure).toEqual('myError');
     });
@@ -559,7 +624,7 @@ describe('FirebaseAuth',function(){
     it('will resolve the promise upon creation',function(){
       var promise = authService.$sendPasswordResetEmail('abe@abe.abe');
       wrapPromise(promise);
-      fakePromiseResolve("myResult");
+      fakePromiseResolve('myResult');
       $timeout.flush();
       expect(result).toEqual('myResult');
     });

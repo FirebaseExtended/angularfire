@@ -12,8 +12,10 @@ services:
   * `$firebaseArray` - synchronized collections
   * `$firebaseAuth` - authentication, user management, routing
 
-Join our [Firebase + Angular Google Group](https://groups.google.com/forum/#!forum/firebase-angular)
+Join our [AngularFire Google Group](https://groups.google.com/forum/#!forum/firebase-angular)
 to ask questions, provide feedback, and share apps you've built with AngularFire.
+
+**Looking for Angular 2 support?** Visit the AngularFire2 project [here](https://github.com/angular/angularfire2).
 
 
 ## Table of Contents
@@ -45,7 +47,7 @@ In order to use AngularFire in your project, you need to include the following f
 <script src="https://www.gstatic.com/firebasejs/3.0.3/firebase.js"></script>
 
 <!-- AngularFire -->
-<script src="https://cdn.firebase.com/libs/angularfire/2.0.0/angularfire.min.js"></script>
+<script src="https://cdn.firebase.com/libs/angularfire/2.0.1/angularfire.min.js"></script>
 ```
 
 You can also install AngularFire via npm and Bower and its dependencies will be downloaded
@@ -64,7 +66,7 @@ $ bower install angularfire --save
 
 * [Quickstart](docs/quickstart.md)
 * [Guide](docs/guide/README.md)
-* [API Reference](https://angularfire.firebaseapp.com/api.html)
+* [API Reference](docs/reference.md)
 
 
 ## Examples

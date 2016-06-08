@@ -56,11 +56,6 @@ in mind:
 * **Use `$window.Firebase`**: This allows test units and end-to-end
 tests to spy on the Firebase client library and replace it with mock functions. It also avoids the linter warnings about
 globals.
-* **Mock Firebase for testing**: Use mocks for unit tests. A non-supported,
-third-party mock of the Firebase classes can be
-[found here](https://github.com/katowulf/mockfirebase). The
-[AngularFire unit tests](https://github.com/firebase/angularfire/blob/master/tests/unit)
-can be used as an example of mocking `Firebase` classes.
 
 
 ## Deploying Your App
@@ -77,10 +72,10 @@ or you can host it at any custom domain on one of our paid plans. Check out
 
 There are many additional resources for learning about using Firebase with Angular applications:
 
-* Browse the [AngularFire API documentation](https://angularfire.firebaseapp.com/api.html).
+* Browse the [AngularFire API reference](/docs/reference.md).
 * The [`angularfire-seed`](https://github.com/firebase/angularfire-seed) repo contains a template
 project to help you get started.
-* Check out the [various examples that use AngularFire](../README.md).
+* Check out the [various examples that use AngularFire](/README.md#examples).
 * Join our [AngularFire mailing list](https://groups.google.com/forum/#!forum/firebase-angular) to
 keep up to date with any announcements and learn from the AngularFire community.
 * The [`angularfire` tag on Stack Overflow](http://stackoverflow.com/questions/tagged/angularfire)

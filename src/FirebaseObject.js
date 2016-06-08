@@ -23,8 +23,8 @@
    * </code></pre>
    */
   angular.module('firebase').factory('$firebaseObject', [
-    '$parse', '$firebaseUtils', '$log',
-    function($parse, $firebaseUtils, $log) {
+    '$parse', '$firebaseUtils', '$log', '$q',
+    function($parse, $firebaseUtils, $log, $q) {
       /**
        * Creates a synchronized object with 2-way bindings between Angular and Firebase.
        *
@@ -73,7 +73,7 @@
         $save: function () {
           var self = this;
           var ref = self.$ref();
-          var def = $firebaseUtils.defer();
+          var def = $q.defer();
           var dataJSON;
 
           try {
@@ -240,7 +240,7 @@
         $$scopeUpdated: function(newData) {
           // we use a one-directional loop to avoid feedback with 3-way bindings
           // since set() is applied locally anyway, this is still performant
-          var def = $firebaseUtils.defer();
+          var def = $q.defer();
           this.$ref().set($firebaseUtils.toJSON(newData), $firebaseUtils.makeNodeResolver(def));
           return def.promise;
         },
@@ -330,7 +330,7 @@
               this.key + '; one binding per instance ' +
               '(call unbind method or create another FirebaseObject instance)';
             $log.error(msg);
-            return $firebaseUtils.reject(msg);
+            return $q.reject(msg);
           }
         },
 
@@ -450,7 +450,7 @@
         }
 
         var isResolved = false;
-        var def = $firebaseUtils.defer();
+        var def = $q.defer();
         var applyUpdate = $firebaseUtils.batch(function(snap) {
           var changed = firebaseObject.$$updated(snap);
           if( changed ) {

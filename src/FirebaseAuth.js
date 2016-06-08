@@ -4,28 +4,33 @@
 
   // Define a service which provides user authentication and management.
   angular.module('firebase').factory('$firebaseAuth', [
-    '$firebaseUtils', function($firebaseUtils) {
+    '$q', '$firebaseUtils', function($q, $firebaseUtils) {
       /**
        * This factory returns an object allowing you to manage the client's authentication state.
        *
-       * @param {Firebase} ref A Firebase reference to authenticate.
+       * @param {Firebase.auth.Auth} auth A Firebase auth instance to authenticate.
        * @return {object} An object containing methods for authenticating clients, retrieving
        * authentication state, and managing users.
        */
       return function(auth) {
         auth = auth || firebase.auth();
 
-        var firebaseAuth = new FirebaseAuth($firebaseUtils, auth);
+        var firebaseAuth = new FirebaseAuth($q, $firebaseUtils, auth);
         return firebaseAuth.construct();
       };
     }
   ]);
 
-  FirebaseAuth = function($firebaseUtils, auth) {
+  FirebaseAuth = function($q, $firebaseUtils, auth) {
+    this._q = $q;
     this._utils = $firebaseUtils;
-    if (typeof ref === 'string') {
-      throw new Error('Please provide a Firebase reference instead of a URL when creating a `$firebaseAuth` object.');
+
+    if (typeof auth === 'string') {
+      throw new Error('The $firebaseAuth service accepts a Firebase auth instance (or nothing) instead of a URL.');
+    } else if (typeof auth.ref !== 'undefined') {
+      throw new Error('The $firebaseAuth service accepts a Firebase auth instance (or nothing) instead of a Database reference.');
     }
+
     this._auth = auth;
     this._initialAuthResolver = this._initAuthResolver();
   };
@@ -76,7 +81,7 @@
      * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
      */
     signInWithCustomToken: function(authToken) {
-      return this._utils.Q(this._auth.signInWithCustomToken(authToken).then);
+      return this._q.when(this._auth.signInWithCustomToken(authToken));
     },
 
     /**
@@ -85,7 +90,7 @@
      * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
      */
     signInAnonymously: function() {
-      return this._utils.Q(this._auth.signInAnonymously().then);
+      return this._q.when(this._auth.signInAnonymously());
     },
 
     /**
@@ -96,7 +101,7 @@
      * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
      */
     signInWithEmailAndPassword: function(email, password) {
-      return this._utils.Q(this._auth.signInWithEmailAndPassword(email, password).then);
+      return this._q.when(this._auth.signInWithEmailAndPassword(email, password));
     },
 
     /**
@@ -106,7 +111,7 @@
      * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
      */
     signInWithPopup: function(provider) {
-      return this._utils.Q(this._auth.signInWithPopup(this._getProvider(provider)).then);
+      return this._q.when(this._auth.signInWithPopup(this._getProvider(provider)));
     },
 
     /**
@@ -116,7 +121,7 @@
      * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
      */
     signInWithRedirect: function(provider) {
-      return this._utils.Q(this._auth.signInWithRedirect(this._getProvider(provider)).then);
+      return this._q.when(this._auth.signInWithRedirect(this._getProvider(provider)));
     },
 
     /**
@@ -126,7 +131,7 @@
      * @return {Promise<Object>} A promise fulfilled with an object containing authentication data.
      */
     signInWithCredential: function(credential) {
-      return this._utils.Q(this._auth.signInWithCredential(credential).then);
+      return this._q.when(this._auth.signInWithCredential(credential));
     },
 
     /**
@@ -181,7 +186,7 @@
      * rejected if the client is unauthenticated and rejectIfAuthDataIsNull is true.
      */
     _routerMethodOnAuthPromise: function(rejectIfAuthDataIsNull) {
-      var utils = this._utils, self = this;
+      var self = this;
 
       // wait for the initial auth state to resolve; on page load we have to request auth state
       // asynchronously so we don't want to resolve router methods or flash the wrong state
@@ -191,10 +196,10 @@
         // to the current auth state and not a stale/initial state
         var authData = self.getAuth(), res = null;
         if (rejectIfAuthDataIsNull && authData === null) {
-          res = utils.reject("AUTH_REQUIRED");
+          res = self._q.reject("AUTH_REQUIRED");
         }
         else {
-          res = utils.resolve(authData);
+          res = self._q.when(authData);
         }
         return res;
       });
@@ -226,7 +231,7 @@
     _initAuthResolver: function() {
       var auth = this._auth;
 
-      return this._utils.promise(function(resolve) {
+      return this._q(function(resolve) {
         var off;
         function callback() {
           // Turn off this onAuthStateChanged() callback since we just needed to get the authentication data once.
@@ -274,7 +279,7 @@
      * uid of the created user.
      */
     createUserWithEmailAndPassword: function(email, password) {
-      return this._utils.Q(this._auth.createUserWithEmailAndPassword(email, password).then);
+      return this._q.when(this._auth.createUserWithEmailAndPassword(email, password));
     },
 
     /**
@@ -286,9 +291,9 @@
     updatePassword: function(password) {
       var user = this.getAuth();
       if (user) {
-        return this._utils.Q(user.updatePassword(password).then);
+        return this._q.when(user.updatePassword(password));
       } else {
-        return this._utils.reject("Cannot update password since there is no logged in user.");
+        return this._q.reject("Cannot update password since there is no logged in user.");
       }
     },
 
@@ -301,9 +306,9 @@
     updateEmail: function(email) {
       var user = this.getAuth();
       if (user) {
-        return this._utils.Q(user.updateEmail(email).then);
+        return this._q.when(user.updateEmail(email));
       } else {
-        return this._utils.reject("Cannot update email since there is no logged in user.");
+        return this._q.reject("Cannot update email since there is no logged in user.");
       }
     },
 
@@ -315,9 +320,9 @@
     deleteUser: function() {
       var user = this.getAuth();
       if (user) {
-        return this._utils.Q(user.delete().then);
+        return this._q.when(user.delete());
       } else {
-        return this._utils.reject("Cannot delete user since there is no logged in user.");
+        return this._q.reject("Cannot delete user since there is no logged in user.");
       }
     },
 
@@ -329,7 +334,7 @@
      * @return {Promise<>} An empty promise fulfilled once the reset password email is sent.
      */
     sendPasswordResetEmail: function(email) {
-      return this._utils.Q(this._auth.sendPasswordResetEmail(email).then);
+      return this._q.when(this._auth.sendPasswordResetEmail(email));
     }
   };
 })();

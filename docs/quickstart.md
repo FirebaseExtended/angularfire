@@ -200,12 +200,11 @@ by the Firebase client library. It can be injected into any controller, service,
 
 ```js
 app.controller("SampleCtrl", function($scope, $firebaseAuth) {
-  var ref = firebase.database().ref();
-  // create an instance of the authentication service
-  var auth = $firebaseAuth(ref);
+  var auth = $firebaseAuth();
+
   // login with Facebook
-  auth.$authWithOAuthPopup("facebook").then(function(authData) {
-    console.log("Logged in as:", authData.uid);
+  auth.$signInWithPopup("facebook").then(function(firebaseUser) {
+    console.log("Signed in as:", firebaseUser.uid);
   }).catch(function(error) {
     console.log("Authentication failed:", error);
   });

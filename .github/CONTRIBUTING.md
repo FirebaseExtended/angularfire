@@ -14,17 +14,18 @@ Thank you for contributing to the Firebase community!
 We get lots of those and we love helping you, but GitHub is not the best place for them. Issues
 which just ask about usage will be closed. Here are some resources to get help:
 
-- Start with the [quickstart](../docs/quickstart.md)
-- Go through the [guide](../docs/guide/README.md)
-- Read the full [API reference](https://angularfire.firebaseapp.com/api.html)
-- Try out some [examples](../README.md#examples)
+- Start with the [quickstart](/docs/quickstart.md)
+- Go through the [guide](/docs/guide/README.md)
+- Read the full [API reference](/docs/reference.md)
+- Try out some [examples](/README.md#examples)
 
-If the official documentation doesn't help, try asking a question through our
-[official support channels](https://firebase.google.com/support/).
+If the official documentation doesn't help, try asking a question on the
+[AngularFire Google Group](https://groups.google.com/forum/#!forum/firebase-angular) or one of our
+other [official support channels](https://firebase.google.com/support/).
 
 **Please avoid double posting across multiple channels!**
 
-see
+
 ## <a name="issue"></a>Think you found a bug?
 
 Yeah, we're definitely not perfect!
@@ -92,7 +93,7 @@ $ grunt install             # install Selenium server for end-to-end tests
 $ export ANGULARFIRE_TEST_DB_URL="https://<YOUR-DATABASE-NAME>.firebaseio.com"
 ```
 
-3. Update the entire `config` variable in [`tests/initialize.js`](../tests/initialize.js) to
+3. Update the entire `config` variable in [`tests/initialize.js`](/tests/initialize.js) to
 correspond to your Firebase project. You can find your `apiKey` and `databaseUrl` by clicking the
 **Web Setup** button at `https://console.firebase.google.com/project/<projectId>/authentication/users`.
 
@@ -109,9 +110,9 @@ $ grunt            # lint, build, and test
 
 $ grunt build      # lint and build
 
-$ gulp test        # run unit and e2e tests
-$ gulp test:unit   # run unit tests
-$ gulp test:e2e    # run e2e tests (via Protractor)
+$ grunt test       # run unit and e2e tests
+$ grunt test:unit  # run unit tests
+$ grunt test:e2e   # run e2e tests (via Protractor)
 
 $ grunt watch      # lint, build, and test whenever source files change
 ```

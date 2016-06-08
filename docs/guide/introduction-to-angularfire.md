@@ -18,7 +18,7 @@ Firebase provides several key advantages for [Angular](https://angular.io/) appl
    our [flexible Security Rules](https://firebase.google.com/docs/database/security/) rules, you can
    have complete control of your data without any server-side hardware or code.
 3. **Built-in authentication:** Firebase provides an [authentication and user management
-   service](https://firebase.google.com/docs/database/security/) which interfaces with OAuth service
+   service](https://firebase.google.com/docs/auth/) which interfaces with OAuth service
    providers like Facebook and Twitter, as well as anonymous and email / password authentication
    tools. You can even integrate with an existing authentication service using Firebase custom
    authentication.
@@ -46,7 +46,7 @@ general, deeply nested collections [should typically be avoided](https://firebas
 in distributed systems.
 
 While AngularFire abstracts a lot of complexities involved in synchronizing data, it is not required
-to use Angular with Firebase. Alternatives are covered in the [Beyond AngularFire](../beyond-angularfire.md)
+to use Angular with Firebase. Alternatives are covered in the [Beyond AngularFire](./beyond-angularfire.md)
 section of this guide.
 
 
@@ -194,7 +194,7 @@ worry about when it be available.
 ```
 
 It's also possible to do this directly in the controller by using the
-[`$loaded()`](https://angularfire.firebaseapp.com/api.html#angularfire-firebaseobject-loaded) method.
+[`$loaded()`](/docs/reference.md#loaded) method.
 However, this method should be used with care as it's only called once after initial load. Using it
 for anything but debugging is usually a poor practice.
 
