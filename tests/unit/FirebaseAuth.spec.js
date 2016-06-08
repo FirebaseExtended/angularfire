@@ -329,38 +329,29 @@ describe('FirebaseAuth',function(){
   });
 
   describe('$requireSignIn()',function(){
-    // TODO: Put these tests back
-    // it('will be resolved if user is logged in', function(done){
-    //   spyOn(authService._, 'getAuth').and.callFake(function () {
-    //     return {provider: 'facebook'};
-    //   });
-    //
-    //   authService._.getAuth = function () {
-    //     return 'book'
-    //   }
-    //
-    //   authService.$requireSignIn()
-    //     .then(function (result) {
-    //       expect(result).toEqual({provider:'facebook'});
-    //       done();
-    //     });
-    // });
-    //
-    // it('will be rejected if user is not logged in', function(done){
-    //   spyOn(authService._, 'getAuth').and.callFake(function () {
-    //     return null;
-    //   });
-    //
-    //   authService._.getAuth = function () {
-    //     return 'book'
-    //   }
-    //
-    //   authService.$requireSignIn()
-    //     .catch(function (error) {
-    //       expect(error).toEqual("AUTH_REQUIRED");
-    //       done();
-    //     });
-    // });
+    it('will be resolved if user is logged in', function(done){
+      spyOn(authService._, 'getAuth').and.callFake(function () {
+        return {provider: 'facebook'};
+      });
+
+      authService.$requireSignIn()
+        .then(function (result) {
+          expect(result).toEqual({provider:'facebook'});
+          done();
+        });
+    });
+
+    it('will be rejected if user is not logged in', function(done){
+      spyOn(authService._, 'getAuth').and.callFake(function () {
+        return null;
+      });
+
+      authService.$requireSignIn()
+        .catch(function (error) {
+          expect(error).toEqual("AUTH_REQUIRED");
+          done();
+        });
+    });
   });
 
   describe('$waitForSignIn()',function(){
@@ -435,6 +426,7 @@ describe('FirebaseAuth',function(){
         return {updatePassword: function (password) {
           expect(password).toBe(pass);
           done();
+          return {then: function () {}}
         }};
       });
       authService.$updatePassword(pass);
