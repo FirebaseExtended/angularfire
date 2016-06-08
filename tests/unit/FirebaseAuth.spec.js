@@ -333,8 +333,6 @@ describe('FirebaseAuth',function(){
   });
 
   describe('$onAuthStateChanged()',function(){
-    //todo add more testing here after mockfirebase v2 auth is released
-
     it('calls onAuthStateChanged() on the backing auth instance', function() {
       function cb() {}
       var ctx = {};
@@ -351,15 +349,19 @@ describe('FirebaseAuth',function(){
 
   describe('$requireSignIn()',function(){
     it('will be resolved if user is logged in', function(done){
+      var credentials = {provider: 'facebook'};
       spyOn(authService._, 'getAuth').and.callFake(function () {
-        return {provider: 'facebook'};
+        return credentials;
       });
 
       authService.$requireSignIn()
         .then(function (result) {
-          expect(result).toEqual({provider:'facebook'});
+          expect(result).toEqual(credentials);
           done();
         });
+
+      fakePromiseResolve(credentials);
+      tick();
     });
 
     it('will be rejected if user is not logged in', function(done){
@@ -372,43 +374,40 @@ describe('FirebaseAuth',function(){
           expect(error).toEqual('AUTH_REQUIRED');
           done();
         });
+
+      fakePromiseResolve();
+      tick();
     });
   });
 
   describe('$waitForSignIn()',function(){
     it('will be resolved with authData if user is logged in', function(done){
+      var credentials = {provider: 'facebook'};
       spyOn(authService._, 'getAuth').and.callFake(function () {
-        return {provider: 'facebook'};
+        return credentials;
       });
 
       authService.$waitForSignIn().then(function (result) {
-        expect(result).toEqual({provider:'facebook'});
+        expect(result).toEqual(credentials);
         done();
       });
+
+      fakePromiseResolve(credentials);
+      tick();
     });
 
     it('will be resolved with null if user is not logged in', function(done){
       spyOn(authService._, 'getAuth').and.callFake(function () {
-        return;
+        return null;
       });
 
       authService.$waitForSignIn().then(function (result) {
-        expect(result).toEqual(undefined);
+        expect(result).toEqual(null);
         done();
       });
-    });
 
-    it('promise resolves with current value if auth state changes after onAuth() completes', function() {
-      ref.getAuth.and.returnValue({provider:'facebook'});
-      wrapPromise(auth.$waitForSignIn());
-      callback('onAuth')();
-      $timeout.flush();
-      expect(result).toEqual({provider:'facebook'});
-
-      ref.getAuth.and.returnValue(null);
-      wrapPromise(auth.$waitForSignIn());
-      $timeout.flush();
-      expect(result).toBe(null);
+      fakePromiseResolve();
+      tick();
     });
   });
 
