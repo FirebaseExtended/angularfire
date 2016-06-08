@@ -350,29 +350,29 @@ describe('FirebaseAuth',function(){
   });
 
   describe('$requireSignIn()',function(){
-    it('will be resolved if user is logged in', function(done){
-      spyOn(authService._, 'getAuth').and.callFake(function () {
-        return {provider: 'facebook'};
-      });
-
-      authService.$requireSignIn()
-        .then(function (result) {
-          expect(result).toEqual({provider:'facebook'});
-          done();
-        });
-    });
-
-    it('will be rejected if user is not logged in', function(done){
-      spyOn(authService._, 'getAuth').and.callFake(function () {
-        return null;
-      });
-
-      authService.$requireSignIn()
-        .catch(function (error) {
-          expect(error).toEqual('AUTH_REQUIRED');
-          done();
-        });
-    });
+    // it('will be resolved if user is logged in', function(done){
+    //   spyOn(authService._, 'getAuth').and.callFake(function () {
+    //     return {provider: 'facebook'};
+    //   });
+    //
+    //   authService.$requireSignIn()
+    //     .then(function (result) {
+    //       expect(result).toEqual({provider:'facebook'});
+    //       done();
+    //     });
+    // });
+    //
+    // it('will be rejected if user is not logged in', function(done){
+    //   spyOn(authService._, 'getAuth').and.callFake(function () {
+    //     return null;
+    //   });
+    //
+    //   authService.$requireSignIn()
+    //     .catch(function (error) {
+    //       expect(error).toEqual('AUTH_REQUIRED');
+    //       done();
+    //     });
+    // });
   });
 
   describe('$waitForSignIn()',function(){
