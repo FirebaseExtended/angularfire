@@ -339,8 +339,6 @@ describe('$firebaseUtils', function () {
           expect(whiteSpy).toHaveBeenCalled();
           done();
         });
-
-      // tick();
     });
 
     it('saves the data', function(done) {
@@ -361,8 +359,6 @@ describe('$firebaseUtils', function () {
           expect(blackSpy).toHaveBeenCalled();
           done();
         });
-
-      // tick();
     });
 
     it('only affects query keys when using a query', function(done) {
@@ -399,13 +395,10 @@ describe('$firebaseUtils', function () {
           expect(whiteSpy).toHaveBeenCalled();
           done();
         });
-
-      // tick();
     });
 
     it('removes the data', function(done) {
       return ref.set(MOCK_DATA).then(function() {
-        // tick();
         return $utils.doRemove(ref);
       }).then(function () {
         return ref.once('value');
@@ -431,8 +424,6 @@ describe('$firebaseUtils', function () {
           expect(blackSpy).toHaveBeenCalledWith(err);
           done();
         });
-
-      // tick();
     });
 
     it('only removes keys in query when query is used', function(done){
