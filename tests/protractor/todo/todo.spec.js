@@ -101,47 +101,58 @@ describe('Todo App', function () {
     expect(todos.count()).toBe(4);
   });
 
-  // it('updates when a new Todo is added remotely', function (done) {
-  //   //TODO: Make this test pass
-  //   // Simulate a todo being added remotely
-  //   flow.execute(function() {
-  //     var def = protractor.promise.defer();
-  //     firebaseRef.push({
-  //       title: 'Wash the dishes',
-  //       completed: false
-  //     }, function(err) {
-  //       if( err ) { def.reject(err); }
-  //       else { def.fulfill(); }
-  //     });
-  //     return def.promise;
-  //   }).then(function () {
-  //     expect(todos.count()).toBe(6);
-  //     done();
-  //   });
-  //   expect(todos.count()).toBe(5);
-  // })
-  //
-  // it('updates when an existing Todo is removed remotely', function (done) {
-  //   //TODO: Make this test pass
-  //   // Simulate a todo being removed remotely
-  //   flow.execute(function() {
-  //     var def = protractor.promise.defer();
-  //     var onCallback = firebaseRef.limitToLast(1).on("child_added", function(childSnapshot) {
-  //       // Make sure we only remove a child once
-  //       firebaseRef.off("child_added", onCallback);
-  //
-  //       childSnapshot.ref.remove(function(err) {
-  //         if( err ) { def.reject(err); }
-  //         else { def.fulfill(); }
-  //       });
-  //     });
-  //     return def.promise;
-  //   }).then(function () {
-  //     expect(todos.count()).toBe(3);
-  //     done();
-  //   });
-  //   expect(todos.count()).toBe(4);
-  // });
+  it('updates when a new Todo is added remotely', function (done) {
+    // Simulate a todo being added remotely
+
+    expect(todos.count()).toBe(4);
+    flow.execute(function() {
+      var def = protractor.promise.defer();
+      firebaseRef.push({
+        title: 'Wash the dishes',
+        completed: false
+      }, function(err) {
+        if( err ) { def.reject(err); }
+        else { def.fulfill(); }
+      });
+      return def.promise;
+    }).then(function () {
+      browser.wait(function() {
+        return element(by.id('todo-4')).isPresent()
+      }, 10000);
+    }).then(function () {
+      expect(todos.count()).toBe(5);
+      done();
+    });
+  })
+
+  it('updates when an existing Todo is removed remotely', function (done) {
+    // Simulate a todo being removed remotely
+
+    expect(todos.count()).toBe(5);
+    flow.execute(function() {
+      var def = protractor.promise.defer();
+      var onCallback = firebaseRef.limitToLast(1).on("child_added", function(childSnapshot) {
+        // Make sure we only remove a child once
+        firebaseRef.off("child_added", onCallback);
+
+        childSnapshot.ref.remove(function(err) {
+          if( err ) { def.reject(err); }
+          else { def.fulfill(); }
+        });
+      });
+      return def.promise;
+    }).then(function () {
+      browser.wait(function() {
+        return todos.count(function (count) {
+          return count == 4;
+        });
+      }, 10000);
+    }).then(function () {
+      expect(todos.count()).toBe(4);
+      done();
+    });
+
+  });
 
   it('stops updating once the sync array is destroyed', function () {
     // Destroy the sync array
