@@ -123,7 +123,7 @@ app.controller("SampleCtrl", ["$scope", "Auth",
       $scope.error = null;
 
       // Delete the currently signed-in user
-      $scope.$deleteUser().then(function() {
+      Auth.$deleteUser().then(function() {
         $scope.message = "User deleted";
       }).catch(function(error) {
         $scope.error = error;
