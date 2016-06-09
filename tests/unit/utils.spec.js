@@ -428,7 +428,6 @@ describe('$firebaseUtils', function () {
 
     it('only removes keys in query when query is used', function(done){
       return ref.set(MOCK_DATA).then(function() {
-        // tick();
         var query = ref.limitToFirst(2);
         return $utils.doRemove(query);
       }).then(function() {
