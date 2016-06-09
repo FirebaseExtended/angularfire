@@ -39,12 +39,17 @@ describe('$firebaseUtils', function () {
       $q = _$q_;
       testutils = _testutils_;
 
-      tick = function (cb) {
+      firebase.database.enableLogging(function () {tick()});
+      tick = function () {
         setTimeout(function() {
           $q.defer();
           $rootScope.$digest();
-          cb && cb();
-        }, 1000)
+          try {
+            $timeout.flush();
+          } catch (err) {
+            // This throws an error when there is nothing to flush...
+          }
+        })
       };
     });
   });
@@ -334,8 +339,6 @@ describe('$firebaseUtils', function () {
           expect(whiteSpy).toHaveBeenCalled();
           done();
         });
-
-      tick();
     });
 
     it('saves the data', function(done) {
@@ -356,8 +359,6 @@ describe('$firebaseUtils', function () {
           expect(blackSpy).toHaveBeenCalled();
           done();
         });
-
-      tick();
     });
 
     it('only affects query keys when using a query', function(done) {
@@ -365,13 +366,12 @@ describe('$firebaseUtils', function () {
       var query = ref.limitToLast(1);
       var spy = spyOn(firebase.database.Reference.prototype, 'update').and.callThrough();
 
-      $utils.doSet(query, {hello: 'world'});
-
-      tick(function () {
-        var args = spy.calls.mostRecent().args[0];
-        expect(Object.keys(args)).toEqual(['hello', 'fish']);
-        done();
-      });
+      $utils.doSet(query, {hello: 'world'})
+        .then(function () {
+          var args = spy.calls.mostRecent().args[0];
+          expect(Object.keys(args)).toEqual(['hello', 'fish']);
+          done();
+        });
     });
   });
 
@@ -395,13 +395,10 @@ describe('$firebaseUtils', function () {
           expect(whiteSpy).toHaveBeenCalled();
           done();
         });
-
-      tick();
     });
 
     it('removes the data', function(done) {
       return ref.set(MOCK_DATA).then(function() {
-        tick();
         return $utils.doRemove(ref);
       }).then(function () {
         return ref.once('value');
@@ -427,13 +424,10 @@ describe('$firebaseUtils', function () {
           expect(blackSpy).toHaveBeenCalledWith(err);
           done();
         });
-
-      tick();
     });
 
     it('only removes keys in query when query is used', function(done){
       return ref.set(MOCK_DATA).then(function() {
-        tick();
         var query = ref.limitToFirst(2);
         return $utils.doRemove(query);
       }).then(function() {

@@ -23,5 +23,4 @@ describe('$firebaseAuthService', function () {
     }));
 
   });
-
 });
