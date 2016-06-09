@@ -635,12 +635,12 @@ for more details about email / password authentication.
 Authenticates the client using a popup-based OAuth flow. This function takes two
 arguments: the unique string identifying the OAuth provider to authenticate with (e.g. `"google"`).
 
-Optionally, you can pass a provider object (like `new firebase.auth().GoogleProvider()`, etc)
+Optionally, you can pass a provider object (like `new firebase.auth.GoogleAuthProvider()`, etc)
 which can be configured with additional options.
 
 ```js
-$scope.authObj.$signInWithPopup("google").then(function(firebaseUser) {
-  console.log("Signed in as:", firebaseUser.uid);
+$scope.authObj.$signInWithPopup("google").then(function(result) {
+  console.log("Signed in as:", result.user.uid);
 }).catch(function(error) {
   console.error("Authentication failed:", error);
 });
