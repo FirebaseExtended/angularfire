@@ -1035,17 +1035,6 @@ describe('$firebaseArray', function () {
     });
   });
 
-  var flushAll = (function() {
-    return function flushAll() {
-      // the order of these flush events is significant
-      Array.prototype.slice.call(arguments, 0).forEach(function(o) {
-        o.flush();
-      });
-      try { $timeout.flush(); }
-      catch(e) {}
-    }
-  })();
-
   function stubRef() {
     return firebase.database().ref().push();
   }

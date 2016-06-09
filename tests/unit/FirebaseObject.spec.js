@@ -759,19 +759,7 @@ describe('$firebaseObject', function() {
       expect(obj.$destroy).toHaveBeenCalledWith(error);
     });
   });
-
-  function flushAll() {
-    Array.prototype.slice.call(arguments, 0).forEach(function (o) {
-      angular.isFunction(o.resolve) ? o.resolve() : o.flush();
-    });
-    try { obj.$ref().flush(); }
-    catch(e) {}
-    try { $interval.flush(500); }
-    catch(e) {}
-    try { $timeout.flush(); }
-    catch (e) {}
-  }
-
+  
   var pushCounter = 1;
 
   function fakeSnap(data, pri) {
