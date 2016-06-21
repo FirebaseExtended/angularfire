@@ -207,7 +207,7 @@ obj.$loaded(
 Returns the `Firebase` reference used to create this object.
 
 ```js
-var ob = $firebaseObject(ref);
+var obj = $firebaseObject(ref);
 obj.$ref() === ref; // true
 ```
 
