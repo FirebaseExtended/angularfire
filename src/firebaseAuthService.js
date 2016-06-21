@@ -4,7 +4,7 @@
   function FirebaseAuthService($firebaseAuth) {
     return $firebaseAuth();
   }
-  FirebaseAuthService.$inject = ['$firebaseAuth', '$firebaseRef'];
+  FirebaseAuthService.$inject = ['$firebaseAuth'];
 
   angular.module('firebase')
     .factory('$firebaseAuthService', FirebaseAuthService);

@@ -3,7 +3,7 @@
 ## Table of Contents
 
 * [Overview](#overview)
-* [Logging Users In](#logging-users-in)
+* [Signing Users In](#signing-users-in)
 * [Managing Users](#managing-users)
 * [Retrieving Authentication State](#retrieving-authentication-state)
 * [User-Based Security](#user-based-security)
@@ -15,8 +15,8 @@
 ## Overview
 
 Firebase provides [a hosted authentication service](https://firebase.google.com/docs/auth/) which
-provides a completely client-side solution to account management and authentication. It supports
-anonymous authentication, email / password login, and login via several OAuth providers, including
+provides a completely client-side solution to user management and authentication. It supports
+anonymous authentication, email / password sign in, and sign in via several OAuth providers, including
 Facebook, GitHub, Google, and Twitter.
 
 Each provider has to be configured individually and also enabled from the **Auth** tab of
@@ -25,7 +25,7 @@ to learn more.
 
 | Provider | Description |
 |----------|-------------|
-| [Custom](https://firebase.google.com/docs/auth/web/custom-auth) | Generate your own login tokens. Use this to integrate with existing authentication systems. You can also use this to authenticate server-side workers. |
+| [Custom](https://firebase.google.com/docs/auth/web/custom-auth) | Generate your own authentication tokens. Use this to integrate with existing authentication systems. You can also use this to authenticate server-side workers. |
 | [Email & Password](https://firebase.google.com/docs/auth/web/password-auth) | Let Firebase manage passwords for you. Register and authenticate users by email & password. |
 | [Anonymous](https://firebase.google.com/docs/auth/web/anonymous-auth) | Build user-centric functionality without requiring users to share their personal information. Anonymous authentication generates a unique identifier for each user that lasts as long as their session. |
 | [Facebook](https://firebase.google.com/docs/auth/web/facebook-login) | Authenticate users with Facebook by writing only client-side code. |
@@ -39,16 +39,17 @@ by the Firebase client library. It can be injected into any controller, service,
 ```js
 // define our app and dependencies (remember to include firebase!)
 var app = angular.module("sampleApp", ["firebase"]);
+
 // inject $firebaseAuth into our controller
 app.controller("SampleCtrl", ["$scope", "$firebaseAuth",
   function($scope, $firebaseAuth) {
-   var auth = $firebaseAuth();
+    var auth = $firebaseAuth();
   }
 ]);
 ```
 
 
-## Logging Users In
+## Signing Users In
 
 The `$firebaseAuth` service has methods for each authentication type. For example, to authenticate
 an anonymous user, you can use `$signInAnonymously()`:
@@ -58,14 +59,14 @@ var app = angular.module("sampleApp", ["firebase"]);
 
 app.controller("SampleCtrl", ["$scope", "$firebaseAuth",
   function($scope, $firebaseAuth) {
-   var auth = $firebaseAuth();
+    var auth = $firebaseAuth();
 
-    $scope.login = function() {
-      $scope.authData = null;
+    $scope.signIn = function() {
+      $scope.firebaseUser = null;
       $scope.error = null;
 
-      auth.$signInAnonymously().then(function(authData) {
-        $scope.authData = authData;
+      auth.$signInAnonymously().then(function(firebaseUser) {
+        $scope.firebaseUser = firebaseUser;
       }).catch(function(error) {
         $scope.error = error;
       });
@@ -76,9 +77,9 @@ app.controller("SampleCtrl", ["$scope", "$firebaseAuth",
 
 ```html
 <div ng-app="sampleApp" ng-controller="SampleCtrl">
-  <button ng-click="login()">Login Anonymously</button>
+  <button ng-click="signIn()">Sign In Anonymously</button>
 
-  <p ng-if="authData">Logged in user: <strong>{{ authData.uid }}</strong></p>
+  <p ng-if="firebaseUser">Signed in user: <strong>{{ firebaseUser.uid }}</strong></p>
   <p ng-if="error">Error: <strong>{{ error }}</strong></p>
 </div>
 ```
@@ -86,11 +87,10 @@ app.controller("SampleCtrl", ["$scope", "$firebaseAuth",
 
 ## Managing Users
 
-The `$firebaseAuth` service also provides [a full suite of
-methods](/docs/reference.md#firebaseauth) for
-managing email / password accounts. This includes methods for creating and removing accounts,
-changing an account's email or password, and sending password reset emails. The following example
-gives you a taste of just how easy this is:
+The `$firebaseAuth` service also provides [a full suite ofmethods](/docs/reference.md#firebaseauth)
+for managing users. This includes methods for creating and removing users, changing an users's email
+or password, and sending email verification and password reset emails. The following example gives
+you a taste of just how easy this is:
 
 ```js
 var app = angular.module("sampleApp", ["firebase"]);
@@ -98,7 +98,7 @@ var app = angular.module("sampleApp", ["firebase"]);
 // let's create a re-usable factory that generates the $firebaseAuth instance
 app.factory("Auth", ["$firebaseAuth",
   function($firebaseAuth) {
-   return $firebaseAuth();
+    return $firebaseAuth();
   }
 ]);
 
@@ -109,25 +109,22 @@ app.controller("SampleCtrl", ["$scope", "Auth",
       $scope.message = null;
       $scope.error = null;
 
-      Auth.$createUser({
-        email: $scope.email,
-        password: $scope.password
-      }).then(function(userData) {
-        $scope.message = "User created with uid: " + userData.uid;
-      }).catch(function(error) {
-        $scope.error = error;
-      });
+      // Create a new user
+      Auth.$createUserWithEmailAndPassword($scope.email, $scope.password)
+        .then(function(firebaseUser) {
+          $scope.message = "User created with uid: " + firebaseUser.uid;
+        }).catch(function(error) {
+          $scope.error = error;
+        });
     };
 
-    $scope.removeUser = function() {
+    $scope.deleteUser = function() {
       $scope.message = null;
       $scope.error = null;
 
-      Auth.$removeUser({
-        email: $scope.email,
-        password: $scope.password
-      }).then(function() {
-        $scope.message = "User removed";
+      // Delete the currently signed-in user
+      Auth.$deleteUser().then(function() {
+        $scope.message = "User deleted";
       }).catch(function(error) {
         $scope.error = error;
       });
@@ -147,7 +144,7 @@ app.controller("SampleCtrl", ["$scope", "Auth",
 
   <br><br>
 
-  <button ng-click="removeUser()">Remove User</button>
+  <button ng-click="deleteUser()">Delete User</button>
 
   <p ng-if="message">Message: <strong>{{ message }}</strong></p>
   <p ng-if="error">Error: <strong>{{ error }}</strong></p>
@@ -157,20 +154,21 @@ app.controller("SampleCtrl", ["$scope", "Auth",
 
 ## Retrieving Authentication State
 
-Whenever a user is authenticated, you can use the synchronous
-[`$getAuth()`](/docs/reference.md#getauth)
+Whenever a user is authenticated, you can use the synchronous [`$getAuth()`](/docs/reference.md#getauth)
 method to retrieve the client's current authentication state. This includes the authenticated user's
-`uid` (a user identifier which is unique across all providers) and the `provider` used to
-authenticate. Additional variables are included for each specific provider and are covered in the
-provider-specific links in the table above.
+`uid` (a user identifier which is unique across all providers), the `providerId` used to
+authenticate (e.g. `google.com`, `facebook.com`), as well as other properties
+[listed here](https://firebase.google.com/docs/reference/js/firebase.User#properties). Additional
+variables are included for each specific provider and are covered in the provider-specific links in
+the table above.
 
 In addition to the synchronous `$getAuth()` method, there is also an asynchronous
 [`$onAuthStateChanged()`](/docs/reference.md#onauthstatechangedcallback-context) method which fires a
 user-provided callback every time authentication state changes. This is often more convenient than
 using `$getAuth()` since it gives you a single, consistent place to handle updates to authentication
-state, including users logging in or out and sessions expiring.
+state, including users signing in or out and sessions expiring.
 
-Pulling some of these concepts together, we can create a login form with dynamic content based on
+Pulling some of these concepts together, we can create a sign in form with dynamic content based on
 the user's current authentication state:
 
 ```js
@@ -178,7 +176,7 @@ var app = angular.module("sampleApp", ["firebase"]);
 
 app.factory("Auth", ["$firebaseAuth",
   function($firebaseAuth) {
-   return $firebaseAuth();
+    return $firebaseAuth();
   }
 ]);
 
@@ -186,9 +184,9 @@ app.controller("SampleCtrl", ["$scope", "Auth",
   function($scope, Auth) {
     $scope.auth = Auth;
 
-    // any time auth status updates, add the user data to scope
-    $scope.auth.$onAuthStateChanged(function(authData) {
-      $scope.authData = authData;
+    // any time auth state changes, add the user data to scope
+    $scope.auth.$onAuthStateChanged(function(firebaseUser) {
+      $scope.firebaseUser = firebaseUser;
     });
   }
 ]);
@@ -196,20 +194,20 @@ app.controller("SampleCtrl", ["$scope", "Auth",
 
 ```html
 <div ng-app="sampleApp" ng-controller="SampleCtrl">
-  <div ng-show="authData">
-    <p>Hello, {{ authData.facebook.displayName }}</p>
-    <button ng-click="auth.$signOut()">Logout</button>
+  <div ng-show="firebaseUser">
+    <p>Hello, {{ firebaseUser.displayName }}</p>
+    <button ng-click="auth.$signOut()">Sign Out</button>
   </div>
-  <div ng-hide="authData">
-    <p>Welcome, please log in.</p>
-    <button ng-click="auth.$signInWithPopup('facebook')">Login With Facebook</button>
+  <div ng-hide="firebaseUser">
+    <p>Welcome, please sign in.</p>
+    <button ng-click="auth.$signInWithPopup('facebook')">Sign In With Facebook</button>
   </div>
 </div>
 ```
 
 The `ng-show` and `ng-hide` directives dynamically change out the content based on the
-authentication state, by checking to see if `authData` is not `null`. The login and logout methods
-were bound directly from the view using `ng-click`.
+authentication state, by checking to see if `firebaseUser` is not `null`. The sign in and sign out
+methods were bound directly from the view using `ng-click`.
 
 
 ## User-Based Security
@@ -225,7 +223,28 @@ it will contain the following attributes:
 | Key | Description |
 |-----|-------------|
 | `uid` |	A user ID, guaranteed to be unique across all providers. |
-| `provider` | The authentication method used (e.g. "anonymous" or "google"). |
+| `provider` | The authentication method used (e.g. "anonymous" or "google.com"). |
+| `token` | The contents of the authentication token (an OpenID JWT). |
+
+The contents of `auth.token` will contain the following information:
+
+```
+{
+  "email": "foo@bar.com",   // The email corresponding to the authenticated user
+  "email_verified": false,  // Whether or not the above email is verified
+  "exp": 1465366314,        // JWT expiration time
+  "iat": 1465279914,        // JWT issued-at time
+  "sub": "g8u5h1i3t51b5",   // JWT subject (same as auth.uid)
+  "auth_time": 1465279914,  // When the original authentication took place
+  "firebase": {             // Firebase-namespaced claims
+    "identities": {         // Authentication identities
+      "github.com": [       // Provider
+        "8513515"           // ID of the user on the above provider
+      ]
+    }
+  }
+}
+```
 
 We can then use the `auth` variable within our rules. For example, we can grant everyone read access
 to all data, but only write access to their own data, our rules would look like this:
@@ -253,7 +272,7 @@ For a more in-depth explanation of this important feature, check out the web gui
 
 Checking to make sure the client has authenticated can be cumbersome and lead to a lot of `if` /
 `else` logic in our controllers. In addition, apps which use authentication often have issues upon
-initial page load with the logged out state flickering into view temporarily before the
+initial page load with the signed out state flickering into view temporarily before the
 authentication check completes. We can abstract away these complexities by taking advantage of the
 `resolve()` method of Angular routers.
 
@@ -264,7 +283,7 @@ want to grab the authentication state before the route is rendered. The second h
 [`$requireSignIn()`](/docs/reference.md#requiresignin)
 which resolves the promise successfully if a user is authenticated and rejects otherwise. This is
 useful in cases where you want to require a route to have an authenticated user. You can catch the
-rejected promise and redirect the unauthenticated user to a different page, such as the login page.
+rejected promise and redirect the unauthenticated user to a different page, such as the sign in page.
 Both of these methods work well with the `resolve()` methods of `ngRoute` and `ui-router`.
 
 ### `ngRoute` Example
@@ -312,12 +331,12 @@ app.config(["$routeProvider", function($routeProvider) {
 
 app.controller("HomeCtrl", ["currentAuth", function(currentAuth) {
   // currentAuth (provided by resolve) will contain the
-  // authenticated user or null if not logged in
+  // authenticated user or null if not signed in
 }]);
 
 app.controller("AccountCtrl", ["currentAuth", function(currentAuth) {
   // currentAuth (provided by resolve) will contain the
-  // authenticated user or null if not logged in
+  // authenticated user or null if not signed in
 }]);
 ```
 
@@ -368,12 +387,12 @@ app.config(["$stateProvider", function ($stateProvider) {
 
 app.controller("HomeCtrl", ["currentAuth", function(currentAuth) {
   // currentAuth (provided by resolve) will contain the
-  // authenticated user or null if not logged in
+  // authenticated user or null if not signed in
 }]);
 
 app.controller("AccountCtrl", ["currentAuth", function(currentAuth) {
   // currentAuth (provided by resolve) will contain the
-  // authenticated user or null if not logged in
+  // authenticated user or null if not signed in
 }]);
 ```
 Keep in mind that, even when using `ng-annotate` or `grunt-ngmin` to minify code, that these tools

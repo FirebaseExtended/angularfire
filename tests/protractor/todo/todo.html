@@ -41,7 +41,7 @@
 
     <!-- Todo list -->
     <div id="todos">
-      <div class="todo" ng-cloak ng-repeat="(id, todo) in todos">
+      <div class="todo" ng-cloak ng-repeat="(id, todo) in todos" id="todo-{{$index}}">
         <input class="toggle" type="checkbox" ng-model="todo.completed" ng-change="todos.$save(todo)" />
         <input class="edit" ng-model="todo.title" ng-change="todos.$save(todo)" />
         <button class="removeTodoButton" ng-click="removeTodo(id)">Remove</button>
