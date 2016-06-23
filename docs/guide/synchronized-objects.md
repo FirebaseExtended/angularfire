@@ -36,7 +36,7 @@ var app = angular.module("sampleApp", ["firebase"]);
 // inject $firebaseObject into our controller
 app.controller("ProfileCtrl", ["$scope", "$firebaseObject",
   function($scope, $firebaseObject) {
-    var ref = firebase.database.ref();
+    var ref = firebase.database().ref();
     // download physicsmarie's profile data into a local object
     // all server changes are applied in realtime
     $scope.profile = $firebaseObject(ref.child('profiles').child('physicsmarie'));
@@ -98,7 +98,7 @@ app.factory("Profile", ["$firebaseObject",
     return function(username) {
       // create a reference to the database node where we will store our data
       var randomRoomId = Math.round(Math.random() * 100000000);
-      var ref = firebase.database.ref().child("rooms").push();
+      var ref = firebase.database().ref("rooms").push();
       var profileRef = ref.child(username);
 
       // return it as a synchronized object
