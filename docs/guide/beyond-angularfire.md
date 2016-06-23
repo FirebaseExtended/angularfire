@@ -23,7 +23,7 @@ This is easiest to accomplish with an example, so read the comments carefully.
 ```js
 app.controller("SampleCtrl", ["$scope", "$timeout", function($scope, $timeout) {
   // create a reference to our Firebase database
-  var ref = firebase.database.ref();
+  var ref = firebase.database().ref();
 
   // read data from the database into a local scope variable
   ref.on("value", function(snapshot) {
