@@ -1108,7 +1108,7 @@ app.factory("User", function(UserFactory) {
   var ref = firebase.database().ref();
   var usersRef = ref.child("users");
   return function(userid) {
-    return new UserFactory(ref.child(userid));
+    return new UserFactory(usersRef.child(userid));
   }
 });
 ```
