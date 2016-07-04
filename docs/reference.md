@@ -550,7 +550,7 @@ Changes are no longer synchronized to or from the database.
 
 ## $firebaseAuth
 
-AngularFire includes support for [user authentication and management](/docs/web/guide/user-auth.html)
+AngularFire includes support for [user authentication and management](/docs/guide/user-auth.md)
 with the `$firebaseAuth` service.
 
 The `$firebaseAuth` factory takes an optional Firebase auth instance (`firebase.auth()`) as its only
