@@ -102,7 +102,6 @@ var app = angular.module("sampleApp", ["firebase"]);
 app.factory("chatMessages", ["$firebaseArray",
   function($firebaseArray) {
     // create a reference to the database location where we will store our data
-    var randomRoomId = Math.round(Math.random() * 100000000);
     var ref = firebase.database().ref();
 
     // this uses AngularFire to create the synchronized array
