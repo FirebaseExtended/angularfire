@@ -96,13 +96,8 @@ var app = angular.module("sampleApp", ["firebase"]);
 app.factory("Profile", ["$firebaseObject",
   function($firebaseObject) {
     return function(username) {
-      var randomRoomId = Math.round(Math.random() * 100000000);
-
-      // create a reference to the database node where we will store our data
-      // push() creates a new child location using an auto-generated key
-      // instead of push(), we use our own custom randomRoomId key
-      // var ref = firebase.database().ref().child("rooms").push();
-      var ref = firebase.database().ref().child("rooms/" + randomRoomId);
+      // create a reference to the database where we will store our data
+      var ref = firebase.database().ref("rooms").push();
       var profileRef = ref.child(username);
 
       // return it as a synchronized object
@@ -168,13 +163,8 @@ var app = angular.module("sampleApp", ["firebase"]);
 app.factory("Profile", ["$firebaseObject",
   function($firebaseObject) {
     return function(username) {
-      var randomRoomId = Math.round(Math.random() * 100000000);
-
       // create a reference to the database where we will store our data
-      // push() creates a new child location using an auto-generated key
-      // instead of push(), we use our own custom randomRoomId key
-      // var ref = firebase.database().ref().child("rooms").push();
-      var ref = firebase.database().ref().child("rooms/" + randomRoomId);
+      var ref = firebase.database().ref("rooms").push();
       var profileRef = ref.child(username);
 
       // return it as a synchronized object
