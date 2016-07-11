@@ -96,7 +96,7 @@ var app = angular.module("sampleApp", ["firebase"]);
 app.factory("Profile", ["$firebaseObject",
   function($firebaseObject) {
     return function(username) {
-      // create a reference to the database where we will store our data
+      // create a reference to the database node where we will store our data
       var ref = firebase.database().ref("rooms").push();
       var profileRef = ref.child(username);
 
@@ -163,7 +163,7 @@ var app = angular.module("sampleApp", ["firebase"]);
 app.factory("Profile", ["$firebaseObject",
   function($firebaseObject) {
     return function(username) {
-      // create a reference to the database where we will store our data
+      // create a reference to the database node where we will store our data
       var ref = firebase.database().ref("rooms").push();
       var profileRef = ref.child(username);
 
