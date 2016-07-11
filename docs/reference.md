@@ -29,7 +29,7 @@
     * [`$signInWithEmailAndPassword(email, password)`](#signinwithemailandpasswordemail-password)
     * [`$signInWithPopup(provider)`](#signinwithpopupprovider)
     * [`$signInWithRedirect(provider[, options])`](#signinwithredirectprovider-options)
-    * [`$signInWithCredentials(credentials)`](#signinwithcredentialscredentials)
+    * [`$signInWithCredential(credential)`](#signinwithcredentialcredential)
     * [`$getAuth()`](#getauth)
     * [`$onAuthStateChanged(callback[, context])`](#onauthstatechangedcallback-context)
     * [`$signOut()`](#signout)
@@ -679,13 +679,13 @@ Firebase currently supports Facebook, GitHub, Google, and Twitter authentication
 [authentication documentation](https://firebase.google.com/docs/auth/)
 for information about configuring each provider.
 
-### $signInWithCredentials(credentials)
+### $signInWithCredential(credential)
 
-Authenticates the client using credentials (potentially created from OAuth Tokens). This function takes one
-arguments: the credentials object. This may be obtained from individual auth providers under `firebase.auth()`;
+Authenticates the client using a credential (potentially created from OAuth Tokens). This function takes one
+arguments: the credential object. This may be obtained from individual auth providers under `firebase.auth()`;
 
 ```js
-$scope.authObj.$signInWithCredentials(credentials).then(function(firebaseUser) {
+$scope.authObj.$signInWithCredential(credential).then(function(firebaseUser) {
   console.log("Signed in as:", firebaseUser.uid);
 }).catch(function(error) {
   console.error("Authentication failed:", error);
