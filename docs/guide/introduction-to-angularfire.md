@@ -63,7 +63,7 @@ AngularFire bindings from our CDN:
 <script src="https://www.gstatic.com/firebasejs/3.0.3/firebase.js"></script>
 
 <!-- AngularFire -->
-<script src="https://cdn.firebase.com/libs/angularfire/2.0.0/angularfire.min.js"></script>
+<script src="https://cdn.firebase.com/libs/angularfire/2.0.1/angularfire.min.js"></script>
 ```
 
 Firebase and AngularFire are also available via npm and Bower as `firebase` and `angularfire`,
