@@ -362,7 +362,7 @@ app.config(["$stateProvider", function ($stateProvider) {
       templateUrl: "views/home.html",
       resolve: {
         // controller will not be loaded until $waitForSignIn resolves
-        // Auth refers to our $firebaseAuth wrapper in the example above
+        // Auth refers to our $firebaseAuth wrapper in the factory below
         "currentAuth": ["Auth", function(Auth) {
           // $waitForSignIn returns a promise so the resolve waits for it to complete
           return Auth.$waitForSignIn();
@@ -375,7 +375,7 @@ app.config(["$stateProvider", function ($stateProvider) {
       templateUrl: "views/account.html",
       resolve: {
         // controller will not be loaded until $requireSignIn resolves
-        // Auth refers to our $firebaseAuth wrapper in the example above
+        // Auth refers to our $firebaseAuth wrapper in the factory below
         "currentAuth": ["Auth", function(Auth) {
           // $requireSignIn returns a promise so the resolve waits for it to complete
           // If the promise is rejected, it will throw a $stateChangeError (see above)
@@ -394,6 +394,12 @@ app.controller("AccountCtrl", ["currentAuth", function(currentAuth) {
   // currentAuth (provided by resolve) will contain the
   // authenticated user or null if not signed in
 }]);
+
+app.factory("Auth", ["$firebaseAuth",
+  function($firebaseAuth) {
+    return $firebaseAuth();
+  }
+]);
 ```
 Keep in mind that, even when using `ng-annotate` or `grunt-ngmin` to minify code, that these tools
 cannot peer inside of functions. So even though we don't need the array notation to declare our
