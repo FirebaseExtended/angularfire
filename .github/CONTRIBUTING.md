@@ -20,7 +20,7 @@ which just ask about usage will be closed. Here are some resources to get help:
 - Try out some [examples](/README.md#examples)
 
 If the official documentation doesn't help, try asking a question on the
-[AngularFire Google Group](https://groups.google.com/forum/#!forum/firebase-angular) or one of our
+[Firebase Google Group](https://groups.google.com/forum/#!forum/firebase-talk) or one of our
 other [official support channels](https://firebase.google.com/support/).
 
 **Please avoid double posting across multiple channels!**

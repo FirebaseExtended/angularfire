@@ -76,7 +76,7 @@ There are many additional resources for learning about using Firebase with Angul
 * The [`angularfire-seed`](https://github.com/firebase/angularfire-seed) repo contains a template
 project to help you get started.
 * Check out the [various examples that use AngularFire](/README.md#examples).
-* Join our [AngularFire mailing list](https://groups.google.com/forum/#!forum/firebase-angular) to
+* Join our [Firebase mailing list](https://groups.google.com/forum/#!forum/firebase-talk) to
 keep up to date with any announcements and learn from the AngularFire community.
 * The [`angularfire` tag on Stack Overflow](http://stackoverflow.com/questions/tagged/angularfire)
 has answers to a lot of code-related questions.
