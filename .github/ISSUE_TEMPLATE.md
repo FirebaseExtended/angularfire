@@ -14,7 +14,7 @@ will be closed. Here are some resources to get help:
 
 If the official documentation doesn't help, try asking through our official support channels:
 
-- AngularFire Google Group: https://groups.google.com/forum/#!forum/firebase-angular
+- Firebase Google Group: https://groups.google.com/forum/#!forum/firebase-talk
 - Other support channels: https://firebase.google.com/support/
 
 *Please avoid double posting across multiple channels!*
