@@ -87,6 +87,10 @@
         });
 
         this._sync.init(this.$list);
+        this._resolved = false;
+        this.$loaded().finally(function() {
+          self._resolved = true;
+        });
 
         return this.$list;
       }
@@ -259,6 +263,11 @@
           }
           return promise;
         },
+
+        /**
+         * @returns {boolean} true once the $loaded() promise has resolved, false until then
+         */
+        $resolved: function() { return this._resolved; },
 
         /**
          * @returns {Firebase} the original Firebase ref used to create this object.
