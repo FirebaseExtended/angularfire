@@ -136,7 +136,7 @@
         },
 
         /**
-         * @returns {boolean} true once the $loaded() promise has resolved, false until then
+         * @returns {boolean} true after $loaded promise is completed (either with success or rejection), false before that
          */
         $resolved: function() { return this._resolved; },
 
