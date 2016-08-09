@@ -590,6 +590,39 @@ describe('$firebaseArray', function () {
     });
   });
 
+  describe('$resolved', function () {
+    it('should return false on init', function () {
+      arr = $firebaseArray(stubRef());
+      expect(arr.$resolved()).toBe(false);
+    });
+
+    it('should return true once $loaded() promise is resolved', function () {
+      arr = $firebaseArray(stubRef());
+
+      arr.$loaded()
+        .finally(function () {
+          expect(obj.$resolved()).toBe(true);
+          done();
+        });
+    });
+
+    it('should return true once $loaded() promise is rejected', function () {
+      var err = new Error('test_fail');
+
+      spyOn(firebase.database.Reference.prototype, "once").and.callFake(function (event, cb, cancel_cb) {
+        cancel_cb(err);
+      });
+
+      arr = $firebaseArray(stubRef());
+
+      arr.$loaded()
+        .finally(function () {
+          expect(obj.$resolved()).toBe(true);
+          done();
+        });
+    });
+  });
+
   describe('$ref', function() {
     it('should return Firebase instance it was created with', function() {
       var ref = stubRef();
