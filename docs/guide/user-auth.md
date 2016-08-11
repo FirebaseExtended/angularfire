@@ -87,7 +87,7 @@ app.controller("SampleCtrl", ["$scope", "$firebaseAuth",
 
 ## Managing Users
 
-The `$firebaseAuth` service also provides [a full suite ofmethods](/docs/reference.md#firebaseauth)
+The `$firebaseAuth` service also provides [a full suite of methods](/docs/reference.md#firebaseauth)
 for managing users. This includes methods for creating and removing users, changing an users's email
 or password, and sending email verification and password reset emails. The following example gives
 you a taste of just how easy this is:
