@@ -10,6 +10,6 @@
   // services will live.
   angular.module("firebase", ["firebase.utils", "firebase.config", "firebase.auth", "firebase.database"])
     //TODO: use $window
-    .value("Firebase", exports.firebase);
+    .value("Firebase", exports.firebase)
     .value("firebase", exports.firebase);
 })(window);
