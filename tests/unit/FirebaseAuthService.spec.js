@@ -4,11 +4,7 @@ describe('$firebaseAuthService', function () {
   var URL = 'https://angularfire-dae2e.firebaseio.com'
 
   beforeEach(function () {
-    module('angularfire.config');
-    module('angularfire.auth', function(_$firebaseRefProvider_) {
-      $firebaseRefProvider = _$firebaseRefProvider_;
-      $firebaseRefProvider.registerUrl(URL);
-    })
+    module('firebase.auth')
   });
 
   describe('<constructor>', function() {
@@ -21,7 +17,7 @@ describe('$firebaseAuthService', function () {
       });
     });
 
-    it('should exist because we called $firebaseRefProvider.registerUrl()', inject(function() {
+    it('should exist', inject(function() {
       expect($firebaseAuthService).not.toBe(null);
     }));
 

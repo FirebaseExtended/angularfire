@@ -1,4 +1,4 @@
-var app = angular.module('priority', ['angularfire.database']);
+var app = angular.module('priority', ['firebase.database']);
 app.controller('PriorityCtrl', function Chat($scope, $firebaseArray, $firebaseObject) {
   // Get a reference to the Firebase
   var rootRef = firebase.database().ref();

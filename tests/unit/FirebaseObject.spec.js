@@ -15,7 +15,7 @@ describe('$firebaseObject', function() {
       error:[]
     };
 
-    module('angularfire.database');
+    module('firebase.database');
     module('testutils',function($provide){
       $provide.value('$log',{
         error:function(){

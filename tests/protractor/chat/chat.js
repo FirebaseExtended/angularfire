@@ -1,4 +1,4 @@
-var app = angular.module('chat', ['angularfire.database']);
+var app = angular.module('chat', ['firebase.database']);
 
 app.controller('ChatCtrl', function Chat($scope, $firebaseObject, $firebaseArray) {
   // Get a reference to the Firebase

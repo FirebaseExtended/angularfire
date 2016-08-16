@@ -1,4 +1,4 @@
-var app = angular.module('todo', ['angularfire.database']);
+var app = angular.module('todo', ['firebase.database']);
 app. controller('TodoCtrl', function Todo($scope, $firebaseArray) {
   // Get a reference to the Firebase
   var rootRef = firebase.database().ref();
