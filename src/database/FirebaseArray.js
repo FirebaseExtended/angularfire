@@ -47,7 +47,7 @@
    * var list = new ExtendedArray(ref);
    * </code></pre>
    */
-  angular.module('firebase').factory('$firebaseArray', ["$log", "$firebaseUtils", "$q",
+  angular.module('firebase.database').factory('$firebaseArray', ["$log", "$firebaseUtils", "$q",
     function($log, $firebaseUtils, $q) {
       /**
        * This constructor should probably never be called manually. It is used internally by

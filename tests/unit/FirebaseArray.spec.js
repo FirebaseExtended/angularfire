@@ -31,7 +31,7 @@ describe('$firebaseArray', function () {
 
   var arr, $firebaseArray, $utils, $timeout, $rootScope, $q, tick, testutils;
   beforeEach(function() {
-    module('firebase');
+    module('firebase.database');
     module('testutils');
     inject(function (_$firebaseArray_, $firebaseUtils, _$timeout_, _$rootScope_, _$q_, _testutils_) {
       testutils = _testutils_;

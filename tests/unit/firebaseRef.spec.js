@@ -2,9 +2,10 @@
 describe('firebaseRef', function () {
 
   var $firebaseRefProvider;
+  //TODO: Load this from env
   var MOCK_URL = 'https://angularfire-dae2e.firebaseio.com'
 
-  beforeEach(module('firebase', function(_$firebaseRefProvider_) {
+  beforeEach(module('firebase.database', function(_$firebaseRefProvider_) {
     $firebaseRefProvider = _$firebaseRefProvider_;
   }));
 

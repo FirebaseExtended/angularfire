@@ -15,7 +15,7 @@ describe('$firebaseObject', function() {
       error:[]
     };
 
-    module('firebase');
+    module('firebase.database');
     module('testutils',function($provide){
       $provide.value('$log',{
         error:function(){
@@ -759,7 +759,7 @@ describe('$firebaseObject', function() {
       expect(obj.$destroy).toHaveBeenCalledWith(error);
     });
   });
-  
+
   var pushCounter = 1;
 
   function fakeSnap(data, pri) {
