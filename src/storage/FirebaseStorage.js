@@ -1,4 +1,5 @@
 (function() {
+  "use strict";
 
   function FirebaseStorage() {
 
@@ -14,14 +15,6 @@
       };
     };
   }
-
-  FirebaseStorage._ = {
-    _unwrapStorageSnapshot: unwrapStorageSnapshot,
-    _$put: _$put,
-    _$getDownloadURL: _$getDownloadURL,
-    _isStorageRef: isStorageRef,
-    _assertStorageRef: _assertStorageRef
-  };
 
   function unwrapStorageSnapshot(storageSnapshot) {
     return {
@@ -42,15 +35,15 @@
       $progress: function $progress(callback) {
         task.on('state_changed', function (storageSnap) {
           return callback(unwrapStorageSnapshot(storageSnap));
-        }, function (err) {}, function (storageSnap) {});
+        }, function () {}, function () {});
       },
       $error: function $error(callback) {
-        task.on('state_changed', function (storageSnap) {}, function (err) {
+        task.on('state_changed', function () {}, function (err) {
           return callback(err);
-        }, function (storageSnap) {});
+        }, function () {});
       },
       $complete: function $complete(callback) {
-        task.on('state_changed', function (storageSnap) {}, function (err) {}, function (_) {
+        task.on('state_changed', function () {}, function () {}, function () {
           return callback(unwrapStorageSnapshot(task.snapshot));
         });
       }
@@ -71,6 +64,14 @@
       throw new Error('$firebaseStorage expects a storage reference from firebase.storage().ref()');
     }
   }
+
+  FirebaseStorage._ = {
+    _unwrapStorageSnapshot: unwrapStorageSnapshot,
+    _$put: _$put,
+    _$getDownloadURL: _$getDownloadURL,
+    _isStorageRef: isStorageRef,
+    _assertStorageRef: _assertStorageRef
+  };  
 
   angular.module('firebase.storage')
     .factory('$firebaseStorage', FirebaseStorage);
