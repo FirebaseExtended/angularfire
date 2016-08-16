@@ -30,7 +30,7 @@ describe('$firebaseUtils', function () {
   };
 
   beforeEach(function () {
-    module('firebase');
+    module('angularfire.utils');
     module('testutils');
     inject(function (_$firebaseUtils_, _$timeout_, _$rootScope_, _$q_, _testutils_) {
       $utils = _$firebaseUtils_;

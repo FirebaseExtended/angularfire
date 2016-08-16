@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  angular.module('firebase')
+  angular.module('angularfire.utils')
     .factory('$firebaseConfig', ["$firebaseArray", "$firebaseObject", "$injector",
       function($firebaseArray, $firebaseObject, $injector) {
         return function(configOpts) {

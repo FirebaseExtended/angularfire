@@ -3,7 +3,7 @@
   var FirebaseAuth;
 
   // Define a service which provides user authentication and management.
-  angular.module('firebase').factory('$firebaseAuth', [
+  angular.module('angularfire.auth').factory('$firebaseAuth', [
     '$q', '$firebaseUtils', function($q, $firebaseUtils) {
       /**
        * This factory returns an object allowing you to manage the client's authentication state.

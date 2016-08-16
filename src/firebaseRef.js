@@ -40,7 +40,7 @@
     };
   }
 
-  angular.module('firebase')
+  angular.module('angularfire.config')
     .provider('$firebaseRef', FirebaseRef);
 
 })();

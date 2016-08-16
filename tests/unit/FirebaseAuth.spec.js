@@ -9,7 +9,8 @@ describe('FirebaseAuth',function(){
       warn:[]
     };
 
-    module('firebase',function($provide){
+    module('angularfire.utils');
+    module('angularfire.auth',function($provide){
       $provide.value('$log',{
         warn:function(){
           log.warn.push(Array.prototype.slice.call(arguments,0));
