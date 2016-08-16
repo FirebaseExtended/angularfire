@@ -1,4 +1,4 @@
-var app = angular.module('todo', ['firebase']);
+var app = angular.module('todo', ['angularfire.database']);
 app. controller('TodoCtrl', function Todo($scope, $firebaseArray) {
   // Get a reference to the Firebase
   var rootRef = firebase.database().ref();
@@ -8,7 +8,7 @@ app. controller('TodoCtrl', function Todo($scope, $firebaseArray) {
 
   // Put the Firebase URL into the scope so the tests can grab it.
   $scope.url = todosRef.toString()
-  
+
   // Get the todos as an array
   $scope.todos = $firebaseArray(todosRef);
 

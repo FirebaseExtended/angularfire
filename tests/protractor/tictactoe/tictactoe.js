@@ -1,4 +1,4 @@
-var app = angular.module('tictactoe', ['firebase']);
+var app = angular.module('tictactoe', ['angularfire.database']);
 app.controller('TicTacToeCtrl', function Chat($scope, $firebaseObject) {
   $scope.board = {};
 
