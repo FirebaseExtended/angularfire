@@ -1,13 +1,13 @@
 (function() {
   "use strict";
 
-  function FirebaseStorage() {
+  function FirebaseStorage($firebaseUtils) {
 
     return function FirebaseStorage(storageRef) {
       _assertStorageRef(storageRef);
       return {
         $put: function $put(file) {
-          return _$put(storageRef, file);
+          return _$put(storageRef, file, $firebaseUtils.compile);
         },
         $getDownloadURL: function $getDownloadURL() {
           return _$getDownloadURL(storageRef);
@@ -28,23 +28,32 @@
     };
   }
 
-  function _$put(storageRef, file) {
+  function _$put(storageRef, file, $digestFn) {
     var task = storageRef.put(file);
 
     return {
       $progress: function $progress(callback) {
-        task.on('state_changed', function (storageSnap) {
-          return callback(unwrapStorageSnapshot(storageSnap));
+        task.on('state_changed', function () {
+          $digestFn(function () {
+            callback.apply(null, [unwrapStorageSnapshot(task.snapshot)]);
+          });
+          return true;
         }, function () {}, function () {});
       },
       $error: function $error(callback) {
         task.on('state_changed', function () {}, function (err) {
-          return callback(err);
+          $digestFn(function () {
+            callback.apply(null, [err]);
+          });
+          return true;
         }, function () {});
       },
       $complete: function $complete(callback) {
         task.on('state_changed', function () {}, function () {}, function () {
-          return callback(unwrapStorageSnapshot(task.snapshot));
+          $digestFn(function () {
+            callback.apply(null, [unwrapStorageSnapshot(task.snapshot)]);
+          });
+          return true;
         });
       }
     };
@@ -71,9 +80,9 @@
     _$getDownloadURL: _$getDownloadURL,
     _isStorageRef: isStorageRef,
     _assertStorageRef: _assertStorageRef
-  };  
+  };
 
   angular.module('firebase.storage')
-    .factory('$firebaseStorage', FirebaseStorage);
+    .factory('$firebaseStorage', ["$firebaseUtils", FirebaseStorage]);
 
 })();
