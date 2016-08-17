@@ -1,21 +1,6 @@
 (function() {
   "use strict";
 
-  function FirebaseStorage($firebaseUtils) {
-
-    return function FirebaseStorage(storageRef) {
-      _assertStorageRef(storageRef);
-      return {
-        $put: function $put(file) {
-          return _$put(storageRef, file, $firebaseUtils.compile);
-        },
-        $getDownloadURL: function $getDownloadURL() {
-          return _$getDownloadURL(storageRef);
-        }
-      };
-    };
-  }
-
   function unwrapStorageSnapshot(storageSnapshot) {
     return {
       bytesTransferred: storageSnapshot.bytesTransferred,
@@ -33,27 +18,18 @@
 
     return {
       $progress: function $progress(callback) {
-        task.on('state_changed', function () {
-          $digestFn(function () {
-            callback.apply(null, [unwrapStorageSnapshot(task.snapshot)]);
-          });
-          return true;
+        task.on('state_changed', function (storageSnap) {
+          callback(unwrapStorageSnapshot(storageSnap));
         }, function () {}, function () {});
       },
       $error: function $error(callback) {
         task.on('state_changed', function () {}, function (err) {
-          $digestFn(function () {
-            callback.apply(null, [err]);
-          });
-          return true;
+          callback(err);
         }, function () {});
       },
       $complete: function $complete(callback) {
         task.on('state_changed', function () {}, function () {}, function () {
-          $digestFn(function () {
-            callback.apply(null, [unwrapStorageSnapshot(task.snapshot)]);
-          });
-          return true;
+          callback(unwrapStorageSnapshot(task.snapshot));
         });
       }
     };
@@ -74,13 +50,30 @@
     }
   }
 
-  FirebaseStorage._ = {
-    _unwrapStorageSnapshot: unwrapStorageSnapshot,
-    _$put: _$put,
-    _$getDownloadURL: _$getDownloadURL,
-    _isStorageRef: isStorageRef,
-    _assertStorageRef: _assertStorageRef
-  };
+  function FirebaseStorage() {
+
+    var Storage = function Storage(storageRef) {
+      _assertStorageRef(storageRef);
+      return {
+        $put: function $put(file) {
+          return _$put(storageRef, file);
+        },
+        $getDownloadURL: function $getDownloadURL() {
+          return _$getDownloadURL(storageRef);
+        }
+      };
+    };
+
+    Storage.utils = {
+      _unwrapStorageSnapshot: unwrapStorageSnapshot,
+      _$put: _$put,
+      _$getDownloadURL: _$getDownloadURL,
+      _isStorageRef: isStorageRef,
+      _assertStorageRef: _assertStorageRef
+    };  
+    
+    return Storage;
+  }  
 
   angular.module('firebase.storage')
     .factory('$firebaseStorage', ["$firebaseUtils", FirebaseStorage]);
