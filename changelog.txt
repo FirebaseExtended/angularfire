@@ -1,0 +1,1 @@
+fixed - `$firebaseAuth.signOut()` now correctly returns a `Promise` fulfilled when the underlying Firebase SDK has signed the user out.
