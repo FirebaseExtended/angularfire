@@ -52,7 +52,7 @@ Several authentication methods have been renamed and / or have different method 
 | `$changeEmail(credentials)` | `$updateEmail(newEmail)` | Changes the email of the currently signed-in user |
 | `$changePassword(credentials)` | `$updatePassword(newPassword)` | Changes the password of the currently signed-in user |
 | `$resetPassword(credentials)` | `$sendPasswordResetEmail(email)` | |
-| `$unauth()` | `$signOut()` | |
+| `$unauth()` | `$signOut()` | Now returns a `Promise` |
 | `$onAuth(callback)` | `$onAuthStateChanged(callback)` | |
 | `$requireAuth()` | `$requireSignIn()` | |
 | `$waitForAuth()` | `$waitForSignIn()` | |
