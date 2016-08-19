@@ -47,7 +47,7 @@ In order to use AngularFire in your project, you need to include the following f
 <script src="https://www.gstatic.com/firebasejs/3.3.0/firebase.js"></script>
 
 <!-- AngularFire -->
-<script src="https://cdn.firebase.com/libs/angularfire/2.0.1/angularfire.min.js"></script>
+<script src="https://cdn.firebase.com/libs/angularfire/2.0.2/angularfire.min.js"></script>
 ```
 
 You can also install AngularFire via npm and Bower and its dependencies will be downloaded
