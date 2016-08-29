@@ -7,8 +7,7 @@ if (!process.env.ANGULARFIRE_TEST_DB_URL) {
 
 try {
   firebase.initializeApp({
-    databaseURL: process.env.ANGULARFIRE_TEST_DB_URL,
-    serviceAccount: path.resolve(__dirname, './key.json')
+    databaseURL: process.env.ANGULARFIRE_TEST_DB_URL
   });
 } catch (err) {
   console.log('Failed to initialize the Firebase SDK [Node]:', err);

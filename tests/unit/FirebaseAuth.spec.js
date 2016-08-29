@@ -8,8 +8,9 @@ describe('FirebaseAuth',function(){
     log = {
       warn:[]
     };
-
-    module('firebase',function($provide){
+    // 
+    // module('firebase.utils');
+    module('firebase.auth',function($provide){
       $provide.value('$log',{
         warn:function(){
           log.warn.push(Array.prototype.slice.call(arguments,0));

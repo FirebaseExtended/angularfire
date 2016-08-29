@@ -22,7 +22,7 @@
    * var obj = new ExtendedObject(ref);
    * </code></pre>
    */
-  angular.module('firebase').factory('$firebaseObject', [
+  angular.module('firebase.database').factory('$firebaseObject', [
     '$parse', '$firebaseUtils', '$log', '$q',
     function($parse, $firebaseUtils, $log, $q) {
       /**
