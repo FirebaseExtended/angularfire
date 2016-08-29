@@ -89,7 +89,7 @@
         this._sync.init(this.$list);
 
         // $resolved provides quick access to the current state of the $loaded() promise.
-        // This information is useful in in data-binding.
+        // This information is useful in data-binding for knowing when the data is available.
         this.$list.$resolved = false;
         this.$loaded().finally(function() {
           self.$list.$resolved = true;
