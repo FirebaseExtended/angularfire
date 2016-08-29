@@ -244,7 +244,7 @@ describe('$firebaseObject', function() {
     it('should return false on init', function () {
       var ref = stubRef();
       var obj = $firebaseObject(ref);
-      expect(obj.$resolved()).toBe(false);
+      expect(obj.$resolved).toBe(false);
     });
 
     it('should return true once $loaded() promise is resolved', function () {
@@ -252,7 +252,7 @@ describe('$firebaseObject', function() {
 
       obj.$loaded()
         .finally(function () {
-          expect(obj.$resolved()).toBe(true);
+          expect(obj.$resolved).toBe(true);
           done();
         });
     });
@@ -268,7 +268,7 @@ describe('$firebaseObject', function() {
 
       obj.$loaded()
         .finally(function () {
-          expect(obj.$resolved()).toBe(true);
+          expect(obj.$resolved).toBe(true);
           done();
         });
     });

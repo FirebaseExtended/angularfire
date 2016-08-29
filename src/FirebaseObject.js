@@ -64,9 +64,12 @@
 
         // start synchronizing data with Firebase
         this.$$conf.sync.init();
-        this._resolved = false;
+
+        // $resolved provides quick access to the current state of the $loaded() promise.
+        // This information is useful in data-binding for knowing when the data is available.
+        this.$resolved = false;
         this.$loaded().finally(function() {
-          self._resolved = true;
+          self.$resolved = true;
         });
       }
 
@@ -134,11 +137,6 @@
           }
           return promise;
         },
-
-        /**
-         * @returns {boolean} true after $loaded promise is completed (either with success or rejection), false before that
-         */
-        $resolved: function() { return this._resolved; },
 
         /**
          * @returns {Firebase} the original Firebase instance used to create this object.
