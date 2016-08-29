@@ -88,8 +88,25 @@
 
         this._sync.init(this.$list);
 
-        // $resolved provides quick access to the current state of the $loaded() promise.
-        // This information is useful in data-binding for knowing when the data is available.
+       /**
+        * $resolved provides quick access to the current state of the $loaded() promise.
+        * This is useful in data-binding when needing to delay the rendering or visibilty
+        * of the content until is has been loaded from firebase.
+        *
+        * For example, the following HTML will display a loading symbol while waiting
+        * for the data to be loaded:
+        *
+        * <code>$scope.data = new $firebaseArray(ref);</code>
+        *
+        * <pre><code>
+        * <div ng-show="data.$resolved">
+        *   <!-- show data -->
+        * </div>
+        * <div ng-show="!data.$resolved">
+        *   <!-- show loading symbol -->
+        * </div>
+        * </code></pre>
+        */
         this.$list.$resolved = false;
         this.$loaded().finally(function() {
           self.$list.$resolved = true;
