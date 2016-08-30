@@ -2,14 +2,10 @@ if (window.jamsine) {
   jasmine.DEFAULT_TIMEOUT_INTERVAL = 5000;
 }
 
-try {
-  // TODO: stop hard-coding this
-  var config = {
-    apiKey: "AIzaSyCcB9Ozrh1M-WzrwrSMB6t5y1flL8yXYmY",
-    authDomain: "angularfire-dae2e.firebaseapp.com",
-    databaseURL: "https://angularfire-dae2e.firebaseio.com"
-  };
-  firebase.initializeApp(config);
-} catch (err) {
-  console.log('Failed to initialize the Firebase SDK [web]:', err);
-}
+var config = {
+  apiKey: 'AIzaSyC3eBV8N95k_K67GTfPqf67Mk1P-IKcYng',
+  authDomain: 'oss-test.firebaseapp.com',
+  databaseURL: 'https://oss-test.firebaseio.com',
+  storageBucket: 'oss-test.appspot.com'
+};
+firebase.initializeApp(config);
