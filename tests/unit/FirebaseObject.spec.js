@@ -240,6 +240,40 @@ describe('$firebaseObject', function() {
     });
   });
 
+  describe('$resolved', function () {
+    it('should return false on init', function () {
+      var ref = stubRef();
+      var obj = $firebaseObject(ref);
+      expect(obj.$resolved).toBe(false);
+    });
+
+    it('should return true once $loaded() promise is resolved', function () {
+      var obj = makeObject();
+
+      obj.$loaded()
+        .finally(function () {
+          expect(obj.$resolved).toBe(true);
+          done();
+        });
+    });
+
+    it('should return true once $loaded() promise is rejected', function () {
+      var err = new Error('test_fail');
+
+      spyOn(firebase.database.Reference.prototype, "once").and.callFake(function (event, cb, cancel_cb) {
+        cancel_cb(err);
+      });
+
+      var obj = makeObject();
+
+      obj.$loaded()
+        .finally(function () {
+          expect(obj.$resolved).toBe(true);
+          done();
+        });
+    });
+  });
+
   describe('$ref', function () {
     it('should return the Firebase instance that created it', function () {
       var ref = stubRef();

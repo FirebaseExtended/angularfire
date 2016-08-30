@@ -88,6 +88,14 @@
 
         this._sync.init(this.$list);
 
+        // $resolved provides quick access to the current state of the $loaded() promise.
+        // This is useful in data-binding when needing to delay the rendering or visibilty
+        // of the data until is has been loaded from firebase.
+        this.$list.$resolved = false;
+        this.$loaded().finally(function() {
+          self.$list.$resolved = true;
+        });
+
         return this.$list;
       }
 
