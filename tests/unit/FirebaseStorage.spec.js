@@ -1,80 +1,23 @@
 'use strict';
-describe('$firebaseStorage', function () {
+fdescribe('$firebaseStorage', function () {
   var $firebaseStorage;
   var URL = 'https://angularfire-dae2e.firebaseio.com';
-
-  function MockTask(interval, limit) {
-    var self = this;
-    self.interval = interval || 1;
-    self.limit = limit || 4;
-    self.progress = null;
-    self.error = null;
-    self.complete = null;
-
-    self.snapshot = {
-      bytesTransferred: 0,
-      downloadURL: 'url',
-      metadata: {},
-      ref: {},
-      state: {},
-      task: {},
-      totalBytes: 0
-    };
-
-    self.causeProgress = function () {
-      var count = 0;
-      var intervalId = setInterval(function () {
-        self.progress(self.snapshot);
-        count = count + 1;
-        if (count === self.limit) {
-          clearInterval(intervalId);
-          self.complete(self.snapshot);
-        }
-      }, self.interval);
-    };
-
-    self.causeError = function () {
-      self.error(new Error('boom'));    
-    };
-  }
-
-  function MockSuccessTask(interval, limit) {
-    var self = this;
-    self._init = false;
-    MockTask.apply(this, interval, limit);
-    self.on = function (event, progress, error, complete) {
-      if (self._init === false) {
-        self.progress = progress;
-        self.error = error;
-        self.complete = complete;
-        self._init = true;
-        self.causeProgress();
-      }
-    };
-  }
-
-  function MockErrorTask(interval, limit) {
-    var self = this;
-    MockTask.apply(this, interval, limit);
-    self.on = function (event, progress, error, complete) {
-      self.progress = progress;
-      self.error = error;
-      self.complete = complete;
-      self.causeError();
-    };    
-  }
-
+  
   beforeEach(function () {
-    module('firebase.storage')
+    module('firebase.storage');
   });
 
   describe('<constructor>', function() {
 
     var $firebaseStorage;
+    var $q;
+    var $rootScope;
     beforeEach(function() {
       module('firebase.storage');
-      inject(function (_$firebaseStorage_) {
+      inject(function (_$firebaseStorage_, _$q_, _$rootScope_) {
         $firebaseStorage = _$firebaseStorage_;
+        $q = _$q_;
+        $rootScope = _$rootScope_;
       });
     });
 
@@ -83,12 +26,12 @@ describe('$firebaseStorage', function () {
     }));
 
     it('should create an instance', function() {
-      const ref = firebase.storage().ref('thing');
-      const storage = $firebaseStorage(ref);
+      var ref = firebase.storage().ref('thing');
+      var storage = $firebaseStorage(ref);
       expect(storage).not.toBe(null);
     });
 
-    fdescribe('$firebaseStorage.utils', function() {
+    describe('$firebaseStorage.utils', function() {
 
       describe('_unwrapStorageSnapshot', function() {
 
@@ -135,74 +78,56 @@ describe('$firebaseStorage', function () {
           expect(task.$complete).toEqual(jasmine.any(Function));          
         });
 
-        it('should call the progress callback function', function(done) {
-
-          var ref = firebase.storage().ref('thing');
-          var file = 'file';
-          var storage = $firebaseStorage(ref);
-          var task = null;
-          var didCallProgress = false;
-
-          spyOn(ref, "put").and.returnValue(new MockSuccessTask());
-          task = storage.$put(file);
-
-          task.$progress(function(snap) {
-            didCallProgress = true;
-            expect(didCallProgress).toBeTruthy();
-            done();
-          });
-
-        });
-
-        it('should call the error callback function', function(done) {
-
-          var ref = firebase.storage().ref('thing');
-          var file = 'file';
-          var storage = $firebaseStorage(ref);
-          var task = null;
-          var didCallError = false;
-
-          spyOn(ref, "put").and.returnValue(new MockErrorTask());
-          task = storage.$put(file);
-
-          task.$error(function(err) {
-            didCallError = true;
-            expect(didCallError).toBeTruthy();
-            done();
-          });
-
-        });  
-
-        it('should call the complete callback function', function(done) {
-
-          var ref = firebase.storage().ref('thing');
-          var file = 'file';
-          var storage = $firebaseStorage(ref);
-          var task = null;
-          var didCallComplete = false;
-
-          spyOn(ref, "put").and.returnValue(new MockSuccessTask());
-          task = storage.$put(file);
-
-          task.$complete(function() {
-            didCallComplete = true;
-            expect(didCallComplete).toBeTruthy();   
-            done();
-          });
-        });              
-
       });
 
       describe('_$getDownloadURL', function() {
-        
+        it('should call a storage ref getDownloadURL', function (done) {
+          var ref = firebase.storage().ref('thing');
+          var testUrl = 'https://google.com/';
+          var storage = $firebaseStorage(ref);
+          var fakePromise = $q(function(resolve, reject) {
+            resolve(testUrl);
+            reject(null);
+          });
+          var testPromise = null;
+          spyOn(ref, 'getDownloadURL').and.returnValue(fakePromise);
+          testPromise = storage.$getDownloadURL();
+          testPromise.then(function(resolvedUrl) {
+            expect(resolvedUrl).toEqual(testUrl)
+            done();
+          });
+          $rootScope.$apply();
+        });
+
       });
 
       describe('_isStorageRef', function() {
         
+        it('should determine a storage ref', function() {
+          var ref = firebase.storage().ref('thing');
+          var isTrue = $firebaseStorage.utils._isStorageRef(ref);
+          var isFalse = $firebaseStorage.utils._isStorageRef(true);
+          expect(isTrue).toEqual(true);
+          expect(isFalse).toEqual(false);
+        });
+
       });
 
       describe('_assertStorageRef', function() {
-        
+        it('should not throw an error if a storage ref is passed', function() {
+          var ref = firebase.storage().ref('thing');
+          function errorWrapper() {
+            $firebaseStorage.utils._assertStorageRef(ref);
+          }
+          expect(errorWrapper).not.toThrow();
+        }); 
+
+        it('should throw an error if a storage ref is passed', function() {
+          function errorWrapper() {
+            $firebaseStorage.utils._assertStorageRef(null);
+          }
+          expect(errorWrapper).toThrow();
+        });        
       });
 
     });

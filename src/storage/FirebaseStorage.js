@@ -13,30 +13,47 @@
     };
   }
 
-  function _$put(storageRef, file, $digestFn) {
+  function _$put(storageRef, file, $digestFn, $q) {
     var task = storageRef.put(file);
 
     return {
       $progress: function $progress(callback) {
-        task.on('state_changed', function (storageSnap) {
-          callback(unwrapStorageSnapshot(storageSnap));
+        task.on('state_changed', function () {
+          $digestFn(function () {
+            callback.apply(null, [unwrapStorageSnapshot(task.snapshot)]);
+          });
+          return true;
         }, function () {}, function () {});
       },
       $error: function $error(callback) {
         task.on('state_changed', function () {}, function (err) {
-          callback(err);
+          $digestFn(function () {
+            callback.apply(null, [err]);
+          });
+          return true;
         }, function () {});
       },
       $complete: function $complete(callback) {
         task.on('state_changed', function () {}, function () {}, function () {
-          callback(unwrapStorageSnapshot(task.snapshot));
+          $digestFn(function () {
+            callback.apply(null, [unwrapStorageSnapshot(task.snapshot)]);
+          });
+          return true;
         });
       }
     };
   }
 
-  function _$getDownloadURL(storageRef) {
-    return storageRef.getDownloadURL();
+  function _$getDownloadURL(storageRef, $q) {
+    return $q(function(resolve, reject) {
+      storageRef.getDownloadURL()
+        .then(function(url) {
+          resolve(url);
+        })
+        .catch(function(err) {
+          reject(err);
+        });
+    });
   }
 
   function isStorageRef(value) {
@@ -50,16 +67,16 @@
     }
   }
 
-  function FirebaseStorage() {
+  function FirebaseStorage($firebaseUtils, $q) {
 
     var Storage = function Storage(storageRef) {
       _assertStorageRef(storageRef);
       return {
         $put: function $put(file) {
-          return _$put(storageRef, file);
+          return _$put(storageRef, file, $firebaseUtils.compile, $q);
         },
         $getDownloadURL: function $getDownloadURL() {
-          return _$getDownloadURL(storageRef);
+          return _$getDownloadURL(storageRef, $q);
         }
       };
     };
@@ -76,6 +93,6 @@
   }  
 
   angular.module('firebase.storage')
-    .factory('$firebaseStorage', ["$firebaseUtils", FirebaseStorage]);
+    .factory('$firebaseStorage', ["$firebaseUtils", "$q", FirebaseStorage]);
 
 })();
