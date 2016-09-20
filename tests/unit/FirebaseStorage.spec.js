@@ -33,5 +33,181 @@ fdescribe('$firebaseStorage', function () {
       expect(storage).not.toBe(null);
     });
 
+    describe('$firebaseStorage.utils', function () {
+
+      describe('_unwrapStorageSnapshot', function () {
+
+        it('should unwrap the snapshot', function () {
+          var mockSnapshot = {
+            bytesTransferred: 0,
+            downloadURL: 'url',
+            metadata: {},
+            ref: {},
+            state: {},
+            task: {},
+            totalBytes: 0
+          };
+          var unwrapped = $firebaseStorage.utils._unwrapStorageSnapshot(mockSnapshot);
+          expect(mockSnapshot).toEqual(unwrapped);
+        });
+
+      });
+
+      describe('_$put', function () {
+
+        it('should call a storage ref put', function () {
+          var ref = firebase.storage().ref('thing');
+          var file = 'file';
+          var task = null;
+          var digestFn = $firebaseUtils.compile;
+          spyOn(ref, 'put');
+          task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
+          expect(ref.put).toHaveBeenCalledWith('file');
+          expect(task.$progress).toEqual(jasmine.any(Function));
+          expect(task.$error).toEqual(jasmine.any(Function));
+          expect(task.$complete).toEqual(jasmine.any(Function));
+        });
+
+        it('should return the observer functions', function () {
+          var ref = firebase.storage().ref('thing');
+          var file = 'file';
+          var task = null;
+          var digestFn = $firebaseUtils.compile;
+          spyOn(ref, 'put');
+          task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
+          expect(task.$progress).toEqual(jasmine.any(Function));
+          expect(task.$error).toEqual(jasmine.any(Function));
+          expect(task.$complete).toEqual(jasmine.any(Function));
+        });
+
+      });
+
+      describe('_$getDownloadURL', function () {
+        it('should call a storage ref getDownloadURL', function (done) {
+          var ref = firebase.storage().ref('thing');
+          var testUrl = 'https://google.com/';
+          var storage = $firebaseStorage(ref);
+          var promise = $q(function (resolve, reject) {
+            resolve(testUrl);
+            reject(null);
+          });
+          var testPromise = null;
+          spyOn(ref, 'getDownloadURL').and.returnValue(promise);
+          testPromise = $firebaseStorage.utils._$getDownloadURL(ref, $q);
+          testPromise.then(function (resolvedUrl) {
+            expect(resolvedUrl).toEqual(testUrl)
+            done();
+          });
+          $rootScope.$apply();
+        });
+
+      });
+
+      describe('_$delete', function () {
+
+        it('should call a storage ref delete', function (done) {
+          var ref = firebase.storage().ref('thing');
+          var fakePromise = $q(function (resolve, reject) {
+            resolve(null);
+            reject(null);
+          });
+          var testPromise = null;
+          var deleted = false;
+          spyOn(ref, 'delete').and.returnValue(fakePromise);
+          testPromise = $firebaseStorage.utils._$delete(ref, $q);
+          testPromise.then(function () {
+            deleted = true;
+            expect(deleted).toEqual(true);
+            done();
+          });
+          $rootScope.$apply();
+        });
+
+      });
+
+      describe('_isStorageRef', function () {
+
+        it('should determine a storage ref', function () {
+          var ref = firebase.storage().ref('thing');
+          var isTrue = $firebaseStorage.utils._isStorageRef(ref);
+          var isFalse = $firebaseStorage.utils._isStorageRef(true);
+          expect(isTrue).toEqual(true);
+          expect(isFalse).toEqual(false);
+        });
+
+      });
+
+      describe('_assertStorageRef', function () {
+        it('should not throw an error if a storage ref is passed', function () {
+          var ref = firebase.storage().ref('thing');
+          function errorWrapper() {
+            $firebaseStorage.utils._assertStorageRef(ref);
+          }
+          expect(errorWrapper).not.toThrow();
+        });
+
+        it('should throw an error if a storage ref is passed', function () {
+          function errorWrapper() {
+            $firebaseStorage.utils._assertStorageRef(null);
+          }
+          expect(errorWrapper).toThrow();
+        });
+      });
+
+    });
+
+    describe('$firebaseStorage', function() {
+
+      describe('$put', function() {
+
+        it('should call the _$put method', function() {
+          // test that $firebaseStorage.utils._$put is called with
+          //  - storageRef, file, $firebaseUtils.compile, $q
+          var ref = firebase.storage().ref('thing');
+          var storage = $firebaseStorage(ref);
+          var fakePromise = $q(function(resolve, reject) {
+            resolve('file');
+          });
+          spyOn(ref, 'put');
+          spyOn($firebaseStorage.utils, '_$put').and.returnValue(fakePromise);
+          storage.$put('file'); // don't ever call this with a string
+          expect($firebaseStorage.utils._$put).toHaveBeenCalledWith(ref, 'file', $firebaseUtils.compile, $q);        
+        })
+
+      });
+
+      describe('$getDownloadURL', function() {
+        it('should call the _$getDownloadURL method', function() {
+          // test that $firebaseStorage.utils._$getDownloadURL is called with
+          //  - storageRef, $q
+          var ref = firebase.storage().ref('thing');
+          var storage = $firebaseStorage(ref);
+          var fakePromise = $q(function(resolve, reject) {
+            resolve('https://google.com');
+          });
+          spyOn(ref, 'getDownloadURL');
+          spyOn($firebaseStorage.utils, '_$getDownloadURL').and.returnValue(fakePromise);
+          storage.$getDownloadURL();
+          expect($firebaseStorage.utils._$getDownloadURL).toHaveBeenCalledWith(ref, $q);
+        });
+      });
+
+      describe('$delete', function() {
+        it('should call the _$delete method', function() {
+          // test that $firebaseStorage.utils._$delete is called with
+          //  - storageRef, $q
+          var ref = firebase.storage().ref('thing');
+          var storage = $firebaseStorage(ref);
+          var fakePromise = $q(function(resolve, reject) {
+            resolve();
+          });
+          spyOn(ref, 'delete');
+          spyOn($firebaseStorage.utils, '_$delete').and.returnValue(fakePromise);
+          storage.$delete();
+          expect($firebaseStorage.utils._$delete).toHaveBeenCalledWith(ref, $q);
+        });
+      });
+
+    });
   });
 });

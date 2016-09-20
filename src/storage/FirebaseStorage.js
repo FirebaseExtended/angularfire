@@ -96,13 +96,13 @@
       _assertStorageRef(storageRef);
       return {
         $put: function $put(file) {
-          return _$put(storageRef, file, $firebaseUtils.compile, $q);
+          return Storage.utils._$put(storageRef, file, $firebaseUtils.compile, $q);
         },
         $getDownloadURL: function $getDownloadURL() {
-          return _$getDownloadURL(storageRef, $q);
+          return Storage.utils._$getDownloadURL(storageRef, $q);
         },
         $delete: function $delete() {
-          return _$delete(storageRef, $q);
+          return Storage.utils._$delete(storageRef, $q);
         }
       };
     };
