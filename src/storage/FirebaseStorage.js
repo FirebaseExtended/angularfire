@@ -40,6 +40,21 @@
           });
           return true;
         });
+      },
+      $cancel: function $cancel() {
+        return task.cancel();
+      },
+      $resume: function $resume() {
+        return task.resume();
+      },
+      $pause: function $pause() {
+        return task.pause();
+      },
+      then: function then() {
+        return task.then();
+      },
+      catch: function _catch() {
+        return task.catch();
       }
     };
   }
@@ -67,6 +82,14 @@
     }
   }
 
+  function _$delete(storageRef, $q) {
+    return $q(function (resolve, reject) {
+      storageRef.delete()
+        .then(resolve)
+        .catch(reject);
+    });
+  }
+
   function FirebaseStorage($firebaseUtils, $q) {
 
     var Storage = function Storage(storageRef) {
@@ -77,6 +100,9 @@
         },
         $getDownloadURL: function $getDownloadURL() {
           return _$getDownloadURL(storageRef, $q);
+        },
+        $delete: function $delete() {
+          return _$delete(storageRef, $q);
         }
       };
     };
@@ -86,7 +112,8 @@
       _$put: _$put,
       _$getDownloadURL: _$getDownloadURL,
       _isStorageRef: isStorageRef,
-      _assertStorageRef: _assertStorageRef
+      _assertStorageRef: _assertStorageRef,
+      _$delete: _$delete
     };  
     
     return Storage;
