@@ -215,7 +215,7 @@ When working directly with the SDK, it's important to notify Angular's compiler 
 been loaded:
 
 ```js
-var ref = firebase().database().ref();
+var ref = firebase.database().ref();
 ref.on("value", function(snapshot) {
   // This isn't going to show up in the DOM immediately, because
   // Angular does not know we have changed this in memory.
