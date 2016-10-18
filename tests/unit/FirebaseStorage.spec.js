@@ -80,6 +80,17 @@ fdescribe('$firebaseStorage', function () {
           expect(task.$complete).toEqual(jasmine.any(Function));
         });
 
+        it('should return a promise with then and catch', function() {
+          var ref = firebase.storage().ref('thing');
+          var file = 'file';
+          var task = null;
+          var digestFn = $firebaseUtils.compile;
+          spyOn(ref, 'put');
+          task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
+          expect(task.then).toEqual(jasmine.any(Function));
+          expect(task.catch).toEqual(jasmine.any(Function));
+        });
+
       });
 
       describe('_$getDownloadURL', function () {
@@ -205,6 +216,35 @@ fdescribe('$firebaseStorage', function () {
           spyOn($firebaseStorage.utils, '_$delete').and.returnValue(fakePromise);
           storage.$delete();
           expect($firebaseStorage.utils._$delete).toHaveBeenCalledWith(ref, $q);
+        });
+      });
+
+      describe('$getMetadata', function() {
+        it('should call ref getMetadata', function() {
+          var ref = firebase.storage().ref('thing');
+          var storage = $firebaseStorage(ref);
+          var fakePromise = $q(function(resolve, reject) {
+            resolve();
+          });
+          spyOn(ref, 'getMetadata');
+          spyOn($firebaseStorage.utils, '_$getMetadata').and.returnValue(fakePromise);
+          storage.$getMetadata();
+          expect($firebaseStorage.utils._$getMetadata).toHaveBeenCalled();
+        });
+      });
+
+      describe('$updateMetadata', function() {
+        it('should call ref updateMetadata', function() {
+          var ref = firebase.storage().ref('thing');
+          var storage = $firebaseStorage(ref);
+          var fakePromise = $q(function(resolve, reject) {
+            resolve();
+          });
+          var fakeMetadata = {};
+          spyOn(ref, 'updateMetadata');
+          spyOn($firebaseStorage.utils, '_$updateMetadata').and.returnValue(fakePromise);
+          storage.$updateMetadata(fakeMetadata);
+          expect($firebaseStorage.utils._$updateMetadata).toHaveBeenCalled();
         });
       });
 

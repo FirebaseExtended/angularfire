@@ -12,8 +12,8 @@
       totalBytes: storageSnapshot.totalBytes
     };
   }
-
-  function _$put(storageRef, file, $digestFn, $q) {
+  
+  function _$put(storageRef, file, $digestFn) {
     var task = storageRef.put(file);
 
     return {
@@ -60,15 +60,7 @@
   }
 
   function _$getDownloadURL(storageRef, $q) {
-    return $q(function(resolve, reject) {
-      storageRef.getDownloadURL()
-        .then(function(url) {
-          resolve(url);
-        })
-        .catch(function(err) {
-          reject(err);
-        });
-    });
+    return $q.when(storageRef.getDownloadURL());
   }
 
   function isStorageRef(value) {
@@ -83,11 +75,15 @@
   }
 
   function _$delete(storageRef, $q) {
-    return $q(function (resolve, reject) {
-      storageRef.delete()
-        .then(resolve)
-        .catch(reject);
-    });
+    return $q.when(storageRef.delete());
+  }
+
+  function _$getMetadata(storageRef, $q) {
+    return $q.when(storageRef.getMetadata());
+  } 
+
+  function _$updateMetadata(storageRef, object, $q) {
+    return $q.when(storageRef.updateMetadata(object));
   }
 
   function FirebaseStorage($firebaseUtils, $q) {
@@ -103,6 +99,12 @@
         },
         $delete: function $delete() {
           return Storage.utils._$delete(storageRef, $q);
+        },
+        $getMetadata: function $getMetadata() {
+          return Storage.utils._$getMetadata(storageRef, $q);
+        },
+        $updateMetadata: function $updateMetadata(object) {
+          return Storage.utils._$updateMetadata(storageRef, object, $q);
         }
       };
     };
@@ -113,7 +115,9 @@
       _$getDownloadURL: _$getDownloadURL,
       _isStorageRef: isStorageRef,
       _assertStorageRef: _assertStorageRef,
-      _$delete: _$delete
+      _$delete: _$delete,
+      _$getMetadata: _$getMetadata,
+      _$updateMetadata: _$updateMetadata
     };  
     
     return Storage;
