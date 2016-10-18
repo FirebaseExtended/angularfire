@@ -84,25 +84,6 @@ $ npm install               # install local npm build / test dependencies
 $ grunt install             # install Selenium server for end-to-end tests
 ```
 
-### Create a Firebase Project
-
-1. Create a Firebase project [here](https://console.firebase.google.com).
-2. Set the `ANGULARFIRE_TEST_DB_URL` environment variable to your project's database URL:
-
-```bash
-$ export ANGULARFIRE_TEST_DB_URL="https://<YOUR-DATABASE-NAME>.firebaseio.com"
-```
-
-3. Update the entire `config` variable in [`tests/initialize.js`](/tests/initialize.js) to
-correspond to your Firebase project. You can find your `apiKey` and `databaseUrl` by clicking the
-**Web Setup** button at `https://console.firebase.google.com/project/<projectId>/authentication/users`.
-
-### Download a Service Account JSON File
-
-1. Follow the instructions [here](https://firebase.google.com/docs/server/setup#add_firebase_to_your_app)
-on how to create a service account for your project and furnish a private key.
-2. Copy the credentials JSON file to `tests/key.json`.
-
 ### Lint, Build, and Test
 
 ```bash

@@ -36,6 +36,7 @@
         if( !(this instanceof FirebaseObject) ) {
           return new FirebaseObject(ref);
         }
+        var self = this;
         // These are private config props and functions used internally
         // they are collected here to reduce clutter in console.log and forEach
         this.$$conf = {
@@ -63,6 +64,14 @@
 
         // start synchronizing data with Firebase
         this.$$conf.sync.init();
+
+        // $resolved provides quick access to the current state of the $loaded() promise.
+        // This is useful in data-binding when needing to delay the rendering or visibilty
+        // of the data until is has been loaded from firebase.
+        this.$resolved = false;
+        this.$loaded().finally(function() {
+          self.$resolved = true;
+        });
       }
 
       FirebaseObject.prototype = {
