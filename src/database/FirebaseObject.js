@@ -22,9 +22,23 @@
    * var obj = new ExtendedObject(ref);
    * </code></pre>
    */
-  angular.module('firebase.database').factory('$firebaseObject', [
-    '$parse', '$firebaseUtils', '$log', '$q',
-    function($parse, $firebaseUtils, $log, $q) {
+  
+  angular
+    .module('firebase.database')
+    .factory('$firebaseObject', firebaseObject);
+    
+    /**
+     * Firebase Object
+     */
+    
+    firebaseObject.$inject = [
+      '$parse', 
+      '$firebaseUtils', 
+      '$log', 
+      '$q'
+    ];
+    
+    function firebaseObject($parse, $firebaseUtils, $log, $q) {
       /**
        * Creates a synchronized object with 2-way bindings between Angular and Firebase.
        *
@@ -487,15 +501,20 @@
 
       return FirebaseObject;
     }
-  ]);
+    
 
   /** @deprecated */
-  angular.module('firebase').factory('$FirebaseObject', ['$log', '$firebaseObject',
-    function($log, $firebaseObject) {
-      return function() {
-        $log.warn('$FirebaseObject has been renamed. Use $firebaseObject instead.');
-        return $firebaseObject.apply(null, arguments);
-      };
-    }
-  ]);
+  angular
+    .module('firebase')
+    .factory('$FirebaseObject', FirebaseObject);
+  
+  FirebaseObject.$inject = ['$log', '$firebaseObject'];
+  
+  function FirebaseObject($log, $firebaseObject){
+    return function() {
+      $log.warn('$FirebaseObject has been renamed. Use $firebaseObject instead.');
+      return $firebaseObject.apply(null, arguments);
+    };
+  }
+  
 })();
