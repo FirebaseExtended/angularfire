@@ -1,0 +1,1 @@
+feature - Added `$resolved` property to `$firebaseArray` and `$firebaseObject` to get synchronous access to the loaded state.

@@ -11,6 +11,7 @@
   * [`$bindTo(scope, varName)`](#bindtoscope-varname)
   * [`$watch(callback, context)`](#watchcallback-context)
   * [`$destroy()`](#destroy)
+  * [`$resolved`](#resolved)
 * [`$firebaseArray`](#firebasearray)
   * [`$add(newData)`](#addnewdata)
   * [`$remove(recordOrIndex)`](#removerecordorindex)
@@ -22,6 +23,7 @@
   * [`$ref()`](#ref-1)
   * [`$watch(cb[, context])`](#watchcb-context)
   * [`$destroy()`](#destroy-1)
+  * [`$resolved`](#resolved-1)
 * [`$firebaseAuth`](#firebaseauth)
   * Authentication
     * [`$signInWithCustomToken(authToken)`](#signinwithcustomtokenauthtoken)
@@ -288,6 +290,27 @@ unwatch();
 Calling this method cancels event listeners and frees memory used by this object (deletes the
 local data). Changes are no longer synchronized to or from the database.
 
+### $resolved
+
+Returns the loaded state for this object. Returns `true` if the initial object data has been
+downloaded from the database; otherwise, returns `false`.
+
+```js
+$scope.obj = $firebaseObject(ref);
+```
+
+```html
+<!-- Loading state -->
+<div ng-if="!obj.$resolved">
+  ...
+</div>
+
+<!-- Loaded state -->
+<div ng-if="obj.$resolved">
+  ...
+</div>
+```
+
 
 ## $firebaseArray
 
@@ -546,6 +569,27 @@ function compare(a, b) {
 
 Stop listening for events and free memory used by this array (empties the local copy).
 Changes are no longer synchronized to or from the database.
+
+### $resolved
+
+Returns the loaded state for this array. Returns `true` if the initial array data has been
+downloaded from the database; otherwise, returns `false`.
+
+```js
+$scope.list = $firebaseArray(ref);
+```
+
+```html
+<!-- Loading state -->
+<div ng-if="!list.$resolved">
+  ...
+</div>
+
+<!-- Loaded state -->
+<div ng-if="list.$resolved">
+  ...
+</div>
+```
 
 
 ## $firebaseAuth
