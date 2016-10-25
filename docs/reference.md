@@ -176,8 +176,8 @@ obj.$save().then(function(ref) {
 
 ### $loaded()
 
-Returns a promise which is resolved when the initial object data has been downloaded from the database.
-The promise resolves to the `$firebaseObject` itself.
+Returns a promise which is resolved asynchronously when the initial object data has been downloaded
+from the database. The promise resolves to the `$firebaseObject` itself.
 
 ```js
 var obj = $firebaseObject(ref);
@@ -292,8 +292,13 @@ local data). Changes are no longer synchronized to or from the database.
 
 ### $resolved
 
-Returns the loaded state for this object. Returns `true` if the initial object data has been
-downloaded from the database; otherwise, returns `false`.
+Attribute which represents the loaded state for this object. Its value will be `true` if the initial
+object data has been downloaded from the database; otherwise, its value will be `false`. This
+attribute is complementary to the `$loaded()` method. If the `$loaded()` promise is completed
+(either with success or rejection), then `$resolved` will be `true`. `$resolved` will be
+`false` before that.
+
+Knowing if the object has been resolved is useful to conditionally show certain parts of your view:
 
 ```js
 $scope.obj = $firebaseObject(ref);
@@ -484,8 +489,8 @@ list.$indexFor("zulu"); // -1
 
 ### $loaded()
 
-Returns a promise which is resolved when the initial array data has been downloaded from the
-database. The promise resolves to the `$firebaseArray`.
+Returns a promise which is resolved asynchronously when the initial array data has been downloaded
+from the database. The promise resolves to the `$firebaseArray`.
 
 ```js
 var list = $firebaseArray(ref);
@@ -572,8 +577,13 @@ Changes are no longer synchronized to or from the database.
 
 ### $resolved
 
-Returns the loaded state for this array. Returns `true` if the initial array data has been
-downloaded from the database; otherwise, returns `false`.
+Attribute which represents the loaded state for this array. Its value will be `true` if the initial
+array data has been downloaded from the database; otherwise, its value will be `false`. This
+attribute is complementary to the `$loaded()` method. If the `$loaded()` promise is completed
+(either with success or rejection), then `$resolved` will be `true`. `$resolved` will be
+`false` before that.
+
+Knowing if the array has been resolved is useful to conditionally show certain parts of your view:
 
 ```js
 $scope.list = $firebaseArray(ref);
