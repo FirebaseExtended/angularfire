@@ -1,5 +1,5 @@
 'use strict';
-fdescribe('$firebaseStorage', function () {
+describe('$firebaseStorage', function () {
   var $firebaseStorage;
   var URL = 'https://angularfire-dae2e.firebaseio.com';
 
@@ -89,6 +89,82 @@ fdescribe('$firebaseStorage', function () {
           task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
           expect(task.then).toEqual(jasmine.any(Function));
           expect(task.catch).toEqual(jasmine.any(Function));
+        });
+
+        it('should create a mock task', function() {
+          var mockTask = new MockTask();
+          var ref = firebase.storage().ref('thing');
+          var file = 'file';
+          var $task = null;
+          var digestFn = $firebaseUtils.compile;
+          spyOn(ref, 'put').and.returnValue(mockTask);
+          $task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
+          expect($task._task()).toEqual(mockTask);
+        });        
+
+        it('$cancel', function() {
+          var mockTask = new MockTask();
+          var ref = firebase.storage().ref('thing');
+          var file = 'file';
+          var $task = null;
+          var digestFn = $firebaseUtils.compile;
+          spyOn(ref, 'put').and.returnValue(mockTask);
+          spyOn(mockTask, 'cancel')
+          $task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
+          $task.$cancel();
+          expect(mockTask.cancel).toHaveBeenCalled();
+        });
+
+        it('$resume', function() {
+          var mockTask = new MockTask();
+          var ref = firebase.storage().ref('thing');
+          var file = 'file';
+          var $task = null;
+          var digestFn = $firebaseUtils.compile;
+          spyOn(ref, 'put').and.returnValue(mockTask);
+          spyOn(mockTask, 'resume')
+          $task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
+          $task.$resume();
+          expect(mockTask.resume).toHaveBeenCalled();
+        });
+
+        it('$pause', function() {
+          var mockTask = new MockTask();
+          var ref = firebase.storage().ref('thing');
+          var file = 'file';
+          var $task = null;
+          var digestFn = $firebaseUtils.compile;
+          spyOn(ref, 'put').and.returnValue(mockTask);
+          spyOn(mockTask, 'pause')
+          $task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
+          $task.$pause();
+          expect(mockTask.pause).toHaveBeenCalled();
+        });
+
+        it('then', function() {
+          var mockTask = new MockTask();
+          var ref = firebase.storage().ref('thing');
+          var file = 'file';
+          var $task = null;
+          var digestFn = $firebaseUtils.compile;
+          spyOn(ref, 'put').and.returnValue(mockTask);
+          spyOn(mockTask, 'then')
+          $task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
+          $task.then();
+          expect(mockTask.then).toHaveBeenCalled();
+        });
+
+        it('catch', function() {
+          var mockTask = new MockTask();
+          var ref = firebase.storage().ref('thing');
+          var file = 'file';
+          var $task = null;
+          var digestFn = $firebaseUtils.compile;
+          spyOn(ref, 'put').and.returnValue(mockTask);
+          spyOn(mockTask, 'catch')
+          $task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
+          $task.catch();
+          expect(mockTask.catch).toHaveBeenCalled();
         });
 
       });
@@ -251,3 +327,37 @@ fdescribe('$firebaseStorage', function () {
     });
   });
 });
+
+
+class MockTask {
+  
+  on(event, successCallback, errorCallback, completionCallback) {
+    this.event = event;
+    this.successCallback = successCallback;
+    this.errorCallback = errorCallback;
+    this.completionCallback = completionCallback;
+  }
+
+  makeProgress() {
+    this.successCallback();
+  }
+
+  causeError() {
+    this.errorCallback();
+  }
+
+  complete() {
+    this.completionCallback();
+  }
+
+  cancel() {}
+
+  resume() {}
+
+  pause() {}
+
+  then() {}
+
+  catch() {}
+
+}

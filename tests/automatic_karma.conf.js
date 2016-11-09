@@ -10,7 +10,7 @@ module.exports = function(config) {
     singleRun: true,
 
     preprocessors: {
-      "../src/*.js": "coverage",
+      "../src/!(lib)/**/!(FirebaseStorageDirective)*.js": "coverage",
       "./fixtures/**/*.json": "html2js"
     },
 

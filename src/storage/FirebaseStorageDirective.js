@@ -11,7 +11,7 @@
         // Ex: <img firebase-src="{{ myUrl }}"/> 
         attrs.$observe('firebaseSrc', function (newVal) {
           if (newVal !== '' && newVal !== null && newVal !== undefined) {
-            var storageRef = firebase.storage().ref().child(attrs.gsUrl);
+            var storageRef = firebase.storage().ref().child(attrs.firebaseSrc);
             var storage = $firebaseStorage(storageRef);
             storage.$getDownloadURL().then(function getDownloadURL(url) {
               element[0].src = url;

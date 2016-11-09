@@ -2,7 +2,7 @@
 describe('firebaseRef', function () {
 
   var $firebaseRefProvider;
-  var MOCK_URL = 'https://oss-test.firebaseio.com';
+  var MOCK_URL = firebase.database().ref().toString();
 
   beforeEach(module('firebase.database', function(_$firebaseRefProvider_) {
     $firebaseRefProvider = _$firebaseRefProvider_;

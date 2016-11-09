@@ -55,6 +55,9 @@
       },
       catch: function _catch() {
         return task.catch();
+      },
+      _task: function _task() {
+        return task;
       }
     };
   }
