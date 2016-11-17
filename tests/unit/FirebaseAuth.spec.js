@@ -631,4 +631,39 @@ describe('FirebaseAuth',function(){
       expect(result).toEqual('myResult');
     });
   });
+
+  describe('$linkUser()',function (){
+    it('should return a promise', function () {
+      var email = 'somebody@somewhere.com';
+      var password = 'myPass';
+      var credentials = {
+        provider: 'password',
+        uid: 'testUid',
+        link: jasmine.createSpy().and.returnValue(fakePromise())
+      };
+      spyOn(authService._, 'getAuth').and.callFake(function () {
+        return credentials;
+      });
+
+      expect(authService.$linkUser(email, password)).toBeAPromise();
+    });
+
+    it('passes email to method on backing auth instance', function () {
+      var email = 'somebody@somewhere.com',
+          password = 'myPass';
+      var credentials = {
+        provider: 'password',
+        uid: 'testUid',
+        link: jasmine.createSpy().and.returnValue(fakePromise())
+      };
+      spyOn(authService._, 'getAuth').and.callFake(function () {
+        return credentials;
+      });
+
+      spyOn(firebase.auth.EmailAuthProvider, 'credential').and.callFake(() => fakePromise());
+
+      authService.$linkUser(email, password);
+      expect(firebase.auth.EmailAuthProvider.credential).toHaveBeenCalledWith(email, password);
+    });
+  });
 });

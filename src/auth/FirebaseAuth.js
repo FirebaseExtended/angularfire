@@ -59,6 +59,7 @@
         $updateEmail: this.updateEmail.bind(this),
         $deleteUser: this.deleteUser.bind(this),
         $sendPasswordResetEmail: this.sendPasswordResetEmail.bind(this),
+        $linkUser: this.linkUser.bind(this),
 
         // Hack: needed for tests
         _: this
@@ -325,6 +326,24 @@
         return this._q.when(user.delete());
       } else {
         return this._q.reject("Cannot delete user since there is no logged in user.");
+      }
+    },
+
+    /**
+     * Links the currently logged in user to a user with the given credentials.
+     *
+     * @param {string} email User's email
+     * @param {string} password User's password
+     * @return {Promise<firebase.User>} A promise fulfilled with the `firebase.User` object.
+     */
+    linkUser: function(email, password) {
+      var user = this.getAuth(),
+          credential;
+      if (user) {
+        credential = firebase.auth.EmailAuthProvider.credential(email, password);
+        return user.link(credential);
+      } else {
+        throw new Error("Cannot link user since there is no logged in user.");
       }
     },
 
