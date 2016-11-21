@@ -12,8 +12,7 @@
     "url": "https://github.com/firebase/angularfire/issues"
   },
   "scripts": {
-    "start": "grunt",
-    "test": "grunt test"
+    "start": "grunt"
   },
   "license": "MIT",
   "keywords": [

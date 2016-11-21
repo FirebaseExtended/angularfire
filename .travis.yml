@@ -13,6 +13,8 @@ install:
 - export PATH=$PATH:~/casperjs/bin
 - npm install -g grunt-cli
 - npm install
+script:
+- sh ./tests/travis.sh
 before_script:
 - grunt install
 - phantomjs --version
