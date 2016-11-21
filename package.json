@@ -13,7 +13,7 @@
   },
   "scripts": {
     "start": "grunt",
-    "test": "grunt"
+    "test": "grunt test"
   },
   "license": "MIT",
   "keywords": [
