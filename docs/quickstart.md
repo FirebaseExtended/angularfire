@@ -76,7 +76,7 @@ In the example above, `$scope.data` is going to be populated from the remote ser
 asynchronous call, so it will take some time before the data becomes available in the controller.
 While it might be tempting to put a `console.log` on the next line to read the results, the data
 won't be downloaded yet, so the object will appear to be empty. Read the section on
-[Asynchronous Operations](guide/introduction-to-angularfire.html#handling-asynchronous-operations) for more details.
+[Asynchronous Operations](guide/introduction-to-angularfire.md#handling-asynchronous-operations) for more details.
 
 
 ## 5. Add Three-Way, Object Bindings
