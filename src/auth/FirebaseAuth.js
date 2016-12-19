@@ -52,7 +52,6 @@
         $getAuth: this.getAuth.bind(this),
         $requireSignIn: this.requireSignIn.bind(this),
         $waitForSignIn: this.waitForSignIn.bind(this),
-        $requireEmailVerification: this.requireEmailVerification.bind(this),
 
         // User management methods
         $createUserWithEmailAndPassword: this.createUserWithEmailAndPassword.bind(this),
@@ -254,11 +253,13 @@
      * Utility method which can be used in a route's resolve() method to require that a route has
      * a logged in client.
      *
+     * @param {boolean} requireEmailVerification Determines if the route requires a client with a verified 
+     * verified email address.
      * @returns {Promise<Object>} A promise fulfilled with the client's current authentication
      * state or rejected if the client is not authenticated.
      */
-    requireSignIn: function() {
-      return this._routerMethodOnAuthPromise(true, false);
+    requireSignIn: function(requireEmailVerification) {
+      return this._routerMethodOnAuthPromise(true, requireEmailVerification);
     },
 
     /**
@@ -270,17 +271,6 @@
      */
     waitForSignIn: function() {
       return this._routerMethodOnAuthPromise(false, false);
-    },
-
-    /**
-     * Utility method which can be used in a route's resolve() method to require that a route has
-     * a logged in client with a verified email address.
-     *
-     * @returns {Promise<Object>} A promise fulfilled with the client's current authentication
-     * state or rejected if the client is not authenticated and/or does not have a verified email address.
-     */
-    requireEmailVerification: function() {
-        return this._routerMethodOnAuthPromise(true, true);
     },
 	
     /*********************/
