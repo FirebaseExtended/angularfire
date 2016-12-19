@@ -44,7 +44,7 @@
   * Router Helpers
     * [`$waitForSignIn()`](#waitforsignin)
     * [`$requireSignIn()`](#requiresignin)
-	* [`$requireEmailVerification()`](#requireemailverification)
+    * [`$requireEmailVerification()`](#requireemailverification)
 * [Extending the Services](#extending-the-services)
   * [Extending `$firebaseObject`](#extending-firebaseobject)
   * [Extending `$firebaseArray`](#extending-firebasearray)
