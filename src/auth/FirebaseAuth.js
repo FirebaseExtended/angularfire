@@ -52,6 +52,7 @@
         $getAuth: this.getAuth.bind(this),
         $requireSignIn: this.requireSignIn.bind(this),
         $waitForSignIn: this.waitForSignIn.bind(this),
+		$requireEmailVerification: this.requireEmailVerification.bind(this),
 
         // User management methods
         $createUserWithEmailAndPassword: this.createUserWithEmailAndPassword.bind(this),
@@ -184,10 +185,12 @@
      *
      * @param {boolean} rejectIfAuthDataIsNull Determines if the returned promise should be
      * resolved or rejected upon an unauthenticated client.
+	 * @param {boolean} rejectIfEmailNotVerified Determines if the returned promise should be 
+	 * resolved or rejected upon a client without a verified email address.
      * @return {Promise<Object>} A promise fulfilled with the client's authentication state or
      * rejected if the client is unauthenticated and rejectIfAuthDataIsNull is true.
      */
-    _routerMethodOnAuthPromise: function(rejectIfAuthDataIsNull) {
+    _routerMethodOnAuthPromise: function(rejectIfAuthDataIsNull, rejectIfEmailNotVerified) {
       var self = this;
 
       // wait for the initial auth state to resolve; on page load we have to request auth state
@@ -200,6 +203,9 @@
         if (rejectIfAuthDataIsNull && authData === null) {
           res = self._q.reject("AUTH_REQUIRED");
         }
+		else if (rejectIfEmailNotVerified && !authData.emailVerified) {
+			res = self._q.reject("EMAIL_NOT_VERIFIED");
+		}
         else {
           res = self._q.when(authData);
         }
@@ -252,7 +258,7 @@
      * state or rejected if the client is not authenticated.
      */
     requireSignIn: function() {
-      return this._routerMethodOnAuthPromise(true);
+      return this._routerMethodOnAuthPromise(true, false);
     },
 
     /**
@@ -263,10 +269,20 @@
      * state, which will be null if the client is not authenticated.
      */
     waitForSignIn: function() {
-      return this._routerMethodOnAuthPromise(false);
+      return this._routerMethodOnAuthPromise(false, false);
     },
 
-
+	/**
+     * Utility method which can be used in a route's resolve() method to require that a route has
+     * a logged in client with a verified email address.
+     *
+     * @returns {Promise<Object>} A promise fulfilled with the client's current authentication
+     * state or rejected if the client is not authenticated and/or does not have a verified email address.
+     */
+    requireEmailVerification: function() {
+		return this._routerMethodOnAuthPromise(true, true);
+    },
+	
     /*********************/
     /*  User Management  */
     /*********************/

@@ -44,6 +44,7 @@
   * Router Helpers
     * [`$waitForSignIn()`](#waitforsignin)
     * [`$requireSignIn()`](#requiresignin)
+	* [`$requireEmailVerification()`](#requireemailverification)
 * [Extending the Services](#extending-the-services)
   * [Extending `$firebaseObject`](#extending-firebaseobject)
   * [Extending `$firebaseArray`](#extending-firebasearray)
@@ -900,6 +901,15 @@ Helper method which returns a promise fulfilled with the current authentication 
 is authenticated but otherwise rejects the promise. This is intended to be used in the `resolve()`
 method of Angular routers to prevented unauthenticated users from seeing authenticated pages
 momentarily during page load. See the
+["Using Authentication with Routers"](/docs/guide/user-auth.md#authenticating-with-routers)
+section of our AngularFire guide for more information and a full example.
+
+### $requireEmailVerification()
+
+Helper method which returns a promise fulfilled with the current authentication state if the user
+is authenticated and has a verified email addres but otherwise rejects the promise. This is intended 
+to be used in the `resolve()` method of Angular routers to prevented unauthenticated/unverified users from seeing 
+authenticated pages momentarily during page load. See the
 ["Using Authentication with Routers"](/docs/guide/user-auth.md#authenticating-with-routers)
 section of our AngularFire guide for more information and a full example.
 
