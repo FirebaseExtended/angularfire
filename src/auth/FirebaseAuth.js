@@ -253,7 +253,7 @@
      * Utility method which can be used in a route's resolve() method to require that a route has
      * a logged in client.
      *
-     * @param {boolean} requireEmailVerification Determines if the route requires a client with a verified 
+     * @param {boolean} requireEmailVerification Determines if the route requires a client with a 
      * verified email address.
      * @returns {Promise<Object>} A promise fulfilled with the client's current authentication
      * state or rejected if the client is not authenticated.
