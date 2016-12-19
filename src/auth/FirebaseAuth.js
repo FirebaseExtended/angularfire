@@ -52,7 +52,7 @@
         $getAuth: this.getAuth.bind(this),
         $requireSignIn: this.requireSignIn.bind(this),
         $waitForSignIn: this.waitForSignIn.bind(this),
-		$requireEmailVerification: this.requireEmailVerification.bind(this),
+        $requireEmailVerification: this.requireEmailVerification.bind(this),
 
         // User management methods
         $createUserWithEmailAndPassword: this.createUserWithEmailAndPassword.bind(this),
@@ -203,9 +203,9 @@
         if (rejectIfAuthDataIsNull && authData === null) {
           res = self._q.reject("AUTH_REQUIRED");
         }
-		else if (rejectIfEmailNotVerified && !authData.emailVerified) {
-			res = self._q.reject("EMAIL_NOT_VERIFIED");
-		}
+        else if (rejectIfEmailNotVerified && !authData.emailVerified) {
+            res = self._q.reject("EMAIL_NOT_VERIFIED");
+        }
         else {
           res = self._q.when(authData);
         }
@@ -272,7 +272,7 @@
       return this._routerMethodOnAuthPromise(false, false);
     },
 
-	/**
+    /**
      * Utility method which can be used in a route's resolve() method to require that a route has
      * a logged in client with a verified email address.
      *
@@ -280,7 +280,7 @@
      * state or rejected if the client is not authenticated and/or does not have a verified email address.
      */
     requireEmailVerification: function() {
-		return this._routerMethodOnAuthPromise(true, true);
+        return this._routerMethodOnAuthPromise(true, true);
     },
 	
     /*********************/
