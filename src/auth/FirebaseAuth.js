@@ -185,8 +185,8 @@
      *
      * @param {boolean} rejectIfAuthDataIsNull Determines if the returned promise should be
      * resolved or rejected upon an unauthenticated client.
-	 * @param {boolean} rejectIfEmailNotVerified Determines if the returned promise should be 
-	 * resolved or rejected upon a client without a verified email address.
+     * @param {boolean} rejectIfEmailNotVerified Determines if the returned promise should be 
+     * resolved or rejected upon a client without a verified email address.
      * @return {Promise<Object>} A promise fulfilled with the client's authentication state or
      * rejected if the client is unauthenticated and rejectIfAuthDataIsNull is true.
      */
