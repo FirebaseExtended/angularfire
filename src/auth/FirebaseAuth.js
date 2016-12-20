@@ -203,7 +203,7 @@
           res = self._q.reject("AUTH_REQUIRED");
         }
         else if (rejectIfEmailNotVerified && !authData.emailVerified) {
-            res = self._q.reject("EMAIL_NOT_VERIFIED");
+            res = self._q.reject("EMAIL_VERIFICATION_REQUIRED");
         }
         else {
           res = self._q.when(authData);
