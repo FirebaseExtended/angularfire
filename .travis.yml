@@ -16,6 +16,8 @@ install:
 before_script:
 - grunt install
 - phantomjs --version
+script:
+- sh ./tests/travis.sh
 after_script:
 - cat ./tests/coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
 env:
