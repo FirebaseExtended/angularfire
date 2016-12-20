@@ -402,7 +402,7 @@ describe('FirebaseAuth',function(){
       tick();
     });
 	
-	it('will be resolved if user is logged in and we ignore email verification', function(done){
+    it('will be resolved if user is logged in and we ignore email verification', function(done){
       var credentials = {provider: 'facebook', emailVerified: false};
       spyOn(authService._, 'getAuth').and.callFake(function () {
         return credentials;
@@ -418,17 +418,17 @@ describe('FirebaseAuth',function(){
       tick();
     });
 	
-	it('will be rejected if user does not have a verified email address', function(done){
-      var credentials = {provider: 'facebook', emailVerified: false};
-      spyOn(authService._, 'getAuth').and.callFake(function () {
-        return credentials;
-      });
+   it('will be rejected if user does not have a verified email address', function(done){
+     var credentials = {provider: 'facebook', emailVerified: false};
+     spyOn(authService._, 'getAuth').and.callFake(function () {
+       return credentials;
+     });
 
       authService.$requireSignIn(true)
-		.catch(function (error) {
+        .catch(function (error) {
           expect(error).toEqual('EMAIL_VERIFICATION_REQUIRED');
           done();
-        });
+      });
 
       fakePromiseResolve(credentials);
       tick();
