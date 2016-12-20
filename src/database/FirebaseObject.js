@@ -461,11 +461,13 @@
         var isResolved = false;
         var def = $q.defer();
         var applyUpdate = $firebaseUtils.batch(function(snap) {
-          var changed = firebaseObject.$$updated(snap);
-          if( changed ) {
-            // notifies $watch listeners and
-            // updates $scope if bound to a variable
-            firebaseObject.$$notify();
+          if (firebaseObject) {
+            var changed = firebaseObject.$$updated(snap);
+            if( changed ) {
+              // notifies $watch listeners and
+              // updates $scope if bound to a variable
+              firebaseObject.$$notify();
+            }
           }
         });
         var error = $firebaseUtils.batch(function(err) {
