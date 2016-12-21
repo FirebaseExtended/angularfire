@@ -43,7 +43,7 @@
     * [`$sendPasswordResetEmail(email)`](#sendpasswordresetemailemail)
   * Router Helpers
     * [`$waitForSignIn()`](#waitforsignin)
-    * [`$requireSignIn(requireEmailVerification)`](#requiresignin)
+    * [`$requireSignIn(requireEmailVerification)`](#requiresigninrequireemailverification)
 * [Extending the Services](#extending-the-services)
   * [Extending `$firebaseObject`](#extending-firebaseobject)
   * [Extending `$firebaseArray`](#extending-firebasearray)
