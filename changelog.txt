@@ -1,0 +1,2 @@
+feature - Added a `requireEmailVerification` argument to the `$requireSignIn()` router helper method to enforce email verification (thanks to @ericmorgan1).
+fixed - Fixed a race condition which sometimes threw an error when the Database reference bound to a `$firebaseObject` instance was set to `null` (thanks to @ulion).
