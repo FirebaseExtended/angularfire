@@ -57,13 +57,13 @@ AngularFire bindings from our CDN:
 
 ```html
 <!-- Angular -->
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.0/angular.min.js"></script>
 
 <!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/3.6.0/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.6.4/firebase.js"></script>
 
 <!-- AngularFire -->
-<script src="https://cdn.firebase.com/libs/angularfire/2.0.1/angularfire.min.js"></script>
+<script src="https://cdn.firebase.com/libs/angularfire/2.2.0/angularfire.min.js"></script>
 ```
 
 Firebase and AngularFire are also available via npm and Bower as `firebase` and `angularfire`,

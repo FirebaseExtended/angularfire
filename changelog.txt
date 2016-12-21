@@ -1,0 +1,2 @@
+feature - Added a `requireEmailVerification` argument to the [`$requireSignIn()`](https://github.com/firebase/angularfire/blob/master/docs/reference.md#requiresignin) router helper method to enforce email verification (thanks to @ericmorgan1).
+fixed - Fixed a race condition which sometimes caused an error when the Database `Reference` bound to a `$firebaseObject` instance was set to `null` (thanks to @ulion).
