@@ -184,10 +184,12 @@
      *
      * @param {boolean} rejectIfAuthDataIsNull Determines if the returned promise should be
      * resolved or rejected upon an unauthenticated client.
+     * @param {boolean} rejectIfEmailNotVerified Determines if the returned promise should be 
+     * resolved or rejected upon a client without a verified email address.
      * @return {Promise<Object>} A promise fulfilled with the client's authentication state or
      * rejected if the client is unauthenticated and rejectIfAuthDataIsNull is true.
      */
-    _routerMethodOnAuthPromise: function(rejectIfAuthDataIsNull) {
+    _routerMethodOnAuthPromise: function(rejectIfAuthDataIsNull, rejectIfEmailNotVerified) {
       var self = this;
 
       // wait for the initial auth state to resolve; on page load we have to request auth state
@@ -199,6 +201,9 @@
         var authData = self.getAuth(), res = null;
         if (rejectIfAuthDataIsNull && authData === null) {
           res = self._q.reject("AUTH_REQUIRED");
+        }
+        else if (rejectIfEmailNotVerified && !authData.emailVerified) {
+            res = self._q.reject("EMAIL_VERIFICATION_REQUIRED");
         }
         else {
           res = self._q.when(authData);
@@ -248,11 +253,13 @@
      * Utility method which can be used in a route's resolve() method to require that a route has
      * a logged in client.
      *
+     * @param {boolean} requireEmailVerification Determines if the route requires a client with a 
+     * verified email address.
      * @returns {Promise<Object>} A promise fulfilled with the client's current authentication
      * state or rejected if the client is not authenticated.
      */
-    requireSignIn: function() {
-      return this._routerMethodOnAuthPromise(true);
+    requireSignIn: function(requireEmailVerification) {
+      return this._routerMethodOnAuthPromise(true, requireEmailVerification);
     },
 
     /**
@@ -263,10 +270,9 @@
      * state, which will be null if the client is not authenticated.
      */
     waitForSignIn: function() {
-      return this._routerMethodOnAuthPromise(false);
+      return this._routerMethodOnAuthPromise(false, false);
     },
-
-
+	
     /*********************/
     /*  User Management  */
     /*********************/
