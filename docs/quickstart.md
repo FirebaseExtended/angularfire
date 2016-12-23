@@ -17,13 +17,13 @@ In order to use AngularFire in a project, include the following script tags:
 
 ```html
 <!-- Angular -->
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.0/angular.min.js"></script>
 
 <!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/3.3.0/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.6.4/firebase.js"></script>
 
 <!-- AngularFire -->
-<script src="https://cdn.firebase.com/libs/angularfire/2.0.1/angularfire.min.js"></script>
+<script src="https://cdn.firebase.com/libs/angularfire/2.2.0/angularfire.min.js"></script>
 ```
 
 Firebase and AngularFire are also available via npm and Bower as `firebase` and `angularfire`,
@@ -76,7 +76,7 @@ In the example above, `$scope.data` is going to be populated from the remote ser
 asynchronous call, so it will take some time before the data becomes available in the controller.
 While it might be tempting to put a `console.log` on the next line to read the results, the data
 won't be downloaded yet, so the object will appear to be empty. Read the section on
-[Asynchronous Operations](guide/introduction-to-angularfire.html#handling-asynchronous-operations) for more details.
+[Asynchronous Operations](guide/introduction-to-angularfire.md#handling-asynchronous-operations) for more details.
 
 
 ## 5. Add Three-Way, Object Bindings

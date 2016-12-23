@@ -384,7 +384,57 @@ describe('FirebaseAuth',function(){
       tick();
     });
   });
+  
+  describe('$requireSignIn(requireEmailVerification)',function(){	
+    it('will be resolved if user is logged in and has a verified email address', function(done){
+      var credentials = {provider: 'facebook', emailVerified: true};
+      spyOn(authService._, 'getAuth').and.callFake(function () {
+        return credentials;
+      });
 
+      authService.$requireSignIn(true)
+        .then(function (result) {
+          expect(result).toEqual(credentials);
+          done();
+        });
+
+      fakePromiseResolve(credentials);
+      tick();
+    });
+	
+    it('will be resolved if user is logged in and we ignore email verification', function(done){
+      var credentials = {provider: 'facebook', emailVerified: false};
+      spyOn(authService._, 'getAuth').and.callFake(function () {
+        return credentials;
+      });
+
+      authService.$requireSignIn(false)
+        .then(function (result) {
+          expect(result).toEqual(credentials);
+          done();
+        });
+
+      fakePromiseResolve(credentials);
+      tick();
+    });
+	
+   it('will be rejected if user does not have a verified email address', function(done){
+     var credentials = {provider: 'facebook', emailVerified: false};
+     spyOn(authService._, 'getAuth').and.callFake(function () {
+       return credentials;
+     });
+
+      authService.$requireSignIn(true)
+        .catch(function (error) {
+          expect(error).toEqual('EMAIL_VERIFICATION_REQUIRED');
+          done();
+      });
+
+      fakePromiseResolve(credentials);
+      tick();
+    });
+  });  
+  
   describe('$waitForSignIn()',function(){
     it('will be resolved with authData if user is logged in', function(done){
       var credentials = {provider: 'facebook'};
