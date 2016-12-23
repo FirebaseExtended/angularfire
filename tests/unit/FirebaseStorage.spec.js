@@ -100,7 +100,7 @@ describe('$firebaseStorage', function () {
           spyOn(ref, 'put').and.returnValue(mockTask);
           $task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
           expect($task._task()).toEqual(mockTask);
-        });        
+        });
 
         it('$cancel', function() {
           var mockTask = new MockTask();
@@ -258,7 +258,7 @@ describe('$firebaseStorage', function () {
           spyOn(ref, 'put');
           spyOn($firebaseStorage.utils, '_$put').and.returnValue(fakePromise);
           storage.$put('file'); // don't ever call this with a string
-          expect($firebaseStorage.utils._$put).toHaveBeenCalledWith(ref, 'file', $firebaseUtils.compile, $q);        
+          expect($firebaseStorage.utils._$put).toHaveBeenCalledWith(ref, 'file', $firebaseUtils.compile, $q);
         })
 
       });
@@ -328,36 +328,34 @@ describe('$firebaseStorage', function () {
   });
 });
 
-
-class MockTask {
-  
-  on(event, successCallback, errorCallback, completionCallback) {
+/**
+ * A Mock for Firebase Storage Tasks. It has the same .on() method signature
+ * but it simply stores the callbacks without doing anything. To make something
+ * happen you call the makeProgress(), causeError(), or complete() methods. The
+ * empty methods are intentional noops.
+ */
+var MockTask = (function () {
+  function MockTask() {
+  }
+  MockTask.prototype.on = function (event, successCallback, errorCallback, completionCallback) {
     this.event = event;
     this.successCallback = successCallback;
     this.errorCallback = errorCallback;
     this.completionCallback = completionCallback;
-  }
-
-  makeProgress() {
+  };
+  MockTask.prototype.makeProgress = function () {
     this.successCallback();
-  }
-
-  causeError() {
+  };
+  MockTask.prototype.causeError = function () {
     this.errorCallback();
-  }
-
-  complete() {
+  };
+  MockTask.prototype.complete = function () {
     this.completionCallback();
-  }
-
-  cancel() {}
-
-  resume() {}
-
-  pause() {}
-
-  then() {}
-
-  catch() {}
-
-}
+  };
+  MockTask.prototype.cancel = function () { };
+  MockTask.prototype.resume = function () { };
+  MockTask.prototype.pause = function () { };
+  MockTask.prototype.then = function () { };
+  MockTask.prototype.catch = function () { };
+  return MockTask;
+} ());
