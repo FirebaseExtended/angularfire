@@ -69,7 +69,7 @@ describe('Upload App', function () {
     .then(function () {
       return el.getText();
     }).then(function (text) {
-      var result = "https://firebasestorage.googleapis.com/v0/b/angularfire-dae2e.appspot.com/o/user%2F1.png";
+      var result = "https://firebasestorage.googleapis.com/v0/b/oss-test.appspot.com/o/user%2F1.png";
       expect(text.slice(0, result.length)).toEqual(result);
       done();
     });

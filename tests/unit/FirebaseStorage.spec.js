@@ -1,7 +1,7 @@
 'use strict';
 describe('$firebaseStorage', function () {
   var $firebaseStorage;
-  var URL = 'https://angularfire-dae2e.firebaseio.com';
+  var URL = 'https://oss-test.firebaseio.com';
 
   beforeEach(function () {
     module('firebase.storage');
