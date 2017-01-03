@@ -686,11 +686,14 @@ for more details about email / password authentication.
 
 ### $signInWithPopup(provider)
 
-Authenticates the client using a popup-based OAuth flow. This function takes two
-arguments: the unique string identifying the OAuth provider to authenticate with (e.g. `"google"`).
+Authenticates the client using a popup-based OAuth flow. This function takes a single argument: a
+a string or provider object representing the OAuth provider to authenticate with. It returns a
+promise which is resolved or rejected when the authentication attempt is completed. If successful,
+the promise will be fulfilled with an object containing authentication data about the signed-in
+user. If unsuccessful, the promise will be rejected with an `Error` object.
 
-Optionally, you can pass a provider object (like `new firebase.auth.GoogleAuthProvider()`, etc)
-which can be configured with additional options.
+Valid values for the string version of the argument are `"facebook"`, `"github"`, `"google"`, and
+`"twitter"`:
 
 ```js
 $scope.authObj.$signInWithPopup("google").then(function(result) {
@@ -700,43 +703,77 @@ $scope.authObj.$signInWithPopup("google").then(function(result) {
 });
 ```
 
-This method returns a promise which is resolved or rejected when the authentication attempt is
-completed. If successful, the promise will be fulfilled with an object containing authentication
-data about the signed-in user. If unsuccessful, the promise will be rejected with an `Error` object.
-
-Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to
-[authentication documentation](https://firebase.google.com/docs/auth/)
-for information about configuring each provider.
-
-### $signInWithRedirect(provider[, options])
-
-Authenticates the client using a redirect-based OAuth flow. This function takes two
-arguments: the unique string identifying the OAuth provider to authenticate with (e.g. `"google"`).
-
-Optionally, you can pass a provider object (like `new firebase.auth().GoogleProvider()`, etc)
-which can be configured with additional options.
+Alternatively, you can request certain scopes or custom parameters from the OAuth provider by
+passing a provider object (such as `new firebase.auth.GoogleAuthProvider()`) configured with
+additional options:
 
 ```js
-$scope.authObj.$signInWithRedirect("google").then(function() {
-  // Never called because of page redirect
+var provider = new firebase.auth.GoogleAuthProvider();
+provider.addScope("https://www.googleapis.com/auth/plus.login");
+provider.setCustomParameters({
+  login_hint: "user@example.com"
+});
+
+$scope.authObj.$signInWithPopup(provider).then(function(result) {
+  console.log("Signed in as:", result.user.uid);
 }).catch(function(error) {
   console.error("Authentication failed:", error);
 });
 ```
 
-This method returns a rejected promise with an `Error` object if the authentication attempt fails.
-Upon successful authentication, the browser will be redirected as part of the OAuth authentication
-flow. As such, the returned promise will never be fulfilled. Instead, you should use the `$onAuthStateChanged()`
+Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to the
+[authentication documentation](https://firebase.google.com/docs/auth/)
+for information about configuring each provider.
+
+### $signInWithRedirect(provider[, options])
+
+Authenticates the client using a redirect-based OAuth flow. This function takes a single argument: a
+string or provider object representing the OAuth provider to authenticate with. It returns a
+rejected promise with an `Error` object if the authentication attempt fails. Upon successful
+authentication, the browser will be redirected as part of the OAuth authentication flow. As such,
+the returned promise will never be fulfilled. Instead, you should use the `$onAuthStateChanged()`
 method to detect when the authentication has been successfully completed.
 
-Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to
+Valid values for the string version of the argument are `"facebook"`, `"github"`, `"google"`, and
+`"twitter"`:
+
+```js
+$scope.authObj.$signInWithRedirect("google").then(function() {
+  // Never called because of page redirect
+  // Instead, use $onAuthStateChanged() to detect successful authentication
+}).catch(function(error) {
+  console.error("Authentication failed:", error);
+});
+```
+
+Alternatively, you can request certain scopes or custom parameters from the OAuth provider by
+passing a provider object (such as `new firebase.auth.GoogleAuthProvider()`) configured with
+additional options:
+
+```js
+var provider = new firebase.auth.GoogleAuthProvider();
+provider.addScope("https://www.googleapis.com/auth/plus.login");
+provider.setCustomParameters({
+  login_hint: "user@example.com"
+});
+
+$scope.authObj.$signInWithRedirect(provider).then(function(result) {
+  // Never called because of page redirect
+  // Instead, use $onAuthStateChanged() to detect successful authentication
+}).catch(function(error) {
+  console.error("Authentication failed:", error);
+});
+```
+
+Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to the
 [authentication documentation](https://firebase.google.com/docs/auth/)
 for information about configuring each provider.
 
 ### $signInWithCredential(credential)
 
-Authenticates the client using a credential (potentially created from OAuth Tokens). This function takes one
-arguments: the credential object. This may be obtained from individual auth providers under `firebase.auth()`;
+Authenticates the client using a credential (potentially created from OAuth tokens). This function
+takes a single argument: the credential object. This may be obtained from individual auth providers
+under `firebase.auth()`;
 
 ```js
 $scope.authObj.$signInWithCredential(credential).then(function(firebaseUser) {
@@ -750,7 +787,7 @@ This method returns a promise which is resolved or rejected when the authenticat
 completed. If successful, the promise will be fulfilled with an object containing authentication
 data about the signed-in user. If unsuccessful, the promise will be rejected with an `Error` object.
 
-Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to
+Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to the
 [authentication documentation](https://firebase.google.com/docs/auth/)
 for information about configuring each provider.
 
@@ -897,8 +934,8 @@ section of our AngularFire guide for more information and a full example.
 ### $requireSignIn(requireEmailVerification)
 
 Helper method which returns a promise fulfilled with the current authentication state if the user
-is authenticated and, if specified, has a verified email address, but otherwise rejects the promise. 
-This is intended to be used in the `resolve()` method of Angular routers to prevented unauthenticated 
+is authenticated and, if specified, has a verified email address, but otherwise rejects the promise.
+This is intended to be used in the `resolve()` method of Angular routers to prevent unauthenticated
 users from seeing authenticated pages momentarily during page load. See the
 ["Using Authentication with Routers"](/docs/guide/user-auth.md#authenticating-with-routers)
 section of our AngularFire guide for more information and a full example.
