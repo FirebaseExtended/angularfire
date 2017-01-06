@@ -1,4 +1,4 @@
-/* istanbul ignore next */g
+/* istanbul ignore next */
 (function () {
   "use strict";
 
