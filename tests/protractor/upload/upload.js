@@ -34,17 +34,6 @@ app.controller('UploadCtrl', function Upload($scope, $firebaseStorage, $timeout)
       $scope.metadata = metadata;
     });
 
-    // meta data
-    //storageFire.$getMetadata(metadata => console.log(metadata));
-    // storageFire.$uploadMetadata({
-    //   cacheControl: 'public,max-age=300',
-    //   contentType: 'image/jpeg'
-    // });
   }
 
-
-    // // Get the possible download URL
-    // storageFire.$getDownloadURL().then(url => {
-    //
-    // });
 });

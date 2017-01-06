@@ -17,8 +17,6 @@ script:
 - sh ./tests/travis.sh
 before_script:
 - grunt install
-script:
-- sh ./tests/travis.sh
 after_script:
 - cat ./tests/coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
 env:

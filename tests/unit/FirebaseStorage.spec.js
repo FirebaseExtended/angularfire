@@ -55,159 +55,99 @@ describe('$firebaseStorage', function () {
 
       describe('_$put', function () {
 
-        it('should call a storage ref put', function () {
+        function setupPutTests(file, mockTask) {
           var ref = firebase.storage().ref('thing');
-          var file = 'file';
           var task = null;
           var digestFn = $firebaseUtils.compile;
-          spyOn(ref, 'put');
-          task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
+          // If a MockTask is provided use it as the
+          // return value of the spy on put
+          if (mockTask) {
+            spyOn(ref, 'put').and.returnValue(mockTask);
+          } else {
+            spyOn(ref, 'put');
+          }
+          task = $firebaseStorage.utils._$put(ref, file, digestFn);
+          return {
+            ref: ref,
+            task: task,
+            digestFn: digestFn
+          };
+        }
+
+        it('should call a storage ref put', function () {
+          var mockTask = new MockTask();
+          var setup = setupPutTests('file', mockTask);
+          var ref = setup.ref;
           expect(ref.put).toHaveBeenCalledWith('file');
-          expect(task.$progress).toEqual(jasmine.any(Function));
-          expect(task.$error).toEqual(jasmine.any(Function));
-          expect(task.$complete).toEqual(jasmine.any(Function));
         });
 
         it('should return the observer functions', function () {
-          var ref = firebase.storage().ref('thing');
-          var file = 'file';
-          var task = null;
-          var digestFn = $firebaseUtils.compile;
-          spyOn(ref, 'put');
-          task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
+          var mockTask = new MockTask();
+          var setup = setupPutTests('file', mockTask);
+          var task = setup.task;
           expect(task.$progress).toEqual(jasmine.any(Function));
           expect(task.$error).toEqual(jasmine.any(Function));
           expect(task.$complete).toEqual(jasmine.any(Function));
         });
 
         it('should return a promise with then and catch', function() {
-          var ref = firebase.storage().ref('thing');
-          var file = 'file';
-          var task = null;
-          var digestFn = $firebaseUtils.compile;
-          spyOn(ref, 'put');
-          task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
+          var mockTask = new MockTask();
+          var setup = setupPutTests('file', mockTask);
+          var task = setup.task;
           expect(task.then).toEqual(jasmine.any(Function));
           expect(task.catch).toEqual(jasmine.any(Function));
         });
 
         it('should create a mock task', function() {
           var mockTask = new MockTask();
-          var ref = firebase.storage().ref('thing');
-          var file = 'file';
-          var $task = null;
-          var digestFn = $firebaseUtils.compile;
-          spyOn(ref, 'put').and.returnValue(mockTask);
-          $task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
-          expect($task._task()).toEqual(mockTask);
+          var setup = setupPutTests('file', mockTask);
+          var task = setup.task;
+          expect(task._task).toEqual(mockTask);
         });
 
         it('$cancel', function() {
           var mockTask = new MockTask();
-          var ref = firebase.storage().ref('thing');
-          var file = 'file';
-          var $task = null;
-          var digestFn = $firebaseUtils.compile;
-          spyOn(ref, 'put').and.returnValue(mockTask);
-          spyOn(mockTask, 'cancel')
-          $task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
-          $task.$cancel();
+          spyOn(mockTask, 'cancel');
+          var setup = setupPutTests('file', mockTask);
+          var task = setup.task;
+          task.$cancel();
           expect(mockTask.cancel).toHaveBeenCalled();
         });
 
         it('$resume', function() {
           var mockTask = new MockTask();
-          var ref = firebase.storage().ref('thing');
-          var file = 'file';
-          var $task = null;
-          var digestFn = $firebaseUtils.compile;
-          spyOn(ref, 'put').and.returnValue(mockTask);
-          spyOn(mockTask, 'resume')
-          $task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
-          $task.$resume();
+          spyOn(mockTask, 'resume');
+          var setup = setupPutTests('file', mockTask);
+          var task = setup.task;
+          task.$resume();
           expect(mockTask.resume).toHaveBeenCalled();
         });
 
         it('$pause', function() {
           var mockTask = new MockTask();
-          var ref = firebase.storage().ref('thing');
-          var file = 'file';
-          var $task = null;
-          var digestFn = $firebaseUtils.compile;
-          spyOn(ref, 'put').and.returnValue(mockTask);
           spyOn(mockTask, 'pause')
-          $task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
-          $task.$pause();
+          var setup = setupPutTests('file', mockTask);
+          var task = setup.task;
+          task.$pause();
           expect(mockTask.pause).toHaveBeenCalled();
         });
 
         it('then', function() {
           var mockTask = new MockTask();
-          var ref = firebase.storage().ref('thing');
-          var file = 'file';
-          var $task = null;
-          var digestFn = $firebaseUtils.compile;
-          spyOn(ref, 'put').and.returnValue(mockTask);
-          spyOn(mockTask, 'then')
-          $task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
-          $task.then();
+          spyOn(mockTask, 'then');
+          var setup = setupPutTests('file', mockTask);
+          var task = setup.task;
+          task.then();
           expect(mockTask.then).toHaveBeenCalled();
         });
 
         it('catch', function() {
           var mockTask = new MockTask();
-          var ref = firebase.storage().ref('thing');
-          var file = 'file';
-          var $task = null;
-          var digestFn = $firebaseUtils.compile;
-          spyOn(ref, 'put').and.returnValue(mockTask);
-          spyOn(mockTask, 'catch')
-          $task = $firebaseStorage.utils._$put(ref, file, digestFn, $q);
-          $task.catch();
+          spyOn(mockTask, 'catch');
+          var setup = setupPutTests('file', mockTask);
+          var task = setup.task;
+          task.catch();
           expect(mockTask.catch).toHaveBeenCalled();
-        });
-
-      });
-
-      describe('_$getDownloadURL', function () {
-        it('should call a storage ref getDownloadURL', function (done) {
-          var ref = firebase.storage().ref('thing');
-          var testUrl = 'https://google.com/';
-          var storage = $firebaseStorage(ref);
-          var promise = $q(function (resolve, reject) {
-            resolve(testUrl);
-            reject(null);
-          });
-          var testPromise = null;
-          spyOn(ref, 'getDownloadURL').and.returnValue(promise);
-          testPromise = $firebaseStorage.utils._$getDownloadURL(ref, $q);
-          testPromise.then(function (resolvedUrl) {
-            expect(resolvedUrl).toEqual(testUrl)
-            done();
-          });
-          $rootScope.$apply();
-        });
-
-      });
-
-      describe('_$delete', function () {
-
-        it('should call a storage ref delete', function (done) {
-          var ref = firebase.storage().ref('thing');
-          var fakePromise = $q(function (resolve, reject) {
-            resolve(null);
-            reject(null);
-          });
-          var testPromise = null;
-          var deleted = false;
-          spyOn(ref, 'delete').and.returnValue(fakePromise);
-          testPromise = $firebaseStorage.utils._$delete(ref, $q);
-          testPromise.then(function () {
-            deleted = true;
-            expect(deleted).toEqual(true);
-            done();
-          });
-          $rootScope.$apply();
         });
 
       });
@@ -257,41 +197,33 @@ describe('$firebaseStorage', function () {
           });
           spyOn(ref, 'put');
           spyOn($firebaseStorage.utils, '_$put').and.returnValue(fakePromise);
-          storage.$put('file'); // don't ever call this with a string
-          expect($firebaseStorage.utils._$put).toHaveBeenCalledWith(ref, 'file', $firebaseUtils.compile, $q);
+          storage.$put('file'); // don't ever call this with a string IRL
+          expect($firebaseStorage.utils._$put).toHaveBeenCalledWith(ref, 'file', $firebaseUtils.compile);
         })
 
       });
 
       describe('$getDownloadURL', function() {
-        it('should call the _$getDownloadURL method', function() {
-          // test that $firebaseStorage.utils._$getDownloadURL is called with
-          //  - storageRef, $q
+        it('should call the ref getDownloadURL method', function() {
           var ref = firebase.storage().ref('thing');
           var storage = $firebaseStorage(ref);
-          var fakePromise = $q(function(resolve, reject) {
-            resolve('https://google.com');
-          });
           spyOn(ref, 'getDownloadURL');
-          spyOn($firebaseStorage.utils, '_$getDownloadURL').and.returnValue(fakePromise);
           storage.$getDownloadURL();
-          expect($firebaseStorage.utils._$getDownloadURL).toHaveBeenCalledWith(ref, $q);
+          expect(ref.getDownloadURL).toHaveBeenCalled();
         });
       });
 
       describe('$delete', function() {
-        it('should call the _$delete method', function() {
-          // test that $firebaseStorage.utils._$delete is called with
-          //  - storageRef, $q
+        it('should call the storage ref delete method', function() {
+          // test that $firebaseStorage.$delete() calls storageRef.delete()
           var ref = firebase.storage().ref('thing');
           var storage = $firebaseStorage(ref);
           var fakePromise = $q(function(resolve, reject) {
             resolve();
           });
           spyOn(ref, 'delete');
-          spyOn($firebaseStorage.utils, '_$delete').and.returnValue(fakePromise);
           storage.$delete();
-          expect($firebaseStorage.utils._$delete).toHaveBeenCalledWith(ref, $q);
+          expect(ref.delete).toHaveBeenCalled();
         });
       });
 
@@ -299,13 +231,9 @@ describe('$firebaseStorage', function () {
         it('should call ref getMetadata', function() {
           var ref = firebase.storage().ref('thing');
           var storage = $firebaseStorage(ref);
-          var fakePromise = $q(function(resolve, reject) {
-            resolve();
-          });
           spyOn(ref, 'getMetadata');
-          spyOn($firebaseStorage.utils, '_$getMetadata').and.returnValue(fakePromise);
           storage.$getMetadata();
-          expect($firebaseStorage.utils._$getMetadata).toHaveBeenCalled();
+          expect(ref.getMetadata).toHaveBeenCalled();
         });
       });
 
@@ -313,14 +241,9 @@ describe('$firebaseStorage', function () {
         it('should call ref updateMetadata', function() {
           var ref = firebase.storage().ref('thing');
           var storage = $firebaseStorage(ref);
-          var fakePromise = $q(function(resolve, reject) {
-            resolve();
-          });
-          var fakeMetadata = {};
           spyOn(ref, 'updateMetadata');
-          spyOn($firebaseStorage.utils, '_$updateMetadata').and.returnValue(fakePromise);
-          storage.$updateMetadata(fakeMetadata);
-          expect($firebaseStorage.utils._$updateMetadata).toHaveBeenCalled();
+          storage.$updateMetadata();
+          expect(ref.updateMetadata).toHaveBeenCalled();
         });
       });
 

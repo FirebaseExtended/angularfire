@@ -1,3 +1,4 @@
+/* istanbul ignore next */g
 (function () {
   "use strict";
 
@@ -7,11 +8,11 @@
       priority: 99, // run after the attributes are interpolated
       scope: {},
       link: function (scope, element, attrs) {
-        // $observe is like $watch but it waits for interpolation 
-        // Ex: <img firebase-src="{{ myUrl }}"/> 
-        attrs.$observe('firebaseSrc', function (newVal) {
-          if (newVal !== '' && newVal !== null && newVal !== undefined) {
-            var storageRef = firebase.storage().ref().child(attrs.firebaseSrc);
+        // $observe is like $watch but it waits for interpolation
+        // Ex: <img firebase-src="{{ myUrl }}"/>
+        attrs.$observe('firebaseSrc', function (newFirebaseSrcVal) {
+          if (newFirebaseSrcVal !== '' && newFirebaseSrcVal !== null && newFirebaseSrcVal !== undefined) {
+            var storageRef = firebase.storage().ref(newFirebaseSrcVal);
             var storage = $firebaseStorage(storageRef);
             storage.$getDownloadURL().then(function getDownloadURL(url) {
               element[0].src = url;
