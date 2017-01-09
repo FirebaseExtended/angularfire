@@ -20,21 +20,21 @@
       $progress: function $progress(callback) {
         task.on('state_changed', function () {
           $digestFn(function () {
-            callback.apply(null, [unwrapStorageSnapshot(task.snapshot)]);
+            callback([unwrapStorageSnapshot(task.snapshot)]);
           });
         });
       },
       $error: function $error(callback) {
         task.on('state_changed', function () {}, function (err) {
           $digestFn(function () {
-            callback.apply(null, [err]);
+            callback([err]);
           });
         });
       },
       $complete: function $complete(callback) {
         task.on('state_changed', function () {}, function () {}, function () {
           $digestFn(function () {
-            callback.apply(null, [unwrapStorageSnapshot(task.snapshot)]);
+            callback([unwrapStorageSnapshot(task.snapshot)]);
           });
         });
       },
