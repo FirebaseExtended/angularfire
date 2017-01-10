@@ -33,6 +33,13 @@ describe('$firebaseStorage', function () {
       expect(storage).not.toBe(null);
     });
 
+    it('should throw error given a non-reference', () => {
+      function errorWrapper() {
+        var storage = $firebaseStorage(null);
+      }
+      expect(errorWrapper).toThrow();
+    });
+
     describe('$firebaseStorage.utils', function () {
 
       describe('_unwrapStorageSnapshot', function () {
@@ -45,20 +52,63 @@ describe('$firebaseStorage', function () {
             ref: {},
             state: {},
             task: {},
-            totalBytes: 0
+            totalBytes: 0,
+            randomAttr: 'rando', // gets removed
+            anotherRando: 'woooo' // gets removed
           };
           var unwrapped = $firebaseStorage.utils._unwrapStorageSnapshot(mockSnapshot);
-          expect(mockSnapshot).toEqual(unwrapped);
+          expect(unwrapped).toEqual({
+            bytesTransferred: 0,
+            downloadURL: 'url',
+            metadata: {},
+            ref: {},
+            state: {},
+            task: {},
+            totalBytes: 0
+          });
         });
 
       });
 
-      describe('_$put', function () {
+      describe('_isStorageRef', function () {
+
+        it('should determine a storage ref', function () {
+          var ref = firebase.storage().ref('thing');
+          var isTrue = $firebaseStorage.utils._isStorageRef(ref);
+          var isFalse = $firebaseStorage.utils._isStorageRef(true);
+          expect(isTrue).toEqual(true);
+          expect(isFalse).toEqual(false);
+        });
+
+      });
+
+      describe('_assertStorageRef', function () {
+        it('should not throw an error if a storage ref is passed', function () {
+          var ref = firebase.storage().ref('thing');
+          function errorWrapper() {
+            $firebaseStorage.utils._assertStorageRef(ref);
+          }
+          expect(errorWrapper).not.toThrow();
+        });
+
+        it('should throw an error if a storage ref is passed', function () {
+          function errorWrapper() {
+            $firebaseStorage.utils._assertStorageRef(null);
+          }
+          expect(errorWrapper).toThrow();
+        });
+      });
+
+    });
+
+    describe('$firebaseStorage', function() {
+
+      describe('$put', function() {
 
         function setupPutTests(file, mockTask) {
           var ref = firebase.storage().ref('thing');
           var task = null;
-          var digestFn = $firebaseUtils.compile;
+          var storage = $firebaseStorage(ref);
           // If a MockTask is provided use it as the
           // return value of the spy on put
           if (mockTask) {
@@ -66,11 +116,10 @@ describe('$firebaseStorage', function () {
           } else {
             spyOn(ref, 'put');
           }
-          task = $firebaseStorage.utils._$put(ref, file, digestFn);
+          task = storage.$put(file);
           return {
             ref: ref,
-            task: task,
-            digestFn: digestFn
+            task: task
           };
         }
 
@@ -152,57 +201,6 @@ describe('$firebaseStorage', function () {
 
       });
 
-      describe('_isStorageRef', function () {
-
-        it('should determine a storage ref', function () {
-          var ref = firebase.storage().ref('thing');
-          var isTrue = $firebaseStorage.utils._isStorageRef(ref);
-          var isFalse = $firebaseStorage.utils._isStorageRef(true);
-          expect(isTrue).toEqual(true);
-          expect(isFalse).toEqual(false);
-        });
-
-      });
-
-      describe('_assertStorageRef', function () {
-        it('should not throw an error if a storage ref is passed', function () {
-          var ref = firebase.storage().ref('thing');
-          function errorWrapper() {
-            $firebaseStorage.utils._assertStorageRef(ref);
-          }
-          expect(errorWrapper).not.toThrow();
-        });
-
-        it('should throw an error if a storage ref is passed', function () {
-          function errorWrapper() {
-            $firebaseStorage.utils._assertStorageRef(null);
-          }
-          expect(errorWrapper).toThrow();
-        });
-      });
-
-    });
-
-    describe('$firebaseStorage', function() {
-
-      describe('$put', function() {
-
-        it('should call the _$put method', function() {
-          // test that $firebaseStorage.utils._$put is called with
-          //  - storageRef, file, $firebaseUtils.compile, $q
-          var ref = firebase.storage().ref('thing');
-          var storage = $firebaseStorage(ref);
-          var fakePromise = $q(function(resolve, reject) {
-            resolve('file');
-          });
-          spyOn(ref, 'put');
-          spyOn($firebaseStorage.utils, '_$put').and.returnValue(fakePromise);
-          storage.$put('file'); // don't ever call this with a string IRL
-          expect($firebaseStorage.utils._$put).toHaveBeenCalledWith(ref, 'file', $firebaseUtils.compile);
-        })
-
-      });
-
       describe('$getDownloadURL', function() {
         it('should call the ref getDownloadURL method', function() {
           var ref = firebase.storage().ref('thing');
@@ -215,12 +213,8 @@ describe('$firebaseStorage', function () {
 
       describe('$delete', function() {
         it('should call the storage ref delete method', function() {
-          // test that $firebaseStorage.$delete() calls storageRef.delete()
           var ref = firebase.storage().ref('thing');
           var storage = $firebaseStorage(ref);
-          var fakePromise = $q(function(resolve, reject) {
-            resolve();
-          });
           spyOn(ref, 'delete');
           storage.$delete();
           expect(ref.delete).toHaveBeenCalled();

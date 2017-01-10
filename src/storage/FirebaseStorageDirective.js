@@ -11,7 +11,10 @@
         // $observe is like $watch but it waits for interpolation
         // Ex: <img firebase-src="{{ myUrl }}"/>
         attrs.$observe('firebaseSrc', function (newFirebaseSrcVal) {
-          if (newFirebaseSrcVal !== '' && newFirebaseSrcVal !== null && newFirebaseSrcVal !== undefined) {
+          if (newFirebaseSrcVal !== '' &&
+            newFirebaseSrcVal !== null &&
+            newFirebaseSrcVal !== undefined &&
+            typeof newFirebaseSrcVal === 'string') {
             var storageRef = firebase.storage().ref(newFirebaseSrcVal);
             var storage = $firebaseStorage(storageRef);
             storage.$getDownloadURL().then(function getDownloadURL(url) {

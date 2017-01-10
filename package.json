@@ -11,9 +11,6 @@
   "bugs": {
     "url": "https://github.com/firebase/angularfire/issues"
   },
-  "scripts": {
-    "start": "grunt"
-  },
   "license": "MIT",
   "keywords": [
     "angular",

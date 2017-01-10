@@ -10,9 +10,6 @@ describe('Upload App', function () {
   // Boolean used to load the page on the first test only
   var isPageLoaded = false;
 
-  // Reference to the messages repeater
-  var messages = element.all(by.repeater('message in messages'));
-
   var flow = protractor.promise.controlFlow();
 
   function waitOne() {
@@ -26,7 +23,7 @@ describe('Upload App', function () {
   function clearFirebaseRef() {
     var deferred = protractor.promise.defer();
 
-    firebaseRef.remove(function(err) {
+    firebaseRef.remove(function (err) {
       if (err) {
         deferred.reject(err);
       } else {
@@ -53,25 +50,21 @@ describe('Upload App', function () {
     expect(browser.getTitle()).toEqual('AngularFire Upload e2e Test');
   });
 
-  it('starts with an empty list of messages', function () {
-    expect(messages.count()).toBe(0);
-  });
-
   it('uploads a file', function (done) {
-    var fileToUpload = './upload/logo.png',
-     absolutePath = path.resolve(__dirname, fileToUpload);
+    var fileToUpload = './upload/logo.png';
+    var absolutePath = path.resolve(__dirname, fileToUpload);
 
-   $('input[type="file"]').sendKeys(absolutePath);
-   $('#submit').click();
+    $('input[type="file"]').sendKeys(absolutePath);
+    $('#submit').click();
 
-   var el = element(by.id('url'));
-   browser.driver.wait(protractor.until.elementIsVisible(el))
-    .then(function () {
-      return el.getText();
-    }).then(function (text) {
-      var result = "https://firebasestorage.googleapis.com/v0/b/oss-test.appspot.com/o/user%2F1.png";
-      expect(text.slice(0, result.length)).toEqual(result);
-      done();
-    });
+    var el = element(by.id('url'));
+    browser.driver.wait(protractor.until.elementIsVisible(el))
+      .then(function () {
+        return el.getText();
+      }).then(function (text) {
+        var result = "https://firebasestorage.googleapis.com/v0/b/oss-test.appspot.com/o/user%2F1.png";
+        expect(text.slice(0, result.length)).toEqual(result);
+        done();
+      });
   });
 });
