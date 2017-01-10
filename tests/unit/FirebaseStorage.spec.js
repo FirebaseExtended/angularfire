@@ -33,7 +33,7 @@ describe('$firebaseStorage', function () {
       expect(storage).not.toBe(null);
     });
 
-    it('should throw error given a non-reference', () => {
+    it('should throw error given a non-reference', function() {
       function errorWrapper() {
         var storage = $firebaseStorage(null);
       }
