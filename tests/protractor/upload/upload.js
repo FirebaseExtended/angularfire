@@ -1,7 +1,7 @@
 var app = angular.module('upload', ['firebase.storage']);
 
 app.controller('UploadCtrl', function Upload($scope, $firebaseStorage, $timeout) {
-  // Create a reference (possible create a provider)
+  // Create a reference
   const storageRef = firebase.storage().ref('user/1.png');
   // Create the storage binding
   const storageFire = $firebaseStorage(storageRef);
@@ -15,7 +15,7 @@ app.controller('UploadCtrl', function Upload($scope, $firebaseStorage, $timeout)
   $scope.upload = function() {
     $scope.isUploading = true;
     $scope.metadata = {bytesTransferred: 0, totalBytes: 1};
-    $scope.error = {};
+    $scope.error = null;
 
     // upload the file
     const task = storageFire.$put(file);

@@ -29,6 +29,11 @@
 
     <br />
     <div ng-show="metadata.downloadURL" id="url">{{metadata.downloadURL}}</div>
+
+    <div ng-show="error">
+      {{ error | json }}
+    </div>
+
     <!-- Custom JS -->
     <script src="upload.js" defer></script>
   </body>

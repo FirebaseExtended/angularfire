@@ -23,6 +23,29 @@ describe('$firebaseStorage', function () {
       });
     });
 
+    function setupPutTests(file, mockTask, isPutString) {
+      var ref = firebase.storage().ref('thing');
+      var task = null;
+      var storage = $firebaseStorage(ref);
+      var putMethod = isPutString ? 'putString': 'put';
+      // If a MockTask is provided use it as the
+      // return value of the spy on put
+      if (mockTask) {
+        spyOn(ref, putMethod).and.returnValue(mockTask);
+      } else {
+        spyOn(ref, putMethod);
+      }
+      task = storage['$' + putMethod](file);
+      return {
+        ref: ref,
+        task: task
+      };
+    }
+
+    function setupPutStringTests(file, mockTask) {
+      return setupPutTests(file, mockTask, true);
+    }
+
     it('should exist', inject(function () {
       expect($firebaseStorage).not.toBe(null);
     }));
@@ -105,29 +128,11 @@ describe('$firebaseStorage', function () {
 
       describe('$put', function() {
 
-        function setupPutTests(file, mockTask) {
-          var ref = firebase.storage().ref('thing');
-          var task = null;
-          var storage = $firebaseStorage(ref);
-          // If a MockTask is provided use it as the
-          // return value of the spy on put
-          if (mockTask) {
-            spyOn(ref, 'put').and.returnValue(mockTask);
-          } else {
-            spyOn(ref, 'put');
-          }
-          task = storage.$put(file);
-          return {
-            ref: ref,
-            task: task
-          };
-        }
-
         it('should call a storage ref put', function () {
           var mockTask = new MockTask();
           var setup = setupPutTests('file', mockTask);
           var ref = setup.ref;
-          expect(ref.put).toHaveBeenCalledWith('file');
+          expect(ref.put).toHaveBeenCalledWith('file', undefined);
         });
 
         it('should return the observer functions', function () {
@@ -145,13 +150,6 @@ describe('$firebaseStorage', function () {
           var task = setup.task;
           expect(task.then).toEqual(jasmine.any(Function));
           expect(task.catch).toEqual(jasmine.any(Function));
-        });
-
-        it('should create a mock task', function() {
-          var mockTask = new MockTask();
-          var setup = setupPutTests('file', mockTask);
-          var task = setup.task;
-          expect(task._task).toEqual(mockTask);
         });
 
         it('$cancel', function() {
@@ -199,6 +197,34 @@ describe('$firebaseStorage', function () {
           expect(mockTask.catch).toHaveBeenCalled();
         });
 
+      });
+
+      describe('$putString', function() {
+        it('should call a storage ref put', function () {
+          var mockTask = new MockTask();
+          var setup = setupPutStringTests('string data', mockTask);
+          var ref = setup.ref;
+          // The two undefineds are for the optional parameters that are still
+          // passed under the hood.
+          expect(ref.putString).toHaveBeenCalledWith('string data', undefined, undefined);
+        });
+      });
+
+      describe('$toString', function() {
+        it('should call a storage ref to string', function() {
+          var ref = firebase.storage().ref('myfile');
+          var storage = $firebaseStorage(ref);
+          spyOn(ref, 'toString');
+          storage.$toString();
+          expect(ref.toString).toHaveBeenCalled();
+        });
+
+        it('should return the proper gs:// URL', function() {
+          var ref = firebase.storage().ref('myfile');
+          var storage = $firebaseStorage(ref);
+          var stringValue = storage.$toString();
+          expect(stringValue).toEqual(ref.toString());
+        });
       });
 
       describe('$getDownloadURL', function() {
