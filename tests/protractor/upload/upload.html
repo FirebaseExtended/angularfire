@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html ng-app="upload">
+  <head>
+    <title>AngularFire Upload e2e Test</title>
+
+    <!-- Angular -->
+    <script src="../../../node_modules/angular/angular.min.js"></script>
+
+    <!-- Firebase -->
+    <script src="../../../node_modules/firebase/firebase.js"></script>
+
+    <!-- AngularFire -->
+    <script src="../../../dist/angularfire.js"></script>
+
+    <!-- Initialize the Firebase SDK -->
+    <script src="../../initialize.js"></script>
+
+  </head>
+
+  <body ng-controller="UploadCtrl">
+    <div ng-show="!isUploading">
+      <input type="file" onchange="angular.element(this).scope().select(this)">
+      <button id="submit" ng-click="upload()">Submit</button>
+    </div>
+
+    <div ng-show="isUploading" id="uploading">
+      {{(metadata.bytesTransferred / metadata.totalBytes)*100}}%<br />
+    </div>
+
+    <br />
+    <div ng-show="metadata.downloadURL" id="url">{{metadata.downloadURL}}</div>
+
+    <div ng-show="error">
+      {{ error | json }}
+    </div>
+
+    <!-- Custom JS -->
+    <script src="upload.js" defer></script>
+  </body>
+</html>
