@@ -322,7 +322,7 @@ app.config(["$routeProvider", function($routeProvider) {
       // Auth refers to our $firebaseAuth wrapper in the factory below
       "currentAuth": ["Auth", function(Auth) {
         // $requireSignIn returns a promise so the resolve waits for it to complete
-        // If the promise is rejected, it will throw a $stateChangeError (see above)
+        // If the promise is rejected, it will throw a $routeChangeError (see above)
         return Auth.$requireSignIn();
       }]
     }
@@ -336,7 +336,7 @@ app.controller("HomeCtrl", ["currentAuth", function(currentAuth) {
 
 app.controller("AccountCtrl", ["currentAuth", function(currentAuth) {
   // currentAuth (provided by resolve) will contain the
-  // authenticated user or null if not signed in
+  // authenticated user or throw a $routeChangeError (see above) if not signed in
 }]);
 
 app.factory("Auth", ["$firebaseAuth",
@@ -398,7 +398,7 @@ app.controller("HomeCtrl", ["currentAuth", function(currentAuth) {
 
 app.controller("AccountCtrl", ["currentAuth", function(currentAuth) {
   // currentAuth (provided by resolve) will contain the
-  // authenticated user or null if not signed in
+  // authenticated user or throw a $stateChangeError (see above) if not signed in
 }]);
 
 app.factory("Auth", ["$firebaseAuth",
