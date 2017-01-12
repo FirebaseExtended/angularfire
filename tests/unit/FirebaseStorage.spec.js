@@ -23,11 +23,14 @@ describe('$firebaseStorage', function () {
       });
     });
 
-    function setupPutTests(file, mockTask, isPutString) {
+    function setupPutTests(fileOrRawString, mockTask, isPutString) {
       var ref = firebase.storage().ref('thing');
       var task = null;
       var storage = $firebaseStorage(ref);
       var putMethod = isPutString ? 'putString': 'put';
+      var metadata = {
+        contentType: 'image/jpeg'
+      };
       // If a MockTask is provided use it as the
       // return value of the spy on put
       if (mockTask) {
@@ -35,15 +38,19 @@ describe('$firebaseStorage', function () {
       } else {
         spyOn(ref, putMethod);
       }
-      task = storage['$' + putMethod](file);
+      if(isPutString) {
+        task = storage.$putString(fileOrRawString, 'raw', metadata);
+      } else {
+        task = storage.$put(fileOrRawString, metadata);
+      }
       return {
         ref: ref,
         task: task
       };
     }
 
-    function setupPutStringTests(file, mockTask) {
-      return setupPutTests(file, mockTask, true);
+    function setupPutStringTests(rawString, mockTask) {
+      return setupPutTests(rawString, mockTask, true);
     }
 
     it('should exist', inject(function () {
@@ -132,7 +139,9 @@ describe('$firebaseStorage', function () {
           var mockTask = new MockTask();
           var setup = setupPutTests('file', mockTask);
           var ref = setup.ref;
-          expect(ref.put).toHaveBeenCalledWith('file', undefined);
+          expect(ref.put).toHaveBeenCalledWith('file', {
+            contentType: 'image/jpeg'
+          });
         });
 
         it('should return the observer functions', function () {
@@ -197,16 +206,27 @@ describe('$firebaseStorage', function () {
           expect(mockTask.catch).toHaveBeenCalled();
         });
 
+        it('$snapshot', function() {
+          var mockTask = new MockTask();
+          var setup = null;
+          var task = null;
+          mockTask.on('', null, null, function() {});
+          mockTask.complete();
+          setup = setupPutTests('file', mockTask);
+          task = setup.task;
+          expect(mockTask.snapshot).toEqual(task.$snapshot);
+        });
+
       });
 
       describe('$putString', function() {
-        it('should call a storage ref put', function () {
+        it('should call a storage ref putString', function () {
           var mockTask = new MockTask();
           var setup = setupPutStringTests('string data', mockTask);
           var ref = setup.ref;
-          // The two undefineds are for the optional parameters that are still
-          // passed under the hood.
-          expect(ref.putString).toHaveBeenCalledWith('string data', undefined, undefined);
+          expect(ref.putString).toHaveBeenCalledWith('string data', 'raw', {
+            contentType: 'image/jpeg'
+          });
         });
       });
 
@@ -279,6 +299,7 @@ describe('$firebaseStorage', function () {
  */
 var MockTask = (function () {
   function MockTask() {
+    this.snapshot = null;
   }
   MockTask.prototype.on = function (event, successCallback, errorCallback, completionCallback) {
     this.event = event;
@@ -287,12 +308,14 @@ var MockTask = (function () {
     this.completionCallback = completionCallback;
   };
   MockTask.prototype.makeProgress = function () {
+    this.snapshot = {};
     this.successCallback();
   };
   MockTask.prototype.causeError = function () {
     this.errorCallback();
   };
   MockTask.prototype.complete = function () {
+    this.snapshot = {};
     this.completionCallback();
   };
   MockTask.prototype.cancel = function () { };
