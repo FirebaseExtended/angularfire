@@ -721,9 +721,11 @@ $scope.authObj.$signInWithPopup(provider).then(function(result) {
 });
 ```
 
-Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to the
-[authentication documentation](https://firebase.google.com/docs/auth/)
-for information about configuring each provider.
+Firebase currently supports [Facebook](https://firebase.google.com/docs/auth/web/facebook-login),
+[GitHub](https://firebase.google.com/docs/auth/web/github-auth),
+[Google](https://firebase.google.com/docs/auth/web/google-signin),
+and [Twitter](https://firebase.google.com/docs/auth/web/twitter-login) authentication. Refer to the
+linked documentation in the previous sentence for information about configuring each provider.
 
 ### $signInWithRedirect(provider[, options])
 
@@ -765,17 +767,36 @@ $scope.authObj.$signInWithRedirect(provider).then(function(result) {
 });
 ```
 
-Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to the
-[authentication documentation](https://firebase.google.com/docs/auth/)
-for information about configuring each provider.
+Firebase currently supports [Facebook](https://firebase.google.com/docs/auth/web/facebook-login),
+[GitHub](https://firebase.google.com/docs/auth/web/github-auth),
+[Google](https://firebase.google.com/docs/auth/web/google-signin),
+and [Twitter](https://firebase.google.com/docs/auth/web/twitter-login) authentication. Refer to the
+linked documentation in the previous sentence for information about configuring each provider.
 
 ### $signInWithCredential(credential)
 
-Authenticates the client using a credential (potentially created from OAuth tokens). This function
-takes a single argument: the credential object. This may be obtained from individual auth providers
-under `firebase.auth()`;
+Authenticates the client using a credential. This function takes a single argument: the credential
+object. Credential objects are created from a provider-specific set of user data, such as their
+email / password combination or an OAuth access token.
 
 ```js
+// Email / password authentication with credential
+var credential = firebase.auth.EmailAuthProvider.credential(email, password);
+
+$scope.authObj.$signInWithCredential(credential).then(function(firebaseUser) {
+  console.log("Signed in as:", firebaseUser.uid);
+}).catch(function(error) {
+  console.error("Authentication failed:", error);
+});
+```
+
+```js
+// Facebook authentication with credential
+var credential = firebase.auth.FacebookAuthProvider.credential(
+  // `event` come from the Facebook SDK's auth.authResponseChange() callback
+  event.authResponse.accessToken
+);
+
 $scope.authObj.$signInWithCredential(credential).then(function(firebaseUser) {
   console.log("Signed in as:", firebaseUser.uid);
 }).catch(function(error) {
@@ -787,9 +808,14 @@ This method returns a promise which is resolved or rejected when the authenticat
 completed. If successful, the promise will be fulfilled with an object containing authentication
 data about the signed-in user. If unsuccessful, the promise will be rejected with an `Error` object.
 
-Firebase currently supports Facebook, GitHub, Google, and Twitter authentication. Refer to the
-[authentication documentation](https://firebase.google.com/docs/auth/)
-for information about configuring each provider.
+Firebase currently supports `$signInWithCredential()` for the
+[email / password](https://firebase.google.com/docs/reference/node/firebase.auth.EmailAuthProvider#.credential),
+[Facebook](https://firebase.google.com/docs/reference/node/firebase.auth.FacebookAuthProvider#.credential),
+[GitHub](https://firebase.google.com/docs/reference/node/firebase.auth.GithubAuthProvider#.credential),
+[Google](https://firebase.google.com/docs/reference/node/firebase.auth.GoogleAuthProvider#.credential),
+and [Twitter](https://firebase.google.com/docs/reference/node/firebase.auth.TwitterAuthProvider#.credential)
+authentication providers. Refer to the linked documentation in the previous sentence for information
+about creating a credential for each provider.
 
 ### $getAuth()
 
