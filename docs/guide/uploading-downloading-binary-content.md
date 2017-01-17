@@ -6,8 +6,7 @@
 * [API Summary](#api-summary)
 * [Uploading files](#uploading-files)
 * [Displaying images with the `firebase-src` directive](#displaying-images-with-the-firebase-src-directive)
-* [Retrieving files from the template](retrieving-files-from-the-template)
-* [Plnkr demo]()
+* [Retrieving files from the template](#retrieving-files-from-the-template)
 
 ## Overview
 
@@ -45,11 +44,11 @@ The Firebase Storage service is created with several special $ methods, all of w
 
 | Method  | Description |
 | ------------- | ------------- |
-| [`$put(file, metadata)`](/docs/reference.md#put) |	Uploads file to configured path with optional metadata. Returns an AngularFire wrapped UploadTask. |
-| [`$putString(string, format, metadata)`](/docs/reference.md#putstring)	| Uploads a upload a raw, base64, or base64url encoded string with optional metadata. Returns an AngularFire wrapped UploadTask. |
+| [`$put(file, metadata)`](/docs/reference.md#putfile-metadata) |	Uploads file to configured path with optional metadata. Returns an AngularFire wrapped UploadTask. |
+| [`$putString(string, format, metadata)`](/docs/reference.md#putstringstring-format-metadata)	| Uploads a upload a raw, base64, or base64url encoded string with optional metadata. Returns an AngularFire wrapped UploadTask. |
 | [`$getDownloadURL()`](/docs/reference.md#getdownloadurl) |	Returns a promise of the download URL for the file stored at the configured path. |
 | [`$getMetadata()`](/docs/reference.md#getmetadata) | Returns a promise of the metadata of the file stored at the configured path. |
-| [`$updateMetadata(metadata)`](/docs/reference.md#updatemetadata) | Updates the metadata of the file stored at the configured path. Returns a promise containing the complete metadata or en error. |
+| [`$updateMetadata(metadata)`](/docs/reference.md#updatemetadatametadata) | Updates the metadata of the file stored at the configured path. Returns a promise containing the complete metadata or en error. |
 | [`$delete()`](/docs/reference.md#delete) | Permanently deletes the file stored at the configured path. Returns a promise that is resolved when the delete completes. |
 | [`$toString()`](/docs/reference.md#tostring) | Returns a string version of the bucket path stored as a `gs://` scheme. |
 
