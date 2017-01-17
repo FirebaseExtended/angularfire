@@ -45,7 +45,7 @@
     * [`$waitForSignIn()`](#waitforsignin)
     * [`$requireSignIn(requireEmailVerification)`](#requiresigninrequireemailverification)
 * [`$firebaseStorage`](#firebasestorage)
-  * [`$putfile, metadata)`](#put)
+  * [`$put(file, metadata)`](#put)
   * [`$putString(string, format, metadata)`](#putstring)
   * [`$getDownloadURL()`](#getdownloadurl)
   * [`$getMetadata()`](#getmetadata)
@@ -982,6 +982,99 @@ This is intended to be used in the `resolve()` method of Angular routers to prev
 users from seeing authenticated pages momentarily during page load. See the
 ["Using Authentication with Routers"](/docs/guide/user-auth.md#authenticating-with-routers)
 section of our AngularFire guide for more information and a full example.
+
+## $firebaseStorage
+
+AngularFire includes support for [binary storage](/docs/guide/uploading-downloading-binary-content.md)
+with the `$firebaseStorage` service.
+
+The `$firebaseStorage` service takes a Firebase Storage reference.
+
+```js
+app.controller("MyCtrl", ["$scope", "$firebaseStorage",
+  function($scope, $firebaseStorage) {
+    var storageRef = firebase.storage().ref("images/dog");
+    $scope.storage = $firebaseAuth(storageRef);
+  }
+]);
+```
+
+The storage object returned by `$firebaseStorage` contains several methods for uploading and
+downloading binary content, as well as managing the content's metadata.
+
+### $put(file, metadata)
+
+[Uploads a `Blob` object](https://firebase.google.com/docs/storage/web/upload-files) to the specified storage reference's path with an optional metadata parameter.
+Returns an [UploadTask](#upload-task) wrapped by AngularFire.
+
+
+```js
+var htmlFile = new Blob(['<html></html>'], {type : 'text/html'});
+var uploadTask = $scope.storage.$put(htmlFile, { contentType: 'text/html' });
+```
+
+## $putString(string, format, metadata)
+
+[Uploads a RAW, base64 string, or base64 URL string](https://firebase.google.com/docs/storage/web/upload-files#upload_from_a_string) to the specified storage reference's path with an optional metadata parameter.
+Returns an [UploadTask](#upload-task) wrapped by AngularFire.
+
+```js
+var base64String = '5b6p5Y+344GX44G+44GX44Gf77yB44GK44KB44Gn44Go44GG77yB';
+var uploadTask = $scope.storage.$putString(base64String, 'base64', { contentType: 'image/gif' });
+```
+
+## $getDownloadURL()
+
+Returns a promise of [the download URL](https://firebase.google.com/docs/storage/web/download-files#download_data_via_url) for the file stored at the configured path.
+
+```js
+$scope.storage.$getDownloadURL().then(function(url) {
+  $scope.url = url;
+});
+```
+
+## $getMetadata()
+
+Returns a promise of [the metadata of the file](https://firebase.google.com/docs/storage/web/file-metadata#get_file_metadata) stored at the configured path. File
+metadata contains common properties such as `name`, `size`, and `contentType`
+(often referred to as MIME type) in addition to some less common ones like `contentDisposition` and `timeCreated`.
+
+```js
+$scope.storage.$getMetadata().then(function(metadata) {
+  $scope.metadata = metadata;
+});
+```
+
+## $updateMetadata(metadata)
+
+Updates [the metadata of the file](https://firebase.google.com/docs/storage/web/file-metadata#update_file_metadata) stored at the configured path.
+Returns a promise containing the complete metadata or en error.
+
+```js
+var updateData = { contenType: 'text/plain' };
+$scope.storage.$updateMetadata(updateData).then(function(completeMetadata) {
+  $scope.completeMetadata = completeMetadata;
+});
+```
+
+## $delete()
+
+Permanently [deletes the file stored](https://firebase.google.com/docs/storage/web/delete-files) at the configured path. Returns a promise that is resolved when the delete completes.
+
+```js
+$scope.storage.$delete().then(function() {
+  console.log('successfully deleted!');
+});
+```
+
+## $toString()
+
+Returns a [string version of the bucket path](https://firebase.google.com/docs/reference/js/firebase.storage.Reference#toString) stored as a `gs://` scheme.
+
+```js
+// gs://<bucket>/<path>/<to>/<object>
+var asString = $scope.storage.$toString();
+```
 
 ## Extending the Services
 
