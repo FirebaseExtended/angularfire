@@ -52,15 +52,15 @@
   * [`$updateMetadata(metadata)`](#updatemetadata)
   * [`$delete()`](#delete)
   * [`$toString()`](#tostring)
-  * Upload Task
-    * [`$progress(callback)`](#uploadtask-progress)
-    * [`$error(callback)`](#uploadtask-error)
-    * [`$complete(callback)`](#uploadtask-complete)
-    * [`$cancel()`](#uploadtask-cancel)
-    * [`$pause()`](#uploadtask-pause)
-    * [`$snapshot()`](#uploadtask-$snapshot)
+  * [Upload Task](#upload-task)
+    * [`$progress(callback)`](#progress)
+    * [`$error(callback)`](#error)
+    * [`$complete(callback)`](#complete)
+    * [`$cancel()`](#cancel)
+    * [`$pause()`](#pause)
+    * [`$snapshot()`](#$snapshot)
     * [`then(callback)`](#uploadtask-then)
-    * [`catch(callback)`](#uploadtask-then)
+    * [`catch(callback)`](#uploadtask-catch)
 * [Extending the Services](#extending-the-services)
   * [Extending `$firebaseObject`](#extending-firebaseobject)
   * [Extending `$firebaseArray`](#extending-firebasearray)
@@ -1074,6 +1074,102 @@ Returns a [string version of the bucket path](https://firebase.google.com/docs/r
 ```js
 // gs://<bucket>/<path>/<to>/<object>
 var asString = $scope.storage.$toString();
+```
+
+## Upload Task
+
+The `$firebaseStorage()` service returns an AngularFire wrapped [`UploadTask`](https://firebase.google.com/docs/reference/js/firebase.storage#uploadtask) when uploading binary content
+using the [`$put()`]($put) and [`$putString()`](#putstring) methods. This task is used for [monitoring](https://firebase.google.com/docs/storage/web/upload-files#monitor_upload_progress)
+and [managing](https://firebase.google.com/docs/storage/web/upload-files#manage_uploads) uploads.
+
+```js
+var htmlFile = new Blob(['<html></html>'], {type : 'text/html'});
+var uploadTask = $scope.storage.$put(htmlFile, { contentType: 'text/html' });
+```
+
+## $progress(callback)
+
+Calls the provided callback function whenever there is an update in the progress of the file uploading. The callback
+passes back an [`UploadTaskSnapshot`](https://firebase.google.com/docs/reference/js/firebase.storage.UploadTaskSnapshot).
+
+```js
+var uploadTask = $scope.storage.$put(file);
+uploadTask.$progress(function(snapshot) {
+  var percentUploaded = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+  console.log(percentUploaded)
+});
+```
+
+## $error(callback)
+
+Calls the provided callback function when there is an error uploading the file.
+
+```js
+var uploadTask = $scope.storage.$put(file);
+uploadTask.$error(function(error) {
+  console.error(error);
+});
+```
+
+## $complete(callback)
+
+Calls the provided callback function when the upload is complete. Passes back the completed [`UploadTaskSnapshot`](https://firebase.google.com/docs/reference/js/firebase.storage.UploadTaskSnapshot).
+
+```js
+var uploadTask = $scope.storage.$put(file);
+uploadTask.$complete(function(snapshot) {
+  console.log(snapshot.downloadURL);
+});
+```
+
+## $cancel()
+
+[Cancels](https://firebase.google.com/docs/reference/js/firebase.storage.UploadTask#cancel) the current upload.
+Has no effect on a completed upload. Returns true if cancel had effect.
+
+```js
+var uploadTask = $scope.storage.$put(file);
+var hadEffect = uploadTask.$cancel();
+```
+
+## $pause()
+
+[Pauses](https://firebase.google.com/docs/reference/js/firebase.storage.UploadTask#pause) the current upload.
+Has no effect on a completed upload. Returns true if pause had effect.
+
+```js
+var uploadTask = $scope.storage.$put(file);
+var hadEffect = uploadTask.$pause();
+```
+
+## $snapshot()
+
+Returns the [current immutable view of the task](https://firebase.google.com/docs/storage/web/upload-files#monitor_upload_progress) at the time the event occurred.
+
+```js
+var uploadTask = $scope.storage.$put(file);
+$scope.bytesTransferred = uploadTask.$snapshot.bytesTransferred;
+```
+
+## Upload Task then()
+An Upload Task implements a promise like interface. The callback is called when the upload is complete. The callback
+passes back an [UploadTaskSnapshot](https://firebase.google.com/docs/reference/js/firebase.storage.UploadTaskSnapshot).
+
+```js
+var uploadTask = $scope.storage.$put(file);
+uploadTask.then(function(snapshot) {
+  console.log(snapshot.downloadURL);
+});
+```
+
+## Upload Task catch()
+An Upload Task implements a promise like interface. The callback is called when an error occurs.
+
+```js
+var uploadTask = $scope.storage.$put(file);
+uploadTask.catch(function(error) {
+  console.error(error);
+});
 ```
 
 ## Extending the Services

@@ -78,11 +78,11 @@ SampleCtrl.$inject = ["$firebaseStorage"];
 | [`$progress(callback)`](/docs/reference.md#uploadtask-progress) |	Calls the provided callback function whenever there is an update in the progress of the file uploading. |
 | [`$error(callback)`](/docs/reference.md#uploadtask-error)	| Calls the provided callback function when there is an error uploading the file |
 | [`$complete(callback)`](/docs/reference.md#uploadtask-complete) |	Calls the provided callback function when the upload is complete. |
-| [`$cancel()`](/docs/reference.md#uploadtask-cancel) | Cancels the upload in progress. |
-| [`$pause()`](/docs/reference.md#uploadtask-pause) | Pauses the upload in progress. |
+| [`$cancel()`](/docs/reference.md#uploadtask-cancel) | Cancels the upload. |
+| [`$pause()`](/docs/reference.md#uploadtask-pause) | Pauses the upload. |
 | [`$snapshot()`](/docs/reference.md#uploadtask-$snapshot) | Returns the [current immutable view of the task](https://firebase.google.com/docs/storage/web/upload-files#monitor_upload_progress) at the time the event occurred. |
-| [`then(callback)`](/docs/reference.md#uploadtask-then) | An Upload Task implements a promise like interface. This method is called when the upload is complete. |
-| [`catch(callback)`](/docs/reference.md#uploadtask-then) | An Upload Task implements a promise like interface. This method is called when an error occurs. |
+| [`then(callback)`](/docs/reference.md#uploadtask-then) | An Upload Task implements a promise like interface. The callback is called when the upload is complete. |
+| [`catch(callback)`](/docs/reference.md#uploadtask-then) | An Upload Task implements a promise like interface. The callback is called when an error occurs. |
 
 ## Displaying images with the `firebase-src` directive
 AngularFire provides a directive that displays a file with any `src` compatible element.
