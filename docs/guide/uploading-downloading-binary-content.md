@@ -4,9 +4,9 @@
 
 * [Overview](#overview)
 * [API Summary](#api-summary)
-* [Uploading files](#uploading-files)
-* [Displaying images with the `firebase-src` directive](#displaying-images-with-the-firebase-src-directive)
-* [Retrieving files from the template](#retrieving-files-from-the-template)
+* [Uploading Files](#uploading-files)
+* [Displaying Images with the `firebase-src` Directive](#displaying-images-with-the-firebase-src-directive)
+* [Retrieving Files from the Template](#retrieving-files-from-the-template)
 
 ## Overview
 
