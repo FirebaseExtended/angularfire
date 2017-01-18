@@ -11,15 +11,15 @@
 ## Overview
 
 Firebase provides [a hosted binary storage service](https://firebase.google.com/docs/storage/)
-which enables you to store and retrieve user-generated content like images, audio and
+which enables you to store and retrieve user-generated content like images, audio, and
 video directly from the Firebase client SDK.
 
 Binary files are stored in a Firebase Storage bucket, not in the Realtime Database.
-The file files in your bucket are stored in a hierarchical structure, just like
+The files in your bucket are stored in a hierarchical structure, just like
 in the Realtime Database.
 
 To use the Firebase Storage binding, first [create a Firebase Storage reference](https://firebase.google.com/docs/storage/web/create-reference).
-Then using this reference, pass it into the `$firebaseStorage` service.
+Then, using this reference, pass it into the `$firebaseStorage` service:
 
 ```js
 // define our app and dependencies (remember to include firebase!)
@@ -32,7 +32,7 @@ angular
 // inject $firebaseStorage into our controller
 function SampleCtrl($firebaseStorage) {
   // create a Firebase Storage Reference for the $firebaseStorage binding
-  var storageRef = firebase.storage().ref('userProfiles/physicsmarie');
+  var storageRef = firebase.storage().ref("userProfiles/physicsmarie");
   var storage = $firebaseStorage(storageRef);
 }
 SampleCtrl.$inject = ["$firebaseStorage"];
@@ -40,22 +40,22 @@ SampleCtrl.$inject = ["$firebaseStorage"];
 
 ## API Summary
 
-The Firebase Storage service is created with several special $ methods, all of which are listed in the following table:
+The Firebase Storage service is created with several special `$` methods, all of which are listed in the following table:
 
 | Method  | Description |
 | ------------- | ------------- |
-| [`$put(file, metadata)`](/docs/reference.md#putfile-metadata) |	Uploads file to configured path with optional metadata. Returns an AngularFire wrapped UploadTask. |
-| [`$putString(string, format, metadata)`](/docs/reference.md#putstringstring-format-metadata)	| Uploads a upload a raw, base64, or base64url encoded string with optional metadata. Returns an AngularFire wrapped UploadTask. |
-| [`$getDownloadURL()`](/docs/reference.md#getdownloadurl) |	Returns a promise of the download URL for the file stored at the configured path. |
-| [`$getMetadata()`](/docs/reference.md#getmetadata) | Returns a promise of the metadata of the file stored at the configured path. |
-| [`$updateMetadata(metadata)`](/docs/reference.md#updatemetadatametadata) | Updates the metadata of the file stored at the configured path. Returns a promise containing the complete metadata or en error. |
-| [`$delete()`](/docs/reference.md#delete) | Permanently deletes the file stored at the configured path. Returns a promise that is resolved when the delete completes. |
+| [`$put(file, metadata)`](/docs/reference.md#putfile-metadata) |	Uploads file to configured path with optional metadata. Returns an AngularFire wrapped `UploadTask`. |
+| [`$putString(string, format, metadata)`](/docs/reference.md#putstringstring-format-metadata)	| Uploads a upload a raw, base64, or base64url encoded string with optional metadata. Returns an AngularFire wrapped `UploadTask`. |
+| [`$getDownloadURL()`](/docs/reference.md#getdownloadurl) |	Returns a `Promise` fulfilled with the download URL for the file stored at the configured path. |
+| [`$getMetadata()`](/docs/reference.md#getmetadata) | Returns a `Promise` fulfilled with the metadata of the file stored at the configured path. |
+| [`$updateMetadata(metadata)`](/docs/reference.md#updatemetadatametadata) | Returns a `Promise` containing the updated metadata. |
+| [`$delete()`](/docs/reference.md#delete) | Permanently deletes the file stored at the configured path. Returns a `Promise` that is resolved when the delete completes. |
 | [`$toString()`](/docs/reference.md#tostring) | Returns a string version of the bucket path stored as a `gs://` scheme. |
 
 
 ## Uploading files
-To upload files use either the `$put()` or `$putString()` methods. These methods
-return an `UploadTask` which is wrapped by AngularFire to handle the `$digest` loop.
+To upload files, use either the `$put()` or `$putString()` methods. These methods
+return an [`UploadTask`](https://firebase.google.com/docs/reference/js/firebase.storage#uploadtask) which is wrapped by AngularFire to handle the `$digest` loop.
 
 ```js
 function SampleCtrl($firebaseStorage) {
