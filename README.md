@@ -2,20 +2,21 @@
 
 
 AngularFire is the officially supported [AngularJS](https://angularjs.org/) binding for
-[Firebase](https://firebase.google.com/). Firebase is a
-backend service that provides data storage, authentication, and static website hosting for your
-Angular app.
+[Firebase](https://firebase.google.com/). Firebase is a backend service that provides data storage,
+file storage, authentication, and static website hosting for your Angular app.
 
-AngularFire is a complement to the core Firebase client. It provides you with three Angular
+AngularFire is a complement to the core Firebase client. It provides you with several Angular
 services:
   * `$firebaseObject` - synchronized objects
   * `$firebaseArray` - synchronized collections
+  * `$firebaseStorage` - store and retrieve user-generated content like images, audio, and video
   * `$firebaseAuth` - authentication, user management, routing
 
 Join our [Firebase Google Group](https://groups.google.com/forum/#!forum/firebase-talk)
 to ask questions, provide feedback, and share apps you've built with AngularFire.
 
-**Looking for Angular 2 support?** Visit the AngularFire2 project [here](https://github.com/angular/angularfire2).
+**Looking for Angular 2 support?** Visit the [AngularFire2](https://github.com/angular/angularfire2)
+project.
 
 
 ## Table of Contents
@@ -41,13 +42,13 @@ In order to use AngularFire in your project, you need to include the following f
 
 ```html
 <!-- AngularJS -->
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.0/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.1/angular.min.js"></script>
 
 <!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/3.6.4/firebase.js"></script>
+<script src="https://www.gstatic.com/firebasejs/3.6.6/firebase.js"></script>
 
 <!-- AngularFire -->
-<script src="https://cdn.firebase.com/libs/angularfire/2.2.0/angularfire.min.js"></script>
+<script src="https://cdn.firebase.com/libs/angularfire/2.3.0/angularfire.min.js"></script>
 ```
 
 You can also install AngularFire via npm and Bower and its dependencies will be downloaded
