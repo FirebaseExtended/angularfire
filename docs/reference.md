@@ -44,6 +44,23 @@
   * Router Helpers
     * [`$waitForSignIn()`](#waitforsignin)
     * [`$requireSignIn(requireEmailVerification)`](#requiresigninrequireemailverification)
+* [`$firebaseStorage`](#firebasestorage)
+  * [`$put(file, metadata)`](#putfile-metadata)
+  * [`$putString(string, format, metadata)`](#putstringstring-format-metadata)
+  * [`$getDownloadURL()`](#getdownloadurl)
+  * [`$getMetadata()`](#getmetadata)
+  * [`$updateMetadata(metadata)`](#updatemetadatametadata)
+  * [`$delete()`](#delete)
+  * [`$toString()`](#tostring)
+  * [Upload Task](#upload-task)
+    * [`$progress(callback)`](#progresscallback)
+    * [`$complete(callback)`](#completecallback)
+    * [`$error(callback)`](#errorcallback)
+    * [`$cancel()`](#cancel)
+    * [`$pause()`](#pause)
+    * [`$snapshot()`](#snapshot)
+    * [`then(callback)`](#then)
+    * [`catch(callback)`](#catch)
 * [Extending the Services](#extending-the-services)
   * [Extending `$firebaseObject`](#extending-firebaseobject)
   * [Extending `$firebaseArray`](#extending-firebasearray)
@@ -965,6 +982,196 @@ This is intended to be used in the `resolve()` method of Angular routers to prev
 users from seeing authenticated pages momentarily during page load. See the
 ["Using Authentication with Routers"](/docs/guide/user-auth.md#authenticating-with-routers)
 section of our AngularFire guide for more information and a full example.
+
+## $firebaseStorage
+
+AngularFire includes support for [binary storage](/docs/guide/uploading-downloading-binary-content.md)
+with the `$firebaseStorage` service.
+
+The `$firebaseStorage` service takes a [Firebase Storage](https://firebase.google.com/docs/storage/) reference.
+
+```js
+app.controller("MyCtrl", ["$scope", "$firebaseStorage",
+  function($scope, $firebaseStorage) {
+    var storageRef = firebase.storage().ref("images/dog");
+    $scope.storage = $firebaseStorage(storageRef);
+  }
+]);
+```
+
+The storage object returned by `$firebaseStorage` contains several methods for uploading and
+downloading binary content, as well as managing the content's metadata.
+
+### $put(file, metadata)
+
+[Uploads a `Blob` object](https://firebase.google.com/docs/storage/web/upload-files) to the specified storage reference's path with an optional metadata parameter.
+Returns an [`UploadTask`](#upload-task) wrapped by AngularFire.
+
+
+```js
+var htmlFile = new Blob(["<html></html>"], { type : "text/html" });
+var uploadTask = $scope.storage.$put(htmlFile, { contentType: "text/html" });
+```
+
+### $putString(string, format, metadata)
+
+[Uploads a raw, `base64` string, or `base64url` string](https://firebase.google.com/docs/storage/web/upload-files#upload_from_a_string) to the specified storage reference's path with an optional metadata parameter.
+Returns an [`UploadTask`](#upload-task) wrapped by AngularFire.
+
+```js
+var base64String = "5b6p5Y+344GX44G+44GX44Gf77yB44GK44KB44Gn44Go44GG77yB";
+// Note: valid values for format are "raw", "base64", "base64url", and "data_url".
+var uploadTask = $scope.storage.$putString(base64String, "base64", { contentType: "image/gif" });
+```
+
+### $getDownloadURL()
+
+Returns a promise fulfilled with [the download URL](https://firebase.google.com/docs/storage/web/download-files#download_data_via_url) for the file stored at the configured path.
+
+```js
+$scope.storage.$getDownloadURL().then(function(url) {
+  $scope.url = url;
+});
+```
+
+### $getMetadata()
+
+Returns a promise fulfilled with [the metadata of the file](https://firebase.google.com/docs/storage/web/file-metadata#get_file_metadata) stored at the configured path. File
+metadata contains common properties such as `name`, `size`, and `contentType`
+(often referred to as MIME type) in addition to some less common ones like `contentDisposition` and `timeCreated`.
+
+```js
+$scope.storage.$getMetadata().then(function(metadata) {
+  $scope.metadata = metadata;
+});
+```
+
+### $updateMetadata(metadata)
+
+[Updates the metadata of the file](https://firebase.google.com/docs/storage/web/file-metadata#update_file_metadata) stored at the configured path.
+Returns a promise fulfilled with the updated metadata.
+
+```js
+var updateData = { contenType: "text/plain" };
+$scope.storage.$updateMetadata(updateData).then(function(updatedMetadata) {
+  $scope.updatedMetadata = updatedMetadata;
+});
+```
+
+### $delete()
+
+Permanently [deletes the file stored](https://firebase.google.com/docs/storage/web/delete-files) at the configured path. Returns a promise that is resolved when the delete completes.
+
+```js
+$scope.storage.$delete().then(function() {
+  console.log("successfully deleted!");
+});
+```
+
+### $toString()
+
+Returns a [string version of the bucket path](https://firebase.google.com/docs/reference/js/firebase.storage.Reference#toString) stored as a `gs://` scheme.
+
+```js
+// gs://<bucket>/<path>/<to>/<object>
+var asString = $scope.storage.$toString();
+```
+
+### Upload Task
+
+The [`$firebaseStorage()`](#firebasestorage) service returns an AngularFire wrapped [`UploadTask`](https://firebase.google.com/docs/reference/js/firebase.storage#uploadtask) when uploading binary content
+using the [`$put()`](#putfile-metadata) and [`$putString()`](#putstringstring-format-metadata) methods. This task is used for [monitoring](https://firebase.google.com/docs/storage/web/upload-files#monitor_upload_progress)
+and [managing](https://firebase.google.com/docs/storage/web/upload-files#manage_uploads) uploads.
+
+```js
+var htmlFile = new Blob(["<html></html>"], { type : "text/html" });
+var uploadTask = $scope.storage.$put(htmlFile, { contentType: "text/html" });
+```
+
+#### $progress(callback)
+
+Calls the provided callback function whenever there is an update in the progress of the file uploading. The callback
+passes back an [`UploadTaskSnapshot`](https://firebase.google.com/docs/reference/js/firebase.storage.UploadTaskSnapshot).
+
+```js
+var uploadTask = $scope.storage.$put(file);
+uploadTask.$progress(function(snapshot) {
+  var percentUploaded = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+  console.log(percentUploaded);
+});
+```
+
+#### $complete(callback)
+
+Calls the provided callback function when the upload is complete. Passes back the completed [`UploadTaskSnapshot`](https://firebase.google.com/docs/reference/js/firebase.storage.UploadTaskSnapshot).
+
+```js
+var uploadTask = $scope.storage.$put(file);
+uploadTask.$complete(function(snapshot) {
+  console.log(snapshot.downloadURL);
+});
+```
+
+#### $error(callback)
+
+Calls the provided callback function when there is an error uploading the file.
+
+```js
+var uploadTask = $scope.storage.$put(file);
+uploadTask.$error(function(error) {
+  console.error(error);
+});
+```
+
+#### $cancel()
+
+[Cancels](https://firebase.google.com/docs/reference/js/firebase.storage.UploadTask#cancel) the current upload.
+Has no effect on a completed upload. Returns `true` if cancel had effect.
+
+```js
+var uploadTask = $scope.storage.$put(file);
+var hadEffect = uploadTask.$cancel();
+```
+
+#### $pause()
+
+[Pauses](https://firebase.google.com/docs/reference/js/firebase.storage.UploadTask#pause) the current upload.
+Has no effect on a completed upload. Returns `true` if pause had effect.
+
+```js
+var uploadTask = $scope.storage.$put(file);
+var hadEffect = uploadTask.$pause();
+```
+
+#### $snapshot()
+
+Returns the [current immutable view of the task](https://firebase.google.com/docs/reference/js/firebase.storage.UploadTaskSnapshot) at the time the event occurred.
+
+```js
+var uploadTask = $scope.storage.$put(file);
+$scope.bytesTransferred = uploadTask.$snapshot.bytesTransferred;
+```
+
+#### then()
+An `UploadTask` implements a promise like interface. The callback is called when the upload is complete. The callback
+passes back an [UploadTaskSnapshot](https://firebase.google.com/docs/reference/js/firebase.storage.UploadTaskSnapshot).
+
+```js
+var uploadTask = $scope.storage.$put(file);
+uploadTask.then(function(snapshot) {
+  console.log(snapshot.downloadURL);
+});
+```
+
+#### catch()
+An `UploadTask` implements a promise like interface. The callback is called when an error occurs.
+
+```js
+var uploadTask = $scope.storage.$put(file);
+uploadTask.catch(function(error) {
+  console.error(error);
+});
+```
 
 ## Extending the Services
 
