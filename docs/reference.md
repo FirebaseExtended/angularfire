@@ -58,7 +58,7 @@
     * [`$error(callback)`](#errorcallback)
     * [`$cancel()`](#cancel)
     * [`$pause()`](#pause)
-    * [`$snapshot()`](#$snapshot)
+    * [`$snapshot()`](#snapshot)
     * [`then(callback)`](#then)
     * [`catch(callback)`](#catch)
 * [Extending the Services](#extending-the-services)
@@ -1009,7 +1009,7 @@ Returns an [`UploadTask`](#upload-task) wrapped by AngularFire.
 
 
 ```js
-var htmlFile = new Blob(["<html></html>"], {type : "text/html"});
+var htmlFile = new Blob(["<html></html>"], { type : "text/html" });
 var uploadTask = $scope.storage.$put(htmlFile, { contentType: "text/html" });
 ```
 
@@ -1048,13 +1048,13 @@ $scope.storage.$getMetadata().then(function(metadata) {
 
 ### $updateMetadata(metadata)
 
-Updates [the metadata of the file](https://firebase.google.com/docs/storage/web/file-metadata#update_file_metadata) stored at the configured path.
+[Updates the metadata of the file](https://firebase.google.com/docs/storage/web/file-metadata#update_file_metadata) stored at the configured path.
 Returns a promise fulfilled with the updated metadata.
 
 ```js
-var updateData = { contenType: 'text/plain' };
-$scope.storage.$updateMetadata(updateData).then(function(completeMetadata) {
-  $scope.completeMetadata = completeMetadata;
+var updateData = { contenType: "text/plain" };
+$scope.storage.$updateMetadata(updateData).then(function(updatedMetadata) {
+  $scope.updatedMetadata = updatedMetadata;
 });
 ```
 
@@ -1064,7 +1064,7 @@ Permanently [deletes the file stored](https://firebase.google.com/docs/storage/w
 
 ```js
 $scope.storage.$delete().then(function() {
-  console.log('successfully deleted!');
+  console.log("successfully deleted!");
 });
 ```
 
@@ -1080,11 +1080,11 @@ var asString = $scope.storage.$toString();
 ### Upload Task
 
 The [`$firebaseStorage()`](#firebasestorage) service returns an AngularFire wrapped [`UploadTask`](https://firebase.google.com/docs/reference/js/firebase.storage#uploadtask) when uploading binary content
-using the [`$put()`]($putfile-metadata) and [`$putString()`](#putstringstring-format-metadata) methods. This task is used for [monitoring](https://firebase.google.com/docs/storage/web/upload-files#monitor_upload_progress)
+using the [`$put()`](#putfile-metadata) and [`$putString()`](#putstringstring-format-metadata) methods. This task is used for [monitoring](https://firebase.google.com/docs/storage/web/upload-files#monitor_upload_progress)
 and [managing](https://firebase.google.com/docs/storage/web/upload-files#manage_uploads) uploads.
 
 ```js
-var htmlFile = new Blob(["<html></html>"], {type : "text/html"});
+var htmlFile = new Blob(["<html></html>"], { type : "text/html" });
 var uploadTask = $scope.storage.$put(htmlFile, { contentType: "text/html" });
 ```
 

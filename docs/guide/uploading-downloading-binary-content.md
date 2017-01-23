@@ -44,8 +44,8 @@ The Firebase Storage service is created with several special `$` methods, all of
 
 | Method  | Description |
 | ------------- | ------------- |
-| [`$put(file, metadata)`](/docs/reference.md#putfile-metadata) |	Uploads file to configured path with optional metadata. Returns an AngularFire wrapped `UploadTask`. |
-| [`$putString(string, format, metadata)`](/docs/reference.md#putstringstring-format-metadata)	| Uploads a upload a raw, base64, or base64url encoded string with optional metadata. Returns an AngularFire wrapped `UploadTask`. |
+| [`$put(file, metadata)`](/docs/reference.md#putfile-metadata) |	Uploads file to configured path with optional metadata. Returns an AngularFire wrapped [`UploadTask`](/docs/reference.md#upload-task). |
+| [`$putString(string, format, metadata)`](/docs/reference.md#putstringstring-format-metadata)	| Uploads a upload a raw, base64, or base64url encoded string with optional metadata. Returns an AngularFire wrapped [`UploadTask`](/docs/reference.md#upload-task). |
 | [`$getDownloadURL()`](/docs/reference.md#getdownloadurl) |	Returns a `Promise` fulfilled with the download URL for the file stored at the configured path. |
 | [`$getMetadata()`](/docs/reference.md#getmetadata) | Returns a `Promise` fulfilled with the metadata of the file stored at the configured path. |
 | [`$updateMetadata(metadata)`](/docs/reference.md#updatemetadatametadata) | Returns a `Promise` containing the updated metadata. |
@@ -55,7 +55,7 @@ The Firebase Storage service is created with several special `$` methods, all of
 
 ## Uploading files
 To upload files, use either the `$put()` or `$putString()` methods. These methods
-return an [`UploadTask`](https://firebase.google.com/docs/reference/js/firebase.storage#uploadtask) which is wrapped by AngularFire to handle the `$digest` loop.
+return an [[`UploadTask`](/docs/reference.md#upload-task)(https://firebase.google.com/docs/reference/js/firebase.storage#uploadtask) which is wrapped by AngularFire to handle the `$digest` loop.
 
 ```js
 function SampleCtrl($firebaseStorage) {
@@ -80,10 +80,10 @@ SampleCtrl.$inject = ["$firebaseStorage"];
 | [`$cancel()`](/docs/reference.md#cancel) | Cancels the upload. |
 | [`$pause()`](/docs/reference.md#pause) | Pauses the upload. |
 | [`$snapshot()`](/docs/reference.md#snapshot) | Returns the [current immutable view of the task](https://firebase.google.com/docs/storage/web/upload-files#monitor_upload_progress) at the time the event occurred. |
-| [`then(callback)`](/docs/reference.md#then) | An `UploadTask` implements a `Promise` like interface. This callback is called when the upload is complete. |
-| [`catch(callback)`](/docs/reference.md#catch) | An `UploadTask` implements a `Promise` like interface. This callback is called when an error occurs. |
+| [`then(callback)`](/docs/reference.md#then) | An [`UploadTask`](/docs/reference.md#upload-task) implements a `Promise` like interface. This callback is called when the upload is complete. |
+| [`catch(callback)`](/docs/reference.md#catch) | An [`UploadTask`](/docs/reference.md#upload-task) implements a `Promise` like interface. This callback is called when an error occurs. |
 
-## Displaying images with the `firebase-src` directive
+## Displaying Images with the `firebase-src` Directive
 
 AngularFire provides a directive that displays a file with any `src`-compatible element. Instead of using the tradional `src` attribute, use `firebase-src`:
 
@@ -93,9 +93,9 @@ AngularFire provides a directive that displays a file with any `src`-compatible 
 <img firebase-src="{{ userProfileId }}" />
 ```
 
-## Retrieving files from the template
+## Retrieving Files from the Template
 
-AngularFire does not provide a directive for retrieving an upload file. However,
+AngularFire does not provide a directive for retrieving an uploaded file. However,
 the directive below provides a baseline to work off:
 
 ```js
@@ -122,7 +122,7 @@ function FileUploadDirective() {
 }
 ```
 
-To use this directive, create a controller to bind the `onChange` method:
+To use this directive, create a controller to bind the `onChange()` method:
 
 ```js
 function UploadCtrl($firebaseStorage) {
@@ -145,3 +145,8 @@ Then specify your template to use the directive:
   </file-upload>
 </div>
 ```
+
+Head on over to the [API reference](/docs/reference.md#firebasestorage)
+for `$firebaseStorage` to see more details for each API method provided by the service. Now that we
+have a grasp of managing binary content with AngularFire, the [next section](user-auth.md) of this guide
+moves on to a new topic: authentication.

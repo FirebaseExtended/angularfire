@@ -211,5 +211,5 @@ app.controller("ChatCtrl", ["$scope", "chatMessages",
 
 Head on over to the [API reference](/docs/reference.md#firebasearray)
 for `$firebaseArray` to see more details for each API method provided by the service. Now that we
-have a grasp of synchronizing data with AngularFire, the [next section](user-auth.md) of this guide
-moves on to a different aspect of building applications: user authentication.
+have a grasp of synchronizing data with AngularFire, the [next section](uploading-downloading-binary-content.md) of this guide
+moves on to a different aspect of building applications: binary storage.
