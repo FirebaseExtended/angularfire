@@ -1,0 +1,1 @@
+feature - Added a new [`$firebaseStorage`](/docs/guide/uploading-downloading-binary-content.md) service to store and retrieve user-generated content like images, audio, and video.
