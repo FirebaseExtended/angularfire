@@ -37,8 +37,8 @@
     * [`$signOut()`](#signout)
   * User Management
     * [`$createUserWithEmailAndPassword(email, password)`](#createuserwithemailandpasswordemail-password)
-    * [`$updatePassword(password)`](#updatepasswordpassword)
-    * [`$updateEmail(email)`](#updateemailemail)
+    * [`$updatePassword(password)`](#updatepasswordnewpassword)
+    * [`$updateEmail(email)`](#updateemailnewemail)
     * [`$deleteUser()`](#deleteuser)
     * [`$sendPasswordResetEmail(email)`](#sendpasswordresetemailemail)
   * Router Helpers
