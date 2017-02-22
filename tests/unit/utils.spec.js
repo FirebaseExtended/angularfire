@@ -136,6 +136,33 @@ describe('$firebaseUtils', function () {
       expect(spy).toHaveBeenCalledWith('baz', 'biz');
     });
   });
+  
+  describe('#deepCopy', function() {
+    it('should work for empty objects', function() {
+      var obj = {};
+      expect($utils.deepCopy(obj)).toEqual(obj);
+    });
+    it('should work for primitives', function() {
+      var obj = 'foo';
+      expect($utils.deepCopy(obj)).toEqual(obj);
+    });
+    it('should work for dates', function() {
+      var obj = new Date();
+      expect($utils.deepCopy(obj)).toEqual(obj);
+    });
+    it('should work for nested objects', function() {
+      var d = new Date();
+      var obj = { date: {date: [{date: d}, {int: 1}, {str: "foo"}, {}]}};
+      expect($utils.deepCopy(obj)).toEqual(obj);
+    });
+    it('should work for functions', function() {
+      var f = function(){ 
+        var s = 'foo';
+      };
+      var obj = f;
+      expect($utils.deepCopy(obj)).toEqual(obj);
+    });
+  });
 
   describe('#updateRec', function() {
     it('should return true if changes applied', function() {
@@ -228,6 +255,13 @@ describe('$firebaseUtils', function () {
     it('should remove any variables prefixed with $', function() {
       var json = {foo: 'bar', $foo: '$bar'};
       expect($utils.toJSON(json)).toEqual({foo: json.foo});
+    });
+    
+    it('should be able to handle date objects', function(){
+      var d = new Date();
+      var json = {date: d};
+
+      expect($utils.toJSON(json)).toEqual({date: d});
     });
 
     it('should remove any deeply nested variables prefixed with $', function() {
