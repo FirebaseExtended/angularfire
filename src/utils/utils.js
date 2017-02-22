@@ -183,7 +183,7 @@
           },
 
           deepCopy: function(obj) {
-            if( !angular.isObject(obj) ) { return obj; }
+            if( !angular.isObject(obj) || angular.isDate(obj) ) { return obj; }
             var newCopy = angular.isArray(obj) ? obj.slice() : angular.extend({}, obj);
             for (var key in newCopy) {
               if (newCopy.hasOwnProperty(key)) {
@@ -395,7 +395,7 @@
     ]);
 
     function stripDollarPrefixedKeys(data) {
-      if( !angular.isObject(data) ) { return data; }
+      if( !angular.isObject(data) || angular.isDate(data)) { return data; }
       var out = angular.isArray(data)? [] : {};
       angular.forEach(data, function(v,k) {
         if(typeof k !== 'string' || k.charAt(0) !== '$') {
