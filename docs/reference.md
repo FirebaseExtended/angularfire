@@ -80,7 +80,7 @@ app.config(function() {
     apiKey: "<API_Key>",               // Your Firebase API key
     authDomain: "<AUTH_DOMAIN>",       // Your Firebase Auth domain ("*.firebaseapp.com")
     databaseURL: "<DATABASE_URL>",     // Your Firebase Database URL ("https://*.firebaseio.com")
-    storageBucket: "<STORAGE_BUCKET>"  // Your Firebase Storage bucket ("*.appspot.com")
+    storageBucket: "<STORAGE_BUCKET>"  // Your Cloud Storage for Firebase bucket ("*.appspot.com")
   };
   firebase.initializeApp(config);
 });
@@ -988,7 +988,7 @@ section of our AngularFire guide for more information and a full example.
 AngularFire includes support for [binary storage](/docs/guide/uploading-downloading-binary-content.md)
 with the `$firebaseStorage` service.
 
-The `$firebaseStorage` service takes a [Firebase Storage](https://firebase.google.com/docs/storage/) reference.
+The `$firebaseStorage` service takes a [Storage](https://firebase.google.com/docs/storage/) reference.
 
 ```js
 app.controller("MyCtrl", ["$scope", "$firebaseStorage",

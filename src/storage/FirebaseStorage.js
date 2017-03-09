@@ -44,7 +44,7 @@
   }
 
   /**
-   * Take an Firebase Storage snapshot and unwrap only the needed properties.
+   * Take a Storage snapshot and unwrap only the needed properties.
    *
    * @param snapshot
    * @returns An object containing the unwrapped values.
@@ -62,12 +62,11 @@
   }
 
   /**
-   * Determines if the value passed in is a Firebase Storage Reference. The
+   * Determines if the value passed in is a Storage Reference. The
    * put method is used for the check.
    *
    * @param value
-   * @returns A boolean that indicates if the value is a Firebase Storage
-   * Reference.
+   * @returns A boolean that indicates if the value is a Storage Reference.
    */
   function _isStorageRef(value) {
     value = value || {};
@@ -75,7 +74,7 @@
   }
 
   /**
-   * Checks if the parameter is a Firebase Storage Reference, and throws an
+   * Checks if the parameter is a Storage Reference, and throws an
    * error if it is not.
    *
    * @param storageRef

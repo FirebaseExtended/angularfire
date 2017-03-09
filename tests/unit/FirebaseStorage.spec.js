@@ -292,7 +292,7 @@ describe('$firebaseStorage', function () {
 });
 
 /**
- * A Mock for Firebase Storage Tasks. It has the same .on() method signature
+ * A Mock for Cloud Storage for Firebase tasks. It has the same .on() method signature
  * but it simply stores the callbacks without doing anything. To make something
  * happen you call the makeProgress(), causeError(), or complete() methods. The
  * empty methods are intentional noops.
