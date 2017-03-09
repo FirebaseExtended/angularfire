@@ -14,11 +14,11 @@ Firebase provides [a hosted binary storage service](https://firebase.google.com/
 which enables you to store and retrieve user-generated content like images, audio, and
 video directly from the Firebase client SDK.
 
-Binary files are stored in a Firebase Storage bucket, not in the Realtime Database.
+Binary files are stored in a Cloud Storage bucket, not in the Realtime Database.
 The files in your bucket are stored in a hierarchical structure, just like
 in the Realtime Database.
 
-To use the Firebase Storage binding, first [create a Firebase Storage reference](https://firebase.google.com/docs/storage/web/create-reference).
+To use the Cloud Storage for Firebase binding, first [create a Storage reference](https://firebase.google.com/docs/storage/web/create-reference).
 Then, using this reference, pass it into the `$firebaseStorage` service:
 
 ```js
@@ -31,7 +31,7 @@ angular
 
 // inject $firebaseStorage into our controller
 function SampleCtrl($firebaseStorage) {
-  // create a Firebase Storage Reference for the $firebaseStorage binding
+  // create a Storage reference for the $firebaseStorage binding
   var storageRef = firebase.storage().ref("userProfiles/physicsmarie");
   var storage = $firebaseStorage(storageRef);
 }
@@ -40,7 +40,7 @@ SampleCtrl.$inject = ["$firebaseStorage"];
 
 ## API Summary
 
-The Firebase Storage service is created with several special `$` methods, all of which are listed in the following table:
+The Cloud Storage for Firebase service is created with several special `$` methods, all of which are listed in the following table:
 
 | Method  | Description |
 | ------------- | ------------- |
@@ -59,7 +59,7 @@ return an [[`UploadTask`](/docs/reference.md#upload-task)(https://firebase.googl
 
 ```js
 function SampleCtrl($firebaseStorage) {
-  // create a Firebase Storage Reference for the $firebaseStorage binding
+  // create a Storage reference for the $firebaseStorage binding
   var storageRef = firebase.storage().ref('userProfiles/physicsmarie');
   var storage = $firebaseStorage(storageRef);
   var file = // get a file from the template (see Retrieving files from template section below)
