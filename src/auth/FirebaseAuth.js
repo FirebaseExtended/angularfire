@@ -1,10 +1,21 @@
 (function() {
+  
   'use strict';
+  
   var FirebaseAuth;
 
   // Define a service which provides user authentication and management.
-  angular.module('firebase.auth').factory('$firebaseAuth', [
-    '$q', '$firebaseUtils', function($q, $firebaseUtils) {
+  angular
+    .module('firebase.auth')
+    .factory('$firebaseAuth', firebaseAuth);
+  
+  /**
+   * Firebase Auth
+   */
+  
+  firebaseAuth.$inject = ['$q', '$firebaseUtils'];
+  
+  function firebaseAuth($q, $firebaseUtils) {
       /**
        * This factory returns an object allowing you to manage the client's authentication state.
        *
@@ -18,8 +29,7 @@
         var firebaseAuth = new FirebaseAuth($q, $firebaseUtils, auth);
         return firebaseAuth.construct();
       };
-    }
-  ]);
+  }
 
   FirebaseAuth = function($q, $firebaseUtils, auth) {
     this._q = $q;
