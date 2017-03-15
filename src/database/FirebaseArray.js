@@ -47,8 +47,18 @@
    * var list = new ExtendedArray(ref);
    * </code></pre>
    */
-  angular.module('firebase.database').factory('$firebaseArray', ["$log", "$firebaseUtils", "$q",
-    function($log, $firebaseUtils, $q) {
+  
+  angular
+    .module('firebase.database')
+    .factory('$firebaseArray', firebaseArray);
+  
+    /**
+     * Firebase Array
+     */
+    
+    firebaseArray.$inject = ['$log', '$firebaseUtils', '$q']
+    
+    function firebaseArray($log, $firebaseUtils, $q) {
       /**
        * This constructor should probably never be called manually. It is used internally by
        * <code>$firebase.$asArray()</code>.
@@ -744,15 +754,20 @@
 
       return FirebaseArray;
     }
-  ]);
+    
 
   /** @deprecated */
-  angular.module('firebase').factory('$FirebaseArray', ['$log', '$firebaseArray',
-    function($log, $firebaseArray) {
+  angular
+    .module('firebase')
+    .factory('$FirebaseArray', FirebaseArray);
+    
+    FirebaseArray.$inject = ['$log', '$firebaseArray'];
+    
+    function FirebaseArray(){
       return function() {
         $log.warn('$FirebaseArray has been renamed. Use $firebaseArray instead.');
         return $firebaseArray.apply(null, arguments);
       };
     }
-  ]);
+    
 })();
