@@ -681,4 +681,93 @@ describe('FirebaseAuth',function(){
       expect(result).toEqual('myResult');
     });
   });
+
+  describe('$linkUser()',function (){
+    it('should return a promise', function () {
+      var email = 'somebody@somewhere.com';
+      var password = 'myPass';
+      var credentials = {
+        provider: 'password',
+        uid: 'testUid',
+        link: jasmine.createSpy().and.returnValue(fakePromise())
+      };
+      spyOn(authService._, 'getAuth').and.returnValue(credentials);
+
+      expect(authService.$linkUser(email, password)).toBeAPromise();
+    });
+
+    it('should pass email and password to method on backing auth instance', function () {
+      var email = 'somebody@somewhere.com',
+          password = 'myPass';
+      var credentials = {
+        provider: 'password',
+        uid: 'testUid',
+        link: jasmine.createSpy().and.returnValue(fakePromise())
+      };
+      spyOn(authService._, 'getAuth').and.callFake(function () {
+        return credentials;
+      });
+
+      spyOn(firebase.auth.EmailAuthProvider, 'credential').and.returnValue(fakePromise());
+
+      authService.$linkUser(email, password);
+      expect(firebase.auth.EmailAuthProvider.credential).toHaveBeenCalledWith(email, password);
+    });
+
+    it('should call Firebase User\'s link method with email credentials', function () {
+      var email = 'somebody@somewhere.com',
+          password = 'myPass',
+          mockCredentials = 'mock credentials';
+      var fbUser = {
+        provider: 'password',
+        uid: 'testUid',
+        link: jasmine.createSpy()
+      };
+      spyOn(authService._, 'getAuth').and.callFake(function () {
+        return fbUser;
+      });
+
+      spyOn(firebase.auth.EmailAuthProvider, 'credential').and.returnValue(mockCredentials);
+
+      authService.$linkUser(email, password);
+
+      expect(fbUser.link).toHaveBeenCalledWith(mockCredentials);
+    });
+
+    it('should resolve promise with the user', function (done) {
+      var email = 'somebody@somewhere.com',
+          password = 'myPass',
+          mockCredentials = 'mock credentials';
+      var mockUser = {
+        provider: 'password',
+        uid: 'testUid',
+        link: jasmine.createSpy().and.callFake(function (aCredential) {
+          if (aCredential === mockCredentials) {
+            return Promise.resolve(mockUser);
+          }
+          return Promise.reject(new Error('Wrong mail / password'));
+        })
+      };
+      spyOn(authService._, 'getAuth').and.callFake(function () {
+        return mockUser;
+      });
+
+      spyOn(firebase.auth.EmailAuthProvider, 'credential').and.returnValue(mockCredentials);
+
+      authService.$linkUser(email, password)
+        .then(function (aUser) {
+          expect(aUser).toBe(mockUser);
+          done();
+        })
+        .catch(function (err) {
+          fail('failed due to an error in promise chain: ' + err.message);
+        });
+    });
+
+    it('should throw an error if there\'s no current user', function () {
+      spyOn(authService._, 'getAuth').and.returnValue(null);
+
+      expect(function () { authService.$linkUser('noone@nowhere.com', 'nevermind'); }).toThrow(new Error('No user to link to (user must login before linking)'));
+    });
+  });
 });
