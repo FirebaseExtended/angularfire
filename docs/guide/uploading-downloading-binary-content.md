@@ -45,7 +45,7 @@ The Cloud Storage for Firebase service is created with several special `$` metho
 | Method  | Description |
 | ------------- | ------------- |
 | [`$put(file, metadata)`](/docs/reference.md#putfile-metadata) |	Uploads file to configured path with optional metadata. Returns an AngularFire wrapped [`UploadTask`](/docs/reference.md#upload-task). |
-| [`$putString(string, format, metadata)`](/docs/reference.md#putstringstring-format-metadata)	| Uploads a upload a raw, base64, or base64url encoded string with optional metadata. Returns an AngularFire wrapped [`UploadTask`](/docs/reference.md#upload-task). |
+| [`$putString(string, format, metadata)`](/docs/reference.md#putstringstring-format-metadata)	| Uploads a raw, base64, or base64url encoded string with optional metadata. Returns an AngularFire wrapped [`UploadTask`](/docs/reference.md#upload-task). |
 | [`$getDownloadURL()`](/docs/reference.md#getdownloadurl) |	Returns a `Promise` fulfilled with the download URL for the file stored at the configured path. |
 | [`$getMetadata()`](/docs/reference.md#getmetadata) | Returns a `Promise` fulfilled with the metadata of the file stored at the configured path. |
 | [`$updateMetadata(metadata)`](/docs/reference.md#updatemetadatametadata) | Returns a `Promise` containing the updated metadata. |
