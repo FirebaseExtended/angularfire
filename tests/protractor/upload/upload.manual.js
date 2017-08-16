@@ -50,18 +50,37 @@ describe('Upload App', function () {
     expect(browser.getTitle()).toEqual('AngularFire Upload e2e Test');
   });
 
-  it('uploads a file', function (done) {
+  it('uploads a file, cancels the upload task, and tries uploading again', function (done) {
     var fileToUpload = './upload/logo.png';
     var absolutePath = path.resolve(__dirname, fileToUpload);
 
     $('input[type="file"]').sendKeys(absolutePath);
     $('#submit').click();
 
-    var el = element(by.id('url'));
-    browser.driver.wait(protractor.until.elementIsVisible(el))
+    var el;
+    var cancelEl = element(by.id('cancel'));
+
+    browser.driver.wait(protractor.until.elementIsVisible(cancelEl.getWebElement()))
+      .then(function () {
+          $('#cancel').click();
+
+        var canceledEl = element(by.id('canceled'));
+        return browser.driver.wait(protractor.until.elementIsVisible(canceledEl.getWebElement()))
+      })
+      .then(function () {
+        var submitEl = element(by.id('submit'));
+        return browser.driver.wait(protractor.until.elementIsVisible(submitEl.getWebElement()))
+      })
+      .then(function () {
+        $('#submit').click();
+
+        el = element(by.id('url'));
+        return browser.driver.wait(protractor.until.elementIsVisible(el.getWebElement()))
+      })
       .then(function () {
         return el.getText();
-      }).then(function (text) {
+      })
+      .then(function (text) {
         var result = "https://firebasestorage.googleapis.com/v0/b/oss-test.appspot.com/o/user%2F1.png";
         expect(text.slice(0, result.length)).toEqual(result);
         done();

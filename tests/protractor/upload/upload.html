@@ -23,12 +23,17 @@
       <button id="submit" ng-click="upload()">Submit</button>
     </div>
 
+    <p ng-show="isCanceled" id="canceled">
+      Canceled
+    </p>
+
     <div ng-show="isUploading" id="uploading">
-      {{(metadata.bytesTransferred / metadata.totalBytes)*100}}%<br />
+      <button id="cancel" ng-click="cancel()">Cancel</button>
+      {{((metadata.bytesTransferred / metadata.totalBytes)*100) || 0}}%<br />
     </div>
 
     <br />
-    <div ng-show="metadata.downloadURL" id="url">{{metadata.downloadURL}}</div>
+    <div ng-show="metadata.downloadURL && snapshot" id="url">{{metadata.downloadURL}}</div>
 
     <div ng-show="error">
       {{ error | json }}
