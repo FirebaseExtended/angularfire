@@ -681,4 +681,24 @@ describe('FirebaseAuth',function(){
       expect(result).toEqual('myResult');
     });
   });
+
+  describe('_initAuthResolver',function(){
+    it('should return a promise', function() {
+      var ctx = authService._;
+      expect(ctx._initAuthResolver()).toBeAPromise();
+    });
+
+    it('should resolve when the inital auth state is fetched', function(done){
+      var ctx = authService._;
+      var promise = ctx._initAuthResolver();
+      wrapPromise(promise);
+      promise.then(function() {
+        expect(status).toBe('resolved');
+        done();
+      });
+
+      fakePromiseResolve();
+    });
+  });
+
 });
