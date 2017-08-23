@@ -34,11 +34,11 @@
           });
         });
       },
-      $cancel: task.cancel,
-      $resume: task.resume,
-      $pause: task.pause,
-      then: task.then,
-      catch: task.catch,
+      $cancel: task.cancel.bind(task),
+      $resume: task.resume.bind(task),
+      $pause: task.pause.bind(task),
+      then: task.then.bind(task),
+      catch: task.catch.bind(task),
       $snapshot: task.snapshot
     };
   }
