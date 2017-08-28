@@ -698,6 +698,7 @@ describe('FirebaseAuth',function(){
       });
 
       fakePromiseResolve();
+      tick();
     });
   });
 
