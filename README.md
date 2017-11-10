@@ -42,7 +42,7 @@ In order to use AngularFire in your project, you need to include the following f
 
 ```html
 <!-- AngularJS -->
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.1/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.6/angular.min.js"></script>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/3.6.6/firebase.js"></script>
