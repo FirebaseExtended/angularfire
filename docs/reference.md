@@ -541,7 +541,7 @@ var list = $firebaseArray(ref);
 sync === list.$ref(); // true
 ```
 
-### $watch(cb[, context])
+### $watch(cb, [context])
 
 Any callback passed here will be invoked each time data in the array is updated from the server.
 The callback receives an object with the following keys:
