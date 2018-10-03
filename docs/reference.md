@@ -264,7 +264,7 @@ Only one scope variable can be bound at a time. If a second attempts to bind to 
 `$firebaseObject` instance, the promise will be rejected and the bind will fail.
 
 **IMPORTANT NOTE**: Angular does not report variables prefixed with `$` to any `$watch()` listeners.
-a simple workaround here is to use a variable prefixed with `_`, which will not be saved to the
+A simple workaround here is to use a variable prefixed with `_`, which will not be saved to the
 server, but will trigger `$watch()`.
 
 ```js
