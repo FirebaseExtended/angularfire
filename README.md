@@ -29,7 +29,7 @@ project.
  * [Contributing](#contributing)
 
 
-## Getting Started With Firebase
+## Getting Started With The Firebase
 
 AngularFire requires [Firebase](https://firebase.google.com/) in order to authenticate users and sync
 and store data. Firebase is a suite of integrated products designed to help you develop your app,
