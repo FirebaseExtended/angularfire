@@ -1,5 +1,10 @@
-# AngularFire [![Build Status](https://travis-ci.org/firebase/angularfire.svg?branch=master)](https://travis-ci.org/firebase/angularfire) [![Coverage Status](https://coveralls.io/repos/firebase/angularfire/badge.svg?branch=master&service=github)](https://coveralls.io/github/firebase/angularfire?branch=master) [![Version](https://badge.fury.io/gh/firebase%2Fangularfire.svg)](http://badge.fury.io/gh/firebase%2Fangularfire)
+# AngularFire _(for AngularJS)_ [![Build Status](https://travis-ci.org/firebase/angularfire.svg?branch=master)](https://travis-ci.org/firebase/angularfire) [![Coverage Status](https://coveralls.io/repos/firebase/angularfire/badge.svg?branch=master&service=github)](https://coveralls.io/github/firebase/angularfire?branch=master) [![Version](https://badge.fury.io/gh/firebase%2Fangularfire.svg)](http://badge.fury.io/gh/firebase%2Fangularfire)
 
+**Looking for the new AngularFire?**: If you're using Angular you'll want to check out [@angular/fire](https://github.com/angular/angularfire).
+
+**Status of this library**: The Firebase team considers this library stable and feature complete. We will only consider Pull Requests that address severe bugs or security risks & are no longer taking feature requests. [AngularJS will be in LTS until July 1<sup>st</sup>, 2021](https://blog.angular.io/stable-angularjs-and-long-term-support-7e077635ee9c) after which this library will be deprecated.
+
+----
 
 AngularFire is the officially supported [AngularJS](https://angularjs.org/) binding for
 [Firebase](https://firebase.google.com/). Firebase is a backend service that provides data storage,
@@ -14,10 +19,6 @@ services:
 
 Join our [Firebase Google Group](https://groups.google.com/forum/#!forum/firebase-talk)
 to ask questions, provide feedback, and share apps you've built with AngularFire.
-
-**Looking for Angular 2 support?** Visit the [AngularFire2](https://github.com/angular/angularfire2)
-project.
-
 
 ## Table of Contents
 
