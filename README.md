@@ -2,7 +2,7 @@
 
 **Looking for the new AngularFire?**: If you're using Angular you'll want to check out [@angular/fire](https://github.com/angular/angularfire).
 
-**Status of this library**: The Firebase team considers this library stable and feature complete. We will only consider Pull Requests that address severe bugs or security risks & are no longer taking feature requests. [AngularJS will be in LTS until July 1<sup>st</sup>, 2021](https://blog.angular.io/stable-angularjs-and-long-term-support-7e077635ee9c) after which this library will be deprecated.
+**Status of this library**: The Firebase team considers this library stable and feature complete. We will only consider Pull Requests that address severe bugs or security risks & are no longer taking feature requests. [AngularJS will be in LTS until December 31<sup>st</sup>, 2021](https://blog.angular.io/stable-angularjs-and-long-term-support-7e077635ee9c) after which this library will be deprecated.
 
 ----
 
