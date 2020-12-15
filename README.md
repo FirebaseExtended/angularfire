@@ -1,8 +1,16 @@
 # AngularFire _(for AngularJS)_ [![Build Status](https://travis-ci.org/firebase/angularfire.svg?branch=master)](https://travis-ci.org/firebase/angularfire) [![Coverage Status](https://coveralls.io/repos/firebase/angularfire/badge.svg?branch=master&service=github)](https://coveralls.io/github/firebase/angularfire?branch=master) [![Version](https://badge.fury.io/gh/firebase%2Fangularfire.svg)](http://badge.fury.io/gh/firebase%2Fangularfire)
 
-**Looking for the new AngularFire?**: If you're using Angular you'll want to check out [@angular/fire](https://github.com/angular/angularfire).
+**⚠️ Looking for the new AngularFire?** If you're using Angular you'll want to check out [@angular/fire](https://github.com/angular/angularfire).
 
-**Status of this library**: The Firebase team considers this library stable and feature complete. We will only consider Pull Requests that address severe bugs or security risks & are no longer taking feature requests. [AngularJS will be in LTS until December 31<sup>st</sup>, 2021](https://blog.angular.io/stable-angularjs-and-long-term-support-7e077635ee9c) after which this library will be deprecated.
+## Status
+
+![Status: Frozen](https://img.shields.io/badge/Status-Frozen-yellow)
+
+This repository is no longer under active development. No new features will be added and issues are not actively triaged. Pull Requests which fix bugs are welcome and will be reviewed on a best-effort basis.
+
+If you maintain a fork of this repository that you believe is healthier than the official version, we may consider recommending your fork. Please open a Pull Request if you believe that is the case.
+
+[AngularJS will be in LTS until December 31<sup>st</sup>, 2021](https://blog.angular.io/stable-angularjs-and-long-term-support-7e077635ee9c) after which this library will be deprecated.
 
 ----
 
